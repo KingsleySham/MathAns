@@ -376,3 +376,64 @@ footer a:hover {
   .card-title h1 { font-size: 1.2rem; }
   .tab { padding: 7px 13px; font-size: 0.8rem; }
 }
+/* Supported Materials link */
+.supported-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #1a56db;
+  padding: 0;
+  margin-bottom: 4px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.supported-link:hover { color: #1340a8; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.modal-box {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 360px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(26,86,219,0.18);
+}
+.modal-header {
+  background: #1a56db;
+  color: #fff;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 2px;
+}
+.modal-body {
+  padding: 18px 20px 20px;
+  color: #374151;
+  font-size: 0.875rem;
+}
+.modal-body p { margin: 0 0 12px; color: #6b7280; }
+.modal-body ul { margin: 0; padding-left: 18px; }
+.modal-body li { margin-bottom: 10px; line-height: 1.5; }
+.modal-body li span { color: #6b7280; font-size: 0.8rem; }
