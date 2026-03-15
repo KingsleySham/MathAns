@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mathans-v8';
+const CACHE_NAME = 'mathans-v9';
 const urlsToCache = [
   '/',
   '/index.html',
