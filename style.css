@@ -1,0 +1,372 @@
+/* ============================================================
+   S.3 Maths Answer Finder — styles
+   Reference: white card, blue title, numbered step labels,
+   big blue button, yellow highlight for final answer
+   ============================================================ */
+
+/* ---------- Reset & base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+               Arial, "Noto Sans TC", sans-serif;
+  background: #f0f2f5;
+  min-height: 100vh;
+  padding: 24px 16px 48px;
+  color: #1a1a2e;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ---------- Page wrapper ---------- */
+.page-wrap {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ---------- Card ---------- */
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 28px 24px 32px;
+}
+
+/* ---------- Card title ---------- */
+.card-title {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.card-title h1 {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #1a56db;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+/* ---------- Form groups ---------- */
+.form-group {
+  margin-bottom: 20px;
+}
+
+/* ---------- Step labels ---------- */
+.step-label {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #374151;
+  margin-bottom: 10px;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- Section tabs ---------- */
+.section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1.5px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab:hover {
+  border-color: #1a56db;
+  color: #1a56db;
+  background: #eff6ff;
+}
+
+.tab.active {
+  background: #1a56db;
+  border-color: #1a56db;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(26, 86, 219, 0.30);
+}
+
+/* UT tab accent */
+.tab-ut {
+  border-color: #f59e0b;
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.tab-ut:hover {
+  background: #fef3c7;
+  border-color: #d97706;
+  color: #78350f;
+}
+
+.tab-ut.active {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+}
+
+/* ---------- Select wrapper ---------- */
+.select-wrap {
+  position: relative;
+}
+
+.select-wrap::after {
+  content: "▾";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  pointer-events: none;
+  font-size: 0.9rem;
+}
+
+select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #ffffff;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  padding: 11px 40px 11px 14px;
+  font-size: 0.9rem;
+  color: #1a1a2e;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+}
+
+select:focus {
+  border-color: #1a56db;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.12);
+}
+
+/* ---------- CTA button ---------- */
+.btn-check {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  margin-top: 8px;
+  background: #1a56db;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-check:hover {
+  background: #1648c0;
+  box-shadow: 0 4px 16px rgba(26, 86, 219, 0.35);
+}
+
+.btn-check:active {
+  transform: scale(0.98);
+  background: #1340a8;
+}
+
+/* ---------- Answer panel ---------- */
+.answer-panel {
+  margin-top: 24px;
+  border-top: 2px solid #e5e7eb;
+  padding-top: 20px;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Answer header (question label) */
+.answer-header {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a56db;
+  margin-bottom: 14px;
+}
+
+/* ---------- Steps container ---------- */
+#steps-container {
+  margin-bottom: 16px;
+}
+
+/* Part label: (a), (b), etc. */
+.part-block {
+  margin-bottom: 18px;
+}
+
+.part-label {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+/* Working steps list */
+.steps-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.steps-list li {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 8px;
+  padding: 5px 0 5px 28px;
+  font-size: 0.875rem;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  line-height: 1.55;
+}
+
+.steps-list li:last-child {
+  border-bottom: none;
+}
+
+/* Step counter bubble */
+.steps-list li::before {
+  content: attr(data-n);
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 18px;
+  height: 18px;
+  background: #dbeafe;
+  color: #1a56db;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Working text (left side) */
+.step-work {
+  flex: 1 1 auto;
+  font-family: inherit;
+  white-space: pre-wrap;
+}
+
+/* Reason text (right side, italic) */
+.step-reason {
+  flex: 0 1 auto;
+  color: #6b7280;
+  font-style: italic;
+  font-size: 0.8rem;
+  white-space: normal;
+  word-break: break-word;
+  padding-left: 10px;
+  text-align: right;
+}
+
+/* MCQ / short step (no numbering when single step) */
+.steps-list.single-step li {
+  padding-left: 0;
+}
+.steps-list.single-step li::before {
+  display: none;
+}
+
+/* ---------- Final answer (yellow highlight) ---------- */
+.final-answer {
+  background: #fef08a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #713f12;
+  line-height: 1.5;
+  border: 1px solid #fde047;
+}
+
+.part-final-answer {
+  background: #fef08a;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #713f12;
+  margin-top: 6px;
+  border: 1px solid #fde047;
+}
+
+/* MCQ pill answer */
+.mcq-answer {
+  display: inline-block;
+  background: #fef08a;
+  border: 1px solid #fde047;
+  color: #713f12;
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding: 6px 18px;
+  border-radius: 8px;
+}
+
+/* ---------- Stacked fractions ---------- */
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 2px;
+  font-size: 0.85em;
+  line-height: 1.2;
+}
+.frac .num {
+  border-bottom: 1.5px solid currentColor;
+  padding: 0 3px 1px;
+  text-align: center;
+  white-space: nowrap;
+}
+.frac .den {
+  padding: 1px 3px 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  text-align: center;
+  margin-top: 24px;
+  padding-bottom: 8px;
+}
+
+footer a {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: #6b7280;
+  text-decoration: underline;
+}
+
+/* ---------- Responsive tweaks ---------- */
+@media (max-width: 400px) {
+  .card { padding: 22px 16px 28px; }
+  .card-title h1 { font-size: 1.2rem; }
+  .tab { padding: 7px 13px; font-size: 0.8rem; }
+}
