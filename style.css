@@ -353,6 +353,12 @@ footer {
   padding-bottom: 8px;
 }
 
+footer p {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0 0 4px;
+}
+
 footer a {
   font-size: 0.75rem;
   color: #9ca3af;
