@@ -98,7 +98,25 @@
     <footer>
       
       <a>For reference only. 只供參考。</a>
-      <p>For MathSmart 3A Consolidation Ex. &amp; School 2526 S.3 UT Practice Paper. 只支援「數學新領域3A精進練習」及校內統一測驗中三溫習卷。</p>
+      <button class="supported-link" onclick="document.getElementById('supported-modal').style.display='flex'">
+  Supported Materials 支援教材
+</button>
+      <div id="supported-modal" style="display:none;" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>Supported Materials 支援教材</span>
+      <button class="modal-close" onclick="document.getElementById('supported-modal').style.display='none'">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>This app supports the following materials:</p>
+      <ul>
+        <li>MathSmart 3A Consolidation Exercises<br><span>數學新領域3A精進練習</span></li>
+        <li>School 2526 S.3 UT Practice Paper<br><span>校內統一測驗中三溫習卷</span></li>
+        <li>Updated: 15 March 2026/span></li>
+      </ul>
+    </div>
+  </div>
+</div>
     </footer>
 
   </div><!-- /page-wrap -->
