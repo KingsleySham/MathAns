@@ -2,7 +2,7 @@
 
 // IMPORTANT: Every time you update data.js, app.js, or index.html, 
 // you MUST change this version number (e.g., v18 -> v19) to trigger the update.
-const CACHE_NAME = 'mathans-v19'; 
+const CACHE_NAME = 'mathans-v20'; 
 
 const ASSETS = [
   '/',
