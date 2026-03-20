@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>S.3 Maths Answer Finder</title>
-    <meta name="description" content="S.3 Maths Answer Finder – 一個為香港中三學生提供數學答案查詢的工具。按章節及題號即可查看參考答案。A maths answer reference t[...]" />
+  <meta name="description" content="S.3 Maths Answer Finder – 一個為香港中三學生提供數學答案查詢的工具。按章節及題號即可查看參考答案。A maths answer reference t[...]" />
   <meta name="keywords" content="S3 maths, S.3 maths answers, Hong Kong secondary school maths, 中三數學答案, 中學數學, mathans.app, mathans" />
   <meta name="author" content="KingsleySham" />
   <meta name="theme-color" content="#4A90E2" />
@@ -28,15 +28,12 @@
   <div class="page-wrap">
     <div class="card">
 
-      <!-- Title -->
       <div class="card-title">
         <h1>S.3 Maths Answer Finder</h1>
       </div>
 
-      <!-- Section selector row -->
       <div class="form-group">
         <div class="step-label">1. 選擇章節 (Section)</div>
-        <!-- Normal section tabs -->
         <div class="section-tabs" id="section-tabs">
           <button class="tab active" data-section="4.1">4.1</button>
           <button class="tab" data-section="4.2">4.2</button>
@@ -50,7 +47,6 @@
         </div>
       </div>
 
-      <!-- UT Chapter picker (hidden unless UT selected) -->
       <div class="form-group" id="ut-chapter-group" style="display:none;">
         <div class="step-label">2. 選擇章節 (Chapter)</div>
         <div class="select-wrap">
@@ -64,7 +60,6 @@
         </div>
       </div>
 
-      <!-- Question number selector -->
       <div class="form-group" id="question-group">
         <div class="step-label" id="q-step-label">2. 選擇題號 (Question)</div>
         <div class="select-wrap">
@@ -74,29 +69,21 @@
         </div>
       </div>
 
-      <!-- Submit button -->
       <button class="btn-check" id="btn-check" onclick="showResult()">
         查看答案 (View Answer)
       </button>
 
-      <!-- Answer panel -->
       <div class="answer-panel" id="answer-panel" style="display:none;">
 
-        <!-- Question label -->
         <div class="answer-header" id="answer-header"></div>
 
-        <!-- Steps -->
         <div id="steps-container"></div>
 
-        <!-- Final answer (yellow highlight) -->
         <div class="final-answer" id="final-answer"></div>
- </div>
 
       </div>
 
-    </div><!-- /card -->
-
-    <footer>
+    </div><footer>
       <p>For reference only. 只供參考。</p>
       <button class="supported-link" onclick="document.getElementById('supported-modal').style.display='flex'">
         Supported Materials 支援教材
@@ -118,9 +105,7 @@
       </div>
     </footer>
 
-  </div><!-- /page-wrap -->
-
-  <script src="data.js"></script>
+  </div><script src="data.js"></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
