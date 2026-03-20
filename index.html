@@ -113,6 +113,30 @@
         console.log('Service Worker registration failed:', err);
       });
     }
+  <script>
+    if ('serviceWorker' in navigator) {
+      let refreshing = false;
+
+      // Listen for the service worker to claim control (happens during an update)
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          // Automatically reload the page to apply the new cached files
+          window.location.reload(); 
+        }
+      });
+
+      // Register the service worker
+      navigator.serviceWorker.register('service-worker.js')
+        .then(reg => {
+          console.log('Service Worker registered.');
+          // Manually check for an update every time the page loads
+          reg.update();
+        })
+        .catch(err => {
+          console.log('Service Worker registration failed:', err);
+        });
+    }
   </script>
 </body>
 </html>
