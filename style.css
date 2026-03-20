@@ -210,6 +210,10 @@ select:focus {
   margin-bottom: 18px;
 }
 
+.part-block:last-child {
+  margin-bottom: 0;
+}
+
 .part-label {
   font-weight: 700;
   font-size: 0.875rem;
@@ -229,7 +233,7 @@ select:focus {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 4px 8px;
   padding: 5px 0 5px 28px;
   font-size: 0.875rem;
