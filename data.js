@@ -586,5 +586,92 @@ const SECTIONS = {
       "Ch7_3": { steps: ["Area of △VAB = (1/2) × 33 × 28 cm²", "= 462 cm²", "Area of △VBC = (1/2) × 16 × 31.5 cm²", "= 252 cm²", "Total surface area of the pyramid", "= (2 × 462 + 2 × 252 + 33 × 16) cm²", "= 1956 cm²"], answer: "1956 cm²" }
     }
   }
-
+"7.1": {
+    label: "7.1",
+    questions: {
+      1: { steps: ["Volume of the pyramid = (1/3) × 24 × 5 cm³"], answer: "40 cm³" },
+      2: { steps: ["Volume of the pyramid = (1/3) × (1/2 × 7 × 3) × 3 cm³"], answer: "10.5 cm³" },
+      3: { steps: ["Volume of the pyramid = (1/3) × 30 × 6 cm³"], answer: "60 cm³" },
+      4: { steps: ["Volume of the pyramid = (1/3) × 3² × 4 cm³"], answer: "12 cm³" },
+      5: { steps: ["Volume of the pyramid = (1/3) × (4 × 2) × 5 cm³"], answer: "40/3 cm³" },
+      6: { steps: ["Volume of the pyramid = (1/3) × (1/2 × 3 × 8) × 5 cm³"], answer: "20 cm³" },
+      7: { steps: ["Volume of the pyramid = (1/3) × (17 × 8) × 15 cm³"], answer: "680 cm³" },
+      8: { steps: ["Let h cm be the height of the pyramid.", "Volume of the pyramid = 24 cm³", "(1/3) × [1/2 × (5 + 7) × 3] × h = 24", "6h = 24", "h = 4"], answer: "The height of the pyramid is 4 cm." },
+      9: { steps: ["Volume of the pyramid = 224 cm³", "(1/3) × (QT × 7) × 12 = 224", "QT = 8", "QR = QT | (definition of rhombus)", "= 8 cm"], answer: "QR = 8 cm" },
+      10: { steps: ["Let x cm² be the base area of the pyramid.", "Volume of the pyramid = 144 cm³", "(1/3) × x × 12 = 144", "x = 36"], answer: "The base area of the pyramid is 36 cm²." },
+      11: { steps: ["Let x cm be the length of a side of the base.", "Height of the equilateral triangle base = √(x² − (x/2)²) cm | (Pyth. theorem)", "= (√3 / 2)x cm", "Volume of the pyramid = 48 cm³", "(1/3) × (1/2 × x × (√3 / 2)x) × 4 = 48", "(√3 / 3)x² = 48", "x² = 144 / √3", "x = 9.12, cor. to 3 sig. fig."], answer: "The length of a side of the base is 9.12 cm." },
+      12: { steps: ["Total surface area of the pyramid", "= area of square PQRS + area of △VQR × 4", "= [6² + (1/2 × 6 × 8) × 4] cm²"], answer: "132 cm²" },
+      13: { steps: ["Total surface area of the pyramid", "= area of rectangle ABCD + area of △VAB × 2 + area of △VBC × 2", "= [18 × 10 + (1/2 × 18 × 13) × 2 + (1/2 × 10 × 15) × 2] cm²"], answer: "564 cm²" },
+      14: { steps: ["Total area of all lateral faces = 70 cm²", "Area of △VBC × 4 = 70 cm²", "(1/2 × BC × 5) × 4 = 70", "BC = 7 cm", "Total surface area of the pyramid", "= area of square ABCD + total area of all lateral faces", "= (7² + 70) cm²"], answer: "119 cm²" },
+      15: { steps: ["For the regular hexagon ABCDEF, △OAB, △OBC, △OCD, △ODE, △OEF and △OAF are all equilateral triangles of side 4 cm.", "Height of each equilateral triangle", "= √(4² − (4/2)²) cm | (Pyth. theorem)", "= √12 cm", "Area of hexagon ABCDEF", "= area of an equilateral triangle × 6", "= (1/2 × 4 × √12) × 6 cm²", "= 12√12 cm²", "Total surface area of the pyramid", "= area of the hexagonal base + total area of all lateral faces", "= (12√12 + 10 × 6) cm²"], answer: "102 cm², cor. to 3 sig. fig." },
+      16: { steps: ["Volume of the frustum", "= volume of VABC − volume of VDEF", "= [1/3 × 18 × (2 + 4) − 1/3 × 2 × 2] cm³"], answer: "104/3 cm³" },
+      17: { parts: [
+        { label: "(a)", steps: ["Volume of pyramid VABCD = 1/3 × (8 × 4) × 9 cm³"], answer: "96 cm³" },
+        { label: "(b)", steps: ["Volume of the frustum", "= volume of VABCD − volume of VEFGH", "= [96 − 1/3 × (4 × 2) × 4.5] cm³"], answer: "84 cm³" }
+      ]},
+      18: { steps: ["Volume of the frustum", "= volume of VEFGH − volume of VIJKL", "= [1/3 × 16² × 24 − 1/3 × 12² × (24 − 6)] cm³"], answer: "1184 cm³" },
+      19: { parts: [
+        { label: "(a)", steps: ["In △PQR,", "PR = √(PQ² + QR²) | (Pyth. theorem)", "= √(6² + 8²) cm = 10 cm", "In △VPO,", "VO = √(VP² − OP²) | (Pyth. theorem)", "= √(13² − (10/2)²) cm"], answer: "VO = 12 cm" },
+        { label: "(b)", steps: ["Volume of the pyramid", "= 1/3 × (6 × 8) × 12 cm³"], answer: "192 cm³" }
+      ]},
+      20: { steps: ["Let O be the projection of V on the base.", "In △ABC,", "AC = √(AB² + BC²) | (Pyth. theorem)", "= √(8² + 8²) cm = √128 cm", "In △VAO,", "VO = √(VA² − OA²) | (Pyth. theorem)", "= √(9² − (√128 / 2)²) cm = 7 cm", "Volume of the pyramid = 1/3 × 8² × 7 cm³"], answer: "448/3 cm³" },
+      21: { steps: ["Let VE be the height of △VAB", "In △VAE,", "VE = √(VA² − AE²) | (Pyth. theorem)", "= √(34² − (32/2)²) cm = 30 cm", "Total surface area of the pyramid", "= area of square ABCD + area of △VAB × 4", "= [32² + (1/2 × 32 × 30) × 4] cm²"], answer: "2944 cm²" },
+      22: { steps: ["In △BMV,", "VB = √(VM² + BM²) | (Pyth. theorem)", "= √(20² + (30/2)²) cm = 25 cm", "Let VN be the height of △VBC", "In △BNV,", "VN = √(VB² − BN²) | (Pyth. theorem)", "= √(25² − (14/2)²) cm = 24 cm", "Total surface area of the pyramid", "= area of rectangle ABCD + area of △VAB × 2 + area of △VBC × 2", "= [30 × 14 + (1/2 × 30 × 20) × 2 + (1/2 × 14 × 24) × 2] cm²"], answer: "1356 cm²" },
+      23: { parts: [
+        { label: "(a)", steps: ["Let h cm be the height of the pyramid.", "Volume of the pyramid = 1050 cm³", "(1/3) × (21 × 15) × h = 1050", "h = 10"], answer: "The height of the pyramid is 10 cm." },
+        { label: "(b)", steps: ["Suppose PQ = 21 cm, QR = 15 cm and O is the projection of V on the base.", "Let VM and VN be the heights of △VPQ and △VQR respectively.", "In △VMO,", "VM = √(VO² + MO²) | (Pyth. theorem)", "= √(10² + (15/2)²) cm = 12.5 cm", "In △VNO,", "VN = √(VO² + NO²) | (Pyth. theorem)", "= √(10² + (21/2)²) cm = 14.5 cm", "Total surface area of the pyramid", "= area of rectangle PQRS + area of △VPQ × 2 + area of △VQR × 2", "= [21 × 15 + (1/2 × 21 × 12.5) × 2 + (1/2 × 15 × 14.5) × 2] cm²"], answer: "795 cm²" }
+      ]},
+      24: { steps: ["Total surface area of the pyramid = 360 cm²", "10² cm² + area of each lateral face × 4 = 360 cm²", "Area of each lateral face × 4 = 260 cm²", "Area of each lateral face = 65 cm²", "Area of △VAB = 65 cm²", "(1/2) × 10 cm × VP = 65 cm²", "VP = 13 cm", "In △VPO,", "VO = √(VP² − OP²) | (Pyth. theorem)", "= √(13² − (10/2)²) cm = 12 cm", "Volume of the pyramid = (1/3) × 10² × 12 cm³"], answer: "400 cm³" },
+      25: { steps: ["Volume of each pyramid = (1/3) × 5² × 3 cm³ = 25 cm³", "Let h cm be the rise in water level.", "Volume of water risen = total volume of the four pyramids", "10 × 8 × h = 25 × 4", "h = 1.25"], answer: "The rise in water level is 1.25 cm." },
+      26: { steps: ["Let x cm be the length of a side of the base of each pyramid.", "Total volume of the two pyramids = volume of the prism", "(1/3 × x² × 15) × 2 = 240 × 6", "x² = 144", "x = 12"], answer: "The length of a side of the base is 12 cm." },
+      27: { steps: ["Volume of the pyramid = (1/3) × 16² × 15 cm³ = 1280 cm³", "Volume of water in the tank = (5/2) × 1280 cm³ = 3200 cm³", "Let h cm be the new water level.", "6² × h = 1280 + 3200", "h = 17.5"], answer: "The new water level is 17.5 cm." },
+      28: { parts: [
+        { label: "(a)", steps: ["Let VO be the height of the pyramid.", "In △VAO,", "AO = √(VA² − VO²) | (Pyth. theorem)", "= √(13² − 12²) cm = 5 cm", "In △ABC,", "AB = √(AC² − BC²) | (Pyth. theorem)", "= √((5 × 2)² − 6²) cm"], answer: "AB = 8 cm" },
+        { label: "(b)", steps: ["Capacity of the pyramid", "= (1/3) × (8 × 6) × 12 cm³ = 192 cm³", "∵ 192 cm³ < 200 cm³", "∴ The water will overflow."], answer: "The water will overflow." }
+      ]},
+      29: { parts: [
+        { label: "(a)", steps: ["Let h cm be the height of the solid.", "Volume of the solid = 128 cm³", "(1/3 × 8² × h/2) × 2 = 128", "h = 6"], answer: "The height of the solid is 6 cm." },
+        { label: "(b)", steps: ["Let pyramid VABCD be the upper part of the solid.", "Let VO and VP be the heights of the pyramid and △VBC respectively.", "In △VPO,", "VP = √(VO² + OP²) | (Pyth. theorem)", "= √((6/2)² + (8/2)²) cm = 5 cm", "Total surface area of the solid", "= area of △VBC × 8", "= (1/2 × 8 × 5) × 8 cm²"], answer: "160 cm²" }
+      ]},
+      30: { parts: [
+        { label: "(a)", steps: ["In △VAB,", "VA = √(AB² + VB²) | (Pyth. theorem)", "= √(20² + 20²) cm = √800 cm", "In △ABC,", "CB = √(AB² + AC²) | (Pyth. theorem)", "= √(20² + 20²) cm = √800 cm", "In △VAC and △CBV,", "VA = CB = √800 cm", "AC = BV = 20 cm | (given)", "VC = CV | (common side)", "∴ △VAC ≅ △CBV | (SSS)"], answer: "△VAC ≅ △CBV" },
+        { label: "(b)", steps: ["Total surface area of the pyramid", "= area of △VAB × 2 + area of △VAC × 2", "= [(1/2 × 20 × 20) × 2 + (1/2 × 20 × √800) × 2] cm²"], answer: "966 cm², cor. to 3 sig. fig." }
+      ]},
+      31: { parts: [
+        { label: "(a)", steps: ["Volume of pyramid ABCDE = (1/3) × 9² × 9 cm³"], answer: "243 cm³" },
+        { label: "(b)", steps: ["In △ADE,", "AE = √(AD² + DE²) cm | (Pyth. theorem)", "= √(9² + 9²) cm = √162 cm", "Total surface area of pyramid ABCDE", "= area of square ABCD + area of △ADE × 2 + area of △ABE × 2", "= [9² + (1/2 × 9 × 9) × 2 + (1/2 × 9 × √162) × 2] cm²"], answer: "277 cm², cor. to 3 sig. fig." }
+      ]},
+      32: { parts: [
+        { label: "(a)", steps: ["Let h cm be the height of the frustum.", "MX = (1/2)QR = (1/2) × 5 cm = 2.5 cm", "NY = (1/2)AB = (1/2) × 15 cm = 7.5 cm", "△VMX ~ △VNY | (AAA)", "VY / VX = NY / MX | (corr. sides, ~ △s)", "(6 + h) / 6 = 7.5 / 2.5", "6 + h = 18", "h = 12"], answer: "The height of the frustum is 12 cm." },
+        { label: "(b)", steps: ["Volume of the frustum", "= volume of pyramid VABCD - volume of pyramid VPQRS", "= [(1/3) × 15² × (6 + 12) - (1/3) × 5² × 6] cm³"], answer: "1300 cm³" }
+      ]},
+      33: { steps: ["Let h cm be the height of pyramid VEFGH.", "MX = (1/2)FG = (1/2) × 10 cm = 5 cm", "NY = (1/2)AB = (1/2) × 15 cm = 7.5 cm", "△VMX ~ △VNY | (AAA)", "VX / VY = MX / NY | (corr. sides, ~ △s)", "h / (h + 5) = 5 / 7.5", "3h = 2h + 10", "h = 10", "The height of pyramid VEFGH is 10 cm.", "Volume of the frustum", "= volume of pyramid VABCD - volume of pyramid VEFGH", "= [(1/3) × (15 × 6) × (10 + 5) - (1/3) × (10 × 4) × 10] cm³"], answer: "950/3 cm³" },
+      34: { steps: ["Let h cm be the height of the original pyramid.", "Then the height of the new pyramid is 2h cm.", "Let l cm be the length of a side of the base of the new pyramid.", "(1/3) × (l × l) × 2h = (1/3) × (9 × 8) × h", "l² = 36", "l = 6"], answer: "The length of a side of the base of the new pyramid is 6 cm." },
+      35: { steps: ["Let h cm be the height of the original pyramid.", "Volume of the original pyramid = total volume of the 3 smaller pyramids", "(1/3) × 12² × h = ((1/3) × 6² × 6) × 3", "h = 4.5", "Note: Text in textbook concludes 'The height of the original pyramid is 6 cm.' due to a presumed typo."], answer: "4.5 cm" },
+      36: { steps: ["Volume of the pyramid = (1/3) × 2² × 1.5 m³ = 2 m³", "Capacity of the cubical tank = 3³ m³ = 27 m³", "Volume of the water in the tank = (27 - 2) m³"], answer: "25 m³" },
+      37: { parts: [
+        { label: "(a)", steps: ["Let h cm be the depth of water in the container.", "Volume of water = 162 cm³", "(1/3) × 9² × h = 162", "h = 6"], answer: "The depth of water in the container is 6 cm." },
+        { label: "(b)", steps: ["Let VY and VM be the heights of the container and △VGF respectively.", "VM = √(MX² + VX²) | (Pyth. theorem)", "= √((9/2)² + 6²) cm = 7.5 cm", "Area of the wet surface of the container", "= area of △VGF × 4", "= (1/2 × 9 × 7.5) × 4 cm²"], answer: "135 cm²" },
+        { label: "(c)", steps: ["△VMX ~ △VNY | (AAA)", "NY / MX = VY / VX | (corr. sides, ~ △s)", "NY / (9/2) = 8 / 6", "NY = 6 cm", "Capacity of the container", "= (1/3) × (6 × 2)² × 8 cm³ = 384 cm³", "Total volume of the stone and the water", "= (200 + 162) cm³ = 362 cm³", "∵ 362 cm³ < 384 cm³", "∴ The water will not overflow."], answer: "The water will not overflow." }
+      ]},
+      38: { parts: [
+        { label: "(a)", steps: ["Let h cm be the height of the pyramid.", "Then the height of the cuboid is (12 - h) cm.", "Volume of the solid = 280 cm³", "(1/3) × (7 × 5) × h + 7 × 5 × (12 - h) = 280", "(1/3)h + 12 - h = 8", "2h / 3 = 4", "h = 6"], answer: "The height of the pyramid is 6 cm." },
+        { label: "(b)", steps: ["In △VMO,", "VM = √(VO² + MO²) | (Pyth. theorem)", "= √(6² + (5/2)²) cm = 6.5 cm", "In △VNO,", "VN = √(VO² + NO²) | (Pyth. theorem)", "= √(6² + (7/2)²) cm = √48.25 cm", "Total surface area of the solid", "= area of the rectangular base + total area of all lateral faces of the cuboid + total area of all lateral faces of the pyramid", "= {[(7+5)×2]×(12-6) + 7×5 + (1/2×7×6.5)×2 + (1/2×5×√48.25)×2} cm²", "≈ 259.23 cm²", "∵ 259.23 cm² < 260 cm²", "∴ The claim is disagreed."], answer: "The claim is disagreed." }
+      ]},
+      39: { parts: [
+        { label: "(a)", steps: ["Volume of the tetrahedron", "= (1/3) × area of △ABD × CD", "= (1/3) × (1/2 × 8 × 6) × 4 cm³"], answer: "32 cm³" }
+      ]},
+      40: { parts: [
+        { label: "(a)", steps: ["In △ABD,", "BD = √(AB² + AD²) | (Pyth. theorem)", "= √(8² + 6²) cm = 10 cm", "Let h cm be the height of the tetrahedron with △BCD as the base.", "Consider the volume of the tetrahedron.", "(1/3) × area of △BCD × h = 32 cm³", "(1/3) × (1/2 × 10 × 4) × h = 32", "h = 4.8"], answer: "The height is 4.8 cm." },
+        { label: "(b)", steps: ["Let VR be the height of the original pyramid.", "VP = (27 - 12) cm = 15 cm", "VQ = (15 + 9) cm = 24 cm", "△VNQ ~ △VOR | (AAA)", "NQ / OR = VQ / VR | (corr. sides, ~ △s)", "NQ / 9 = 24 / 27", "NQ = 8 cm", "△VMP ~ △VOR | (AAA)", "MP / OR = VP / VR | (corr. sides, ~ △s)", "MP / 9 = 15 / 27", "MP = 5 cm", "xF = 2NQ = 2 × 8 cm = 16 cm", "JK = 2MP = 2 × 5 cm = 10 cm", "Volume of water in the container", "= volume of VEFGH - volume of VIJKL", "= [(1/3) × 16² × 24 - (1/3) × 10² × 15] cm³"], answer: "1548 cm³" },
+        { label: "(c)", steps: ["In △VNQ,", "VN = √(VQ² + NQ²) | (Pyth. theorem)", "= √(24² + 8²) cm = √640 cm", "In △VMP,", "VM = √(VP² + MP²) | (Pyth. theorem)", "= √(15² + 5²) cm = √250 cm", "Area of the wet surface of the container", "= area of the lower base of the frustum + total area of all lateral faces of the frustum", "= [10² + (1/2 × 16 × √640 - 1/2 × 10 × √250) × 4] cm²", "≈ 593.32 cm²", "∵ 593.32 cm² < 600 cm²", "∴ The claim is agreed."], answer: "The claim is agreed." }
+      ]},
+      41: { steps: ["Volume of ABCDEFGH = BC × CH × CD", "Volume of pyramid DBCHG = (1/3) × BC × CH × CD", "= (1/3) × volume of ABCDEFGH", "∴ Volume of ABCDEFGH : volume of pyramid DBCHG = 3 : 1", "∴ The answer is A."], answer: "A" },
+      42: { steps: ["Let h cm be the height of the original pyramid.", "Volume of the original pyramid = total volume of the 9 smaller pyramids", "(1/3) × 6² × h = ((1/3) × 4² × 3) × 9", "h = 12", "∴ The height of the original pyramid is 12 cm.", "∴ The answer is C."], answer: "C" },
+      43: { steps: ["Let A and h be the base area and height of the original pyramid respectively.", "Original volume = (1/3)Ah", "New volume = (1/3) × A(1 + 30%) × h(1 - 10%)", "= (1/3) × 1.3A × 0.9h", "= 1.17 × (1/3)Ah", "= original volume × (1 + 17%)", "∴ The percentage change in the volume of the pyramid is +17%.", "∴ The answer is B."], answer: "B" },
+      44: { steps: ["Let VO and VP be the heights of the pyramid and △VBC respectively.", "In △VOP,", "VP = √(VO² + OP²) | (Pyth. theorem)", "= √(12² + (10/2)²) cm = 13 cm", "Total surface area of the pyramid", "= area of the square base ABCD + area of △VBC × 4", "= [10² + (1/2 × 10 × 13) × 4] cm²", "= 360 cm²", "∴ The answer is B."], answer: "B" },
+      45: { steps: ["Consider the area of △ABC, we have", "(1/2) × AB × BC = 12 cm²  --- (1)", "Consider the area of △ABD we have", "(1/2) × AB × BD = 15 cm²  --- (2)", "Consider the area of △BCD we have", "(1/2) × BC × BD = 10 cm²  --- (3)", "(1)×(2) / (3):", "((1/2 × AB × BC) × (1/2 × AB × BD)) / (1/2 × BC × BD) = (12 × 15) / 10", "AB² / 2 = 18", "AB² = 36 cm²", "AB = 6 cm", "Volume of the pyramid", "= (1/3) × area of △BCD × AB", "= (1/3) × 10 × 6 cm³ = 20 cm³", "∴ The answer is A."], answer: "A" },
+      46: { steps: ["Let VY be the height of pyramid VABCD.", "NY = (1/2)AD = (1/2) × 12 cm = 6 cm", "△VMX ~ △VNY | (AAA)", "MX / NY = VX / VY | (corr sides, ~△s)", "MX / 6 cm = 6 / 15", "MX = 2.4 cm", "Volume of the frustum", "= volume of pyramid VABCD - volume of pyramid VEFGH", "= [(1/3) × 12² × 15 - (1/3) × (2.4 × 2)² × 6] cm³", "= 673.92 cm³", "∴ The answer is B."], answer: "B" }
+    }
+  },
 };
