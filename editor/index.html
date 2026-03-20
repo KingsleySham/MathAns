@@ -116,6 +116,11 @@
       font-weight: 600;
     }
 
+    .upload-area.paste-highlight {
+      border-color: #4A90E2;
+      background: #eef5fd;
+    }
+
     /* Preview */
     #preview-container {
       display: none;
@@ -256,7 +261,7 @@
     <div class="upload-area" id="upload-area">
       <input type="file" id="file-input" accept="image/*" />
       <div class="upload-icon">🖼️</div>
-      <div class="upload-label">Tap to choose or <span>drag &amp; drop</span> a photo</div>
+      <div class="upload-label">Tap to choose, <span>drag &amp; drop</span>, or <span>paste</span> a photo</div>
       <div style="font-size:0.75rem;color:#aaa;margin-top:0.2rem">JPEG, PNG, WebP — max 5 MB</div>
     </div>
     <div id="preview-container">
@@ -321,6 +326,23 @@
     if (fileInput.files[0]) handleFile(fileInput.files[0]);
   });
 
+  // Paste from clipboard (Ctrl+V / mobile share)
+  document.addEventListener("paste", function (e) {
+    var items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith("image/")) {
+        var file = items[i].getAsFile();
+        if (file) {
+          uploadArea.classList.add("paste-highlight");
+          setTimeout(function () { uploadArea.classList.remove("paste-highlight"); }, 600);
+          handleFile(file);
+        }
+        break;
+      }
+    }
+  });
+
   removeBtn.addEventListener("click", function () {
     clearFile();
   });
@@ -345,7 +367,7 @@
       imageBase64 = dataUrl.split(",")[1];
 
       previewImg.src = dataUrl;
-      previewName.textContent = file.name + " (" + (file.size / 1024).toFixed(0) + " KB)";
+      previewName.textContent = (file.name || "pasted image") + " (" + (file.size / 1024).toFixed(0) + " KB)";
       previewCont.style.display = "block";
       updateSubmitState();
     };
