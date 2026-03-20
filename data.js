@@ -75,7 +75,6 @@ const SECTIONS = {
     }
   },
 
-
   "4.2": {
     label: "4.2",
     questions: {
@@ -157,7 +156,6 @@ const SECTIONS = {
       52: { steps: ["EC = DE | (property of square)", "= 3", "∠CEF = 90° | (property of square)", "In △CEF,", "tan ∠EFC = EC / EF", "= 3 / √3", "∠EFC = 60°", "∠BFC + ∠EFC = 180° | (adj. ∠s on st. line)", "∠BFC + 60° = 180°", "∠BFC = 120°", "∴ The answer is C."], answer: "C" }
     }
   },
-
 
   "4.3": {
     label: "4.3",
@@ -585,8 +583,9 @@ const SECTIONS = {
       "Ch7_2": { steps: ["Total surface area of the pyramid", "= (4 × 35 + 7 × 7) cm²", "= 189 cm²"], answer: "189 cm²" },
       "Ch7_3": { steps: ["Area of △VAB = (1/2) × 33 × 28 cm²", "= 462 cm²", "Area of △VBC = (1/2) × 16 × 31.5 cm²", "= 252 cm²", "Total surface area of the pyramid", "= (2 × 462 + 2 × 252 + 33 × 16) cm²", "= 1956 cm²"], answer: "1956 cm²" }
     }
-  }
-"7.1": {
+  },
+
+  "7.1": {
     label: "7.1",
     questions: {
       1: { steps: ["Volume of the pyramid = (1/3) × 24 × 5 cm³"], answer: "40 cm³" },
@@ -673,5 +672,6 @@ const SECTIONS = {
       45: { steps: ["Consider the area of △ABC, we have", "(1/2) × AB × BC = 12 cm²  --- (1)", "Consider the area of △ABD we have", "(1/2) × AB × BD = 15 cm²  --- (2)", "Consider the area of △BCD we have", "(1/2) × BC × BD = 10 cm²  --- (3)", "(1)×(2) / (3):", "((1/2 × AB × BC) × (1/2 × AB × BD)) / (1/2 × BC × BD) = (12 × 15) / 10", "AB² / 2 = 18", "AB² = 36 cm²", "AB = 6 cm", "Volume of the pyramid", "= (1/3) × area of △BCD × AB", "= (1/3) × 10 × 6 cm³ = 20 cm³", "∴ The answer is A."], answer: "A" },
       46: { steps: ["Let VY be the height of pyramid VABCD.", "NY = (1/2)AD = (1/2) × 12 cm = 6 cm", "△VMX ~ △VNY | (AAA)", "MX / NY = VX / VY | (corr sides, ~△s)", "MX / 6 cm = 6 / 15", "MX = 2.4 cm", "Volume of the frustum", "= volume of pyramid VABCD - volume of pyramid VEFGH", "= [(1/3) × 12² × 15 - (1/3) × (2.4 × 2)² × 6] cm³", "= 673.92 cm³", "∴ The answer is B."], answer: "B" }
     }
-  },
+  }
+
 };
