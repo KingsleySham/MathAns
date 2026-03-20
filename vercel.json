@@ -1,6 +1,11 @@
 {
   "rewrites": [
     { "source": "/edit",  "destination": "/editor/index.html" },
-    { "source": "/edit/", "destination": "/editor/index.html" }
+    { "source": "/edit/", "destination": "/editor/index.html" },
+    {
+      "has": [{ "type": "host", "value": "edit.mathans.app" }],
+      "source": "/",
+      "destination": "/editor/index.html"
+    }
   ]
 }
