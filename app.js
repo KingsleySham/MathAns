@@ -8,6 +8,13 @@
   // ── State ────────────────────────────────────────────────
   var currentSection = "4.1";
   var currentUtChapter = "";   // "Ch4", "Ch5", or "Ch6"
+  var DIAGRAMS = {};           // loaded from diagrams.json
+
+  // ── Load diagram mapping ──────────────────────────────────
+  fetch("/diagrams.json")
+    .then(function (r) { return r.json(); })
+    .then(function (d) { DIAGRAMS = d || {}; })
+    .catch(function () {}); // graceful fallback if file missing
 
   // ── Init ─────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", function () {
@@ -153,6 +160,20 @@
     // Render steps & answer
     var stepsContainer = document.getElementById("steps-container");
     stepsContainer.innerHTML = "";
+
+    // Diagram image (if one has been uploaded for this question)
+    var sectionDiagrams = DIAGRAMS[currentSection] || {};
+    var imgPath = sectionDiagrams[qKey];
+    if (imgPath) {
+      var imgDiv = document.createElement("div");
+      imgDiv.className = "diagram-img-container";
+      var img = document.createElement("img");
+      img.src = "/" + imgPath;
+      img.alt = "Diagram for " + sectionLabel;
+      img.className = "diagram-img";
+      imgDiv.appendChild(img);
+      stepsContainer.appendChild(imgDiv);
+    }
 
     if (qData.parts) {
       // Multi-part question
