@@ -272,20 +272,21 @@
 
   // Converts fraction patterns into stacked <span class="frac"> HTML.
   //
-  // STACKED — matches PDF fraction bars:
-  //   ID/tan ∠IBD, EC/BC, AD/cos∠OAC, BP/OB, IE/EC, tan∠EBC = EC/BC
-  //   Rule: NUM must contain at least one letter (variable/expression)
+  // STACKED — any A/B where A and B are alphanumeric/symbol tokens:
+  //   970/83, 40/3, EC/BC, AD/cos∠OAC, 1/3, √3/2, etc.
   //
-  // INLINE — stays as-is, matches PDF slash notation:
-  //   1/2, √3/2, 2/√3, 1/3  — purely numeric/radical with no letters
-  //   (1/2)BC, (3/4)x        — parenthesised coefficients
+  // NOT stacked — parenthesised coefficients (prefix or suffix guard):
+  //   (1/2)BC, (3/4)x  — excluded by prefix rule (char before num is '(')
+  //   x/(y+1)          — excluded because den contains '+'
   //
   function renderMath(rawText) {
     var s = escapeHtml(rawText);
 
-    // Backward-compatible fraction match (Fixes Safari crash):
+    // Stack any NUM/DEN where neither side contains spaces-except-between-tokens.
+    // Prefix guard: must not be preceded by letter, digit, or '('.
+    // Suffix guard: must not be followed by letter, digit, or ')'.
     s = s.replace(
-      /(^|[^A-Za-z0-9(])([A-Za-z0-9°²³√∠△]*[A-Za-z][A-Za-z0-9°²³√∠△]*)\/([A-Za-z0-9°²³√∠△]+(?:[ ][A-Za-z0-9°²³√∠△]+)*)(?![A-Za-z0-9)])/g,
+      /(^|[^A-Za-z0-9(])([A-Za-z0-9°²³√∠△]+)\/([A-Za-z0-9°²³√∠△]+(?:[ ][A-Za-z0-9°²³√∠△]+)*)(?![A-Za-z0-9)])/g,
       function (match, prefix, num, den) {
         return prefix + '<span class="frac"><span class="num">' + num + '</span><span class="den">' + den + '</span></span>';
       }
