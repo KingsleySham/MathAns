@@ -303,6 +303,17 @@
   function renderMath(rawText) {
     var s = escapeHtml(rawText);
 
+    // Handle (NUM/DEN)UNIT? — strip parens, render stacked fraction + optional unit.
+    // e.g. (ab/ac)cm3  →  [stacked frac] cm3
+    //      (1/2)BC     →  [stacked frac] BC
+    s = s.replace(
+      /\(([A-Za-z0-9°²³√∠△]+)\/([A-Za-z0-9°²³√∠△]+(?:[ ][A-Za-z0-9°²³√∠△]+)*)\)([A-Za-z0-9°²³√∠△]*)/g,
+      function (match, num, den, unit) {
+        var frac = '<span class="frac"><span class="num">' + num + '</span><span class="den">' + den + '</span></span>';
+        return unit ? frac + ' ' + unit : frac;
+      }
+    );
+
     // Stack any NUM/DEN where neither side contains spaces-except-between-tokens.
     // Prefix guard: must not be preceded by letter, digit, or '('.
     // Suffix guard: must not be followed by letter, digit, or ')'.
