@@ -283,15 +283,11 @@
   function renderMath(rawText) {
     var s = escapeHtml(rawText);
 
-    // Match NUM/DEN where:
-    // - NUM must contain at least one letter (so pure numbers like 1/2 are skipped)
-    // - NUM is not preceded by '(' or alphanumeric (token boundary)
-    // - DEN may include a space + more tokens (e.g. "tan 36°", "cos ∠ACE")
-    // - Not followed by ')' or alphanumeric
+    // Backward-compatible fraction match (Fixes Safari crash):
     s = s.replace(
-      /(?<![A-Za-z0-9(])([A-Za-z0-9°²³√∠△]*[A-Za-z][A-Za-z0-9°²³√∠△]*)\/([A-Za-z0-9°²³√∠△]+(?:[ ][A-Za-z0-9°²³√∠△]+)*)(?![A-Za-z0-9)])/g,
-      function (m, num, den) {
-        return '<span class="frac"><span class="num">' + num + '</span><span class="den">' + den + '</span></span>';
+      /(^|[^A-Za-z0-9(])([A-Za-z0-9°²³√∠△]*[A-Za-z][A-Za-z0-9°²³√∠△]*)\/([A-Za-z0-9°²³√∠△]+(?:[ ][A-Za-z0-9°²³√∠△]+)*)(?![A-Za-z0-9)])/g,
+      function (match, prefix, num, den) {
+        return prefix + '<span class="frac"><span class="num">' + num + '</span><span class="den">' + den + '</span></span>';
       }
     );
 
