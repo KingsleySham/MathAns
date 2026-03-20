@@ -442,3 +442,16 @@ footer a:hover {
 .modal-body li { margin-bottom: 10px; line-height: 1.5; }
 .modal-body li span { color: #6b7280; font-size: 0.8rem; }
 
+/* ---------- Diagram images ---------- */
+.diagram-img-container {
+  text-align: center;
+  margin: 0.75rem 0 1rem;
+}
+
+.diagram-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+

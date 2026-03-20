@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MathAns — Diagram Editor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    header {
+      width: 100%;
+      max-width: 520px;
+      margin-bottom: 1.5rem;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #4A90E2;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .field { margin-bottom: 1.1rem; }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1.5px solid #dde1e7;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #333;
+      background: #fafbfc;
+      appearance: none;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    select:focus, input:focus {
+      border-color: #4A90E2;
+      background: #fff;
+    }
+
+    /* UT sub-field */
+    #ut-chapter-group { display: none; }
+
+    /* File upload area */
+    .upload-area {
+      border: 2px dashed #c8d0da;
+      border-radius: 10px;
+      padding: 1.2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: #fafbfc;
+      position: relative;
+    }
+
+    .upload-area:hover, .upload-area.dragover {
+      border-color: #4A90E2;
+      background: #eef5fd;
+    }
+
+    .upload-area input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon { font-size: 2rem; margin-bottom: 0.3rem; }
+
+    .upload-label {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .upload-label span {
+      color: #4A90E2;
+      font-weight: 600;
+    }
+
+    /* Preview */
+    #preview-container {
+      display: none;
+      margin-top: 0.9rem;
+      text-align: center;
+    }
+
+    #preview-container img {
+      max-width: 100%;
+      max-height: 220px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      object-fit: contain;
+    }
+
+    #preview-name {
+      font-size: 0.78rem;
+      color: #888;
+      margin-top: 0.35rem;
+    }
+
+    #remove-btn {
+      display: inline-block;
+      margin-top: 0.4rem;
+      font-size: 0.78rem;
+      color: #e05c5c;
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    /* Submit */
+    #submit-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: #4A90E2;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      margin-top: 0.5rem;
+    }
+
+    #submit-btn:hover:not(:disabled) { background: #357abd; }
+    #submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* Status */
+    #status {
+      margin-top: 1rem;
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    #status.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+      display: block;
+    }
+
+    #status.error {
+      background: #fdecea;
+      color: #b71c1c;
+      border: 1px solid #ef9a9a;
+      display: block;
+    }
+
+    #status.loading {
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1px solid #90caf9;
+      display: block;
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.78rem;
+      color: #aaa;
+      text-align: center;
+    }
+
+    footer a { color: #4A90E2; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>MathAns — Diagram Editor</h1>
+  <p>Upload a diagram photo for any question. It will appear in the answer on <a href="https://www.mathans.app" target="_blank">www.mathans.app</a> after a short delay.</p>
+</header>
+
+<div class="card">
+
+  <!-- Section -->
+  <div class="field">
+    <label for="section-select">Section</label>
+    <select id="section-select">
+      <option value="">— Select section —</option>
+      <option value="4.1">4.1</option>
+      <option value="4.2">4.2</option>
+      <option value="4.3">4.3</option>
+      <option value="5.1">5.1</option>
+      <option value="5.2">5.2</option>
+      <option value="6.1">6.1</option>
+      <option value="6.3">6.3</option>
+      <option value="7.1">7.1</option>
+      <option value="UT">UT (Practice Paper)</option>
+    </select>
+  </div>
+
+  <!-- UT chapter (only shown for UT) -->
+  <div class="field" id="ut-chapter-group">
+    <label for="ut-chapter">UT Chapter</label>
+    <select id="ut-chapter">
+      <option value="">— Select chapter —</option>
+      <option value="Ch4">Ch4</option>
+      <option value="Ch5">Ch5</option>
+      <option value="Ch6">Ch6</option>
+    </select>
+  </div>
+
+  <!-- Question number -->
+  <div class="field">
+    <label for="question-input">Question Number</label>
+    <input type="text" id="question-input" placeholder="e.g. 1, 12, 46" inputmode="numeric" />
+  </div>
+
+  <!-- Image upload -->
+  <div class="field">
+    <label>Diagram Image</label>
+    <div class="upload-area" id="upload-area">
+      <input type="file" id="file-input" accept="image/*" />
+      <div class="upload-icon">🖼️</div>
+      <div class="upload-label">Tap to choose or <span>drag &amp; drop</span> a photo</div>
+      <div style="font-size:0.75rem;color:#aaa;margin-top:0.2rem">JPEG, PNG, WebP — max 5 MB</div>
+    </div>
+    <div id="preview-container">
+      <img id="preview-img" src="" alt="Preview" />
+      <div id="preview-name"></div>
+      <button id="remove-btn" type="button">Remove image</button>
+    </div>
+  </div>
+
+  <button id="submit-btn" type="button" disabled>Save Diagram</button>
+  <div id="status"></div>
+
+</div>
+
+<footer>
+  <a href="https://www.mathans.app">← Back to MathAns</a>
+</footer>
+
+<script>
+(function () {
+  var sectionSel  = document.getElementById("section-select");
+  var utGroup     = document.getElementById("ut-chapter-group");
+  var utChapter   = document.getElementById("ut-chapter");
+  var questionIn  = document.getElementById("question-input");
+  var uploadArea  = document.getElementById("upload-area");
+  var fileInput   = document.getElementById("file-input");
+  var previewCont = document.getElementById("preview-container");
+  var previewImg  = document.getElementById("preview-img");
+  var previewName = document.getElementById("preview-name");
+  var removeBtn   = document.getElementById("remove-btn");
+  var submitBtn   = document.getElementById("submit-btn");
+  var statusDiv   = document.getElementById("status");
+
+  var selectedFile = null;
+  var imageBase64  = null;
+
+  // Show/hide UT chapter picker
+  sectionSel.addEventListener("change", function () {
+    utGroup.style.display = sectionSel.value === "UT" ? "block" : "none";
+    updateSubmitState();
+  });
+
+  utChapter.addEventListener("change", updateSubmitState);
+  questionIn.addEventListener("input", updateSubmitState);
+
+  // Drag-and-drop
+  uploadArea.addEventListener("dragover", function (e) {
+    e.preventDefault();
+    uploadArea.classList.add("dragover");
+  });
+  uploadArea.addEventListener("dragleave", function () {
+    uploadArea.classList.remove("dragover");
+  });
+  uploadArea.addEventListener("drop", function (e) {
+    e.preventDefault();
+    uploadArea.classList.remove("dragover");
+    var file = e.dataTransfer && e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  fileInput.addEventListener("change", function () {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  removeBtn.addEventListener("click", function () {
+    clearFile();
+  });
+
+  function handleFile(file) {
+    if (!file.type.startsWith("image/")) {
+      showStatus("error", "Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showStatus("error", "Image is too large (max 5 MB).");
+      return;
+    }
+
+    selectedFile = file;
+    clearStatus();
+
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var dataUrl = e.target.result;
+      // Strip the data:...;base64, prefix
+      imageBase64 = dataUrl.split(",")[1];
+
+      previewImg.src = dataUrl;
+      previewName.textContent = file.name + " (" + (file.size / 1024).toFixed(0) + " KB)";
+      previewCont.style.display = "block";
+      updateSubmitState();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    imageBase64 = null;
+    fileInput.value = "";
+    previewImg.src = "";
+    previewCont.style.display = "none";
+    updateSubmitState();
+  }
+
+  function updateSubmitState() {
+    var section  = sectionSel.value;
+    var question = questionIn.value.trim();
+    var utOk     = section !== "UT" || utChapter.value !== "";
+    submitBtn.disabled = !(section && question && utOk && imageBase64);
+  }
+
+  submitBtn.addEventListener("click", function () {
+    var section  = sectionSel.value;
+    var question = questionIn.value.trim();
+
+    if (!section || !question || !imageBase64) return;
+
+    // Build full question key for UT sections
+    var questionKey = question;
+    if (section === "UT" && utChapter.value) {
+      questionKey = utChapter.value + "_" + question;
+    }
+
+    submitBtn.disabled = true;
+    showStatus("loading", "Uploading… this may take a few seconds.");
+
+    fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        section:     section,
+        question:    questionKey,
+        imageBase64: imageBase64,
+        mimeType:    selectedFile.type,
+      }),
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (data.ok) {
+        showStatus("success", "Saved! The diagram will appear on www.mathans.app within a minute or so.");
+        clearFile();
+        questionIn.value = "";
+        sectionSel.value = "";
+        utGroup.style.display = "none";
+        utChapter.value = "";
+      } else {
+        showStatus("error", "Error: " + (data.error || "Unknown error"));
+        submitBtn.disabled = false;
+      }
+    })
+    .catch(function (err) {
+      showStatus("error", "Network error. Please try again.");
+      submitBtn.disabled = false;
+    });
+  });
+
+  function showStatus(type, msg) {
+    statusDiv.className = type;
+    statusDiv.textContent = msg;
+  }
+
+  function clearStatus() {
+    statusDiv.className = "";
+    statusDiv.textContent = "";
+    statusDiv.style.display = "none";
+  }
+})();
+</script>
+
+</body>
+</html>
