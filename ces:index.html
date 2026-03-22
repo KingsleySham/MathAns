@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CES S3 Quiz — MathAns</title>
+  <meta name="description" content="S.3 Citizenship, Economics and Society interactive quiz for Hong Kong students." />
+  <meta name="theme-color" content="#0f766e" />
+  <link rel="canonical" href="https://www.mathans.app/ces" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    /* ── Variables ── */
+    :root {
+      --bg: #f0f4f4;
+      --card: #ffffff;
+      --primary: #0f766e;
+      --primary-light: #ccfbf1;
+      --primary-dark: #0d6862;
+      --accent: #f59e0b;
+      --accent-light: #fef3c7;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 4px 24px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.05);
+      --radius: 14px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sora', -apple-system, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      padding: 20px 16px 60px;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    /* ── Page wrapper ── */
+    .page-wrap {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* ── Back link ── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+      margin-bottom: 18px;
+      letter-spacing: 0.02em;
+      opacity: 0.85;
+      transition: opacity 0.15s;
+    }
+    .back-link:hover { opacity: 1; }
+
+    /* ── Header ── */
+    .header {
+      background: var(--primary);
+      border-radius: var(--radius);
+      padding: 22px 24px 20px;
+      margin-bottom: 20px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 120px; height: 120px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -20px; left: 40px;
+      width: 80px; height: 80px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+    }
+    .header-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.18);
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+    .header h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+    .header p {
+      font-size: 0.82rem;
+      opacity: 0.8;
+    }
+
+    /* ── Mode selector ── */
+    .mode-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+    .mode-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .mode-btn {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 12px;
+      background: #f9fafb;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .mode-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+    .mode-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .mode-btn .mode-icon { font-size: 1.4rem; margin-bottom: 6px; display: block; }
+    .mode-btn .mode-label { font-size: 0.85rem; font-weight: 700; color: var(--text); display: block; }
+    .mode-btn .mode-desc { font-size: 0.72rem; color: var(--muted); margin-top: 2px; display: block; }
+
+    /* ── Section selector ── */
+    .section-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .sec-btn {
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: #f9fafb;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .sec-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .sec-btn.selected {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* ── Start button ── */
+    .start-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .start-btn:hover { background: var(--primary-dark); box-shadow: 0 4px 16px rgba(15,118,110,0.35); }
+    .start-btn:active { transform: scale(0.98); }
+    .start-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Quiz area ── */
+    #quiz-area { display: none; animation: fadeUp 0.3s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .progress-meta .q-counter { color: var(--primary); font-weight: 700; }
+    .progress-meta .score-badge {
+      background: var(--accent-light);
+      color: #92400e;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.75rem;
+    }
+    .progress-bar-bg {
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #14b8a6);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    /* ── Timer (timed mode) ── */
+    .timer-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+    .timer-icon { font-size: 1.1rem; }
+    .timer-label { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+    .timer-display {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--primary);
+      transition: color 0.3s;
+    }
+    .timer-display.urgent { color: var(--red); }
+    .timer-bar-bg {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .timer-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 99px;
+      transition: width 1s linear, background 0.3s;
+    }
+    .timer-bar-fill.urgent { background: var(--red); }
+
+    /* ── Question card ── */
+    .q-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 24px 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    /* Section badge */
+    .q-section-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+    .badge-mc   { background: #dbeafe; color: #1e40af; }
+    .badge-sq   { background: #fce7f3; color: #9d174d; }
+    .badge-dbq  { background: #ede9fe; color: #5b21b6; }
+
+    .q-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+
+    /* Source box (for DBQ) */
+    .source-box {
+      background: #f8fafc;
+      border-left: 3px solid var(--primary);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 14px;
+      margin: 12px 0;
+      font-size: 0.82rem;
+      color: #374151;
+      line-height: 1.65;
+    }
+    .source-label {
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    /* Sub question (for DBQ) */
+    .sub-q-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin: 14px 0 6px;
+    }
+
+    /* ── MC Options ── */
+    .options-list {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .option-btn {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #f9fafb;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.875rem;
+      color: var(--text);
+      text-align: left;
+      transition: all 0.15s;
+      width: 100%;
+      line-height: 1.5;
+    }
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .option-btn:disabled { cursor: default; }
+    .option-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .option-btn.correct {
+      border-color: var(--green);
+      background: var(--green-light);
+    }
+    .option-btn.wrong {
+      border-color: var(--red);
+      background: var(--red-light);
+    }
+    .option-key {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: #e5e7eb;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: all 0.15s;
+    }
+    .option-btn.selected .option-key { background: var(--primary); color: #fff; }
+    .option-btn.correct .option-key  { background: var(--green); color: #fff; }
+    .option-btn.wrong .option-key    { background: var(--red); color: #fff; }
+
+    /* ── SQ / DBQ textarea ── */
+    .answer-area {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #fafbfc;
+      font-family: inherit;
+      font-size: 0.875rem;
+      color: var(--text);
+      resize: vertical;
+      min-height: 90px;
+      outline: none;
+      transition: border-color 0.15s;
+      line-height: 1.6;
+    }
+    .answer-area:focus { border-color: var(--primary); background: #fff; }
+
+    /* ── Marks badge ── */
+    .marks-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      background: var(--accent-light);
+      color: #92400e;
+      border-radius: 20px;
+      padding: 2px 8px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── Feedback / Answer reveal ── */
+    .feedback-box {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      line-height: 1.65;
+      display: none;
+      animation: fadeUp 0.2s ease;
+    }
+    .feedback-box.correct-fb {
+      background: var(--green-light);
+      border: 1px solid #86efac;
+      color: #14532d;
+    }
+    .feedback-box.wrong-fb {
+      background: var(--red-light);
+      border: 1px solid #fca5a5;
+      color: #7f1d1d;
+    }
+    .feedback-box.info-fb {
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      color: #1e3a8a;
+    }
+    .feedback-box .fb-label {
+      font-weight: 800;
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .feedback-box .model-answer {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      font-size: 0.82rem;
+    }
+
+    /* ── Action buttons ── */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .btn-submit {
+      flex: 1;
+      padding: 12px;
+      background: var(--primary);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-submit:hover { background: var(--primary-dark); }
+    .btn-submit:active { transform: scale(0.98); }
+    .btn-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-next {
+      padding: 12px 20px;
+      background: #f3f4f6;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: none;
+    }
+    .btn-next:hover { background: var(--border); }
+
+    .btn-skip {
+      padding: 12px 14px;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-skip:hover { border-color: var(--muted); color: var(--text); }
+
+    /* ── Results screen ── */
+    #results-area { display: none; animation: fadeUp 0.35s ease; }
+
+    .results-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .results-emoji { font-size: 3rem; margin-bottom: 10px; }
+    .results-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+    .results-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 22px; }
+
+    .score-ring-wrap { display: flex; justify-content: center; margin-bottom: 24px; }
+    .score-ring {
+      width: 110px; height: 110px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      border: 8px solid var(--primary-light);
+      position: relative;
+    }
+    .score-ring.great { border-color: var(--green-light); }
+    .score-ring.ok    { border-color: var(--accent-light); }
+    .score-ring.poor  { border-color: var(--red-light); }
+    .score-pct { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+    .score-pct.great { color: var(--green); }
+    .score-pct.ok    { color: var(--accent); }
+    .score-pct.poor  { color: var(--red); }
+    .score-label { font-size: 0.7rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .stat-box {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 8px;
+    }
+    .stat-val { font-size: 1.2rem; font-weight: 800; display: block; }
+    .stat-val.green { color: var(--green); }
+    .stat-val.red   { color: var(--red); }
+    .stat-val.blue  { color: var(--primary); }
+    .stat-lbl { font-size: 0.68rem; color: var(--muted); font-weight: 600; }
+
+    .results-btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-retry {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-retry:hover { background: var(--primary-dark); }
+    .btn-home {
+      width: 100%;
+      padding: 12px;
+      background: #f3f4f6;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      transition: background 0.15s;
+    }
+    .btn-home:hover { background: var(--border); }
+
+    /* ── Review log ── */
+    .review-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+    .review-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .review-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    .review-item.ri-correct { background: var(--green-light); border-left: 3px solid var(--green); }
+    .review-item.ri-wrong   { background: var(--red-light);   border-left: 3px solid var(--red); }
+    .review-item.ri-skipped { background: #f3f4f6; border-left: 3px solid var(--muted); }
+    .ri-q { font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .ri-ans { color: #374151; }
+    .ri-correct-ans { color: var(--green); font-weight: 600; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      margin-top: 20px;
+    }
+    footer a {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    footer a:hover { color: var(--primary); }
+
+    /* ── Responsive ── */
+    @media (max-width: 400px) {
+      .mode-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+      .q-card { padding: 18px 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- Back link -->
+  <a href="https://www.mathans.app" class="back-link">← MathAns Home</a>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-tag">CES · S3 Interactive</div>
+    <h1>Economy &amp; World Trade Quiz</h1>
+    <p>Citizenship, Economics and Society · 公民、經濟與社會</p>
+  </div>
+
+  <!-- ── SETUP SCREEN ── -->
+  <div id="setup-area">
+    <div class="mode-card">
+      <div class="mode-title">1. Quiz Mode</div>
+      <div class="mode-grid">
+        <button class="mode-btn selected" data-mode="practice" onclick="selectMode('practice')">
+          <span class="mode-icon">📖</span>
+          <span class="mode-label">Practice</span>
+          <span class="mode-desc">Instant feedback after each answer</span>
+        </button>
+        <button class="mode-btn" data-mode="timed" onclick="selectMode('timed')">
+          <span class="mode-icon">⏱️</span>
+          <span class="mode-label">Timed</span>
+          <span class="mode-desc">30 minutes, exam simulation</span>
+        </button>
+      </div>
+
+      <div class="mode-title">2. Question Types</div>
+      <div class="section-row" id="type-selector">
+        <button class="sec-btn selected" data-type="mc"  onclick="toggleType('mc')">Multiple Choice</button>
+        <button class="sec-btn selected" data-type="sq"  onclick="toggleType('sq')">Short Questions</button>
+        <button class="sec-btn selected" data-type="dbq" onclick="toggleType('dbq')">Data-Based</button>
+      </div>
+
+      <div class="mode-title">3. Topics</div>
+      <div class="section-row" id="topic-selector">
+        <button class="sec-btn selected" data-topic="all" onclick="selectTopic('all')">All Topics</button>
+        <button class="sec-btn" data-topic="economy" onclick="selectTopic('economy')">Economic Systems</button>
+        <button class="sec-btn" data-topic="trade" onclick="selectTopic('trade')">World Trade</button>
+        <button class="sec-btn" data-topic="hk" onclick="selectTopic('hk')">Hong Kong's Role</button>
+        <button class="sec-btn" data-topic="gba" onclick="selectTopic('gba')">Greater Bay Area</button>
+        <button class="sec-btn" data-topic="poverty" onclick="selectTopic('poverty')">Poverty & Development</button>
+      </div>
+
+      <button class="start-btn" id="start-btn" onclick="startQuiz()">Start Quiz →</button>
+    </div>
+  </div>
+
+  <!-- ── QUIZ SCREEN ── -->
+  <div id="quiz-area">
+
+    <!-- Progress -->
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span class="q-counter" id="q-counter">Q1 / 20</span>
+        <span class="score-badge" id="score-badge">Score: 0 pts</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Timer (timed mode only) -->
+    <div class="timer-wrap" id="timer-wrap" style="display:none;">
+      <span class="timer-icon">⏱️</span>
+      <span class="timer-label">Time Remaining</span>
+      <div class="timer-bar-bg">
+        <div class="timer-bar-fill" id="timer-bar" style="width:100%"></div>
+      </div>
+      <div class="timer-display" id="timer-display">30:00</div>
+    </div>
+
+    <!-- Question card -->
+    <div class="q-card" id="q-card">
+      <span class="q-section-badge badge-mc" id="q-badge">MC</span>
+      <div id="source-area"></div>
+      <div class="q-text" id="q-text"></div>
+      <div id="sub-q-label-area"></div>
+      <div id="options-area"></div>
+      <div class="feedback-box" id="feedback-box"></div>
+    </div>
+
+    <!-- Action row -->
+    <div class="action-row">
+      <button class="btn-submit" id="btn-submit" onclick="submitAnswer()">Check Answer</button>
+      <button class="btn-next"   id="btn-next"   onclick="nextQuestion()">Next →</button>
+      <button class="btn-skip"   id="btn-skip"   onclick="skipQuestion()">Skip</button>
+    </div>
+  </div>
+
+  <!-- ── RESULTS SCREEN ── -->
+  <div id="results-area">
+    <div class="results-card">
+      <div class="results-emoji" id="results-emoji">🎉</div>
+      <div class="results-title" id="results-title">Quiz Complete!</div>
+      <div class="results-sub" id="results-sub">Here's how you did</div>
+
+      <div class="score-ring-wrap">
+        <div class="score-ring" id="score-ring">
+          <span class="score-pct" id="score-pct">--</span>
+          <span class="score-label">Score</span>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-val green" id="stat-correct">0</span>
+          <span class="stat-lbl">✓ Correct</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val red" id="stat-wrong">0</span>
+          <span class="stat-lbl">✗ Wrong</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val blue" id="stat-skipped">0</span>
+          <span class="stat-lbl">– Skipped</span>
+        </div>
+      </div>
+
+      <div class="results-btn-row">
+        <button class="btn-retry" onclick="retryQuiz()">Try Again 重試</button>
+        <a href="https://www.mathans.app" class="btn-home">← Back to MathAns</a>
+      </div>
+    </div>
+
+    <!-- Review log -->
+    <div class="review-card" id="review-card"></div>
+  </div>
+
+  <footer><a href="https://www.mathans.app">MathAns · For reference only · 只供參考</a></footer>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  QUESTION BANK
+// ══════════════════════════════════════════════════════════════
+const QUESTIONS = [
+
+  // ════════════════════════════════════════════════════════════
+  //  MULTIPLE CHOICE — ECONOMIC SYSTEMS (topic: economy)
+  // ════════════════════════════════════════════════════════════
+  {
+    id: 1, type: 'mc', topic: 'economy',
+    text: 'Which of the following BEST describes a planned economy?',
+    options: [
+      'Resources are privately owned and allocated by market prices.',
+      'The government owns resources and directs all economic activity centrally.',
+      'A mix of government and market mechanisms allocates resources.',
+      'Consumers determine production through their spending choices.'
+    ],
+    answer: 1,
+    explanation: 'In a planned economy, the government owns the means of production and makes all major economic decisions centrally — what to produce, how to produce, and for whom to produce.'
+  },
+  {
+    id: 2, type: 'mc', topic: 'economy',
+    text: 'In a market economy, which is the MAIN mechanism for allocating resources?',
+    options: ['Government directives', 'Five-Year Plans', 'Market prices', 'Food stamps'],
+    answer: 2,
+    explanation: 'In a market economy, the price mechanism (supply and demand) signals producers and consumers on how to allocate scarce resources — no central authority is needed.'
+  },
+  {
+    id: 3, type: 'mc', topic: 'economy',
+    text: "China's current economic system is BEST described as a:",
+    options: ['Pure planned economy', 'Pure market economy', 'Socialist market economy', 'Laissez-faire economy'],
+    answer: 2,
+    explanation: "China operates a 'socialist market economy' where market forces play a decisive role in resource allocation, yet the state retains ownership of key sectors and guides development through Five-Year Plans."
+  },
+  {
+    id: 4, type: 'mc', topic: 'economy',
+    text: "The term 'socialist market economy' was formally written into China's Constitution in which year?",
+    options: ['1978', '1992', '1993', '2001'],
+    answer: 2,
+    explanation: "The 1993 constitutional amendment enshrined the 'socialist market economy', following Deng Xiaoping's 1992 southern inspection tour which renewed momentum for market reform."
+  },
+  {
+    id: 5, type: 'mc', topic: 'economy',
+    text: "China's reform and opening-up policy was launched under which leader in 1978?",
+    options: ['Mao Zedong', 'Deng Xiaoping', 'Jiang Zemin', 'Xi Jinping'],
+    answer: 1,
+    explanation: "Deng Xiaoping launched the reform and opening-up (改革開放) policy at the Third Plenary Session of the 11th Central Committee in December 1978, shifting China from a planned economy toward market-oriented reforms."
+  },
+  {
+    id: 6, type: 'mc', topic: 'economy',
+    text: 'Which government body is primarily responsible for drafting China\'s Five-Year Plans?',
+    options: [
+      'Ministry of Finance',
+      'People\'s Bank of China',
+      'National Development and Reform Commission',
+      'Ministry of Agriculture and Rural Affairs'
+    ],
+    answer: 2,
+    explanation: 'The National Development and Reform Commission (NDRC) drafts and oversees China\'s Five-Year Plans, which set medium-term economic and social development targets.'
+  },
+  {
+    id: 7, type: 'mc', topic: 'economy',
+    text: 'Which of the following is NOT one of the main objectives of China\'s macroeconomic regulation?',
+    options: [
+      'Promoting economic growth',
+      'Eliminating all private enterprises',
+      'Stabilising prices',
+      'Maintaining a balance of payments'
+    ],
+    answer: 1,
+    explanation: "Macroeconomic regulation targets growth, price stability, full employment, and balance of payments. Eliminating private enterprises is NOT an objective — private businesses are encouraged under the socialist market economy."
+  },
+  {
+    id: 8, type: 'mc', topic: 'economy',
+    text: 'According to the 14th Five-Year Plan (2021–2025), China aims to basically achieve socialist modernisation by which year?',
+    options: ['2025', '2030', '2035', '2049'],
+    answer: 2,
+    explanation: 'The 14th Five-Year Plan targets basic achievement of socialist modernisation by 2035. Full development as a leading world power is targeted for the centenary of the PRC in 2049.'
+  },
+  {
+    id: 9, type: 'mc', topic: 'economy',
+    text: 'Which of the following BEST describes "economic security"?',
+    options: [
+      "A country's ability to avoid all international trade.",
+      "A country's capability to eliminate and resolve economic risks to ensure sustained development.",
+      'A government policy of imposing tariffs on all imports.',
+      'The use of food stamps to stabilise prices during downturns.'
+    ],
+    answer: 1,
+    explanation: "Economic security means a country's ability to identify, manage, and resolve economic risks (e.g., food, energy, financial risks) to sustain long-term development."
+  },
+  {
+    id: 10, type: 'mc', topic: 'economy',
+    text: 'Which of the following is an example of fiscal policy used by the Chinese government?',
+    options: [
+      'Adjusting interest rates to control inflation',
+      'Increasing government spending on infrastructure',
+      'Setting import quotas on foreign goods',
+      'Devaluing the renminbi to boost exports'
+    ],
+    answer: 1,
+    explanation: 'Fiscal policy involves government spending and taxation decisions. Increasing infrastructure spending is a classic expansionary fiscal policy tool used to stimulate economic growth.'
+  },
+  {
+    id: 11, type: 'mc', topic: 'economy',
+    text: 'Which of the following BEST describes a mixed economy?',
+    options: [
+      'An economy where only the private sector produces goods and services.',
+      'An economy where only the government controls all production.',
+      'An economy where both the government and private sector play important roles.',
+      'An economy that relies entirely on foreign trade.'
+    ],
+    answer: 2,
+    explanation: 'A mixed economy combines elements of both market and planned economies: private businesses operate freely in most sectors, while the government provides public goods, regulates markets, and may own strategic industries.'
+  },
+  {
+    id: 12, type: 'mc', topic: 'economy',
+    text: "China's urbanisation rate grew from 17.92% in 1978 to approximately what percentage in 2022?",
+    options: ['45.22%', '55.00%', '65.22%', '75.10%'],
+    answer: 2,
+    explanation: "China's urbanisation rate reached approximately 65.22% by 2022, up from just 17.92% in 1978 — a dramatic shift driven by industrialisation, rural-to-urban migration, and economic development."
+  },
+
+  // ════════════════════════════════════════════════════════════
+  //  MULTIPLE CHOICE — WORLD TRADE (topic: trade)
+  // ════════════════════════════════════════════════════════════
+  {
+    id: 13, type: 'mc', topic: 'trade',
+    text: 'Which of the following is classified as "invisible trade"?',
+    options: [
+      'Export of manufactured goods',
+      'Import of food products',
+      'Trade in services such as banking and tourism',
+      'Export of steel and raw materials'
+    ],
+    answer: 2,
+    explanation: 'Invisible trade refers to trade in services (banking, insurance, tourism, transport) — goods that cannot be physically inspected at customs. Physical goods trade is called "visible trade".'
+  },
+  {
+    id: 14, type: 'mc', topic: 'trade',
+    text: "According to the WTO, China was the world's largest merchandise exporter in 2023 with a value of approximately:",
+    options: ['USD 1,000 billion', 'USD 2,000 billion', 'USD 3,379 billion', 'USD 5,000 billion'],
+    answer: 2,
+    explanation: "China's merchandise exports totalled approximately USD 3,379 billion in 2023 according to WTO data, maintaining its position as the world's largest goods exporter."
+  },
+  {
+    id: 15, type: 'mc', topic: 'trade',
+    text: 'Which trade protection policy sets a MAXIMUM QUANTITY of imports allowed within a given period?',
+    options: ['Export subsidies', 'Import quota', 'Embargo', 'Import duties (tariffs)'],
+    answer: 1,
+    explanation: 'An import quota limits the quantity of a specific good that can be imported in a set period. Unlike tariffs (which raise the price), quotas directly cap the volume of imports.'
+  },
+  {
+    id: 16, type: 'mc', topic: 'trade',
+    text: 'The World Trade Organization (WTO) was established in which year?',
+    options: ['1948', '1978', '1995', '2001'],
+    answer: 2,
+    explanation: 'The WTO was established on 1 January 1995, succeeding the General Agreement on Tariffs and Trade (GATT). China joined the WTO in December 2001.'
+  },
+  {
+    id: 17, type: 'mc', topic: 'trade',
+    text: 'Which of the following is a potential DISADVANTAGE of world trade for a country?',
+    options: [
+      'Increased variety of goods for consumers',
+      'Higher production efficiency through specialisation',
+      'Unemployment in industries that cannot compete with cheaper imports',
+      'Access to technology and capital from abroad'
+    ],
+    answer: 2,
+    explanation: "Free trade can cause structural unemployment when domestic industries cannot compete with cheaper foreign imports. Workers in those industries may lose their jobs, requiring retraining and government support."
+  },
+  {
+    id: 18, type: 'mc', topic: 'trade',
+    text: 'A country imposes a tax on imported goods to make them more expensive than domestic products. This is called:',
+    options: ['An export subsidy', 'A tariff (import duty)', 'An embargo', 'A trade surplus'],
+    answer: 1,
+    explanation: 'A tariff (import duty) is a tax levied on imported goods, raising their price and making domestic alternatives more competitive. It is one of the most common forms of trade protection.'
+  },
+  {
+    id: 19, type: 'mc', topic: 'trade',
+    text: 'When a country exports more than it imports, it has a:',
+    options: ['Trade deficit', 'Trade surplus', 'Current account deficit', 'Balance of payments crisis'],
+    answer: 1,
+    explanation: 'A trade surplus occurs when the value of a country\'s exports exceeds the value of its imports. China has maintained a large trade surplus for many years, driven by its manufacturing export strength.'
+  },
+  {
+    id: 20, type: 'mc', topic: 'trade',
+    text: 'Which of the following is the MAIN purpose of the WTO\'s dispute settlement mechanism?',
+    options: [
+      'To impose sanctions on countries that violate trade rules',
+      'To provide a structured process for resolving trade disputes between member countries',
+      'To set tariff rates for all member countries',
+      'To distribute foreign aid to developing nations'
+    ],
+    answer: 1,
+    explanation: "The WTO's dispute settlement mechanism allows member countries to resolve trade conflicts through a structured legal process — first consultation, then panel review, then appeal — without resorting to unilateral retaliation."
+  },
+  {
+    id: 21, type: 'mc', topic: 'trade',
+    text: 'Which of the following describes an EMBARGO?',
+    options: [
+      'A limit on the quantity of goods that can be imported',
+      'A tax imposed on imported goods',
+      'A complete ban on trade with a specific country',
+      'A government payment to domestic exporters'
+    ],
+    answer: 2,
+    explanation: 'An embargo is a complete prohibition on trade (or specific categories of trade) with a particular country. It is the most extreme form of trade restriction and is often used for political or security reasons.'
+  },
+  {
+    id: 22, type: 'mc', topic: 'trade',
+    text: 'Which of the following is an ADVANTAGE of world trade for consumers?',
+    options: [
+      'Higher prices due to greater competition',
+      'Less variety as countries specialise',
+      'Access to a wider range of goods at lower prices',
+      'Increased government control over consumption'
+    ],
+    answer: 2,
+    explanation: 'World trade allows consumers to access a wider variety of goods, often at lower prices, because countries can specialise in what they produce most efficiently and trade the surplus with others.'
+  },
+  {
+    id: 23, type: 'mc', topic: 'trade',
+    text: 'China acceded to (joined) the WTO in which year?',
+    options: ['1995', '1999', '2001', '2005'],
+    answer: 2,
+    explanation: "China officially joined the WTO on 11 December 2001. Accession accelerated China's integration into the global trading system and contributed to rapid export-led economic growth."
+  },
+
+  // ════════════════════════════════════════════════════════════
+  //  MULTIPLE CHOICE — HONG KONG'S ROLE (topic: hk)
+  // ════════════════════════════════════════════════════════════
+  {
+    id: 24, type: 'mc', topic: 'hk',
+    text: "Trading and logistics accounted for approximately what percentage of Hong Kong's GDP in 2022?",
+    options: ['10.5%', '22.5%', '35.0%', '49.2%'],
+    answer: 1,
+    explanation: "Trading and logistics is Hong Kong's single largest economic sector at approximately 22.5% of GDP (2022), reflecting the city's role as one of the world's busiest ports and a premier international trading hub."
+  },
+  {
+    id: 25, type: 'mc', topic: 'hk',
+    text: "By the end of 2023, approximately what percentage of the world's offshore RMB payments were processed through Hong Kong?",
+    options: ['25%', '50%', '75%', '90%'],
+    answer: 2,
+    explanation: "Hong Kong handled approximately 75% of all global offshore RMB payments by end-2023, making it the world's leading offshore RMB clearing and settlement centre."
+  },
+  {
+    id: 26, type: 'mc', topic: 'hk',
+    text: 'Which of the following BEST describes Hong Kong\'s role as a "super-connector" between China and the world?',
+    options: [
+      'Hong Kong imposes high tariffs to protect mainland industries.',
+      'Hong Kong facilitates capital flows, international business, and RMB internationalisation between China and global markets.',
+      'Hong Kong produces the majority of China\'s manufactured exports.',
+      'Hong Kong manages China\'s central bank monetary policy.'
+    ],
+    answer: 1,
+    explanation: "As a 'super-connector', Hong Kong bridges China and international markets by facilitating foreign direct investment, RMB internationalisation, capital markets access, professional services, and trade in goods and services."
+  },
+  {
+    id: 27, type: 'mc', topic: 'hk',
+    text: "Hong Kong's Stock Exchange (HKEX) ranked approximately which position globally by market capitalisation in 2023?",
+    options: ['2nd', '4th', '6th', '10th'],
+    answer: 2,
+    explanation: "HKEX consistently ranks among the world's top stock exchanges. In 2023 it ranked approximately 6th globally, and is a key channel for Chinese companies to raise international capital."
+  },
+  {
+    id: 28, type: 'mc', topic: 'hk',
+    text: 'Under the "one country, two systems" principle, Hong Kong maintains its own:',
+    options: [
+      'Military forces and foreign policy',
+      'Currency, legal system, and trade policy',
+      'National anthem and flag only',
+      'Central bank independent of the PRC'
+    ],
+    answer: 1,
+    explanation: 'Under "one country, two systems", Hong Kong retains its own legal system (common law), currency (HKD), trade policy, and a high degree of autonomy in economic and social affairs until 2047.'
+  },
+  {
+    id: 29, type: 'mc', topic: 'hk',
+    text: 'Which of the following is NOT a major pillar industry of Hong Kong\'s economy?',
+    options: [
+      'Financial services',
+      'Trading and logistics',
+      'Heavy manufacturing and steel production',
+      'Professional services and tourism'
+    ],
+    answer: 2,
+    explanation: "Hong Kong's four pillar industries are financial services, trading and logistics, tourism, and professional and producer services. Heavy manufacturing and steel production are NOT part of Hong Kong's economic structure."
+  },
+  {
+    id: 30, type: 'mc', topic: 'hk',
+    text: 'Hong Kong International Airport handled approximately how many tonnes of air cargo in 2023, maintaining its rank as one of the busiest cargo airports globally?',
+    options: ['1 million tonnes', '3 million tonnes', '4.3 million tonnes', '8 million tonnes'],
+    answer: 2,
+    explanation: "Hong Kong International Airport handled approximately 4.3 million tonnes of air cargo in 2023, consistently ranking among the world's top 3 cargo airports and underlining Hong Kong's role as a global logistics hub."
+  },
+
+  // ════════════════════════════════════════════════════════════
+  //  MULTIPLE CHOICE — GREATER BAY AREA (topic: gba)
+  // ════════════════════════════════════════════════════════════
+  {
+    id: 31, type: 'mc', topic: 'gba',
+    text: 'The Guangdong-Hong Kong-Macao Greater Bay Area comprises how many cities and SARs in total?',
+    options: ['9', '10', '11', '12'],
+    answer: 2,
+    explanation: 'The GBA includes 9 Guangdong cities (Guangzhou, Shenzhen, Zhuhai, Foshan, Huizhou, Dongguan, Zhongshan, Jiangmen, Zhaoqing) plus Hong Kong and Macao SARs = 11 in total.'
+  },
+  {
+    id: 32, type: 'mc', topic: 'gba',
+    text: 'According to the Global Innovation Index 2024, the Shenzhen-Hong Kong-Guangzhou cluster is ranked:',
+    options: ['1st in the world', '2nd in the world', '3rd in the world', '5th in the world'],
+    answer: 1,
+    explanation: 'The Shenzhen-Hong Kong-Guangzhou innovation cluster ranked 2nd globally in the GII 2024, second only to Tokyo-Yokohama, reflecting the region\'s world-class technology and R&D ecosystem.'
+  },
+  {
+    id: 33, type: 'mc', topic: 'gba',
+    text: 'The Hong Kong-Zhuhai-Macao Bridge was officially opened in which year?',
+    options: ['2016', '2017', '2018', '2020'],
+    answer: 2,
+    explanation: "The HK-Zhuhai-Macao Bridge, the world's longest sea-crossing bridge-tunnel system at about 55 km, opened on 23 October 2018, dramatically cutting travel time between the three cities."
+  },
+  {
+    id: 34, type: 'mc', topic: 'gba',
+    text: 'The Guangzhou-Shenzhen-Hong Kong Express Rail Link (XRL) reduced travel time between Hong Kong and Guangzhou to approximately:',
+    options: ['15 minutes', '47 minutes', '2 hours', '3.5 hours'],
+    answer: 1,
+    explanation: 'The XRL, which opened in September 2018, reduced the Hong Kong–Guangzhou journey to approximately 47 minutes, greatly enhancing connectivity within the Greater Bay Area.'
+  },
+  {
+    id: 35, type: 'mc', topic: 'gba',
+    text: 'Which of the following is a key strategic role that Macao plays in the Greater Bay Area?',
+    options: [
+      'Heavy manufacturing hub',
+      'World Centre of Tourism and Leisure / Portuguese-speaking world platform',
+      'Agricultural production base',
+      'Major logistics and container port'
+    ],
+    answer: 1,
+    explanation: "Macao's strategic positioning in the GBA is as a 'World Centre of Tourism and Leisure' and as a commercial and trade cooperation platform between China and Portuguese-speaking countries, leveraging its unique historical and cultural links."
+  },
+  {
+    id: 36, type: 'mc', topic: 'gba',
+    text: 'Which of the following cities in the Greater Bay Area is China\'s leading technology and innovation hub, home to major firms like Huawei, Tencent, and DJI?',
+    options: ['Guangzhou', 'Zhuhai', 'Shenzhen', 'Foshan'],
+    answer: 2,
+    explanation: "Shenzhen transformed from a fishing village to China's Silicon Valley in just four decades. It is home to globally significant tech firms including Huawei, Tencent, BYD, and DJI, and leads China in innovation output."
+  },
+  {
+    id: 37, type: 'mc', topic: 'gba',
+    text: 'The Greater Bay Area development plan positions Hong Kong as a centre for which of the following?',
+    options: [
+      'Heavy industry and raw material processing',
+      'International aviation, shipping, trade, finance, and innovation',
+      'Agricultural exports to Southeast Asia',
+      'Coal and energy production'
+    ],
+    answer: 1,
+    explanation: "The GBA outline development plan designates Hong Kong as a global centre for international aviation, shipping, trade, financial services, and innovation — building on the city's existing world-class infrastructure and institutions."
+  },
+
+  // ════════════════════════════════════════════════════════════
+  //  MULTIPLE CHOICE — POVERTY & DEVELOPMENT (topic: poverty)
+  // ════════════════════════════════════════════════════════════
+  {
+    id: 38, type: 'mc', topic: 'poverty',
+    text: "China's targeted poverty alleviation strategy was launched under which national congress?",
+    options: ['17th National Congress (2007)', '18th National Congress (2012)', '19th National Congress (2017)', '20th National Congress (2022)'],
+    answer: 1,
+    explanation: "After the 18th National Congress in 2012, President Xi Jinping launched the targeted poverty alleviation (精準扶貧) campaign, calling for the eradication of absolute poverty in China by 2020."
+  },
+  {
+    id: 39, type: 'mc', topic: 'poverty',
+    text: 'By 2020, how many poor counties in China had been removed from the poverty list under the targeted poverty alleviation campaign?',
+    options: ['500', '652', '832', '1,000'],
+    answer: 2,
+    explanation: 'All 832 nationally designated poor counties were removed from the poverty list by 2020, completing the goal of eliminating absolute poverty in China ahead of the original schedule.'
+  },
+  {
+    id: 40, type: 'mc', topic: 'poverty',
+    text: 'According to the World Bank, China\'s poverty reduction between 2012 and 2020 accounted for approximately what percentage of global poverty reduction in the same period?',
+    options: ['30%', '50%', '70%', '90%'],
+    answer: 2,
+    explanation: "China's poverty reduction accounted for more than 70% of the global decrease in the number of people living in extreme poverty during the same period, according to the World Bank's international poverty standard."
+  },
+  {
+    id: 41, type: 'mc', topic: 'poverty',
+    text: "Which of the following BEST describes China's 'targeted poverty alleviation' approach?",
+    options: [
+      'Distributing equal cash payments to all rural households',
+      'Using data and grassroots investigation to precisely identify poor households and tailor support measures',
+      'Relocating all poor households to urban areas',
+      'Imposing higher taxes on wealthy regions to fund transfers to poor regions'
+    ],
+    answer: 1,
+    explanation: "Targeted poverty alleviation uses 'big data' registries and village-level investigation to identify each poor household's specific situation, then assigns tailored interventions such as industry development, relocation, education support, or social assistance."
+  },
+  {
+    id: 42, type: 'mc', topic: 'poverty',
+    text: 'Which of the following is NOT one of the main measures used in China\'s targeted poverty alleviation strategy?',
+    options: [
+      'Industry development support (developing local industries)',
+      'Relocation of residents from inhospitable areas',
+      'Banning all agricultural activities in poor regions',
+      'Education and skills training for poor households'
+    ],
+    answer: 2,
+    explanation: "China's poverty alleviation uses five main measures: industry development, relocation, ecological compensation, education support, and social assistance. Banning agricultural activities is NOT one of them — agriculture is often promoted as a livelihood."
+  },
+  {
+    id: 43, type: 'mc', topic: 'poverty',
+    text: 'Which of the following BEST explains why urbanisation contributes to economic development?',
+    options: [
+      'Urban areas always have lower living costs than rural areas.',
+      'Cities concentrate labour, capital, infrastructure, and services, raising productivity and incomes.',
+      'Urbanisation reduces a country\'s population growth rate.',
+      'Urban areas eliminate income inequality automatically.'
+    ],
+    answer: 1,
+    explanation: 'Urbanisation concentrates economic activity, enabling economies of scale, better infrastructure, higher labour productivity, and greater access to education and healthcare — all of which raise average incomes and support development.'
+  },
+  {
+    id: 44, type: 'mc', topic: 'poverty',
+    text: "The annual per capita disposable income of rural residents in China's poor regions grew from RMB 6,079 in 2013 to approximately RMB 12,588 in 2020. This change is BEST described as:",
+    options: [
+      'A decrease of more than 50%',
+      'Roughly doubling over 7 years',
+      'A decrease in real terms after adjusting for inflation',
+      'An increase of only 10%'
+    ],
+    answer: 1,
+    explanation: 'Income roughly doubled from RMB 6,079 (2013) to RMB 12,588 (2020), representing sustained improvement in living standards in poor rural areas over the poverty alleviation period.'
+  },
+
+  // ════════════════════════════════════════════════════════════
+  //  SHORT QUESTIONS (topic: various)
+  // ════════════════════════════════════════════════════════════
+  {
+    id: 50, type: 'sq', topic: 'economy',
+    text: 'Explain ONE advantage of a planned economy.',
+    marks: 2,
+    modelAnswer: 'Advantage: A planned economy can achieve more equitable distribution of income and resources.\nExplanation: The government directs resources towards public goods (e.g., healthcare, education, housing) that may be under-provided by a market, ensuring that citizens\'s basic needs are met regardless of their income level. This reduces inequality and social tensions.'
+  },
+  {
+    id: 51, type: 'sq', topic: 'economy',
+    text: 'Explain ONE disadvantage of a planned economy.',
+    marks: 2,
+    modelAnswer: 'Disadvantage: A planned economy tends to be economically inefficient.\nExplanation: Without the price mechanism, central planners lack accurate information about consumers\' preferences and relative scarcities. This leads to misallocation of resources — overproduction of some goods and shortages of others — and removes incentives for firms to innovate or cut costs, resulting in slower economic growth.'
+  },
+  {
+    id: 52, type: 'sq', topic: 'economy',
+    text: 'Explain ONE advantage of a market economy.',
+    marks: 2,
+    modelAnswer: 'Advantage: A market economy promotes efficiency and innovation through competition.\nExplanation: Firms compete for consumers, incentivising them to produce goods at lower cost and higher quality. Prices serve as signals: if demand rises, prices rise, attracting new producers and allocating resources efficiently without central direction. This drives productivity growth and technological innovation.'
+  },
+  {
+    id: 53, type: 'sq', topic: 'economy',
+    text: 'Explain ONE disadvantage of a market economy.',
+    marks: 2,
+    modelAnswer: 'Disadvantage: A market economy may generate significant income inequality.\nExplanation: Since resources flow to those willing and able to pay, individuals with greater wealth or skills accumulate more income. Public goods (e.g., national defence) and merit goods (e.g., education) may be under-provided because they are not profitable to supply, leaving lower-income groups without access to essential services.'
+  },
+  {
+    id: 54, type: 'sq', topic: 'economy',
+    text: 'Explain why China adopted a socialist market economy rather than retaining a purely planned economy.',
+    marks: 3,
+    modelAnswer: '(1) The planned economy that existed before 1978 was highly inefficient, producing shortages and stifling innovation, while GDP growth was slow (1 mark).\n(2) By introducing market mechanisms — allowing prices to guide production, permitting private enterprise, and attracting foreign investment — China could harness competition and efficiency gains to accelerate growth (1 mark).\n(3) However, the government retained state ownership of key "strategic" sectors (energy, banking, telecommunications) and macroeconomic planning through Five-Year Plans to ensure social stability, equity, and national security goals (1 mark).'
+  },
+  {
+    id: 55, type: 'sq', topic: 'trade',
+    text: 'Explain TWO functions of the WTO in promoting international trade.',
+    marks: 4,
+    modelAnswer: '(1) Rules-based framework: The WTO administers binding trade agreements that reduce barriers such as tariffs and quotas. This creates a predictable, rules-based trading environment, encouraging countries to trade more freely and fairly (2 marks).\n(2) Dispute settlement: The WTO provides a structured mechanism for resolving trade disputes between members through consultation and, if necessary, independent panel review. This reduces the risk of unilateral retaliation and escalating trade wars, maintaining trade stability (2 marks).'
+  },
+  {
+    id: 56, type: 'sq', topic: 'trade',
+    text: 'Explain the difference between a tariff and an import quota as forms of trade protection.',
+    marks: 4,
+    modelAnswer: 'A tariff is a tax imposed on imported goods, raising their price and making domestic products more competitive. Consumers can still import any quantity, but must pay the extra cost. For example, a 25% tariff on steel makes imported steel more expensive than domestic steel.\n\nAn import quota sets a maximum quantity of a specific good that can be imported during a period. Once the quota limit is reached, no further imports are allowed regardless of price. Quotas give the government more direct control over import volumes than tariffs. Both measures protect domestic industries but may reduce consumer choice and raise prices.'
+  },
+  {
+    id: 57, type: 'sq', topic: 'hk',
+    text: "State and explain TWO ways in which Hong Kong contributes to China's economic development.",
+    marks: 4,
+    modelAnswer: "(1) Offshore RMB centre: Hong Kong processes ~75% of global offshore RMB payments, facilitating the internationalisation of China's currency and reducing reliance on the US dollar in international trade (2 marks).\n(2) Gateway for foreign investment: Hong Kong is China's largest source of inward foreign direct investment (FDI). Its common law system, low taxes, and open capital markets attract multinational companies to use Hong Kong as a base for entering the mainland market, bringing capital, technology, and management expertise to China (2 marks)."
+  },
+  {
+    id: 58, type: 'sq', topic: 'gba',
+    text: 'Describe ONE advantage of the Greater Bay Area for young people in Hong Kong.',
+    marks: 2,
+    modelAnswer: "The GBA expands employment and entrepreneurship opportunities for young Hongkongers. With improved cross-boundary transport (e.g., XRL, HZMB) and government schemes supporting HK graduates working in the mainland, young people can access the dynamic labour market and startup ecosystems of cities like Shenzhen and Guangzhou, broadening their career prospects beyond Hong Kong's relatively small market."
+  },
+  {
+    id: 59, type: 'sq', topic: 'poverty',
+    text: "Explain how China's targeted poverty alleviation strategy differs from general economic development as an approach to reducing poverty.",
+    marks: 3,
+    modelAnswer: "General economic development aims to grow the overall economy (GDP), assuming that rising incomes will 'trickle down' to the poor over time. However, growth alone may bypass the most remote or vulnerable households.\n\nTargeted poverty alleviation (精準扶貧) precisely identifies each poor household using data registers, assigns individual case workers, and tailors specific interventions (industry development, relocation, education, social assistance) to that household's exact circumstances. This ensures no one is 'left behind' and accelerates poverty reduction even in areas where general growth is slow."
+  },
+  {
+    id: 60, type: 'sq', topic: 'trade',
+    text: "Explain why countries use trade protection policies despite the general benefits of free trade.",
+    marks: 3,
+    modelAnswer: "Countries use trade protection because free trade, while efficient overall, can harm specific groups:\n(1) Infant industry protection: New industries may need time to develop economies of scale before competing with established foreign rivals. Temporary tariffs or quotas can provide this space.\n(2) Employment protection: Sudden import surges can cause rapid unemployment in affected sectors; tariffs slow this adjustment, giving workers time to retrain.\n(3) National security: Strategic industries (e.g., food, defence, energy) may be protected to ensure self-sufficiency even if foreign suppliers are cheaper.\nHowever, excessive protection leads to inefficiency and can trigger retaliatory trade wars."
+  },
+
+  // ════════════════════════════════════════════════════════════
+  //  DATA-BASED QUESTIONS (topic: various)
+  // ════════════════════════════════════════════════════════════
+  {
+    id: 70, type: 'dbq', topic: 'poverty',
+    source: {
+      label: 'Source A — China\'s Poverty Alleviation Results',
+      text: 'By 2020, all 98.99 million poor people in China had been lifted out of poverty, and all 832 nationally designated poor counties were removed from the poverty list. The task of eradicating absolute poverty was completed ahead of schedule. According to the World Bank\'s international poverty standard, China\'s poverty reduction accounted for more than 70% of the global reduction in the number of poor people during the same period. The annual per capita disposable income of rural residents in poor regions rose from RMB 6,079 in 2013 to RMB 12,588 in 2020.\n(Adapted from the White Paper on Poverty Alleviation: China\'s Experience and Contribution, 2021.)'
+    },
+    text: '(a) Describe the trend in the annual per capita disposable income of rural residents in poor regions between 2013 and 2020, as shown in Source A.',
+    marks: 2,
+    modelAnswer: 'The annual per capita disposable income of rural residents in poor regions increased steadily and consistently from RMB 6,079 in 2013 to RMB 12,588 in 2020 — a rise of approximately RMB 6,509, or roughly doubling over seven years. The growth indicates a sustained improvement in the living standards of poor rural households during the poverty alleviation campaign.'
+  },
+  {
+    id: 71, type: 'dbq', topic: 'poverty',
+    source: {
+      label: 'Source A — China\'s Poverty Alleviation Results',
+      text: 'By 2020, all 98.99 million poor people in China had been lifted out of poverty, and all 832 nationally designated poor counties were removed from the poverty list. The task of eradicating absolute poverty was completed ahead of schedule. According to the World Bank\'s international poverty standard, China\'s poverty reduction accounted for more than 70% of the global reduction in the number of poor people during the same period.\n(Adapted from the White Paper on Poverty Alleviation, 2021.)'
+    },
+    text: '(b) With reference to Source A, explain ONE way in which China\'s targeted poverty alleviation approach contributed to the results shown.',
+    marks: 2,
+    modelAnswer: "By precisely identifying each poor household (using data registers and village-level surveys), the government could tailor specific interventions — such as industry development, relocation, education support, or social assistance — to each family's individual circumstances. This precision avoided wasted resources and ensured that even the most remote or vulnerable households received appropriate help, enabling all 98.99 million poor people to be lifted out of poverty by 2020."
+  },
+  {
+    id: 72, type: 'dbq', topic: 'poverty',
+    source: {
+      label: 'Source A — China\'s Poverty Alleviation Results (continued)',
+      text: 'China\'s poverty alleviation work also achieved progress in rural infrastructure. By 2020, all villages with permanent residents had access to roads, electricity, and clean drinking water. The number of rural people with access to internet rose significantly, supporting the development of e-commerce as an income source in poor areas.\n(Adapted from the White Paper on Poverty Alleviation, 2021.)'
+    },
+    text: '(c) "Economic development alone is sufficient to solve the poverty problem." Do you agree? Explain your answer with reference to Source A and your own knowledge.',
+    marks: 4,
+    modelAnswer: "I disagree that economic development alone is sufficient.\n\nArgument (disagree): Source A shows that even with decades of strong GDP growth, China still had 98.99 million people in absolute poverty by 2012. General economic growth did not automatically reach the most remote and vulnerable households. Targeted interventions — including infrastructure provision (roads, electricity, internet), education, and direct assistance — were essential to ensure growth benefits reached everyone (2 marks).\n\nHowever, economic development is still a necessary foundation (partial agreement): Rising incomes from industrialisation and urbanisation created jobs, tax revenues, and government capacity to fund poverty programmes. Without sustained economic growth, China would lack the resources to invest in rural infrastructure and social support (1 mark).\n\nConclusion: Both targeted policy interventions AND broad economic development are required — development provides the resources, but targeted policies ensure those resources reach the poorest (1 mark)."
+  },
+  {
+    id: 73, type: 'dbq', topic: 'trade',
+    source: {
+      label: 'Source B — The China-US Trade Conflict',
+      text: 'The China-US trade conflict began in 2018 when the US proposed tariffs of up to USD 50–60 billion on Chinese imports, citing unfair trade practices. China retaliated by imposing tariffs of USD 3 billion on 128 US products. The conflict escalated, with both sides imposing 25% tariffs on thousands of products. Goods affected by US tariffs accounted for approximately 10% of China\'s total exports. Rising costs led some enterprises to relocate production to Vietnam and Thailand. The conflict also disrupted global supply chains and raised production costs for businesses worldwide.\n(Adapted from various sources.)'
+    },
+    text: '(a) According to Source B, identify ONE trade protection policy used by the United States against China and explain its likely effect on Chinese exports.',
+    marks: 2,
+    modelAnswer: "The US imposed tariffs (import duties) of up to 25% on Chinese goods (1 mark).\n\nEffect: These tariffs raised the price of Chinese exports in the US market, making them less competitive compared to American-made or third-country alternatives. As a result, American importers reduced purchases of Chinese goods, lowering China's export volumes and revenues to its third-largest trading partner (1 mark)."
+  },
+  {
+    id: 74, type: 'dbq', topic: 'trade',
+    source: {
+      label: 'Source B — The China-US Trade Conflict',
+      text: 'The China-US trade conflict began in 2018. Both sides imposed 25% tariffs on thousands of products. Goods affected by US tariff increases accounted for approximately 10% of China\'s total exports. Higher tariffs raised production costs, leading some enterprises to relocate operations to countries such as Thailand and Vietnam. US consumers also faced higher prices on many everyday goods as a result of the tariffs. Global supply chains were disrupted.'
+    },
+    text: '(b) With reference to Source B, explain TWO negative impacts of the China-US trade conflict on China\'s economy.',
+    marks: 4,
+    modelAnswer: "(1) Reduced export revenue: Tariffs made Chinese goods approximately 25% more expensive in the US market. Since goods affected accounted for about 10% of China's total exports, the reduced US demand directly cut China's export income, harming export-oriented manufacturers (2 marks).\n(2) Enterprise relocation and job losses: Higher costs made China a less competitive production base. Some manufacturers moved operations to lower-cost countries (Vietnam, Thailand), reducing investment and employment in China (2 marks)."
+  },
+  {
+    id: 75, type: 'dbq', topic: 'trade',
+    source: {
+      label: 'Source C — WTO Dispute Resolution: China and Australia',
+      text: 'In October 2023, China and Australia resolved their WTO dispute over wine and barley trade through friendly consultation. An expert stated: "The resolution in line with WTO principles of encouraging consultation is a successful case of resolving disputes under the WTO framework. It demonstrates that dialogue and negotiation under a rules-based system can achieve outcomes that benefit both parties without the damage of escalating trade wars."\n(Adapted from Global Times, October 2023.)'
+    },
+    text: 'Using BOTH Sources B and C, discuss whether countries should always use trade protection policies to safeguard their own industries.',
+    marks: 4,
+    modelAnswer: "Trade protection can sometimes be justified but is not always beneficial:\n\nArguments for protection (from Source B): Tariffs can defend strategic industries from unfair foreign competition. The US argued its tariffs against China were needed to address trade imbalances and unfair practices, suggesting that some protection may be warranted in specific circumstances (1 mark).\n\nArguments against protection (from both sources): Source B shows that US tariffs triggered Chinese retaliation, leading to escalating tariffs on both sides that disrupted global supply chains and raised costs for businesses and consumers worldwide. This demonstrates that trade wars harm both economies, not just the targeted country (1 mark).\n\nSource C shows an alternative: dialogue under the WTO framework can resolve disputes without destructive retaliation. The China-Australia settlement achieved mutually beneficial outcomes through negotiation, showing that trade protection is not the only — or best — tool (1 mark).\n\nConclusion: Countries should not always resort to trade protection; dialogue, negotiation, and the WTO dispute settlement mechanism are preferable to avoid costly trade wars. Protection is only justified in specific circumstances (infant industries, national security) and should be temporary and proportionate (1 mark)."
+  },
+  {
+    id: 76, type: 'dbq', topic: 'gba',
+    source: {
+      label: 'Source D — The Greater Bay Area Development Plan',
+      text: 'The Outline Development Plan for the Guangdong-Hong Kong-Macao Greater Bay Area (2019) aims to build a world-class bay area and city cluster. Key strategic positions include: Hong Kong as a global financial, shipping, and trade centre; Macao as a World Centre of Tourism and Leisure; Guangzhou as a national hub for innovation, education and technology; and Shenzhen as a special economic zone and innovation centre. The plan emphasises "one country, two systems", facilitating the free flow of people, goods, capital, and information across the region.\n(Source: National Development and Reform Commission, 2019.)'
+    },
+    text: '(a) According to Source D, identify the strategic position assigned to Shenzhen in the Greater Bay Area development plan.',
+    marks: 1,
+    modelAnswer: "According to Source D, Shenzhen is positioned as a 'special economic zone and innovation centre' within the Greater Bay Area, building on its existing strength as China's technology and entrepreneurship capital."
+  },
+  {
+    id: 77, type: 'dbq', topic: 'gba',
+    source: {
+      label: 'Source D — The Greater Bay Area Development Plan',
+      text: 'The Outline Development Plan for the Guangdong-Hong Kong-Macao Greater Bay Area (2019) aims to build a world-class bay area and city cluster. Hong Kong is positioned as a global financial, shipping, and trade centre, and as a centre for innovation and technology. The plan emphasises facilitating the free flow of people, goods, capital, and information across the region, while maintaining the "one country, two systems" principle for Hong Kong and Macao.'
+    },
+    text: '(b) Explain how the Greater Bay Area development plan benefits Hong Kong\'s economic development. Refer to Source D and your own knowledge.',
+    marks: 3,
+    modelAnswer: "(1) Expanded market access: The GBA plan integrates Hong Kong into a market of over 86 million people across 11 cities. By facilitating free flow of goods, capital, and people, Hong Kong businesses gain direct access to a vast consumer and production base, expanding their market beyond Hong Kong's 7.4 million population (1 mark).\n(2) Reinforcing Hong Kong's strengths: The plan designates Hong Kong as the GBA's global financial, shipping, and innovation centre. This official recognition encourages investment in Hong Kong's existing industries and attracts multinational companies to use Hong Kong as their GBA headquarters, supporting high-value professional services employment (1 mark).\n(3) Infrastructure connectivity: Projects like the HZMB and XRL reduce travel time between Hong Kong and GBA cities, enabling Hong Kong professionals, businesses, and investors to participate more easily in the broader regional economy (1 mark)."
+  },
+  {
+    id: 78, type: 'dbq', topic: 'economy',
+    source: {
+      label: 'Source E — China\'s Macroeconomic Regulation',
+      text: 'During the COVID-19 pandemic (2020), China\'s government implemented a series of macroeconomic measures to stabilise the economy: (1) Fiscal policy — the government increased public spending on infrastructure and provided tax relief to businesses, running a deficit to support growth; (2) Monetary policy — the People\'s Bank of China lowered interest rates and increased the money supply to encourage borrowing and investment; (3) Five-Year Plan guidance — the 14th Five-Year Plan (2021–2025) set key development targets including technology self-reliance, green development, and expanding domestic consumption.\n(Adapted from various government sources.)'
+    },
+    text: '(a) According to Source E, identify ONE fiscal policy measure used by China during the COVID-19 pandemic.',
+    marks: 1,
+    modelAnswer: "China increased public spending on infrastructure (or: provided tax relief to businesses) — both are fiscal policy measures that inject government funds into the economy to stimulate demand and support growth during the pandemic downturn."
+  },
+  {
+    id: 79, type: 'dbq', topic: 'economy',
+    source: {
+      label: 'Source E — China\'s Macroeconomic Regulation (continued)',
+      text: 'China\'s macroeconomic regulation combines fiscal policy (government spending and taxation), monetary policy (interest rates and money supply), and planning (Five-Year Plans). The socialist market economy allows the government to intervene when markets fail or when strategic national goals require direction. Economists note that this combination gives China more policy tools than either a pure market or a pure planned economy.'
+    },
+    text: '(b) Using Source E and your own knowledge, explain how China\'s socialist market economy allows the government to respond more effectively to economic crises than a pure market economy.',
+    marks: 3,
+    modelAnswer: "(1) Multiple policy tools: Source E shows China can use fiscal stimulus (infrastructure spending, tax cuts), monetary easing (lower rates), and Five-Year Plan directives simultaneously. A pure market economy relies primarily on market self-correction, which may be too slow in a crisis (1 mark).\n(2) State ownership of strategic sectors: China's state-owned enterprises (banks, energy, transport) can be directed to continue investing even when private firms cut back, maintaining economic momentum during downturns — this is not possible in a pure market economy where all firms respond only to profit signals (1 mark).\n(3) Long-term planning: Five-Year Plans allow China to set strategic direction (e.g., technology self-reliance, green development) that guides investment even in uncertainty, providing stability that pure market economies lack (1 mark)."
+  }
+
+];
+
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+let state = {
+  mode: 'practice',
+  selectedTypes: new Set(['mc','sq','dbq']),
+  selectedTopic: 'all',
+  questions: [],
+  current: 0,
+  score: 0,
+  maxScore: 0,
+  results: [],        // {id, status:'correct'|'wrong'|'skipped', userAnswer, q}
+  timerInterval: null,
+  timerSeconds: 30*60,
+  answered: false,
+};
+
+// ══════════════════════════════════════════════════════════════
+//  SETUP
+// ══════════════════════════════════════════════════════════════
+function selectMode(m) {
+  state.mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.mode === m);
+  });
+}
+
+function toggleType(t) {
+  if (state.selectedTypes.has(t)) {
+    if (state.selectedTypes.size === 1) return; // keep at least one
+    state.selectedTypes.delete(t);
+  } else {
+    state.selectedTypes.add(t);
+  }
+  document.querySelector(`[data-type="${t}"]`).classList.toggle('selected', state.selectedTypes.has(t));
+}
+
+function selectTopic(t) {
+  state.selectedTopic = t;
+  document.querySelectorAll('[data-topic]').forEach(b => {
+    b.classList.toggle('selected', b.dataset.topic === t);
+  });
+}
+
+function buildQuestionSet() {
+  let pool = QUESTIONS.filter(q =>
+    state.selectedTypes.has(q.type) &&
+    (state.selectedTopic === 'all' || q.topic === state.selectedTopic)
+  );
+  // Shuffle
+  pool = pool.sort(() => Math.random() - 0.5);
+  return pool;
+}
+
+function startQuiz() {
+  state.questions = buildQuestionSet();
+  if (state.questions.length === 0) {
+    alert('No questions match the selected filters. Please select at least one question type.');
+    return;
+  }
+  state.current = 0;
+  state.score = 0;
+  state.maxScore = 0;
+  state.results = [];
+  state.answered = false;
+
+  // Compute max score
+  state.questions.forEach(q => {
+    if (q.type === 'mc') state.maxScore += 1;
+    else state.maxScore += (q.marks || 2);
+  });
+
+  document.getElementById('setup-area').style.display = 'none';
+  document.getElementById('quiz-area').style.display = 'block';
+  document.getElementById('results-area').style.display = 'none';
+
+  if (state.mode === 'timed') {
+    state.timerSeconds = 30 * 60;
+    document.getElementById('timer-wrap').style.display = 'flex';
+    startTimer();
+  } else {
+    document.getElementById('timer-wrap').style.display = 'none';
+  }
+
+  renderQuestion();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TIMER
+// ══════════════════════════════════════════════════════════════
+function startTimer() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    state.timerSeconds--;
+    updateTimerDisplay();
+    if (state.timerSeconds <= 0) {
+      clearInterval(state.timerInterval);
+      finishQuiz(true);
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(state.timerSeconds / 60);
+  const s = state.timerSeconds % 60;
+  const display = document.getElementById('timer-display');
+  const bar = document.getElementById('timer-bar');
+  const txt = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  display.textContent = txt;
+  const pct = (state.timerSeconds / (30*60)) * 100;
+  bar.style.width = pct + '%';
+  const urgent = state.timerSeconds < 300; // < 5 min
+  display.classList.toggle('urgent', urgent);
+  bar.classList.toggle('urgent', urgent);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RENDER QUESTION
+// ══════════════════════════════════════════════════════════════
+function renderQuestion() {
+  const q = state.questions[state.current];
+  state.answered = false;
+
+  // Progress
+  const pct = (state.current / state.questions.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('q-counter').textContent = `Q${state.current + 1} / ${state.questions.length}`;
+  document.getElementById('score-badge').textContent = `Score: ${state.score} pts`;
+
+  // Badge
+  const badge = document.getElementById('q-badge');
+  if (q.type === 'mc')  { badge.textContent = 'Multiple Choice'; badge.className = 'q-section-badge badge-mc'; }
+  if (q.type === 'sq')  { badge.textContent = 'Short Question';  badge.className = 'q-section-badge badge-sq'; }
+  if (q.type === 'dbq') { badge.textContent = 'Data-Based';       badge.className = 'q-section-badge badge-dbq'; }
+
+  // Source
+  const sourceArea = document.getElementById('source-area');
+  if (q.source) {
+    sourceArea.innerHTML = `<div class="source-box"><div class="source-label">${esc(q.source.label)}</div>${esc(q.source.text)}</div>`;
+  } else {
+    sourceArea.innerHTML = '';
+  }
+
+  // Sub-question label
+  const subArea = document.getElementById('sub-q-label-area');
+  if (q.subQuestion) {
+    subArea.innerHTML = `<div class="sub-q-label">${esc(q.subQuestion)}</div>`;
+  } else {
+    subArea.innerHTML = '';
+  }
+
+  // Question text + marks
+  const marksHtml = q.marks ? `<span class="marks-badge">${q.marks} marks</span>` : '';
+  document.getElementById('q-text').innerHTML = esc(q.text) + marksHtml;
+
+  // Options / textarea
+  const optArea = document.getElementById('options-area');
+  if (q.type === 'mc') {
+    optArea.innerHTML = `<div class="options-list">${
+      q.options.map((opt, i) => `
+        <button class="option-btn" id="opt-${i}" onclick="selectOption(${i})">
+          <span class="option-key">${'ABCD'[i]}</span>
+          <span>${esc(opt)}</span>
+        </button>`
+      ).join('')
+    }</div>`;
+  } else {
+    optArea.innerHTML = `<textarea class="answer-area" id="user-answer" placeholder="Write your answer here… 在此作答"></textarea>`;
+  }
+
+  // Hide feedback
+  const fb = document.getElementById('feedback-box');
+  fb.style.display = 'none';
+  fb.className = 'feedback-box';
+
+  // Buttons
+  document.getElementById('btn-submit').style.display = 'inline-block';
+  document.getElementById('btn-submit').disabled = q.type === 'mc';
+  document.getElementById('btn-next').style.display = 'none';
+  document.getElementById('btn-skip').style.display = 'inline-block';
+
+  if (q.type === 'mc') {
+    document.getElementById('btn-submit').textContent = 'Select an Option';
+  } else {
+    document.getElementById('btn-submit').textContent = 'Check Answer';
+    document.getElementById('btn-submit').disabled = false;
+  }
+}
+
+let selectedOption = null;
+
+function selectOption(i) {
+  if (state.answered) return;
+  selectedOption = i;
+  document.querySelectorAll('.option-btn').forEach((b, idx) => {
+    b.classList.toggle('selected', idx === i);
+  });
+  document.getElementById('btn-submit').disabled = false;
+  document.getElementById('btn-submit').textContent = 'Check Answer';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SUBMIT / FEEDBACK
+// ══════════════════════════════════════════════════════════════
+function submitAnswer() {
+  if (state.answered) return;
+  const q = state.questions[state.current];
+  state.answered = true;
+
+  const fb = document.getElementById('feedback-box');
+  let correct = false;
+  let userAnswer = '';
+
+  if (q.type === 'mc') {
+    if (selectedOption === null) return;
+    correct = selectedOption === q.answer;
+    userAnswer = 'ABCD'[selectedOption];
+
+    // Style options
+    document.querySelectorAll('.option-btn').forEach((b, i) => {
+      b.disabled = true;
+      if (i === q.answer) b.classList.add('correct');
+      if (i === selectedOption && !correct) b.classList.add('wrong');
+    });
+
+    if (correct) {
+      state.score += 1;
+      fb.className = 'feedback-box correct-fb';
+      fb.innerHTML = `<span class="fb-label">✓ Correct! +1 point</span>${q.explanation ? `<div class="model-answer">${esc(q.explanation)}</div>` : ''}`;
+    } else {
+      fb.className = 'feedback-box wrong-fb';
+      fb.innerHTML = `<span class="fb-label">✗ Wrong — correct answer: ${esc('ABCD'[q.answer])}</span><div class="model-answer">${esc(q.explanation || '')}</div>`;
+    }
+
+    state.results.push({ id: q.id, status: correct ? 'correct' : 'wrong', userAnswer, q });
+
+  } else {
+    // SQ / DBQ — always show model answer
+    userAnswer = (document.getElementById('user-answer') || {}).value || '';
+    fb.className = 'feedback-box info-fb';
+    fb.innerHTML = `<span class="fb-label">📋 Model Answer / 參考答案</span><div class="model-answer" style="white-space:pre-wrap">${esc(q.modelAnswer)}</div>`;
+    state.results.push({ id: q.id, status: 'info', userAnswer, q });
+    // Give half marks for written questions as encouragement signal (ungraded)
+  }
+
+  fb.style.display = 'block';
+
+  // In practice mode: show next button
+  if (state.mode === 'practice') {
+    document.getElementById('btn-submit').style.display = 'none';
+    document.getElementById('btn-next').style.display = 'inline-block';
+  } else {
+    // Timed: auto-advance after 1.5s for MC, show next for written
+    if (q.type === 'mc') {
+      setTimeout(nextQuestion, 1800);
+    } else {
+      document.getElementById('btn-submit').style.display = 'none';
+      document.getElementById('btn-next').style.display = 'inline-block';
+    }
+  }
+  document.getElementById('btn-skip').style.display = 'none';
+}
+
+function skipQuestion() {
+  const q = state.questions[state.current];
+  state.results.push({ id: q.id, status: 'skipped', userAnswer: '', q });
+  nextQuestion();
+}
+
+function nextQuestion() {
+  selectedOption = null;
+  if (state.current + 1 >= state.questions.length) {
+    finishQuiz(false);
+    return;
+  }
+  state.current++;
+  document.getElementById('quiz-area').style.animation = 'none';
+  setTimeout(() => {
+    document.getElementById('quiz-area').style.animation = '';
+    renderQuestion();
+  }, 80);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RESULTS
+// ══════════════════════════════════════════════════════════════
+function finishQuiz(timedOut) {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+
+  // Tally MC-only score
+  const mcResults = state.results.filter(r => r.q.type === 'mc');
+  const correct = mcResults.filter(r => r.status === 'correct').length;
+  const wrong   = mcResults.filter(r => r.status === 'wrong').length;
+  const skipped = state.results.filter(r => r.status === 'skipped').length;
+  const total   = mcResults.length;
+  const pct     = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+  document.getElementById('quiz-area').style.display = 'none';
+  document.getElementById('results-area').style.display = 'block';
+  document.getElementById('setup-area').style.display = 'none';
+
+  // Emoji & title
+  let emoji, title, sub;
+  if (pct >= 80) {
+    emoji = '🎉'; title = 'Excellent Work!'; sub = 'Outstanding performance!';
+  } else if (pct >= 60) {
+    emoji = '👍'; title = 'Good Effort!'; sub = 'Keep reviewing the weaker areas.';
+  } else if (pct >= 40) {
+    emoji = '📚'; title = 'Keep Studying!'; sub = 'Review the topics and try again.';
+  } else {
+    emoji = '💪'; title = 'Don\'t Give Up!'; sub = 'Revisit the material and try again.';
+  }
+  if (timedOut) { emoji = '⏰'; sub = 'Time\'s up! ' + sub; }
+
+  document.getElementById('results-emoji').textContent = emoji;
+  document.getElementById('results-title').textContent = title;
+  document.getElementById('results-sub').textContent = sub;
+
+  // Score ring
+  const ring = document.getElementById('score-ring');
+  const pctEl = document.getElementById('score-pct');
+  pctEl.textContent = pct + '%';
+  if (pct >= 80) { ring.className = 'score-ring great'; pctEl.className = 'score-pct great'; }
+  else if (pct >= 60) { ring.className = 'score-ring ok'; pctEl.className = 'score-pct ok'; }
+  else { ring.className = 'score-ring poor'; pctEl.className = 'score-pct poor'; }
+
+  document.getElementById('stat-correct').textContent = correct;
+  document.getElementById('stat-wrong').textContent   = wrong;
+  document.getElementById('stat-skipped').textContent = skipped;
+
+  // Review log
+  const rc = document.getElementById('review-card');
+  rc.innerHTML = `<div class="review-title">Question Review 題目回顧</div>` +
+    state.results.map((r, idx) => {
+      const cls = r.status === 'correct' ? 'ri-correct' :
+                  r.status === 'wrong'   ? 'ri-wrong'   :
+                  r.status === 'skipped' ? 'ri-skipped' : 'ri-skipped';
+      const icon = r.status === 'correct' ? '✓' : r.status === 'wrong' ? '✗' : r.status === 'skipped' ? '–' : '📋';
+      const qShort = r.q.text.length > 60 ? r.q.text.slice(0,60) + '…' : r.q.text;
+      let detail = '';
+      if (r.q.type === 'mc' && r.status === 'wrong') {
+        detail = `<div class="ri-correct-ans">✓ ${esc('ABCD'[r.q.answer])}. ${esc(r.q.options[r.q.answer])}</div>`;
+      }
+      if (r.q.type !== 'mc') {
+        detail = `<div style="color:#6b7280;font-size:0.75rem;margin-top:2px;">Written question — see model answer</div>`;
+      }
+      return `<div class="review-item ${cls}">
+        <div class="ri-q">${icon} Q${idx+1}: ${esc(qShort)}</div>
+        ${detail}
+      </div>`;
+    }).join('');
+}
+
+function retryQuiz() {
+  document.getElementById('results-area').style.display = 'none';
+  document.getElementById('setup-area').style.display = 'block';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════════
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;')
+    .replace(/\n/g, '<br>');
+}
+</script>
+</body>
+</html>
