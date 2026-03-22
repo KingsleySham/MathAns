@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/edit1125",  "destination": "/editor/index.html" },
-    { "source": "/edit1125/", "destination": "/editor/index.html" }
+    { "source": "/edit1125/", "destination": "/editor/index.html" },
+    { "source": "/ces",  "destination": "/ces/index.html" },
+    { "source": "/ces/", "destination": "/ces/index.html" }
   ]
 }
