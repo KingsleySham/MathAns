@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>THS Revision Exercise Bank — MathAns</title>
+  <meta name="description" content="S.3 Tourism & Hospitality Studies Topical Revision Exercise Bank with full marking scheme. Topics 1.1–1.11." />
+  <meta name="theme-color" content="#0d9488" />
+  <link rel="canonical" href="https://www.mathans.app/ths/revision" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal:       #0d9488;
+      --teal-dark:  #0f766e;
+      --teal-light: #ccfbf1;
+      --teal-pale:  #f0fdfa;
+      --amber:      #d97706;
+      --amber-light:#fef3c7;
+      --violet:     #7c3aed;
+      --violet-light:#ede9fe;
+      --slate:      #1e293b;
+      --muted:      #64748b;
+      --border:     #e2e8f0;
+      --bg:         #f8fafc;
+      --card:       #ffffff;
+      --shadow:     0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.06);
+      --radius:     14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--slate);
+      min-height: 100vh;
+      padding: 20px 16px 60px;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.75rem; font-weight: 600; color: var(--teal);
+      text-decoration: none; margin-bottom: 16px;
+    }
+    .back-link:hover { opacity: 0.75; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--teal-dark) 0%, #14b8a6 100%);
+      border-radius: var(--radius); padding: 26px 26px 22px;
+      color: #fff; margin-bottom: 20px; position: relative; overflow: hidden;
+    }
+    .header::after {
+      content: '📖'; position: absolute; right: 20px; top: 50%;
+      transform: translateY(-50%); font-size: 5rem; opacity: 0.08;
+    }
+    .header-tag {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; background: rgba(255,255,255,0.18);
+      display: inline-block; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px;
+    }
+    .header h1 { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 900; margin-bottom: 4px; }
+    .header p { font-size: 0.82rem; opacity: 0.82; }
+
+    /* How to use */
+    .how-card {
+      background: var(--card); border-radius: var(--radius);
+      padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 20px;
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+    .level-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; font-weight: 700; padding: 5px 12px;
+      border-radius: 20px; white-space: nowrap;
+    }
+    .lvl-a { background: #dcfce7; color: #14532d; }
+    .lvl-b { background: var(--amber-light); color: #78350f; }
+    .lvl-c { background: var(--violet-light); color: #4c1d95; }
+
+    /* Topic nav */
+    .topic-nav {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
+    }
+    .topic-btn {
+      padding: 7px 13px; border-radius: 8px; border: 1.5px solid var(--border);
+      background: var(--card); font-size: 0.78rem; font-weight: 600;
+      color: var(--muted); cursor: pointer; font-family: inherit;
+      transition: all 0.15s;
+    }
+    .topic-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .topic-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+    /* Topic section */
+    .topic-section { margin-bottom: 14px; }
+
+    .topic-card {
+      background: var(--card); border-radius: var(--radius);
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    .topic-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer; user-select: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .topic-header:hover { background: var(--teal-pale); }
+    .topic-title-row { display: flex; align-items: center; gap: 10px; }
+    .topic-num {
+      font-size: 0.72rem; font-weight: 800; padding: 3px 9px;
+      border-radius: 20px; background: var(--teal-light); color: var(--teal-dark);
+    }
+    .topic-name { font-size: 0.95rem; font-weight: 700; }
+    .chevron { font-size: 0.85rem; color: var(--muted); transition: transform 0.2s; }
+    .topic-header.open .chevron { transform: rotate(180deg); }
+    .topic-body { display: none; }
+    .topic-body.open { display: block; animation: slideIn 0.2s ease; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tabs inside topic */
+    .inner-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+    }
+    .inner-tab {
+      flex: 1; padding: 11px 16px; font-family: inherit; font-size: 0.82rem;
+      font-weight: 600; background: none; border: none; cursor: pointer;
+      color: var(--muted); border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .inner-tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+    .inner-tab:hover:not(.active) { color: var(--slate); }
+
+    .tab-pane { display: none; padding: 20px; }
+    .tab-pane.active { display: block; }
+
+    /* MC answer grid */
+    .mc-answer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0; }
+    .mc-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border); transition: background 0.12s;
+    }
+    .mc-row:hover { background: var(--teal-pale); }
+    .mc-q { font-size: 0.72rem; font-weight: 700; color: var(--muted); min-width: 24px; }
+    .mc-a { font-size: 0.88rem; font-weight: 800; color: var(--teal-dark); min-width: 16px; }
+    .mc-note { font-size: 0.75rem; color: #475569; flex: 1; line-height: 1.4; }
+    .dse-tag {
+      font-size: 0.62rem; font-weight: 700; padding: 1px 6px; border-radius: 10px;
+      background: #dbeafe; color: #1e40af; margin-left: 4px; vertical-align: middle;
+    }
+
+    /* Short answer blocks */
+    .sa-block { border-bottom: 1px solid var(--border); padding: 16px 0; }
+    .sa-block:last-child { border-bottom: none; padding-bottom: 0; }
+    .sa-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+      cursor: pointer; user-select: none;
+    }
+    .sa-num {
+      font-size: 0.72rem; font-weight: 800; padding: 2px 8px;
+      border-radius: 20px; background: #f1f5f9; color: var(--muted);
+    }
+    .sa-q { font-size: 0.85rem; font-weight: 600; color: var(--slate); flex: 1; }
+    .sa-meta { display: flex; gap: 6px; align-items: center; }
+    .marks-badge {
+      font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
+      border-radius: 20px; background: var(--amber-light); color: #78350f;
+    }
+    .sa-chevron { font-size: 0.78rem; color: var(--muted); transition: transform 0.15s; }
+    .sa-header.open .sa-chevron { transform: rotate(180deg); }
+
+    .sa-answer { display: none; }
+    .sa-answer.open {
+      display: block; animation: slideIn 0.15s ease;
+      background: #f8fafc; border-radius: 10px; padding: 14px 16px;
+      margin-top: 6px; font-size: 0.85rem; color: #374151; line-height: 1.7;
+    }
+    .sa-answer p { margin-bottom: 8px; }
+    .sa-answer p:last-child { margin-bottom: 0; }
+
+    .answer-label {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--teal); margin-bottom: 8px; display: block;
+    }
+    .key-point {
+      background: #dcfce7; border-left: 3px solid #16a34a;
+      border-radius: 0 6px 6px 0; padding: 8px 12px;
+      font-size: 0.82rem; color: #14532d; margin: 6px 0; line-height: 1.6;
+    }
+    .accept-note {
+      font-size: 0.75rem; color: var(--muted); font-style: italic; margin-top: 6px;
+    }
+
+    /* Chapter Quiz label */
+    .quiz-separator {
+      background: linear-gradient(90deg, var(--teal-dark), #0891b2);
+      color: #fff; padding: 10px 20px;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em;
+    }
+
+    /* Footer */
+    .footer-note {
+      text-align: center; font-size: 0.75rem; color: var(--muted); margin-top: 24px;
+    }
+    .footer-note a { color: var(--teal); text-decoration: none; }
+
+    @media (max-width: 480px) {
+      .mc-answer-grid { grid-template-columns: 1fr; }
+      .how-card { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="https://www.mathans.app/ths" class="back-link">← THS Mock Test & Marking Scheme</a>
+
+  <div class="header">
+    <div class="header-tag">THS · S3 Revision Exercise Bank</div>
+    <h1>Topical Revision Exercise Bank</h1>
+    <p>Module 1 · Sections 1.1–1.11 · Multi-Level Questions · Full Marking Scheme</p>
+  </div>
+
+  <!-- How to use -->
+  <div class="how-card">
+    <span style="font-size:0.78rem;font-weight:700;color:var(--muted);align-self:center;">LEVELS:</span>
+    <span class="level-badge lvl-a">★ Basic — Direct recall</span>
+    <span class="level-badge lvl-b">★★ Moderate — Application</span>
+    <span class="level-badge lvl-c">★★★ Challenging — DSE-style</span>
+    <span style="font-size:0.75rem;color:var(--muted);align-self:center;font-style:italic;">Click any question to reveal the model answer</span>
+  </div>
+
+  <!-- Topic nav -->
+  <div class="topic-nav" id="topic-nav">
+    <button class="topic-btn active" onclick="filterTopic('all')">All Topics</button>
+    <button class="topic-btn" onclick="filterTopic('t1')">1.1</button>
+    <button class="topic-btn" onclick="filterTopic('t2')">1.2</button>
+    <button class="topic-btn" onclick="filterTopic('t3')">1.3</button>
+    <button class="topic-btn" onclick="filterTopic('t4')">1.4</button>
+    <button class="topic-btn" onclick="filterTopic('t5')">1.5</button>
+    <button class="topic-btn" onclick="filterTopic('t6')">1.6</button>
+    <button class="topic-btn" onclick="filterTopic('t7')">1.7</button>
+    <button class="topic-btn" onclick="filterTopic('t8')">1.8</button>
+    <button class="topic-btn" onclick="filterTopic('t9')">1.9</button>
+    <button class="topic-btn" onclick="filterTopic('t10')">1.10</button>
+    <button class="topic-btn" onclick="filterTopic('t11')">1.11</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- TOPIC 1.1 -->
+  <div class="topic-section" data-topic="t1">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row">
+          <span class="topic-num">1.1</span>
+          <span class="topic-name">Tourism as an Integrated Discipline</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-1')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-1')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-1')">Chapter Quiz</button>
+        </div>
+
+        <div class="tab-pane active" id="mc-1">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1</div><div class="mc-a">B</div><div class="mc-note">Tourism draws on many subjects including geography, economics, history, marketing and law</div></div>
+            <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">B</div><div class="mc-note">IT enhances understanding of the global distribution system and its effect on tourism business</div></div>
+            <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">C</div><div class="mc-note">History and Geography help understand development of historical/geographical resources at a destination</div></div>
+            <div class="mc-row"><div class="mc-q">Q4</div><div class="mc-a">A</div><div class="mc-note">(1), (2) and (3) only — Economics, Social Studies, and IT are all in the model; Pure Maths is NOT</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">A</div><div class="mc-note">Yes — religion and culture are directly listed as part of the Integrated Disciplinary Model</div></div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="sa-1">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q6</span>
+              <span class="sa-q">Give TWO examples of how academic subjects help us understand tourism.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <span class="answer-label">Model Answer</span>
+              <div class="key-point"><strong>Subject 1: History / Geography</strong> — helps understand the development of historical and geographical resources of tourist destinations.</div>
+              <div class="key-point"><strong>Subject 2: Marketing and Business</strong> — helps understand the promotion and marketing of tourism products.</div>
+              <p class="accept-note">Accept any two from: Geography, History, Economics, Law, Psychology, Marketing, Information Technology, Religion, Social Studies — each with a correct explanation.</p>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q7</span>
+              <span class="sa-q">"You only need to study business to understand tourism." Do you agree? Explain with reference to TWO other disciplines.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-c" style="font-size:0.68rem;padding:2px 7px;">★★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <span class="answer-label">Model Answer</span>
+              <p><strong>Disagree.</strong> Tourism is not just about business; it involves a wide range of disciplines:</p>
+              <div class="key-point"><strong>Geography</strong> — physical features of destinations and natural attractions require geographical knowledge.</div>
+              <div class="key-point"><strong>History</strong> — heritage attractions and historic sites require historical understanding to appreciate and explain.</div>
+              <p class="accept-note">Also accept: Psychology (tourist motivations), Information Technology (GDS, mobile apps), Religion and Culture (cultural tourism). Any two disciplines with clear explanation awarded 2 marks each.</p>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q8</span>
+              <span class="sa-q">Explain why tourism is described as "so vast, so complex, and so multifaceted". Give TWO examples of contributing disciplines.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-c" style="font-size:0.68rem;padding:2px 7px;">★★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <span class="answer-label">Model Answer</span>
+              <p>Tourism is <strong>"vast"</strong> because it covers almost all aspects of society — economic, social, cultural, environmental. It is <strong>"complex"</strong> because it includes a variety of disciplines, either directly or indirectly related. It is <strong>"multifaceted"</strong> because different aspects of tourism (cultural, economic, environmental) require different subject knowledge.</p>
+              <div class="key-point">Example 1: <strong>Information Technology</strong> — enhances understanding of the global distribution system and its effect on tourism business.</div>
+              <div class="key-point">Example 2: <strong>Religion and Culture</strong> — provides information on cultural resources of a destination and opportunities to develop it as a cultural destination.</div>
+              <p class="accept-note">Award marks for explaining at least two disciplines accurately.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="quiz-1">
+          <div class="quiz-separator">Chapter Quiz 1.1 — Section A MC Answers</div>
+          <div style="padding:16px 20px;">
+            <div class="mc-answer-grid">
+              <div class="mc-row"><div class="mc-q">Q1</div><div class="mc-a">B</div><div class="mc-note">Understand development of historical/geographical resources at a tourist destination</div></div>
+              <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">C</div><div class="mc-note">Pure Mathematics is NOT mentioned in the handout as a subject related to tourism</div></div>
+              <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">B</div><div class="mc-note">Cultural resources and opportunities to develop it as a cultural destination</div></div>
+              <div class="mc-row"><div class="mc-q">Q4</div><div class="mc-a">C</div><div class="mc-note">Information Technology is associated with global distribution systems</div></div>
+              <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">C</div><div class="mc-note">Vast, complex and multifaceted</div></div>
+            </div>
+          </div>
+          <div class="quiz-separator">Chapter Quiz 1.1 — Section B Data Question</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)</span>
+                <span class="sa-q">Identify FOUR academic disciplines relevant to a trip to Japan.</span>
+                <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer">
+                <span class="answer-label">Model Answer</span>
+                <p>Any four: History (ancient temples); Geography (mountain and river landscapes); Economics (yen exchange rate); Marketing and Business (tour packages); Information Technology (online booking); Religion and Culture (Shinto/Buddhist customs). 1 mark each, max 4.</p>
+              </div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span>
+                <span class="sa-q">Explain why tourism cannot be fully understood by studying a single discipline.</span>
+                <div class="sa-meta"><span class="marks-badge">1 mark</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer">
+                <span class="answer-label">Model Answer</span>
+                <p>Tourism involves many aspects of society — economic, social, cultural, environmental. No single discipline can fully capture the complexity of tourism. (Accept equivalent explanation.)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 1.2 -->
+  <div class="topic-section" data-topic="t2">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row">
+          <span class="topic-num">1.2</span>
+          <span class="topic-name">Integrated Model of Tourism</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-2')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-2')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-2')">Chapter Quiz</button>
+        </div>
+        <div class="tab-pane active" id="mc-2">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1</div><div class="mc-a">C</div><div class="mc-note">Travellers are at the centre of the model</div></div>
+            <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">B</div><div class="mc-note">Tourism Promoters — in the first layer, closest to travellers</div></div>
+            <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">B</div><div class="mc-note">Tourism boards and direct marketing companies (Promoters); not airlines (Service Suppliers)</div></div>
+            <div class="mc-row"><div class="mc-q">Q4</div><div class="mc-a">C</div><div class="mc-note">Airline companies are Tourism Service Suppliers — they provide services independently</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">A</div><div class="mc-note">Social/Cultural, Political, Environmental, Economic, Technological forces — 5 external environment forces</div></div>
+            <div class="mc-row"><div class="mc-q">Q6</div><div class="mc-a">C</div><div class="mc-note">Technology (sharing economy) is changing how people travel — a technological force</div></div>
+            <div class="mc-row"><div class="mc-q">Q7</div><div class="mc-a">B</div><div class="mc-note">HKTB = Tourism Promoter; Marriott = Service Supplier; visa policy = political force</div></div>
+            <div class="mc-row"><div class="mc-q">Q8</div><div class="mc-a">B</div><div class="mc-note">"Hong Kong Pals" — a social/cultural force (encouraging community to engage in tourism)</div></div>
+          </div>
+        </div>
+        <div class="tab-pane" id="sa-2">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q9</span>
+              <span class="sa-q">Describe the FOUR key elements in the Integrated Model of Tourism.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <span class="answer-label">Model Answer</span>
+              <div class="key-point"><strong>1. Travellers</strong> — at the centre; without them there is no tourism.</div>
+              <div class="key-point"><strong>2. Tourism Promoters</strong> (1st layer) — tourism boards, travel agents, tour operators, direct marketing companies, meeting planners; in close contact with travellers.</div>
+              <div class="key-point"><strong>3. Tourism Service Suppliers</strong> (2nd layer) — airlines, hotels, cruise ships, bus operators; provide services independently or collaboratively.</div>
+              <div class="key-point"><strong>4. External Environment</strong> — social/cultural, political, environmental, economic, technological forces that all stakeholders respond to.</div>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q10</span>
+              <span class="sa-q">Explain FIVE external environment forces that affect tourism.</span>
+              <div class="sa-meta"><span class="marks-badge">5 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <span class="answer-label">Model Answer (1 mark each)</span>
+              <div class="key-point"><strong>Social/Cultural:</strong> Local culture and attitude of residents affect tourist experience (e.g. "HK Pals" campaign).</div>
+              <div class="key-point"><strong>Political:</strong> Government visa policies and infrastructure (e.g. HK e-Channel clearance).</div>
+              <div class="key-point"><strong>Environmental:</strong> Pollution may destroy destination ambience.</div>
+              <div class="key-point"><strong>Economic:</strong> Disposable income and exchange rates affect travel desire.</div>
+              <div class="key-point"><strong>Technological:</strong> Mobile apps and sharing economy platforms transform tourism.</div>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q11</span>
+              <span class="sa-q">Explain how Tourism Service Suppliers can collaborate. How does this benefit travellers?</span>
+              <div class="sa-meta"><span class="marks-badge">3 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <span class="answer-label">Model Answer</span>
+              <p>Service suppliers collaborate by combining services (e.g. hotel + airline joint package). (1 mark) This benefits travellers through convenience, cost savings, and a seamless travel experience. (1 mark) Example: hotel + airline offering an accommodation-and-flight bundle. (1 mark)</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="quiz-2">
+          <div class="quiz-separator">Chapter Quiz 1.2 — MC: Q1.B Q2.C Q3.B Q4.B Q5.C</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)</span><span class="sa-q">Identify the key element of HK Explore app. Explain with evidence.</span>
+                <div class="sa-meta"><span class="marks-badge">2 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p><strong>Tourism Promoter</strong> — HK Explore allows tourists to get information and make purchases; this matches the promoter role of making travel arrangements and providing information.</p></div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span><span class="sa-q">Which key element do airlines and hotel chains belong to?</span>
+                <div class="sa-meta"><span class="marks-badge">2 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p><strong>Tourism Service Suppliers</strong> — because airlines and hotel chains directly provide accommodation and transport services to travellers independently.</p></div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(c)</span><span class="sa-q">Which external environment force prompted development of AI chatbots in tourism?</span>
+                <div class="sa-meta"><span class="marks-badge">1 mark</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p><strong>Technological force</strong> — AI/technology development prompted the company to create a chatbot to enhance information provision and booking services.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 1.3 -->
+  <div class="topic-section" data-topic="t3">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row">
+          <span class="topic-num">1.3</span>
+          <span class="topic-name">Concepts of Travel, Tourism, Tourist, Excursionist & Defining Factors</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-3')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-3')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-3')">Chapter Quiz</button>
+        </div>
+        <div class="tab-pane active" id="mc-3">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1</div><div class="mc-a">B</div><div class="mc-note">Temporary short-term movement to destinations outside where they normally live and work</div></div>
+            <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">C</div><div class="mc-note">Excursionist — visits destination for less than 24 hours, not for transit</div></div>
+            <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">C</div><div class="mc-note">Tourist — stays at least 24 hours, outside residence and working place</div></div>
+            <div class="mc-row"><div class="mc-q">Q4</div><div class="mc-a">A</div><div class="mc-note">Length of stay less than one year</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">B</div><div class="mc-note">Purpose of visit — not remunerated from within the place visited</div></div>
+            <div class="mc-row"><div class="mc-q">Q6</div><div class="mc-a">B</div><div class="mc-note">Usual environment excludes regular routine trips between home and workplace</div></div>
+            <div class="mc-row"><div class="mc-q">Q7 <span class="dse-tag">DSE</span></div><div class="mc-a">A</div><div class="mc-note">A patient abroad 13 months (exceeds 1 year) and daily Shenzhen commuter (usual environment) are NOT tourists</div></div>
+            <div class="mc-row"><div class="mc-q">Q8 <span class="dse-tag">DSE</span></div><div class="mc-a">C</div><div class="mc-note">Exchange students on short-term courses are NOT tourists — studying is a routine activity within usual environment</div></div>
+          </div>
+        </div>
+        <div class="tab-pane" id="sa-3">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q9</span><span class="sa-q">Define "tourist" and "excursionist". Give ONE example each.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-a" style="font-size:0.68rem;padding:2px 7px;">★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Tourist:</strong> A person who travels to destinations outside his/her residence and working place, and stays for at least 24 hours, for the purpose of leisure or business. Example: A UK family staying 5 days in Japan.</div>
+              <div class="key-point"><strong>Excursionist:</strong> A person who temporarily visits a destination and stays for less than 24 hours for the purpose of leisure or business, but NOT for transit. Example: A HK resident day-tripping to Shenzhen without an overnight stay.</div>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q10</span><span class="sa-q">State THREE defining factors of tourism.</span>
+              <div class="sa-meta"><span class="marks-badge">3 marks</span><span class="level-badge lvl-a" style="font-size:0.68rem;padding:2px 7px;">★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>1. Length of Stay</strong> — must be less than one year (temporary/short-term).</div>
+              <div class="key-point"><strong>2. Purpose of Visit</strong> — not for an activity remunerated from within the destination (e.g. leisure, business, not working there).</div>
+              <div class="key-point"><strong>3. Distance / Usual Environment</strong> — must travel outside their usual environment (not commuting or routine trips).</div>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q11</span><span class="sa-q">A person regularly visits the same nearby shopping mall on weekends. Apply THREE defining factors to determine their status.</span>
+              <div class="sa-meta"><span class="marks-badge">6 marks</span><span class="level-badge lvl-c" style="font-size:0.68rem;padding:2px 7px;">★★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Not a tourist.</strong> Factor 1 (Usual Environment): Regular trips to the same nearby shopping mall fall within "usual environment" — routine trips are excluded. Factor 2 (Purpose): Shopping may be acceptable but regular/frequent trips do not qualify. Factor 3 (Length of Stay): If the person returns the same day, they could be an excursionist, not a tourist — likely not even an excursionist if it is within usual environment.</div>
+              <p class="accept-note">Award 2 marks per factor applied correctly, total 6.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="quiz-3">
+          <div class="quiz-separator">Chapter Quiz 1.3 — MC: Q1.C Q2.B Q3.B Q4.C Q5.C</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)</span><span class="sa-q">Classify Persons A–D (tourist / excursionist / not a tourist).</span>
+                <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer">
+                <p>Person A: <strong>International Tourist</strong> — travels outside HK (Japan), stays 5 days (≥24 hrs). Person B: <strong>Not a tourist</strong> — student in usual environment after settling in. Person C: <strong>International Excursionist</strong> — visits HK for &lt;24 hours for shopping, not transit. Person D: <strong>Not counted as tourist</strong> — airline crew in transit environment. (1 mark per person; accept reasoned answers.)</p>
+              </div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span><span class="sa-q">Why are airline crew NOT classified as tourists?</span>
+                <div class="sa-meta"><span class="marks-badge">1 mark</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p><strong>Purpose of visit / usual environment</strong> — airline crew are generally considered to be in their "usual environment" when travelling for work; thus not classified as tourists per UNWTO.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 1.4 -->
+  <div class="topic-section" data-topic="t4">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row">
+          <span class="topic-num">1.4</span>
+          <span class="topic-name">International, Outbound, Inbound & Domestic Tourism</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-4')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-4')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-4')">Chapter Quiz</button>
+        </div>
+        <div class="tab-pane active" id="mc-4">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1</div><div class="mc-a">B</div><div class="mc-note">International tourism = trips between 2 countries</div></div>
+            <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">C</div><div class="mc-note">Outbound; inbound — HK residents going abroad = outbound; foreigners visiting HK = inbound</div></div>
+            <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">C</div><div class="mc-note">Domestic tourism = trips made by local residents within their own country</div></div>
+            <div class="mc-row"><div class="mc-q">Q4</div><div class="mc-a">D</div><div class="mc-note">Airline employees spending wages (second order); hotel operators reinvesting profits (second order)</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">B</div><div class="mc-note">From HK's perspective: outbound (HK residents visiting China) and inbound (Mainland visitors to HK)</div></div>
+            <div class="mc-row"><div class="mc-q">Q6</div><div class="mc-a">C</div><div class="mc-note">France is the world's top destination by international tourist arrivals</div></div>
+            <div class="mc-row"><div class="mc-q">Q7</div><div class="mc-a">C</div><div class="mc-note">Top 10 destinations receive 40% of global arrivals; top 10 earners account for ~50% of receipts</div></div>
+          </div>
+        </div>
+        <div class="tab-pane" id="sa-4">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q8</span><span class="sa-q">Classify the following journeys as inbound, outbound, or domestic tourism.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-a" style="font-size:0.68rem;padding:2px 7px;">★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point">Row 1 (Overseas visitor to HK): <strong>Inbound</strong> (to HK)</div>
+              <div class="key-point">Row 2 (HK resident to Japan): <strong>Outbound</strong> (from HK)</div>
+              <div class="key-point">Row 3 (Non-Malaysian visiting Malaysia): <strong>Inbound</strong> (to Malaysia)</div>
+              <div class="key-point">Row 4 (American from NY to LA): <strong>Domestic</strong> (within USA)</div>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q9</span><span class="sa-q">Explain TWO benefits of inbound tourism to Hong Kong.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Benefit 1: Foreign exchange earnings</strong> — visitors spend money on accommodation, food, shopping, attractions, generating income for HK businesses and tax revenue.</div>
+              <div class="key-point"><strong>Benefit 2: Employment</strong> — inbound tourism creates jobs in hotels, transport, F&B, retail, and tourism-related industries.</div>
+              <p class="accept-note">Accept any 2 well-explained benefits, 2 marks each.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="quiz-4">
+          <div class="quiz-separator">Chapter Quiz 1.4 — MC: Q1.C Q2.C Q3.C Q4.C Q5.C</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)(i)</span><span class="sa-q">Japanese tourists visiting HK — type from HK's perspective?</span>
+                <div class="sa-meta"><span class="marks-badge">1 mark</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p><strong>Inbound tourism</strong> (to Hong Kong).</p></div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)(ii)</span><span class="sa-q">HK residents visiting Japan — type from HK's perspective?</span>
+                <div class="sa-meta"><span class="marks-badge">1 mark</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p><strong>Outbound tourism</strong> (from Hong Kong).</p></div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span><span class="sa-q">HK residents visiting China — what type from Mainland China's perspective?</span>
+                <div class="sa-meta"><span class="marks-badge">2 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p><strong>Inbound tourism</strong> — from Mainland China's perspective, HK residents visiting Mainland are inbound visitors to China.</p></div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(c)</span><span class="sa-q">State ONE economic benefit of international tourism to a destination country.</span>
+                <div class="sa-meta"><span class="marks-badge">1 mark</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>Any one: foreign exchange earnings / employment creation / economic multiplier effect / development of tourism infrastructure. (1 mark with explanation)</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 1.5 -->
+  <div class="topic-section" data-topic="t5">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row"><span class="topic-num">1.5</span><span class="topic-name">Main Concerns of Tourists</span></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-5')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-5')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-5')">Chapter Quiz</button>
+        </div>
+        <div class="tab-pane active" id="mc-5">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1</div><div class="mc-a">B</div><div class="mc-note">Safety is the primary concern; other concerns include health and crime rate/theft</div></div>
+            <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">B</div><div class="mc-note">Keep cheques, credit cards and cash in SEPARATE places (not the same place)</div></div>
+            <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">C</div><div class="mc-note">Three concern categories: Personal Safety, Money and Valuables, Health</div></div>
+            <div class="mc-row"><div class="mc-q">Q4</div><div class="mc-a">A</div><div class="mc-note">Avoid places with high crime rates, wars or terrorist threats</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">A</div><div class="mc-note">Buy traveller's cheques to reduce possibility of losing cash</div></div>
+          </div>
+        </div>
+        <div class="tab-pane" id="sa-5">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q6</span><span class="sa-q">Name THREE categories of tourist concerns and give ONE precaution for each.</span>
+              <div class="sa-meta"><span class="marks-badge">6 marks</span><span class="level-badge lvl-a" style="font-size:0.68rem;padding:2px 7px;">★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>A: Personal Safety</strong> — e.g. avoid high-crime areas; find fire exits in hotel.</div>
+              <div class="key-point"><strong>B: Money and Valuables</strong> — e.g. buy traveller's cheques; keep credit cards and cash in separate places; put valuables in hotel safe.</div>
+              <div class="key-point"><strong>C: Health</strong> — e.g. check inoculation requirements; bring personal medication.</div>
+              <p class="accept-note">1 mark per category name, 1 mark per precaution, max 6.</p>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q7</span><span class="sa-q">Describe specific advice for each of the THREE main concerns.</span>
+              <div class="sa-meta"><span class="marks-badge">6 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Personal Safety:</strong> Avoid high-crime areas; note location of fire exits.</div>
+              <div class="key-point"><strong>Money and Valuables:</strong> Keep cash and valuables in hotel safe; buy traveller's cheques; keep documents and emergency numbers.</div>
+              <div class="key-point"><strong>Health:</strong> Check sanitation conditions; avoid unclean food and water; consult travel health advice (travelhealth.gov.hk).</div>
+              <p class="accept-note">Award 2 marks per concern with specific advice, max 6.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="quiz-5">
+          <div class="quiz-separator">Chapter Quiz 1.5 — MC: Q1.C Q2.C Q3.C Q4.C Q5.B</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)</span><span class="sa-q">A photographer travelling abroad — state THREE concerns and ONE precaution each.</span>
+                <div class="sa-meta"><span class="marks-badge">3 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer">
+                <p>Concern 1: <strong>Personal Safety</strong> — Avoid high-crime areas; note location of fire exits. Concern 2: <strong>Money and Valuables</strong> — Keep camera equipment in hotel safe; use traveller's cheques. Concern 3: <strong>Health</strong> — Avoid eating at unhygienic food stalls; check if inoculation is required. (1 mark per concern + precaution)</p>
+              </div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span><span class="sa-q">Why should cash and credit cards be kept in separate places?</span>
+                <div class="sa-meta"><span class="marks-badge">2 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>Keeping cash and credit cards in separate places reduces the risk of losing all funds at once. If one is stolen or lost, the tourist still has access to the other.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 1.6 -->
+  <div class="topic-section" data-topic="t6">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row"><span class="topic-num">1.6</span><span class="topic-name">Tourists with Special Needs</span></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-6')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-6')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-6')">Chapter Quiz</button>
+        </div>
+        <div class="tab-pane active" id="mc-6">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1</div><div class="mc-a">B</div><div class="mc-note">VIPs receive special immigration/customs procedures (different from normal passengers)</div></div>
+            <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">C</div><div class="mc-note">Children — airlines may provide special meals AND toys; staff supervision when unaccompanied</div></div>
+            <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">A</div><div class="mc-note">Blind passengers — airlines allow guide dogs on board</div></div>
+            <div class="mc-row"><div class="mc-q">Q4</div><div class="mc-a">B</div><div class="mc-note">Religious travellers — may ask direction of aircraft to pray to a holy centre</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">A</div><div class="mc-note">Pregnant travellers — accepted up to 28 weeks; medical certificate may be required</div></div>
+            <div class="mc-row"><div class="mc-q">Q6</div><div class="mc-a">B</div><div class="mc-note">(2), (3) and (4) only — toys/special meals are for CHILDREN not seniors</div></div>
+          </div>
+        </div>
+        <div class="tab-pane" id="sa-6">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q7</span><span class="sa-q">Describe special services provided for FOUR categories of tourists with special needs.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-a" style="font-size:0.68rem;padding:2px 7px;">★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <p>Any four from:</p>
+              <div class="key-point"><strong>VIPs</strong> — served by specially trained employees; special immigration/customs check.</div>
+              <div class="key-point"><strong>Senior Travellers</strong> — special meals; wheelchair/staff assistance boarding.</div>
+              <div class="key-point"><strong>Children</strong> — special meals, toys; staff supervision when unaccompanied.</div>
+              <div class="key-point"><strong>Disabled</strong> — guide dogs allowed; therapeutic air; wheelchairs.</div>
+              <div class="key-point"><strong>Religious</strong> — special halal/kosher meals; prayer direction assistance; prayer room.</div>
+              <div class="key-point"><strong>Pregnant</strong> — accepted up to 28 weeks; medical certificate may be required.</div>
+              <div class="key-point"><strong>Infant</strong> — baby bassinets, diapers, baby food.</div>
+              <p class="accept-note">1 mark per category correctly matched with service, max 4.</p>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q8</span><span class="sa-q">Identify THREE barriers for physically challenged travellers. Explain how each can be addressed.</span>
+              <div class="sa-meta"><span class="marks-badge">6 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Barrier 1: Accessibility</strong> — e.g. airport provides ramps and elevators for wheelchair users.</div>
+              <div class="key-point"><strong>Barrier 2: Mobility</strong> — e.g. airline provides wheelchair assistance from check-in to boarding.</div>
+              <div class="key-point"><strong>Barrier 3: Communication</strong> — e.g. hotel provides braille menus or visual alerts for deaf guests.</div>
+              <p class="accept-note">2 marks per barrier + how addressed, max 6.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="quiz-6">
+          <div class="quiz-separator">Chapter Quiz 1.6 — MC: Q1.B Q2.C Q3.C Q4.C Q5.B</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)</span><span class="sa-q">Special services for: (a) elderly, (b) infants, (c) visually impaired, (d) Muslims.</span>
+                <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer">
+                <p>Elderly: mobility needs — wheelchair/staff assistance; special meals. (b) Infants: baby bassinets, diapers, baby food; meet-and-assist service. (c) Visually impaired: guide dog allowed on board; staff assistance. (d) Muslims: halal meals; direction of aircraft for prayer. (1 mark each)</p>
+              </div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span><span class="sa-q">Why is it important for tourism providers to offer barrier-free services?</span>
+                <div class="sa-meta"><span class="marks-badge">1 mark</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>Barrier-free services ensure physically challenged tourists can travel safely and comfortably. Tourism providers have a responsibility to cater to all guests regardless of ability, making tourism more inclusive and accessible.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 1.7 -->
+  <div class="topic-section" data-topic="t7">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row"><span class="topic-num">1.7</span><span class="topic-name">Forms of Tourism</span></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-7')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-7')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-7')">Chapter Quiz</button>
+        </div>
+        <div class="tab-pane active" id="mc-7">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1</div><div class="mc-a">B</div><div class="mc-note">Cultural tourism — motivated by learning and experiencing another culture</div></div>
+            <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">C</div><div class="mc-note">Eco-tourism — characterised as a force for conservation and preservation of nature</div></div>
+            <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">C</div><div class="mc-note">Business tourism is price-inelastic — lower prices do NOT encourage more travel</div></div>
+            <div class="mc-row"><div class="mc-q">Q4</div><div class="mc-a">A</div><div class="mc-note">VFR tourists do NOT usually buy accommodation; they consume supermarket food from hosts</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">D</div><div class="mc-note">Business tourism: trade, meeting, convention and exhibition — NOT sightseeing</div></div>
+            <div class="mc-row"><div class="mc-q">Q6</div><div class="mc-a">B</div><div class="mc-note">Study tourism — students travel to overseas learning/training centres for courses</div></div>
+            <div class="mc-row"><div class="mc-q">Q7</div><div class="mc-a">B</div><div class="mc-note">Demand for religious pilgrimage is quite stable; destinations have long tradition</div></div>
+          </div>
+        </div>
+        <div class="tab-pane" id="sa-7">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q8</span><span class="sa-q">Match forms of tourism to descriptions (Leisure, Cultural, Study, Eco, VFR, Health).</span>
+              <div class="sa-meta"><span class="marks-badge">6 marks</span><span class="level-badge lvl-a" style="font-size:0.68rem;padding:2px 7px;">★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point">A → iv (sun/sea/sand relaxation = <strong>Leisure</strong>)</div>
+              <div class="key-point">B → iii (visit museums, folk performances = <strong>Cultural</strong>)</div>
+              <div class="key-point">C → i (overseas universities = <strong>Study</strong>)</div>
+              <div class="key-point">D → ii (minimise environmental impact = <strong>Eco-tourism</strong>)</div>
+              <div class="key-point">E → v (visit family, no accommodation = <strong>VFR</strong>)</div>
+              <div class="key-point">F → vi (spas, medical centres = <strong>Health</strong>)</div>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q9</span><span class="sa-q">State THREE characteristics of business tourism.</span>
+              <div class="sa-meta"><span class="marks-badge">3 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <p>Any three:</p>
+              <div class="key-point">(a) Frequently travel to destinations not usually seen as tourist destinations (e.g. Frankfurt, NY, HK)</div>
+              <div class="key-point">(b) Price-inelastic — lower/higher prices do not affect travel frequency</div>
+              <div class="key-point">(c) Not greatly affected by seasonal factors</div>
+              <div class="key-point">(d) Short but frequent trips to major business destinations</div>
+              <div class="key-point">(e) May require special services — communication facilities, secretarial service</div>
+              <div class="key-point">(f) Expect higher standard of service — first/business-class</div>
+              <p class="accept-note">1 mark each, max 3.</p>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q10</span><span class="sa-q">Explain what it means that eco-tourism is "a force for conservation". Give TWO examples.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point">Eco-tourism revenue funds conservation of natural areas. (2 marks for explanation)</div>
+              <div class="key-point">Example 1: Managing authorities of wildlife areas (e.g. national parks) use entrance fees for conservation work.</div>
+              <div class="key-point">Example 2: Tour guides educate tourists and modify behaviour to minimise environmental impact.</div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="quiz-7">
+          <div class="quiz-separator">Chapter Quiz 1.7 — MC: Q1.C Q2.B Q3.D Q4.B Q5.B</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)</span><span class="sa-q">Identify the form of tourism for Days 1–2 (temples, tea ceremony), Day 3 (onsen), Days 4–5 (sumo tournament).</span>
+                <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer">
+                <p>Days 1–2: <strong>Cultural tourism</strong> — visit temples and tea ceremony to learn about Japanese culture. Day 3: <strong>Health tourism</strong> — enjoy onsen (hot spring) spa treatment. Days 4–5: <strong>Sports tourism</strong> — watch sumo tournament as spectators. (1 mark per form + evidence)</p>
+              </div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span><span class="sa-q">Why does the onsen visit classify as health tourism?</span>
+                <div class="sa-meta"><span class="marks-badge">1 mark</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>Health tourism involves visiting medical treatment centres or spas. The onsen (hot spring) is a form of spa/balneotherapy associated with health and relaxation, consistent with the handout's description of health tourism since the development of spas in the 18th century.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 1.8 -->
+  <div class="topic-section" data-topic="t8">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row"><span class="topic-num">1.8</span><span class="topic-name">Tourist Attractions</span></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-8')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-8')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-8')">Chapter Quiz</button>
+        </div>
+        <div class="tab-pane active" id="mc-8">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1</div><div class="mc-a">B</div><div class="mc-note">Natural and man-made attractions are the main pull factor of tourist flow</div></div>
+            <div class="mc-row"><div class="mc-q">Q2 <span class="dse-tag">DSE</span></div><div class="mc-a">B</div><div class="mc-note">Temperature, Relative Humidity, and Wind are the three climatic elements associated with human comfort</div></div>
+            <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">C</div><div class="mc-note">Historic relics — Qin Terra Cotta Warriors and Crown Jewels of England</div></div>
+            <div class="mc-row"><div class="mc-q">Q4 <span class="dse-tag">DSE</span></div><div class="mc-a">B</div><div class="mc-note">(1) and (3) only — Niagara Falls and Amazon Rainforest are natural; Great Wall = man-made; Disneyland = theme park</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">A</div><div class="mc-note">Olympic Games, Munich Beer Festival, Cannes Film Festival = special events; The Louvre = Cultural Attraction</div></div>
+            <div class="mc-row"><div class="mc-q">Q6</div><div class="mc-a">B</div><div class="mc-note">Tropical rainforests → eco-tourism & bird watching; Savannas → wildlife expeditions (NOT cycling)</div></div>
+            <div class="mc-row"><div class="mc-q">Q7</div><div class="mc-a">C</div><div class="mc-note">Historic attractions include historic relics, sites, history museums and buildings — not theme parks</div></div>
+          </div>
+        </div>
+        <div class="tab-pane" id="sa-8">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q8</span><span class="sa-q">Classify SIX tourist attractions as natural, cultural/historic, built facility, or special event.</span>
+              <div class="sa-meta"><span class="marks-badge">6 marks</span><span class="level-badge lvl-a" style="font-size:0.68rem;padding:2px 7px;">★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point">Niagara Falls — <strong>Natural</strong> (landform)</div>
+              <div class="key-point">Louvre Museum — <strong>Built facility / Cultural</strong></div>
+              <div class="key-point">HK Disneyland — <strong>Built</strong> (theme park)</div>
+              <div class="key-point">Stonehenge — <strong>Historic</strong> (site)</div>
+              <div class="key-point">FIFA World Cup — <strong>Special event</strong> (sports)</div>
+              <div class="key-point">Serengeti Plains — <strong>Natural</strong> (savanna/wildlife)</div>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q9</span><span class="sa-q">Explain why attractions are described as "pull factors". Give TWO Hong Kong examples.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point">Attractions are "pull factors" that draw tourists to a destination. Without attractions, there would be no need for other tourist services. (1 mark)</div>
+              <div class="key-point">HK Example 1: <strong>Hong Kong Disneyland</strong> — draws families from across Asia. (1 mark)</div>
+              <div class="key-point">HK Example 2: <strong>Ocean Park Hong Kong</strong> — attracts visitors for its marine life and rides. (1 mark)</div>
+              <p class="accept-note">Accept any valid HK examples. 1 mark concept, 1 mark per example with explanation.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="quiz-8">
+          <div class="quiz-separator">Chapter Quiz 1.8 — MC: Q1.C Q2.B Q3.B Q4.C Q5.D</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)</span><span class="sa-q">Identify TWO types of tourist attractions in the West Kowloon Cultural District.</span>
+                <div class="sa-meta"><span class="marks-badge">2 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>Type 1: Cultural attraction — HK Palace Museum or Xiqu Centre (Chinese art, opera, culture). Type 2: Built facility / Entertainment attraction — M+, Freespace, Art Park (modern art museum, outdoor performance spaces). (1 mark type + 1 mark evidence)</p></div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span><span class="sa-q">Explain why a combination of attractions creates a stronger tourist appeal.</span>
+                <div class="sa-meta"><span class="marks-badge">3 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>A combination of attractions (art, culture, music, architecture, lifestyle) ensures the WKCD appeals to different types of tourists with different interests. Since attractiveness differs between people and may change over time, a combination creates a stronger and more sustainable tourist appeal. (Up to 3 marks)</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 1.9 -->
+  <div class="topic-section" data-topic="t9">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row"><span class="topic-num">1.9</span><span class="topic-name">Cohen's Classification of Tourists</span></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-9')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-9')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-9')">Chapter Quiz</button>
+        </div>
+        <div class="tab-pane active" id="mc-9">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1 <span class="dse-tag">DSE</span></div><div class="mc-a">B</div><div class="mc-note">Organised Mass Tourist — least adventurous, stays in environmental bubble, itinerary pre-decided</div></div>
+            <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">C</div><div class="mc-note">Drifter — no fixed itinerary, lives with locals, takes odd jobs, keeps away from tourism establishment</div></div>
+            <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">C</div><div class="mc-note">Explorer — arranges trip alone, seeks unusual destinations, retains some comforts, tries to mix with locals</div></div>
+            <div class="mc-row"><div class="mc-q">Q4 <span class="dse-tag">DSE</span></div><div class="mc-a">B</div><div class="mc-note">(1) and (3) only: Organised mass tourist ✓; Individual mass tourist ✓. Explorer ≠ Drifter; Drifter ≠ Explorer descriptions given</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">B</div><div class="mc-note">Individual Mass Tourist — NOT bound to a group, has some control, but still uses travel agency</div></div>
+            <div class="mc-row"><div class="mc-q">Q6</div><div class="mc-a">C</div><div class="mc-note">Institutionalized tourism = OMT + IMT (use tourist establishments); Non-institutionalized = Explorer + Drifter</div></div>
+            <div class="mc-row"><div class="mc-q">Q7</div><div class="mc-a">C</div><div class="mc-note">Drifter may violate UNWTO tourist definition by earning income at the destination (remunerated from within)</div></div>
+          </div>
+        </div>
+        <div class="tab-pane" id="sa-9">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q8</span><span class="sa-q">Compare the FOUR tourist types in Cohen's classification in a table. (8 marks)</span>
+              <div class="sa-meta"><span class="marks-badge">8 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Organised Mass Tourist (OMT):</strong> Fixed itinerary, all arranged by travel establishment, spends time in "environmental bubble", least adventurous.</div>
+              <div class="key-point"><strong>Individual Mass Tourist (IMT):</strong> Similar to OMT but NOT bound to a group; some control over time/itinerary; still uses travel agency; still in bubble.</div>
+              <div class="key-point"><strong>Explorer:</strong> Arranges trip alone; seeks unusual destinations; retains some comforts; tries to mix with locals; more flexible but still careful.</div>
+              <div class="key-point"><strong>Drifter:</strong> Furthest from bubble; keeps away from tourist establishment; no fixed itinerary/timetable; lives with locals; takes odd jobs.</div>
+              <p class="accept-note">2 marks per type fully described, max 8.</p>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q9</span><span class="sa-q">Classify the traveller below using Cohen's classification. Give TWO pieces of evidence.</span>
+              <div class="sa-meta"><span class="marks-badge">3 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Explorer</strong> (1 mark) — Evidence 1: She arranges her own trips and seeks unusual experiences. Evidence 2: She stays in local guesthouses (retaining basic comfort) and uses public transport (reliable means of transport). (1 mark each evidence)</div>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q10</span><span class="sa-q">Discuss whether a Drifter meets the UNWTO definition of a tourist.</span>
+              <div class="sa-meta"><span class="marks-badge">5 marks</span><span class="level-badge lvl-c" style="font-size:0.68rem;padding:2px 7px;">★★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>For:</strong> They stay ≥24 hours and travel outside their usual environment.</div>
+              <div class="key-point"><strong>Against:</strong> They earn income from "odd jobs" at the destination — this violates the "purpose of visit" defining factor (remunerated from within the destination).</div>
+              <div class="key-point"><strong>Conclusion:</strong> A Drifter who takes odd jobs would NOT meet the UNWTO tourist definition due to working at the destination.</div>
+              <p class="accept-note">Award marks for both sides and conclusion.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="quiz-9">
+          <div class="quiz-separator">Chapter Quiz 1.9 — MC: Q1.B Q2.B Q3.D Q4.C Q5.B</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)</span><span class="sa-q">Classify Sam, Lisa, and David using Cohen's classification.</span>
+                <div class="sa-meta"><span class="marks-badge">3 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>Sam: <strong>Organised Mass Tourist</strong> — all arrangements made by travel agency, no say in itinerary. Lisa: <strong>Individual Mass Tourist</strong> — major arrangements through agency but has some control over daytime itinerary. David: <strong>Drifter</strong> — stays with local families, eats local food, no fixed plan, works odd jobs.</p></div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span><span class="sa-q">Compare Sam and Lisa: ONE similarity and ONE difference.</span>
+                <div class="sa-meta"><span class="marks-badge">2 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p><strong>Similarity:</strong> Both Sam and Lisa use travel agencies for major arrangements (institutionalized). <strong>Difference:</strong> Sam's tour is entirely fixed with no individual control; Lisa has some control over her time and is not bound to a group.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 1.10 -->
+  <div class="topic-section" data-topic="t10">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row"><span class="topic-num">1.10</span><span class="topic-name">Plog's Classification of Tourists</span></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-10')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-10')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-10')">Chapter Quiz</button>
+        </div>
+        <div class="tab-pane active" id="mc-10">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1</div><div class="mc-a">C</div><div class="mc-note">Allocentric — seeks new experiences, explores unusual areas before others, outgoing and self-confident</div></div>
+            <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">B</div><div class="mc-note">Psychocentric — conservatively oriented, prefers familiar destinations, heavily structured itinerary</div></div>
+            <div class="mc-row"><div class="mc-q">Q3 <span class="dse-tag">DSE</span></div><div class="mc-a">D</div><div class="mc-note">Allocentric visits first during early exploration; psychocentrics prefer popular/familiar destinations later</div></div>
+            <div class="mc-row"><div class="mc-q">Q4</div><div class="mc-a">B</div><div class="mc-note">Mid-centric — not particularly adventurous but receptive to new experience; between allocentric and psychocentric</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">C</div><div class="mc-note">Psychocentric prefers familiar hotel chains and home cuisine restaurants</div></div>
+            <div class="mc-row"><div class="mc-q">Q6</div><div class="mc-a">D</div><div class="mc-note">Allocentric prefers simple/adequate accommodation — NOT necessarily modern or chain hotels</div></div>
+            <div class="mc-row"><div class="mc-q">Q7</div><div class="mc-a">C</div><div class="mc-note">As destination becomes popular, it goes from allocentric to mid-centric to psychocentric visitors</div></div>
+          </div>
+        </div>
+        <div class="tab-pane" id="sa-10">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q8</span><span class="sa-q">Compare the characteristics of Allocentric and Psychocentric tourists.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-a" style="font-size:0.68rem;padding:2px 7px;">★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Allocentric:</strong> Non-tourist destinations; discovers new destinations first; unusual destinations; high activity; simple accommodation; enjoys different cultures; flexible arrangements.</div>
+              <div class="key-point"><strong>Psychocentric:</strong> Familiar destinations; commonplace activities; sun-and-fun; low activity; familiar hotel chain and home cuisine; familiar atmosphere; complete tour packages.</div>
+              <p class="accept-note">1 mark each difference, max 4.</p>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q9</span><span class="sa-q">Explain how Plog's model is useful for destination managers and tourism marketers.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Destination managers:</strong> Can identify which tourist type currently visits their destination and develop appropriate products (e.g. allocentric stage = raw/adventure tourism; psychocentric stage = mass facilities).</div>
+              <div class="key-point"><strong>Tourism marketers:</strong> Can target promotions — adventurous destinations for allocentrics (e.g. adventure travel ads); familiar packages for psychocentrics (e.g. "same hotel, same beach").</div>
+              <p class="accept-note">2 marks per example with clear explanation.</p>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q10</span><span class="sa-q">Explain how a destination's visitor profile changes as it becomes more popular. What are the implications for managers?</span>
+              <div class="sa-meta"><span class="marks-badge">6 marks</span><span class="level-badge lvl-c" style="font-size:0.68rem;padding:2px 7px;">★★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point">Allocentrics visit first (exploration stage). As more tourists arrive, mass tourism facilities develop. Mid-centrics begin to visit. Eventually psychocentrics arrive as the destination becomes familiar and developed.</div>
+              <div class="key-point"><strong>Implications:</strong> Destination may lose its appeal for allocentrics; becomes crowded; risk of decline if quality drops. Managers should balance development with preserving unique appeal.</div>
+              <p class="accept-note">Award marks for Plog model application + implications.</p>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="quiz-10">
+          <div class="quiz-separator">Chapter Quiz 1.10 — MC: Q1.B Q2.D Q3.B Q4.C Q5.C</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)</span><span class="sa-q">Classify Emma (visits off-the-beaten-track Bhutan), Tom (same Spanish resort every summer), and Sara (popular but slightly adventurous destinations).</span>
+                <div class="sa-meta"><span class="marks-badge">3 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>Emma: <strong>Allocentric</strong> — visits unusual destinations, books own accommodation, enjoys meeting locals. Tom: <strong>Psychocentric</strong> — returns to same resort, familiar hotel, familiar cuisine, books through agency. Sara: <strong>Mid-centric</strong> — explores independently but uses an agent for popular destinations. (1 mark each)</p></div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span><span class="sa-q">How should a travel agency mainly serving Tom structure its offerings?</span>
+                <div class="sa-meta"><span class="marks-badge">2 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>Offer <strong>complete, structured tour packages</strong> to familiar destinations; choose chain hotels with consistent standards; ensure itineraries include familiar food options; focus marketing on safety, comfort and familiarity rather than novelty.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC 1.11 -->
+  <div class="topic-section" data-topic="t11">
+    <div class="topic-card">
+      <div class="topic-header" onclick="toggleTopic(this)">
+        <div class="topic-title-row"><span class="topic-num">1.11</span><span class="topic-name">The Concept of Tourist Flows</span></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="topic-body">
+        <div class="inner-tabs">
+          <button class="inner-tab active" onclick="switchTab(this,'mc-11')">MC Answers</button>
+          <button class="inner-tab" onclick="switchTab(this,'sa-11')">Short Answer Scheme</button>
+          <button class="inner-tab" onclick="switchTab(this,'quiz-11')">Chapter Quiz</button>
+        </div>
+        <div class="tab-pane active" id="mc-11">
+          <div class="mc-answer-grid">
+            <div class="mc-row"><div class="mc-q">Q1 <span class="dse-tag">DSE</span></div><div class="mc-a">C</div><div class="mc-note">Push factors are intangible internal desires; pull factors are destination attributes (drawing power)</div></div>
+            <div class="mc-row"><div class="mc-q">Q2</div><div class="mc-a">B</div><div class="mc-note">Desire to escape, rest and relaxation, prestige, adventure, social interaction = push factors (internal)</div></div>
+            <div class="mc-row"><div class="mc-q">Q3</div><div class="mc-a">B</div><div class="mc-note">Natural/man-made attractions, climate, political ties, relative costs, new cultural experience = pull factors</div></div>
+            <div class="mc-row"><div class="mc-q">Q4</div><div class="mc-a">B</div><div class="mc-note">Currency control and visa requirements = macro political factors affecting tourist flows</div></div>
+            <div class="mc-row"><div class="mc-q">Q5</div><div class="mc-a">C</div><div class="mc-note">Economic development: more developed countries generate more tourists; China is an example in Asia</div></div>
+            <div class="mc-row"><div class="mc-q">Q6</div><div class="mc-a">B</div><div class="mc-note">(1), (3) and (4) only — business travel is PRICE-INELASTIC so lower prices do NOT increase demand</div></div>
+            <div class="mc-row"><div class="mc-q">Q7</div><div class="mc-a">C</div><div class="mc-note">Currency control, economic development, tourism trends = macro factors (not individual desire for adventure)</div></div>
+            <div class="mc-row"><div class="mc-q">Q8</div><div class="mc-a">B</div><div class="mc-note">A tourist's desire to escape urban pressures = push factor (internal psychological motivation)</div></div>
+            <div class="mc-row"><div class="mc-q">Q9</div><div class="mc-a">C</div><div class="mc-note">Natural scenery and historic landmarks = pull factors; need for relaxation and desire for social interaction = push</div></div>
+          </div>
+        </div>
+        <div class="tab-pane" id="sa-11">
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q10</span><span class="sa-q">Classify each item as Push (P) or Pull (L): escape, beautiful beaches, desire for prestige, low cost of living, need for rest, positive host attitude.</span>
+              <div class="sa-meta"><span class="marks-badge">6 marks</span><span class="level-badge lvl-a" style="font-size:0.68rem;padding:2px 7px;">★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Push factors:</strong> Escape (P) · Desire for prestige (P) · Need for rest and relaxation (P)</div>
+              <div class="key-point"><strong>Pull factors:</strong> Beautiful beaches (L) · Low cost of living (L) · Positive attitude of host community (L)</div>
+              <p class="accept-note">1 mark each.</p>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q11</span><span class="sa-q">Distinguish between micro and macro factors influencing tourist flows. Give examples of each.</span>
+              <div class="sa-meta"><span class="marks-badge">4 marks</span><span class="level-badge lvl-b" style="font-size:0.68rem;padding:2px 7px;">★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>Micro factors</strong> = push and pull factors at the individual level. Push: internal motivations — escape, rest, prestige, adventure, social interaction. Pull: destination attractiveness — attractions, climate, lower cost.</div>
+              <div class="key-point"><strong>Macro factors</strong> = broader external forces. Political: visa policies, currency control, political stability. Economic: income levels, exchange rates. Trend: changing tourism patterns (e.g. rise of independent travel).</div>
+              <p class="accept-note">1 mark per definition, 1 mark per example, max 4.</p>
+            </div>
+          </div>
+          <div class="sa-block">
+            <div class="sa-header" onclick="toggleSA(this)">
+              <span class="sa-num">Q12</span><span class="sa-q">Analyse the recent surge in HK tourists to Japan using push/pull and macro factors. [(a) TWO push, (b) TWO pull, (c) ONE macro]</span>
+              <div class="sa-meta"><span class="marks-badge">6 marks</span><span class="level-badge lvl-c" style="font-size:0.68rem;padding:2px 7px;">★★★</span><span class="sa-chevron">▼</span></div>
+            </div>
+            <div class="sa-answer">
+              <div class="key-point"><strong>(a) Push factors:</strong> Desire to escape / need for rest and relaxation · Desire for social interaction / experiencing pop culture. (1 mark each)</div>
+              <div class="key-point"><strong>(b) Pull factors:</strong> Weak Japanese Yen — Japan more affordable (relative cost pull) · New theme parks and attractions (natural and man-made attractions). (1 mark each)</div>
+              <div class="key-point"><strong>(c) Macro factor:</strong> Economic/Political (stability). Japan's political stability and economic affordability (weak yen) are macro factors at country/government level beyond individual control, affecting the overall pattern of tourist flows. (2 marks)</div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="quiz-11">
+          <div class="quiz-separator">Chapter Quiz 1.11 — MC: Q1.B Q2.C Q3.B Q4.C Q5.B</div>
+          <div style="padding:16px 20px;">
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(a)</span><span class="sa-q">Identify ONE push and ONE pull factor for HK tourists visiting Thailand.</span>
+                <div class="sa-meta"><span class="marks-badge">2 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>Push: desire to escape / affordability of Thailand (HK is more expensive). Pull: Beautiful beaches; weak Thai Baht making Thailand affordable; variety of food. (1 mark each)</p></div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(b)</span><span class="sa-q">Identify the macro factor explaining increased Mainland visitors to HK under the Individual Visit Scheme.</span>
+                <div class="sa-meta"><span class="marks-badge">2 marks</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p><strong>Political macro factor</strong> — the Individual Visit Scheme (IVS) is a government policy that allows Mainland residents to visit HK individually, removing the restriction of group tours. This directly increased inbound tourist flows from Mainland China. (1 mark macro factor, 1 mark explanation)</p></div>
+            </div>
+            <div class="sa-block">
+              <div class="sa-header" onclick="toggleSA(this)">
+                <span class="sa-num">(c)</span><span class="sa-q">Suggest ONE measure HK government can take to attract more tourists.</span>
+                <div class="sa-meta"><span class="marks-badge">1 mark</span><span class="sa-chevron">▼</span></div>
+              </div>
+              <div class="sa-answer"><p>Any one: Develop new tourist attractions; improve tourism infrastructure; launch international marketing campaigns; host mega-events to raise HK's international profile; offer tourism incentives (e.g. HK Night Vibes events).</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <p>All answers may have acceptable alternatives. Exercise professional discretion. For reference only.</p>
+    <p style="margin-top:6px;"><a href="https://www.mathans.app/ths">← THS Mock Test & Marking Scheme</a> · <a href="https://www.mathans.app">MathAns Home</a></p>
+  </div>
+
+</div><!-- end wrap -->
+
+<script>
+  function toggleTopic(header) {
+    const body = header.nextElementSibling;
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    header.classList.toggle('open', !isOpen);
+  }
+
+  function switchTab(btn, paneId) {
+    const parent = btn.closest('.topic-body');
+    parent.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+    parent.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    parent.querySelector('#' + paneId).classList.add('active');
+  }
+
+  function toggleSA(header) {
+    const answer = header.nextElementSibling;
+    const isOpen = answer.classList.contains('open');
+    answer.classList.toggle('open', !isOpen);
+    header.classList.toggle('open', !isOpen);
+  }
+
+  function filterTopic(key) {
+    document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.querySelectorAll('.topic-section').forEach(s => {
+      s.style.display = (key === 'all' || s.dataset.topic === key) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>

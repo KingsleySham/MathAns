@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>THS Mock Test — MathAns</title>
+  <meta name="description" content="S.3 Tourism and Hospitality Studies Mock Test Marking Scheme for St. Margaret's 2025-2026." />
+  <meta name="theme-color" content="#0d9488" />
+  <link rel="canonical" href="https://www.mathans.app/ths" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal:       #0d9488;
+      --teal-dark:  #0f766e;
+      --teal-light: #ccfbf1;
+      --teal-pale:  #f0fdfa;
+      --amber:      #d97706;
+      --amber-light:#fef3c7;
+      --rose:       #e11d48;
+      --rose-light: #ffe4e6;
+      --green:      #16a34a;
+      --green-light:#dcfce7;
+      --slate:      #1e293b;
+      --muted:      #64748b;
+      --border:     #e2e8f0;
+      --bg:         #f8fafc;
+      --card:       #ffffff;
+      --shadow:     0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.06);
+      --radius:     14px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--slate);
+      min-height: 100vh;
+      padding: 20px 16px 60px;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .wrap { max-width: 680px; margin: 0 auto; }
+
+    /* Back link */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--teal);
+      text-decoration: none;
+      margin-bottom: 16px;
+      letter-spacing: 0.03em;
+    }
+    .back-link:hover { opacity: 0.75; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--teal-dark) 0%, #14b8a6 100%);
+      border-radius: var(--radius);
+      padding: 26px 26px 22px;
+      color: #fff;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::after {
+      content: '✈';
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 5rem;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+    .header-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.18);
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .header p { font-size: 0.82rem; opacity: 0.82; }
+
+    /* Download bar */
+    .dl-bar {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .dl-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      flex: 0 0 auto;
+      margin-right: 4px;
+    }
+    .dl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--slate);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .dl-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-pale); }
+    .dl-btn .icon { font-size: 1rem; }
+
+    /* Set toggle */
+    .set-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .set-btn {
+      flex: 1;
+      padding: 11px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .set-btn.active {
+      border-color: var(--teal);
+      background: var(--teal);
+      color: #fff;
+    }
+    .set-btn:hover:not(.active) { border-color: var(--teal); color: var(--teal); }
+
+    /* Section card */
+    .section-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .section-header:hover { background: var(--teal-pale); }
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--slate);
+    }
+    .section-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: var(--teal-light);
+      color: var(--teal-dark);
+    }
+    .chevron {
+      font-size: 0.85rem;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+    .section-header.open .chevron { transform: rotate(180deg); }
+    .section-body { display: none; padding: 0; }
+    .section-body.open { display: block; }
+
+    /* MC answer row */
+    .mc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 0;
+    }
+    .mc-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    .mc-item:hover { background: var(--teal-pale); }
+    .mc-num {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      min-width: 26px;
+    }
+    .mc-ans {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--teal-dark);
+      min-width: 18px;
+    }
+    .mc-expl {
+      font-size: 0.78rem;
+      color: #475569;
+      line-height: 1.5;
+      flex: 1;
+    }
+    .mc-ref {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 3px;
+    }
+
+    /* DBQ question block */
+    .dbq-block {
+      border-bottom: 1px solid var(--border);
+    }
+    .dbq-block:last-child { border-bottom: none; }
+    .dbq-q-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      cursor: pointer;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+    }
+    .dbq-q-header:hover { background: var(--teal-pale); }
+    .dbq-q-num {
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: var(--teal-dark);
+      background: var(--teal-light);
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .dbq-q-title { font-size: 0.85rem; font-weight: 600; color: var(--slate); flex: 1; }
+    .dbq-marks {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--amber);
+      background: var(--amber-light);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .dbq-q-chevron {
+      font-size: 0.8rem;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+    .dbq-q-header.open .dbq-q-chevron { transform: rotate(180deg); }
+
+    .dbq-answer { display: none; padding: 18px 20px 20px; }
+    .dbq-answer.open { display: block; animation: slideIn 0.2s ease; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .part-block { margin-bottom: 16px; }
+    .part-block:last-child { margin-bottom: 0; }
+
+    .part-label {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 8px;
+    }
+
+    .answer-chip {
+      display: inline-block;
+      background: var(--green-light);
+      color: #14532d;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 5px 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #86efac;
+    }
+
+    .answer-body {
+      font-size: 0.85rem;
+      color: #374151;
+      line-height: 1.7;
+    }
+    .answer-body p { margin-bottom: 8px; }
+    .answer-body p:last-child { margin-bottom: 0; }
+
+    .evidence-box {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      border-radius: 0 8px 8px 0;
+      padding: 10px 13px;
+      margin: 8px 0;
+      font-size: 0.82rem;
+      color: #1e3a8a;
+      line-height: 1.6;
+    }
+    .evidence-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #2563eb;
+      margin-bottom: 4px;
+    }
+
+    .marks-note {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+
+    .note-box {
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 10px 13px;
+      font-size: 0.8rem;
+      color: #78350f;
+      margin-top: 10px;
+    }
+
+    /* Scenario header */
+    .scenario-box {
+      background: linear-gradient(135deg, var(--teal-dark) 0%, #0891b2 100%);
+      color: #fff;
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .scenario-box small { opacity: 0.78; font-weight: 400; font-size: 0.78rem; }
+
+    /* Footer note */
+    .footer-note {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 24px;
+    }
+    .footer-note a { color: var(--teal); text-decoration: none; }
+
+    @media (max-width: 460px) {
+      .mc-grid { grid-template-columns: 1fr; }
+      .header h1 { font-size: 1.35rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="https://www.mathans.app" class="back-link">← MathAns Home</a>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-tag">THS · S3 Mock Test 2025–2026</div>
+    <h1>Tourism &amp; Hospitality Studies</h1>
+    <p>St. Margaret's Co-educational English Secondary &amp; Primary School · Marking Scheme</p>
+  </div>
+
+  <!-- Downloads -->
+  <div class="dl-bar">
+    <span class="dl-label">📥 Download</span>
+    <a class="dl-btn" href="/ths/mock-test.docx" download="S3_THS_Mock_Test_2025_2026.docx">
+      <span class="icon">📝</span> Mock Test Paper
+    </a>
+    <a class="dl-btn" href="/ths/marking-scheme.docx" download="S3_THS_Marking_Scheme_2025_2026.docx">
+      <span class="icon">✅</span> Marking Scheme
+    </a>
+    <a class="dl-btn" href="/ths/full-book.docx" download="THS_S3_Full_Book.docx">
+      <span class="icon">📚</span> Full Book Notes
+    </a>
+  </div>
+
+  <!-- Set Toggle -->
+  <div class="set-toggle">
+    <button class="set-btn active" data-set="A" onclick="switchSet('A')">Set A</button>
+    <button class="set-btn" data-set="B" onclick="switchSet('B')">Set B</button>
+  </div>
+
+  <!-- ══════════════ SET A ══════════════ -->
+  <div id="set-A">
+
+    <!-- Section A: MCQ -->
+    <div class="section-card">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div>
+          <div class="section-title">Section A — Multiple Choice</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="section-badge">20 marks</span>
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="mc-grid">
+
+          <div class="mc-item">
+            <div class="mc-num">Q1</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">The temporary short-term movement of people to destinations outside where they normally live and work.</div>
+              <div class="mc-ref">§1.3.1 Definition of Tourism, p.7</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q2</div>
+            <div class="mc-ans">C</div>
+            <div>
+              <div class="mc-expl">An excursionist — visits a destination for less than 24 hours (returns same evening), not for transit.</div>
+              <div class="mc-ref">§1.3.1 Excursionist, p.7</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q3</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">A Taipei resident travelling to Kaohsiung — travel within their own country = domestic tourism.</div>
+              <div class="mc-ref">§1.4.3 Domestic Tourism, p.10</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q4</div>
+            <div class="mc-ans">C</div>
+            <div>
+              <div class="mc-expl">Outbound; inbound. HK residents going abroad = HK outbound; foreigners visiting HK = HK inbound.</div>
+              <div class="mc-ref">§1.4.2 Outbound and Inbound Tourism, p.10</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q5</div>
+            <div class="mc-ans">A</div>
+            <div>
+              <div class="mc-expl">(1) and (2) only — HKTB and online travel agencies are Tourism Promoters (2nd layer). Cathay Pacific and Marriott are Service Suppliers (3rd layer).</div>
+              <div class="mc-ref">§1.2 Integrated Model of Tourism, p.3</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q6</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1) and (3) only — Airline companies and hotel chains are Tourism Service Suppliers. Direct marketing companies and tourist boards are Tourism Promoters.</div>
+              <div class="mc-ref">§1.2 Key Elements, p.3</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q7</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">A government relaxing visa requirements is a political force. Note: mobile apps = technological; pollution = environmental; exchange rates = economic.</div>
+              <div class="mc-ref">§1.2 Political Forces, p.4</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q8</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">The development of jet airplanes made large-scale international tourism possible — a technological force directly stated in the handout.</div>
+              <div class="mc-ref">§1.2 Technological Forces, p.4</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q9</div>
+            <div class="mc-ans">C</div>
+            <div>
+              <div class="mc-expl">Least adventurous; stays in their "environmental bubble" with a fully pre-planned itinerary throughout the trip.</div>
+              <div class="mc-ref">§1.9 Cohen's: Organised Mass Tourist, p.39</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q10</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1) and (3) only. Drifters keep away from hotels (1) ✓ and live with locals (3) ✓. They do NOT have pre-planned itineraries (2) ✗ and do NOT stay in the environmental bubble (4) ✗.</div>
+              <div class="mc-ref">§1.9 Drifter, p.40</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q11</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">Book a fully structured package tour to a familiar beach resort. Psychocentrics prefer familiar destinations and heavily structured itineraries.</div>
+              <div class="mc-ref">§1.10 Plog's: Psychocentric, p.41</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q12</div>
+            <div class="mc-ans">C</div>
+            <div>
+              <div class="mc-expl">Cultural tourism — motivated by learning and experiencing another culture; visiting traditional arts and food culture.</div>
+              <div class="mc-ref">§1.7 Cultural Tourism, p.16</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q13</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">Religious traveller. "During the flight, they may ask the direction of the aircraft so as to pray to a holy center of their belief."</div>
+              <div class="mc-ref">§1.6 Religious Travelers, p.12</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q14</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1) and (3) only — Niagara Falls and the Amazon Rainforest are natural attractions. The Great Wall = famous construction (man-made); Disneyland = theme park (man-made).</div>
+              <div class="mc-ref">§1.8 Natural Attractions, p.19–22</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q15</div>
+            <div class="mc-ans">C</div>
+            <div>
+              <div class="mc-expl">Historic relics. Terra Cotta Warriors and Crown Jewels are explicitly listed as examples of Historic Relics in the handout.</div>
+              <div class="mc-ref">§1.8 Historic Attractions, p.28–29</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q16</div>
+            <div class="mc-ans">C</div>
+            <div>
+              <div class="mc-expl">A tourist's desire to escape from the pressures of daily urban life — internal psychological motivation = push factor. Options A, B, D are all destination attributes = pull factors.</div>
+              <div class="mc-ref">§1.11 Push Factors, p.45</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q17</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1) and (3) only — natural scenery and historic landmarks = pull factors. (2) need for relaxation and (4) desire for social interaction = push factors.</div>
+              <div class="mc-ref">§1.11 Pull vs Push Factors, p.45–46</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q18</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">Length of stay, purpose of visit, and distance travelled.</div>
+              <div class="mc-ref">§1.3.2 Defining Factors of Tourism, p.8</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q19</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">Marketing and business — helps understand the promotion and marketing of tourism products. Explicitly stated in the handout, p.1.</div>
+              <div class="mc-ref">§1.1 Tourism as an Integrated Discipline, p.1</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q20</div>
+            <div class="mc-ans">A</div>
+            <div>
+              <div class="mc-expl">(1) and (2) only. HKTB = Tourism Promoter ✓. Palace Museum = Tourism Promoter/Destination ✓. Rosewood Hong Kong = hotel = Tourism Service Supplier (3rd layer) ✗.</div>
+              <div class="mc-ref">2025 DSE P1 Q1</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Section B: DBQ -->
+    <div class="section-card">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div>
+          <div class="section-title">Section B — Data-Based Questions</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="section-badge">45 marks</span>
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <!-- DBQ Q1 -->
+        <div class="dbq-block">
+          <div class="dbq-q-header" onclick="toggleDbq(this)">
+            <span class="dbq-q-num">B-Q1</span>
+            <span class="dbq-q-title">The Lee Family Trip to Japan</span>
+            <span class="dbq-marks">15 marks</span>
+            <span class="dbq-q-chevron">▼</span>
+          </div>
+          <div class="dbq-answer">
+            <div class="scenario-box">
+              📖 <strong>Scenario:</strong> The Lee Family Trip to Japan
+              <br><small>Questions (a)–(d) refer to this scenario</small>
+            </div>
+
+            <!-- (a) -->
+            <div class="part-block">
+              <div class="part-label">(a) Define "tourist" and "excursionist". Give ONE example each. [4 marks]</div>
+              <div class="marks-note">1 mark per definition + 1 mark per example</div>
+              <div class="answer-chip">Tourist (1 mark)</div>
+              <div class="answer-body">
+                <p>A person who travels to destinations outside his/her residence and working place, and stays for <strong>at least 24 hours</strong>, for the purpose of leisure or business. (§1.3.1)</p>
+              </div>
+              <div class="evidence-box">
+                <div class="evidence-label">Example (1 mark)</div>
+                A Hong Kong resident spending 3 nights in Tokyo on holiday. (Accept any valid example of an overnight stay away from home country/usual environment.)
+              </div>
+              <div class="answer-chip" style="margin-top:10px;">Excursionist (1 mark)</div>
+              <div class="answer-body">
+                <p>A person who temporarily visits a destination and stays for <strong>less than 24 hours</strong>, for the purpose of leisure or business, but not for transit. (§1.3.1)</p>
+              </div>
+              <div class="evidence-box">
+                <div class="evidence-label">Example (1 mark)</div>
+                A Hong Kong resident visiting Shenzhen for shopping and returning home the same day. (Accept any valid same-day trip.)
+              </div>
+            </div>
+
+            <!-- (b) -->
+            <div class="part-block">
+              <div class="part-label">(b) Identify the type of tourist (Cohen's) with TWO pieces of evidence. [3 marks]</div>
+              <div class="answer-chip">Organised Mass Tourist (1 mark)</div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence 1 (1 mark)</div>
+                "The entire trip was booked through a travel agency" — dealt with in a routine way by tourist establishments; itinerary decided in advance.
+              </div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence 2 (1 mark)</div>
+                "The itinerary was fully pre-arranged with no changes allowed" — tourists have almost no decisions on their trip; staying in their environmental bubble.
+              </div>
+            </div>
+
+            <!-- (c) -->
+            <div class="part-block">
+              <div class="part-label">(c) Identify the type of attraction for (i) Osaka Castle and (ii) Traditional Japanese dance. [4 marks]</div>
+              <div class="answer-chip">(i) Osaka Castle — Historic attraction / Historic site (1 mark)</div>
+              <div class="answer-body">
+                <p><strong>Reason (1 mark):</strong> It is a famous historic building with special significance in relation to historical events; included in the handout's "Historic Attractions" category. (§1.8, p.28)</p>
+              </div>
+              <div class="answer-chip" style="margin-top:10px;">(ii) Traditional Japanese dance — Cultural attraction: Music and dance (1 mark)</div>
+              <div class="answer-body">
+                <p><strong>Reason (1 mark):</strong> "Music and dance are probably the most entertaining and appealing cultural attractions for tourists." (§1.7 / 1.8, p.30)</p>
+              </div>
+            </div>
+
+            <!-- (d) -->
+            <div class="part-block">
+              <div class="part-label">(d) Identify ONE Tourism Promoter and ONE Tourism Service Supplier with explanations. [4 marks]</div>
+              <div class="answer-chip">Tourism Promoter: Travel agency / Tour guide (1 mark)</div>
+              <div class="answer-body">
+                <p><strong>Explanation (1 mark):</strong> Travel agencies provide services such as making travel arrangements and giving advice on tourism-related matters. They are in the first layer (closest to travellers) of the Integrated Model. (§1.2, p.3)</p>
+              </div>
+              <div class="answer-chip" style="margin-top:10px;">Tourism Service Supplier: Airline / Hotel (1 mark)</div>
+              <div class="answer-body">
+                <p><strong>Explanation (1 mark):</strong> Airlines and hotels provide transportation/accommodation services to travellers, usually independently. They are in the third layer (Tourism Service Suppliers) of the Integrated Model. (§1.2, p.3)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DBQ Q2 -->
+        <div class="dbq-block">
+          <div class="dbq-q-header" onclick="toggleDbq(this)">
+            <span class="dbq-q-num">B-Q2</span>
+            <span class="dbq-q-title">Top 5 International Tourist Arrivals 2019</span>
+            <span class="dbq-marks">15 marks</span>
+            <span class="dbq-q-chevron">▼</span>
+          </div>
+          <div class="dbq-answer">
+            <div class="scenario-box">
+              📊 <strong>Scenario:</strong> Top 5 International Tourist Arrivals 2019
+              <br><small>Questions (a)–(d) refer to this data source</small>
+            </div>
+
+            <!-- (a) -->
+            <div class="part-block">
+              <div class="part-label">(a) Define "international tourism" and give ONE example from the source. [2 marks]</div>
+              <div class="answer-chip">Definition (1 mark)</div>
+              <div class="answer-body">
+                <p>International tourism involves trips between 2 countries. International tourists are those who travel to a country <strong>other than the one in which they normally live</strong>. (§1.4.1, p.9)</p>
+              </div>
+              <div class="evidence-box">
+                <div class="evidence-label">Example (1 mark)</div>
+                A Hong Kong resident visiting France / A Japanese tourist visiting the United States. (Accept any valid cross-border example using countries from the source.)
+              </div>
+            </div>
+
+            <!-- (b) -->
+            <div class="part-block">
+              <div class="part-label">(b) From China's perspective, Chinese tourists visiting France represent which type of tourism? [2 marks]</div>
+              <div class="answer-chip">Outbound tourism (1 mark)</div>
+              <div class="answer-body">
+                <p><strong>Explanation (1 mark):</strong> Visits by Chinese residents to France (another country) represent China's OUTBOUND tourism. From France's perspective, these visitors are inbound tourists. (§1.4.2, p.10)</p>
+              </div>
+            </div>
+
+            <!-- (c) -->
+            <div class="part-block">
+              <div class="part-label">(c) Identify THREE pull factors attracting tourists to France. Explain each. [6 marks]</div>
+              <div class="marks-note">2 marks each: 1 for identification + 1 for explanation. Accept any three.</div>
+
+              <div class="answer-chip">Pull Factor 1: Natural scenery / Climate</div>
+              <div class="answer-body"><p>France has beautiful landscapes (Alps, Loire Valley) and a pleasant climate. Tourists seek attractive scenery and comfortable climatic conditions for their holiday. (§1.8 / 1.11)</p></div>
+
+              <div class="answer-chip" style="margin-top:8px;">Pull Factor 2: Historic and cultural attractions</div>
+              <div class="answer-body"><p>France has world-famous historic sites and art museums (e.g. the Louvre, Palace of Versailles, Eiffel Tower). Tourists are attracted by the beauty of architecture and art, or for their historical/cultural meaning. (§1.8)</p></div>
+
+              <div class="answer-chip" style="margin-top:8px;">Pull Factor 3: Food and cuisine</div>
+              <div class="answer-body"><p>French cuisine is internationally renowned. "Trying new food is a novel experience that is enjoyed by most tourists." (§1.8, p.30) Food differences are one of the most interesting ways to learn about another culture.</p></div>
+
+              <div class="note-box">Other acceptable pull factors: favourable exchange rates; strong political/cultural ties; famous events (e.g. Cannes Film Festival); combination of natural and man-made attractions.</div>
+            </div>
+
+            <!-- (d) -->
+            <div class="part-block">
+              <div class="part-label">(d) Explain whether the Hong Kong resident is classified as a "tourist" using THREE defining factors. [5 marks]</div>
+
+              <div class="answer-chip">Factor 1 — Length of stay (1 mark)</div>
+              <div class="answer-body"><p>Stays 10 days, which is less than one year. The visit is temporary and short-term. ✓</p></div>
+
+              <div class="answer-chip" style="margin-top:8px;">Factor 2 — Purpose of visit (1 mark)</div>
+              <div class="answer-body"><p>Main purpose is sightseeing (leisure), NOT earning income at the destination. ✓</p></div>
+
+              <div class="answer-chip" style="margin-top:8px;">Factor 3 — Distance travelled (1 mark)</div>
+              <div class="answer-body"><p>Travelling from Hong Kong to France is outside their "usual environment" — not a routine community trip between home and workplace. ✓</p></div>
+
+              <div class="answer-chip" style="margin-top:8px;">Conclusion (2 marks)</div>
+              <div class="answer-body"><p>The resident meets ALL three defining factors and IS classified as a tourist. (§1.3.2, p.8)</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DBQ Q3 -->
+        <div class="dbq-block">
+          <div class="dbq-q-header" onclick="toggleDbq(this)">
+            <span class="dbq-q-num">B-Q3</span>
+            <span class="dbq-q-title">Eco-Tourism in the Amazon</span>
+            <span class="dbq-marks">15 marks</span>
+            <span class="dbq-q-chevron">▼</span>
+          </div>
+          <div class="dbq-answer">
+            <div class="scenario-box">
+              🌿 <strong>Scenario:</strong> Eco-Tourism in the Amazon
+              <br><small>Questions (a)–(d) refer to this scenario</small>
+            </div>
+
+            <div class="part-block">
+              <div class="part-label">(a) Identify the form of tourism. Explain with TWO pieces of evidence. [3 marks]</div>
+              <div class="answer-chip">Eco-tourism (1 mark)</div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence 1 (1 mark)</div>
+                "All income from entrance fees and donations is used for conservation of the rainforest." — Eco-tourism income is spent on conservation; it is "a force for conservation and preservation of nature." (§1.7, p.16)
+              </div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence 2 (1 mark)</div>
+                "Travellers are reminded to minimise their environmental impact throughout the trip." — Eco-tourists "will minimise their impact on the environment." (§1.7, p.16)
+              </div>
+            </div>
+
+            <div class="part-block">
+              <div class="part-label">(b) Identify THREE types of tourist attractions. State natural/man-made and give evidence. [6 marks]</div>
+              <div class="marks-note">2 marks each: 1 for type + natural/man-made, 1 for evidence. Accept any three.</div>
+
+              <div class="answer-chip">Type 1: Natural attraction — Fauna / Wildlife (natural)</div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence</div>
+                "Tourists can observe rare animals such as jaguars, river dolphins, and exotic birds in their natural habitat." (§1.8 Natural vegetation and wildlife, p.22)
+              </div>
+
+              <div class="answer-chip" style="margin-top:8px;">Type 2: Natural attraction — Natural vegetation / Tropical rainforest (natural)</div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence</div>
+                "Amazon Rainforest in Brazil" — lush tropical vegetation. Tropical rainforests are listed in the handout as tourist attractions. (§1.8, p.25)
+              </div>
+
+              <div class="answer-chip" style="margin-top:8px;">Type 3: Cultural attraction — Handicrafts / Traditions (man-made)</div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence</div>
+                "Local indigenous communities…demonstrate traditional cooking and craft-making skills." — Handicrafts and lifestyle are cultural attractions. (§1.8, p.29–30)
+              </div>
+            </div>
+
+            <div class="part-block">
+              <div class="part-label">(c) According to Plog's classification, which tourist type does this tour target? Give TWO characteristics. [3 marks]</div>
+              <div class="answer-chip">Allocentric tourist (1 mark)</div>
+              <div class="answer-body">
+                <p><strong>Characteristic 1 (1 mark):</strong> "Prefer non-tourist destinations and few developed tourist attractions." / "Enjoy discovering new destinations before others have visited them." The Amazon is an off-the-beaten-path destination. (§1.10, p.41–42)</p>
+                <p><strong>Characteristic 2 (1 mark):</strong> "Prefer simple services, such as adequate to good accommodations." Evidence: "Stay in basic but adequate accommodation rather than luxury hotels." (§1.10, p.42)</p>
+              </div>
+            </div>
+
+            <div class="part-block">
+              <div class="part-label">(d) State ONE push factor and ONE pull factor for this eco-tour. Explain each. [3 marks]</div>
+
+              <div class="answer-chip">Push factor (0.5 + 0.5 mark)</div>
+              <div class="answer-body"><p>Any valid internal motivation, e.g. desire for adventure / desire to escape urban pressures / desire for social interaction / desire for self-education. Push factors are "intangible desires of the individual traveller." (§1.11, p.45)</p></div>
+
+              <div class="answer-chip" style="margin-top:8px;">Pull factor (1 + 1 mark)</div>
+              <div class="answer-body"><p>Any valid destination attribute, e.g. unique Amazon wildlife / lush tropical rainforest / cultural experience with indigenous communities / conservation opportunities. Pull factors are the "attractiveness or drawing power of the destination." (§1.11, p.45–46)</p></div>
+
+              <div class="note-box">⚠️ Do NOT award marks if student confuses push and pull factors (e.g. gives an internal motivation as a pull factor or vice versa).</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- end set-A -->
+
+
+  <!-- ══════════════ SET B ══════════════ -->
+  <div id="set-B" style="display:none;">
+
+    <!-- Section A: MCQ -->
+    <div class="section-card">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div><div class="section-title">Section A — Multiple Choice</div></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="section-badge">20 marks</span>
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="mc-grid">
+
+          <div class="mc-item">
+            <div class="mc-num">Q1</div>
+            <div class="mc-ans">C</div>
+            <div>
+              <div class="mc-expl">(C) is INCORRECT. A patient staying abroad for 13 months exceeds the "less than one year" rule → cannot be a tourist. All other rows (A, B, D) are correctly classified.</div>
+              <div class="mc-ref">2025 DSE P1 Q2</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q2</div>
+            <div class="mc-ans">C</div>
+            <div>
+              <div class="mc-expl">Exchange students on SHORT-TERM courses are NOT tourists — studying is a routine activity placing them within their "usual environment". Diplomats, airline crews, and military personnel stationed overseas are likewise NOT tourists.</div>
+              <div class="mc-ref">2024 DSE P1 Q6</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q3</div>
+            <div class="mc-ans">A</div>
+            <div>
+              <div class="mc-expl">(1) and (3) only. (1) Daily Shenzhen commuter = within usual environment ✗. (3) 14-month exchange = exceeds 1-year rule ✗. (2) Retired couple, 2 weeks = tourist ✓. (4) 3-day conference = tourist ✓.</div>
+              <div class="mc-ref">§1.3.2 Defining Factors, p.8</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q4</div>
+            <div class="mc-ans">D</div>
+            <div>
+              <div class="mc-expl">(3) and (4) only = second order effects. Airline employees spending wages (3) and hotel operators reinvesting profits (4) are second order. (1) and (2) are first order effects.</div>
+              <div class="mc-ref">2024 DSE P1 Q3</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q5</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1), (3) and (4) only. HKTB (1) ✓ Promoter. Cathay Pacific (2) ✗ = Service Supplier. Meeting planners (3) ✓ Promoter. Car rental (4) ✓ = Service Supplier.</div>
+              <div class="mc-ref">§1.2 Integrated Model, p.3</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q6</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1), (3) and (4) only. Airbnb = Technological ✓. Political instability = Political force, NOT Economic ✗ → (2) is wrong. Hong Kong Pals = Social/Cultural ✓. Pollution = Environmental ✓.</div>
+              <div class="mc-ref">§1.2 External Environment Forces, p.4</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q7</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1) and (3) only. (1) Organised mass tourist ✓. (2) Explorer description matches Drifter ✗. (3) Individual mass tourist ✓. (4) Drifter description matches Explorer ✗.</div>
+              <div class="mc-ref">§1.9 Cohen's Classification, p.39–40</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q8</div>
+            <div class="mc-ans">A</div>
+            <div>
+              <div class="mc-expl">(1) and (3) only. Early exploration stage attracts allocentrics (1) ✓. Psychocentrics prefer popular/familiar destinations (2) ✗. Allocentrics enjoy discovering before others (3) ✓.</div>
+              <div class="mc-ref">2025 DSE P1 Q4 adapted; §1.10 Plog's, p.41</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q9</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1), (3) and (4) only. Business tourism ✓. Disneyland = leisure/holiday tourism, NOT eco-tourism ✗. Study tourism ✓. VFR ✓.</div>
+              <div class="mc-ref">§1.7 Forms of Tourism, p.14–18</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q10</div>
+            <div class="mc-ans">D</div>
+            <div>
+              <div class="mc-expl">(2), (3) and (4) only. (1) WRONG — toys/special meals are for CHILDREN, not senior travellers. (2) ✓ Religious meals. (3) ✓ Up to 28 weeks pregnant. (4) ✓ Guide dogs for blind.</div>
+              <div class="mc-ref">§1.6 Tourists with Special Needs, p.12–13</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q11</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1), (3) and (4) only. Olympic Games ✓, Munich Beer Festival ✓, Cannes Film Festival ✓ = Events. The Louvre (2) = History Museum = Cultural Attraction, NOT an event.</div>
+              <div class="mc-ref">§1.8 Special Events and Festivals, p.36</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q12</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1), (3) and (4) only — Temperature, Relative Humidity, and Wind. These three are explicitly listed. Rainfall is not mentioned as a comfort element.</div>
+              <div class="mc-ref">§1.8 Climate and Human Comfort, p.21</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q13</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1), (2) and (4) only. Natural attractions (1) ✓, cultural attractions (2) ✓, food (4) ✓ are pull factors. "Desire for adventure" (3) is an internal motivation = push factor.</div>
+              <div class="mc-ref">§1.11 Pull Factors, p.45–46</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q14</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1), (2) and (3) only. Geography & history ✓. Marketing & business ✓. IT & global distribution system ✓. (4) WRONG — Religion & culture provides info on cultural resources, NOT financial returns.</div>
+              <div class="mc-ref">§1.1 Tourism as an Integrated Discipline, p.1–2</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q15</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1) and (3) only. Tropical rainforests → eco-tourism & bird watching (1) ✓. Savannas → wildlife expeditions, NOT cycling/horse-riding (2) ✗. Tundra → wildlife expeditions (3) ✓. Temperate forests → cycling, NOT wildlife safaris (4) ✗.</div>
+              <div class="mc-ref">§1.8 Vegetation and Animals table, p.25</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q16</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1), (3) and (4) only. Non-typical destinations (1) ✓. Business travel is PRICE-INELASTIC — lower prices do NOT increase demand (2) ✗. Not affected by seasonality (3) ✓. Higher standard of service (4) ✓.</div>
+              <div class="mc-ref">§1.7 Business Tourism, p.16</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q17</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1), (3) and (4) only. Currency control (1) ✓ macro. Personal desire for adventure (2) ✗ = individual push factor (micro). Economic development (3) ✓ macro. Tourism trends (4) ✓ macro.</div>
+              <div class="mc-ref">§1.11 Macro Factors, p.47</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q18</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">"Keep traveller's cheques, credit cards, and cash all in the SAME place" — NOT recommended. The handout states: "Keep them in SEPARATE places." All other options (A, C, D) are correctly recommended.</div>
+              <div class="mc-ref">§1.5 Money and Valuables, p.11</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q19</div>
+            <div class="mc-ans">B</div>
+            <div>
+              <div class="mc-expl">(1), (3) and (4) only. "Not really tourists in the conceptual sense" (1) ✓. They do NOT usually buy accommodation (2) ✗. Consume food from host's supermarkets (3) ✓. Mainland China, Canada, Australia named in handout (4) ✓.</div>
+              <div class="mc-ref">§1.7 VFR Tourism, p.18</div>
+            </div>
+          </div>
+
+          <div class="mc-item">
+            <div class="mc-num">Q20</div>
+            <div class="mc-ans">A</div>
+            <div>
+              <div class="mc-expl">(1) and (2) only. No fixed itinerary, lives with locals, takes odd jobs = Drifter (1) ✓. Prefers unusual areas, explores before others = Allocentric (2) ✓. Psychocentric prefers familiar places (3) ✗. Drifters are non-institutionalised (4) ✗.</div>
+              <div class="mc-ref">§1.9 (Cohen) + §1.10 (Plog)</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Set B Section B -->
+    <div class="section-card">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div><div class="section-title">Section B — Data-Based Questions</div></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="section-badge">45 marks</span>
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <!-- Set B Q1 -->
+        <div class="dbq-block">
+          <div class="dbq-q-header" onclick="toggleDbq(this)">
+            <span class="dbq-q-num">B-Q1</span>
+            <span class="dbq-q-title">The Chan Family Trip to Hong Kong</span>
+            <span class="dbq-marks">15 marks</span>
+            <span class="dbq-q-chevron">▼</span>
+          </div>
+          <div class="dbq-answer">
+            <div class="scenario-box">
+              🏙️ <strong>Scenario:</strong> The Chan Family Trip to Hong Kong
+              <br><small>Apply the same framework as Set A — See marking scheme PDF for full details</small>
+            </div>
+            <div class="answer-body">
+              <p>This question follows the same structure as Set A Q1. Apply the same principles:</p>
+              <p>• Use §1.3.1 for tourist/excursionist definitions<br>
+              • Apply Cohen's classification based on evidence from the scenario<br>
+              • Identify attraction types (natural/man-made, historic/cultural)<br>
+              • Use the Integrated Model of Tourism for Promoters vs Service Suppliers</p>
+            </div>
+            <div class="note-box">📄 Download the full Marking Scheme document above for the complete model answers for Set B questions.</div>
+          </div>
+        </div>
+
+        <!-- Set B Q2: Hotel + Service Gaps -->
+        <div class="dbq-block">
+          <div class="dbq-q-header" onclick="toggleDbq(this)">
+            <span class="dbq-q-num">B-Q2</span>
+            <span class="dbq-q-title">Papua New Guinea Resort — Service Gaps</span>
+            <span class="dbq-marks">15 marks</span>
+            <span class="dbq-q-chevron">▼</span>
+          </div>
+          <div class="dbq-answer">
+            <div class="scenario-box">
+              🏨 <strong>Scenario:</strong> Mr. & Mrs. Cheung's stay at a Papua New Guinea resort
+              <br><small>Questions focus on service quality gaps and tourism types</small>
+            </div>
+
+            <div class="part-block">
+              <div class="part-label">(c) Identify THREE service quality gaps with explanation and evidence. [9 marks]</div>
+              <div class="marks-note">3 marks each: 1 for gap name + 0.5 explanation + 0.5 evidence × 3</div>
+
+              <div class="answer-chip">Gap 1: The Communication Gap (1 mark)</div>
+              <div class="answer-body"><p><strong>Explanation:</strong> The gap between what the company promises in its marketing communications and what is actually delivered.</p></div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence</div>
+                "The resort's website promised a complimentary welcome drink upon check-in, but no drink was offered when they entered the room." — the communicated service did not match the delivered service.
+              </div>
+
+              <div class="answer-chip" style="margin-top:10px;">Gap 2: The Service Performance Gap / Service Delivery Gap (1 mark)</div>
+              <div class="answer-body"><p><strong>Explanation:</strong> The gap between the service standards set by management and the actual service delivered by frontline staff.</p></div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence</div>
+                "Due to a lack of staff, they waited over 45 minutes before being assigned a room." — actual service delivery fell below the expected standard for a five-star resort.
+              </div>
+
+              <div class="answer-chip" style="margin-top:10px;">Gap 3: The Knowledge Gap / Customer Expectations Gap (1 mark)</div>
+              <div class="answer-body"><p><strong>Explanation:</strong> The gap between customer expectations and management's perception of those expectations.</p></div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence</div>
+                "Staff brewed famous local hot coffee…but they were not keen on it due to the climate." — the manager misjudged what guests would enjoy in a hot tropical climate, suggesting a gap in understanding customer expectations.
+              </div>
+            </div>
+
+            <div class="part-block">
+              <div class="part-label">(d) Identify capital and currency of Papua New Guinea. Explain inbound or outbound from HK's perspective. [4 marks]</div>
+              <div class="answer-chip">Capital: Port Moresby (1 mark)</div>
+              <div class="answer-chip" style="margin-top:6px;">Currency: Papua New Guinean Kina (PGK) (1 mark)</div>
+              <div class="answer-chip" style="margin-top:6px;">Type: Outbound tourism from Hong Kong's perspective (1 mark)</div>
+              <div class="answer-body" style="margin-top:8px;">
+                <p><strong>Explanation (1 mark):</strong> "Visits by residents of [a] country to another country is [that country's] outbound tourism." Mr. and Mrs. Cheung are Hong Kong residents travelling to Papua New Guinea. This represents Hong Kong's outbound tourism. From Papua New Guinea's perspective, they are inbound tourists. (§1.4.2, p.10)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Set B Q3 -->
+        <div class="dbq-block">
+          <div class="dbq-q-header" onclick="toggleDbq(this)">
+            <span class="dbq-q-num">B-Q3</span>
+            <span class="dbq-q-title">Hotel A &amp; B Comparison + Tour C Itinerary</span>
+            <span class="dbq-marks">15 marks</span>
+            <span class="dbq-q-chevron">▼</span>
+          </div>
+          <div class="dbq-answer">
+            <div class="scenario-box">
+              🏩 <strong>Scenario:</strong> Hotel A & B Comparison + Tour C Itinerary Leaflet
+            </div>
+
+            <div class="part-block">
+              <div class="part-label">(a) Identify the type of accommodation Hotel A belongs to. Explain with evidence. [2 marks]</div>
+              <div class="answer-chip">Heritage hotel / Boutique hotel / Historic hotel (1 mark)</div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence (1 mark)</div>
+                "A former marine police station built in 1902 to combat pirates" — Hotel A was converted from a historic building, giving it unique historical value not found in conventional hotels. Consistent with the handout's category of historic attractions converted for tourism use. (§1.8, p.28)
+              </div>
+            </div>
+
+            <div class="part-block">
+              <div class="part-label">(b) Identify THREE HKTB Hotel Classification indicators giving Hotel B a higher score. [6 marks]</div>
+              <div class="marks-note">2 marks per indicator: 1 for indicator + 1 for evidence. Accept any three.</div>
+
+              <div class="answer-chip">Indicator 1: Number of rooms / Scale</div>
+              <div class="evidence-box"><div class="evidence-label">Evidence</div>Hotel B has 298 rooms vs Hotel A's 9 rooms. A larger property with more rooms indicates greater capacity and typically a higher classification score.</div>
+
+              <div class="answer-chip" style="margin-top:8px;">Indicator 2: Facilities and services</div>
+              <div class="evidence-box"><div class="evidence-label">Evidence</div>Hotel B offers a swimming pool, spa, fitness centre, and 6 food & beverage outlets. Hotel A has only 1 restaurant. More diversified facilities contribute to a higher HKTB classification score.</div>
+
+              <div class="answer-chip" style="margin-top:8px;">Indicator 3: Room rate / Standard of accommodation</div>
+              <div class="evidence-box"><div class="evidence-label">Evidence</div>Hotel B's average room rate (HK$2,600/night) is double Hotel A's (HK$1,300/night), reflecting a higher standard of accommodation and service quality.</div>
+
+              <div class="note-box">Other acceptable: Location — Hotel B is in Central (prime commercial district) vs Lantau Island (remote), which may attract a higher-rated clientele.</div>
+            </div>
+
+            <div class="part-block">
+              <div class="part-label">(c) Identify and explain THREE attributes of tourist attractions in Tour C with evidence. [6 marks]</div>
+              <div class="marks-note">2 marks per attribute: 1 for attribute + 1 for evidence. Accept any three.</div>
+
+              <div class="answer-chip">Attribute 1: Accessibility</div>
+              <div class="evidence-box"><div class="evidence-label">Evidence</div>"Luxury limousine service" and "Flexible pick-up & drop-off" — the tour removes transport barriers and makes the attractions easily accessible to visitors, stimulating tourist flows. (§1.8, p.20)</div>
+
+              <div class="answer-chip" style="margin-top:8px;">Attribute 2: Cultural / Historic significance</div>
+              <div class="evidence-box"><div class="evidence-label">Evidence</div>"Join a guided tour of Hotel A to learn about its historical value" — Hotel A (former 1902 marine police station) has special significance in relation to historical events, classified as a historic attraction. (§1.8, p.28)</div>
+
+              <div class="answer-chip" style="margin-top:8px;">Attribute 3: Activities / Experiential value</div>
+              <div class="evidence-box"><div class="evidence-label">Evidence</div>"Participate in DIY workshops to make traditional handicrafts" and "Try delicacies at the local seafood market" — variety of hands-on activities enhancing visitor engagement. (§1.8, p.29–30)</div>
+
+              <div class="note-box">Other acceptable: Uniqueness/Authenticity; Educational value; Combination of attraction types.</div>
+            </div>
+
+            <div class="part-block">
+              <div class="part-label">(d) According to Plog's classification, which tourist type is this person? Explain with ONE characteristic and ONE piece of evidence. [3 marks]</div>
+              <div class="answer-chip">Allocentric tourist (1 mark)</div>
+              <div class="answer-body">
+                <p><strong>Characteristic (1 mark):</strong> "Enjoy meeting people from foreign or different cultures" / "prefer non-tourist destinations and few developed tourist attractions" / "enjoy discovering new destinations before others have visited them." Allocentrics are motivated by cultural learning and authentic experience. (§1.10, p.41–42)</p>
+              </div>
+              <div class="evidence-box">
+                <div class="evidence-label">Evidence from Source 2 (1 mark)</div>
+                "Join a guided tour of Hotel A to learn about its historical value" / "Participate in DIY workshops to make traditional handicrafts" / "Try delicacies at the local seafood market" — the tourist seeks authentic cultural learning rather than mainstream tourist activities, consistent with allocentric behaviour.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end set-B -->
+
+  <!-- Footer note -->
+  <div class="footer-note">
+    <p>All questions may have more than one answer. Other reasonable answers are accepted.</p>
+    <p style="margin-top:6px;"><a href="https://www.mathans.app">← MathAns Home</a> · For reference only · 只供參考</p>
+  </div>
+
+</div><!-- end wrap -->
+
+<script>
+  function switchSet(set) {
+    document.getElementById('set-A').style.display = set === 'A' ? 'block' : 'none';
+    document.getElementById('set-B').style.display = set === 'B' ? 'block' : 'none';
+    document.querySelectorAll('.set-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.set === set);
+    });
+  }
+
+  function toggleSection(header) {
+    const body = header.nextElementSibling;
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    header.classList.toggle('open', !isOpen);
+  }
+
+  function toggleDbq(header) {
+    const answer = header.nextElementSibling;
+    const isOpen = answer.classList.contains('open');
+    answer.classList.toggle('open', !isOpen);
+    header.classList.toggle('open', !isOpen);
+  }
+</script>
+</body>
+</html>
