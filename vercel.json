@@ -2,7 +2,9 @@
   "rewrites": [
     { "source": "/edit1125",  "destination": "/editor/index.html" },
     { "source": "/edit1125/", "destination": "/editor/index.html" },
-    { "source": "/ces",  "destination": "/cesindex.html" },
+    { "source": "/ces",  "destination": "/cesindex.html" }
     { "source": "/ces/", "destination": "/cesindex.html" }
+    { "source": "/relativeclauses",  "destination": "/relativeclauses.html" },
+    { "source": "/relativeclauses/", "destination": "/relativeclauses.html" }
   ]
 }
