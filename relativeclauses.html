@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Clause Master — Relative Clauses Practice</title>
+<meta name="description" content="S.3 Uniform Test English Writing — Relative Clauses Practice. 180+ questions across 5 patterns: defining, non-defining, prepositions, reduced, and adjectival phrases."/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+/* ══════════════════════════════════════════════
+   DESIGN TOKENS — Architectural Tutor
+══════════════════════════════════════════════ */
+:root {
+  --bg:            #effbff;
+  --surface-low:   #def8ff;
+  --surface-mid:   #cdf5ff;
+  --surface-high:  #bef0fd;
+  --surface-top:   #b3ecfa;
+  --surface-0:     #ffffff;
+  --primary:       #006a71;
+  --primary-dim:   #005d63;
+  --primary-ctr:   #91ebf4;
+  --secondary:     #1f6877;
+  --secondary-ctr: #abedfe;
+  --tertiary:      #845500;
+  --tertiary-ctr:  #f9a825;
+  --on-bg:         #003842;
+  --on-muted:      #2c6773;
+  --outline:       #4a8390;
+  --outline-var:   #82bbc8;
+  --error:         #ac3434;
+  --error-ctr:     #f56965;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background: var(--bg);
+  color: var(--on-bg);
+  min-height: 100dvh;
+}
+
+h1, h2, h3, h4 { font-family: 'Lexend', sans-serif; }
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100dvh; }
+.screen.active { display: block; }
+#results.active { display: flex; }
+
+/* ── ARCH GRID ── */
+.arch-grid {
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--outline-var) .4px, transparent .4px);
+  background-size: 24px 24px;
+}
+
+/* ══════════════════════════════════════════════
+   GLASS NAV
+══════════════════════════════════════════════ */
+.glass-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 50;
+  background: rgba(239,251,255,.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.nav-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 32px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Lexend', sans-serif;
+  font-weight: 900;
+  font-size: 19px;
+  color: var(--primary);
+  letter-spacing: -.5px;
+  text-decoration: none;
+}
+.brand .material-symbols-outlined { font-size: 24px; }
+
+.btn-cta {
+  font-family: 'Lexend', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .3px;
+  background: linear-gradient(135deg, var(--primary) 0%, #009fa8 100%);
+  color: #e7fdff;
+  border: none;
+  border-radius: 12px;
+  padding: 11px 24px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,106,113,.22);
+  transition: all .2s;
+}
+.btn-cta:hover { opacity: .9; transform: translateY(-1px); }
+.btn-cta:active { transform: scale(.98); }
+.btn-cta:disabled {
+  background: var(--surface-high);
+  color: var(--outline);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 1;
+}
+.btn-ghost {
+  font-family: 'Lexend', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--surface-0);
+  color: var(--primary);
+  border: none;
+  border-radius: 12px;
+  padding: 11px 24px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.btn-ghost:hover { background: var(--surface-low); }
+
+/* ══════════════════════════════════════════════
+   WELCOME / LANDING
+══════════════════════════════════════════════ */
+#welcome { background: var(--bg); }
+
+/* Hero */
+.hero-wrap {
+  padding: 130px 32px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+@media (max-width: 860px) {
+  .hero-wrap { grid-template-columns: 1fr; padding-top: 110px; }
+  .bento { display: none; }
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: 'Lexend', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  background: var(--surface-high);
+  color: var(--on-muted);
+  padding: 6px 16px;
+  border-radius: 99px;
+  margin-bottom: 22px;
+}
+.hero-title {
+  font-family: 'Lexend', sans-serif;
+  font-size: clamp(2.6rem, 5vw, 4.4rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  color: var(--on-bg);
+  margin-bottom: 22px;
+}
+.hero-title .g {
+  background: linear-gradient(135deg, var(--primary) 0%, #009fa8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--on-muted);
+  line-height: 1.7;
+  max-width: 430px;
+  margin-bottom: 36px;
+}
+.hero-acts { display: flex; gap: 14px; flex-wrap: wrap; }
+.hero-acts .btn-cta  { padding: 16px 34px; font-size: 15px; border-radius: 16px; }
+.hero-acts .btn-ghost { padding: 16px 26px; font-size: 15px; border-radius: 16px; }
+
+/* Bento */
+.bento { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.b-card {
+  background: var(--surface-0);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 1px 12px rgba(0,56,66,.05);
+}
+.b-card.teal { background: var(--surface-low); }
+.b-card.mid  { background: var(--surface-mid); }
+.b-card.amb  { background: rgba(249,168,37,.11); }
+.b-card .material-symbols-outlined { font-size: 26px; color: var(--primary); margin-bottom: 9px; display: block; }
+.b-card.amb .material-symbols-outlined { color: var(--tertiary); }
+.b-card h4 { font-family: 'Lexend', sans-serif; font-weight: 700; font-size: 13px; color: var(--on-bg); margin-bottom: 3px; }
+.b-card p  { font-size: 12px; color: var(--on-muted); line-height: 1.5; }
+.big-num { font-family: 'Lexend', sans-serif; font-size: 38px; font-weight: 900; color: var(--primary); line-height: 1; margin-bottom: 3px; }
+.big-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--on-muted); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--surface-low); border-radius: 18px; padding: 16px 18px; grid-column: span 2; }
+.chip-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--on-muted); margin-right: 4px; }
+.chip      { font-family: 'Lexend', sans-serif; font-size: 13px; font-weight: 700; padding: 5px 13px; border-radius: 99px; background: var(--tertiary-ctr); color: #4e3000; }
+.chip.soft { background: var(--surface-top); color: var(--on-muted); font-weight: 500; }
+
+/* Stats bar */
+.stats-bar { background: var(--surface-low); padding: 56px 32px; }
+.stats-in  {
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; text-align: center;
+}
+@media (max-width: 560px) { .stats-in { grid-template-columns: 1fr; } }
+.snum { font-family: 'Lexend', sans-serif; font-size: 46px; font-weight: 900; color: var(--primary); display: block; }
+.slbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--on-muted); }
+
+/* Mode section */
+.mode-sec { padding: 72px 32px; max-width: 1200px; margin: 0 auto; }
+.sec-eyebrow { font-family: 'Lexend', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--on-muted); margin-bottom: 10px; }
+.sec-title   { font-family: 'Lexend', sans-serif; font-size: clamp(1.8rem,3vw,2.5rem); font-weight: 800; letter-spacing: -1px; color: var(--on-bg); margin-bottom: 8px; }
+.sec-sub     { font-size: 15px; color: var(--on-muted); line-height: 1.65; max-width: 500px; margin-bottom: 36px; }
+
+.modes-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 32px; }
+@media (max-width: 560px) { .modes-grid { grid-template-columns: 1fr; } }
+
+.m-card {
+  background: var(--surface-0);
+  border-radius: 20px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 8px rgba(0,56,66,.04);
+}
+.m-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,106,113,.1); }
+.m-card.sel {
+  background: rgba(0,106,113,.06);
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.m-card .sel-dot { position: absolute; top: 14px; right: 14px; width: 9px; height: 9px; border-radius: 50%; background: var(--primary); display: none; }
+.m-card.sel .sel-dot { display: block; }
+.m-icon { font-size: 26px; margin-bottom: 10px; display: block; }
+.m-name { font-family: 'Lexend', sans-serif; font-weight: 700; font-size: 14px; color: var(--on-bg); margin-bottom: 4px; }
+.m-desc { font-size: 12px; color: var(--on-muted); line-height: 1.5; }
+
+.start-wrap .btn-cta { width: 100%; padding: 20px; font-size: 15px; border-radius: 18px; letter-spacing: 1px; text-transform: uppercase; }
+
+/* Methodology */
+.method-sec { background: var(--surface-low); padding: 72px 32px; }
+.method-in  { max-width: 1200px; margin: 0 auto; }
+.method-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; margin-top: 44px; }
+@media (max-width: 720px) { .method-grid { grid-template-columns: 1fr; } }
+.mth-card { background: var(--surface-0); border-radius: 22px; padding: 32px 26px; transition: transform .2s; }
+.mth-card:hover { transform: translateY(-3px); }
+.mth-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+.mth-icon.t { background: var(--surface-mid); }
+.mth-icon.t .material-symbols-outlined { color: var(--primary); font-size: 24px; }
+.mth-icon.a { background: rgba(249,168,37,.15); }
+.mth-icon.a .material-symbols-outlined { color: var(--tertiary); font-size: 24px; }
+.mth-icon.c { background: var(--secondary-ctr); }
+.mth-icon.c .material-symbols-outlined { color: var(--secondary); font-size: 24px; }
+.mth-card h3 { font-family: 'Lexend', sans-serif; font-weight: 700; font-size: 16px; color: var(--on-bg); margin-bottom: 8px; }
+.mth-card p  { font-size: 13px; color: var(--on-muted); line-height: 1.65; }
+
+/* CTA Banner */
+.cta-wrap { padding: 72px 32px; max-width: 1200px; margin: 0 auto; }
+.cta-box  {
+  background: linear-gradient(135deg, var(--primary) 0%, #009fa8 100%);
+  border-radius: 34px; padding: 60px 52px; text-align: center;
+  position: relative; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,106,113,.2);
+}
+.cta-box h2 { font-family: 'Lexend', sans-serif; font-size: clamp(1.5rem,3vw,2.3rem); font-weight: 800; color: #e7fdff; margin-bottom: 14px; letter-spacing: -.5px; }
+.cta-box p  { font-size: 15px; color: rgba(231,253,255,.75); margin-bottom: 32px; max-width: 460px; margin-left: auto; margin-right: auto; line-height: 1.65; }
+.btn-inv {
+  font-family: 'Lexend', sans-serif; font-weight: 700; font-size: 15px;
+  background: var(--surface-0); color: var(--primary);
+  border: none; border-radius: 14px; padding: 17px 44px;
+  cursor: pointer; transition: transform .2s; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.btn-inv:hover { transform: scale(1.03); }
+
+/* Footer */
+footer { background: var(--surface-low); padding: 36px 32px; }
+.foot-in { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.foot-brand { font-family: 'Lexend', sans-serif; font-weight: 800; font-size: 15px; color: var(--primary); }
+footer small { font-size: 12px; color: var(--on-muted); }
+
+/* ══════════════════════════════════════════════
+   QUIZ SCREEN
+══════════════════════════════════════════════ */
+#quiz { display: flex; flex-direction: column; }
+
+.q-nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(239,251,255,.86);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.q-nav-in {
+  max-width: 760px; margin: 0 auto;
+  padding: 13px 24px;
+  display: flex; align-items: center; gap: 15px;
+}
+.quit-btn {
+  background: none; border: none; color: var(--on-muted);
+  cursor: pointer; font-family: 'Material Symbols Outlined';
+  font-size: 21px; width: 36px; height: 36px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: background .15s; flex-shrink: 0;
+}
+.quit-btn:hover { background: var(--surface-mid); }
+
+.prog-block { flex: 1; }
+.prog-meta {
+  display: flex; justify-content: space-between;
+  font-family: 'Lexend', sans-serif; font-size: 11px; font-weight: 700;
+  color: var(--on-muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px;
+}
+.prog-track { height: 8px; background: var(--surface-high); border-radius: 99px; overflow: hidden; }
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-ctr));
+  border-radius: 99px;
+  box-shadow: 0 0 10px rgba(0,106,113,.35);
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+.score-pill {
+  font-family: 'Lexend', sans-serif; font-size: 12px; font-weight: 700;
+  color: var(--primary); background: rgba(0,106,113,.09);
+  padding: 6px 13px; border-radius: 99px; white-space: nowrap; flex-shrink: 0;
+}
+
+.q-body {
+  flex: 1; max-width: 760px; margin: 0 auto;
+  width: 100%; padding: 36px 24px 130px;
+}
+
+.q-num { font-family: 'Lexend', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--on-muted); margin-bottom: 18px; }
+
+.type-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: 'Lexend', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 5px 13px; border-radius: 99px; margin-bottom: 20px;
+}
+.type-badge .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.type-badge.mc { background: rgba(132,85,0,.09); color: var(--tertiary); }
+.type-badge.ty { background: rgba(0,106,113,.09); color: var(--primary); }
+
+/* Sentence card — tonal, no hard border */
+.s-card {
+  background: var(--surface-low);
+  border-radius: 22px; padding: 30px 30px 26px;
+  margin-bottom: 22px; position: relative; overflow: hidden;
+}
+.s-card::after {
+  content: '"';
+  font-family: 'Lexend', sans-serif; font-size: 110px;
+  position: absolute; top: -8px; right: 18px;
+  color: var(--outline-var); opacity: .14; line-height: 1; pointer-events: none;
+}
+.q-instr { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--on-muted); margin-bottom: 14px; }
+.q-sent { font-size: 18px; font-weight: 500; line-height: 1.7; color: var(--on-bg); }
+.q-sent .blank {
+  display: inline-block; border-bottom: 2px solid rgba(0,106,113,.4);
+  min-width: 68px; color: var(--primary); font-weight: 700; padding: 0 6px; text-align: center;
+}
+.q-sent .s1, .q-sent .s2 { display: block; font-size: 15px; color: var(--on-muted); font-weight: 500; margin-bottom: 5px; }
+.q-sent .arr { display: block; color: var(--primary); font-size: 17px; margin: 7px 0; opacity: .6; }
+.hint-row { display: flex; align-items: center; gap: 7px; margin-top: 12px; font-size: 13px; color: var(--on-muted); }
+.hint-row .material-symbols-outlined { font-size: 15px; color: var(--tertiary); }
+.hint-row strong { color: var(--tertiary); }
+
+/* Options */
+.opts-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+.opt-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 17px 20px;
+  background: var(--surface-0);
+  border: none; border-radius: 14px; cursor: pointer;
+  font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 600;
+  color: var(--on-bg); text-align: left;
+  transition: all .18s;
+  box-shadow: 0 1px 5px rgba(0,56,66,.04);
+}
+.opt-btn:hover:not(:disabled) { background: var(--surface-low); transform: translateX(4px); }
+.opt-circle {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--outline-var); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; transition: all .2s;
+}
+.opt-btn.correct { background: rgba(0,106,113,.07); }
+.opt-btn.correct .opt-circle { background: var(--primary); border-color: var(--primary); color: #fff; }
+.opt-btn.wrong { background: rgba(172,52,52,.06); color: var(--error); }
+.opt-btn.wrong .opt-circle { background: var(--error-ctr); border-color: var(--error); color: #fff; }
+.opt-btn:disabled { cursor: default; }
+
+/* Typing */
+.ty-area { margin-bottom: 22px; }
+.ty-lbl { font-family: 'Lexend', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--on-muted); margin-bottom: 9px; }
+.ty-inp {
+  width: 100%; background: var(--surface-0);
+  border: none; outline: 2px solid rgba(130,187,200,.2); outline-offset: -2px;
+  border-radius: 14px; padding: 17px 20px;
+  font-family: 'DM Mono', monospace; font-size: 15px; color: var(--on-bg);
+  resize: none; transition: outline .2s, background .2s;
+  box-shadow: 0 1px 5px rgba(0,56,66,.04);
+}
+.ty-inp:focus { outline: 2px solid rgba(0,106,113,.35); }
+.ty-inp.correct { background: rgba(0,106,113,.04); outline-color: rgba(0,106,113,.3); }
+.ty-inp.wrong   { background: rgba(172,52,52,.04); outline-color: rgba(172,52,52,.3); }
+.ty-hint { font-size: 12px; color: var(--on-muted); margin-top: 8px; line-height: 1.5; }
+
+/* Feedback — tonal, inset accent */
+.fb-box { display: none; border-radius: 14px; padding: 18px 20px; margin-bottom: 22px; flex-direction: row; gap: 13px; align-items: flex-start; }
+.fb-box.show { display: flex; animation: riseUp .3s ease; }
+.fb-box.ok  { background: rgba(0,106,113,.08); box-shadow: inset 4px 0 0 var(--primary); }
+.fb-box.err { background: rgba(172,52,52,.06); box-shadow: inset 4px 0 0 var(--error); }
+.fb-ico { font-size: 21px; flex-shrink: 0; }
+.fb-ttl { font-family: 'Lexend', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.fb-ttl.c { color: var(--primary); }
+.fb-ttl.w { color: var(--error); }
+.fb-body { font-size: 13px; color: var(--on-muted); line-height: 1.6; }
+.fb-ans  { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--primary); font-weight: 500; margin-top: 5px; display: block; }
+@keyframes riseUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+/* Quiz footer */
+.q-foot {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 15px 24px 26px;
+  background: rgba(239,251,255,.9);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.q-foot-in { max-width: 760px; margin: 0 auto; }
+#check-btn {
+  width: 100%; padding: 19px; font-size: 15px; border-radius: 16px;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+#next-btn {
+  display: none; width: 100%; padding: 19px; font-size: 15px; border-radius: 16px;
+  letter-spacing: 1px; text-transform: uppercase;
+  font-family: 'Lexend', sans-serif; font-weight: 700;
+  background: linear-gradient(135deg, var(--primary) 0%, #009fa8 100%);
+  color: #e7fdff; border: none; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,106,113,.22); transition: all .2s;
+}
+#next-btn:hover { opacity: .9; transform: translateY(-1px); }
+
+/* ══════════════════════════════════════════════
+   RESULTS SCREEN
+══════════════════════════════════════════════ */
+#results {
+  background: var(--bg); min-height: 100dvh;
+  align-items: center; justify-content: center; padding: 40px 24px;
+}
+.res-card {
+  background: var(--surface-0); border-radius: 30px;
+  padding: 50px 44px; max-width: 500px; width: 100%;
+  text-align: center; box-shadow: 0 4px 40px rgba(0,56,66,.08);
+}
+.ring-wrap {
+  width: 144px; height: 144px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 26px; position: relative;
+  background: conic-gradient(var(--primary) var(--deg,0turn), var(--surface-high) 0);
+}
+.ring-wrap::after { content:''; position:absolute; inset:10px; border-radius:50%; background:var(--surface-0); }
+.ring-in { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
+.ring-pct { font-family:'Lexend',sans-serif; font-size:34px; font-weight:900; color:var(--primary); line-height:1; }
+.ring-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--on-muted); margin-top:3px; }
+.res-ttl { font-family:'Lexend',sans-serif; font-size:24px; font-weight:800; color:var(--on-bg); margin-bottom:9px; }
+.res-msg { font-size:14px; color:var(--on-muted); line-height:1.65; margin-bottom:28px; }
+.res-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:28px; }
+.rs { background:var(--surface-low); border-radius:14px; padding:16px 10px; }
+.rs .n { font-family:'Lexend',sans-serif; font-size:28px; font-weight:900; color:var(--primary); display:block; line-height:1; margin-bottom:3px; }
+.rs.bad .n { color:var(--error); }
+.rs .l { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--on-muted); }
+.res-btns { display:flex; flex-direction:column; gap:10px; }
+.res-btns .btn-cta   { width:100%; padding:17px; font-size:15px; border-radius:14px; text-transform:uppercase; letter-spacing:1px; }
+.res-btns .btn-ghost { width:100%; padding:15px; font-size:14px; border-radius:14px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ WELCOME ══════════════ -->
+<div class="screen active" id="welcome">
+
+  <nav class="glass-nav">
+    <div class="nav-in">
+      <span class="brand">
+        <span class="material-symbols-outlined">architecture</span>
+        Clause Master
+      </span>
+      <button class="btn-cta" onclick="scrollModes()">Start Practice</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="arch-grid">
+    <div class="hero-wrap">
+      <div>
+        <span class="eyebrow">S.3 Uniform Test · English Writing</span>
+        <h1 class="hero-title">Master the<br/><span class="g">Structure</span><br/>of Language</h1>
+        <p class="hero-sub">Deconstruct every relative clause pattern with architectural precision — from defining and non-defining clauses to reduced forms, prepositional structures, and adjectival phrases.</p>
+        <div class="hero-acts">
+          <button class="btn-cta" onclick="scrollModes()">Begin Practice →</button>
+          <button class="btn-ghost" onclick="scrollModes()">View Patterns</button>
+        </div>
+      </div>
+      <div class="bento">
+        <div class="b-card teal" style="margin-top:18px">
+          <span class="material-symbols-outlined">account_tree</span>
+          <h4>Defining &amp; Non-defining</h4>
+          <p>Who, which, that, whose, where, when, why — with and without commas.</p>
+        </div>
+        <div class="b-card">
+          <span class="material-symbols-outlined">link</span>
+          <h4>Preposition Structures</h4>
+          <p>at which · to whom · in which · with whom</p>
+        </div>
+        <div class="b-card amb" style="margin-top:-8px">
+          <span class="material-symbols-outlined">layers</span>
+          <h4>Reduced &amp; Adjectival</h4>
+          <p>Participial phrases · adj. phrase reduction</p>
+        </div>
+        <div class="b-card mid">
+          <div class="big-num">180+</div>
+          <div class="big-lbl">Questions</div>
+        </div>
+        <div class="chip-row">
+          <span class="chip-lbl">Patterns</span>
+          <span class="chip">Defining</span>
+          <span class="chip">Non-defining</span>
+          <span class="chip">Prepositions</span>
+          <span class="chip soft">Reduced</span>
+          <span class="chip soft">Adj. Phrases</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stats-in">
+      <div><span class="snum">180+</span><span class="slbl">Practice Questions</span></div>
+      <div><span class="snum">5</span><span class="slbl">Clause Patterns</span></div>
+      <div><span class="snum">2</span><span class="slbl">Question Types</span></div>
+    </div>
+  </div>
+
+  <!-- Mode Selection -->
+  <div class="mode-sec" id="modes">
+    <div class="sec-eyebrow">Get Started</div>
+    <h2 class="sec-title">Choose Your Practice Mode</h2>
+    <p class="sec-sub">All questions cover all 5 S.3 relative clause patterns: defining, non-defining, prepositional, reduced, and adjectival. Select a mode and begin.</p>
+    <div class="modes-grid">
+      <div class="m-card sel" onclick="pickMode(this,'all')">
+        <div class="sel-dot"></div>
+        <span class="m-icon">⚡</span>
+        <div class="m-name">All Questions</div>
+        <div class="m-desc">Full mix of multiple choice and sentence combining — both types in one session.</div>
+      </div>
+      <div class="m-card" onclick="pickMode(this,'mc')">
+        <div class="sel-dot"></div>
+        <span class="m-icon">☑️</span>
+        <div class="m-name">Multiple Choice</div>
+        <div class="m-desc">Choose the correct relative pronoun or sentence structure from four options.</div>
+      </div>
+      <div class="m-card" onclick="pickMode(this,'ty')">
+        <div class="sel-dot"></div>
+        <span class="m-icon">✍️</span>
+        <div class="m-name">Sentence Combining</div>
+        <div class="m-desc">Rewrite two sentences as one using the correct relative clause — just like the exam.</div>
+      </div>
+      <div class="m-card" onclick="pickMode(this,'random')">
+        <div class="sel-dot"></div>
+        <span class="m-icon">🎲</span>
+        <div class="m-name">Quick Drill · 20Q</div>
+        <div class="m-desc">20 randomly selected questions for a fast, focused warm-up before the test.</div>
+      </div>
+    </div>
+    <div class="start-wrap">
+      <button class="btn-cta" onclick="startQuiz()">Start Practice Session →</button>
+    </div>
+  </div>
+
+  <!-- Methodology -->
+  <div class="method-sec">
+    <div class="method-in">
+      <div class="sec-eyebrow">The Architectural Approach</div>
+      <h2 class="sec-title">Five Pillars of Mastery</h2>
+      <div class="method-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="mth-card">
+          <div class="mth-icon t"><span class="material-symbols-outlined">foundation</span></div>
+          <h3>Defining Clauses</h3>
+          <p>Who, that, whom, whose, which, where, when, why — providing essential information with no commas.</p>
+        </div>
+        <div class="mth-card">
+          <div class="mth-icon a"><span class="material-symbols-outlined">adjust</span></div>
+          <h3>Non-defining Clauses</h3>
+          <p>Extra (non-essential) information set off by commas. Never use "that" in non-defining clauses.</p>
+        </div>
+        <div class="mth-card">
+          <div class="mth-icon c"><span class="material-symbols-outlined">link</span></div>
+          <h3>Preposition Structures</h3>
+          <p>Formal preposition + whom/which: <em>to whom, at which, in which</em>. Quantifiers: <em>some of whom, none of which</em>.</p>
+        </div>
+        <div class="mth-card">
+          <div class="mth-icon t"><span class="material-symbols-outlined">compress</span></div>
+          <h3>Reduced Clauses</h3>
+          <p>Drop the relative pronoun + auxiliary to create a participial phrase: <em>The man sitting by the door…</em></p>
+        </div>
+        <div class="mth-card">
+          <div class="mth-icon a"><span class="material-symbols-outlined">edit_note</span></div>
+          <h3>Adjectival Phrases</h3>
+          <p>Relative clauses reduced to adjective phrases: <em>The boy (who is) afraid of dogs…</em> — concise and precise.</p>
+        </div>
+        <div class="mth-card">
+          <div class="mth-icon c"><span class="material-symbols-outlined">star</span></div>
+          <h3>The Polish</h3>
+          <p>Comma rules, "that" vs "which", contact clauses, and the quantifier patterns — <em>most of which, none of whom</em> — that distinguish top-band writing.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap">
+    <div class="cta-box">
+      <h2>Build Your Legacy. One Clause at a Time.</h2>
+      <p>Consistent practice on these patterns is the single most effective way to improve your writing band score before the Uniform Test.</p>
+      <button class="btn-inv" onclick="scrollModes()">Begin Your Session</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="foot-in">
+      <span class="foot-brand">Clause Master</span>
+      <small>S.3 Uniform Test · English Writing · Relative Clauses</small>
+    </div>
+  </footer>
+</div>
+
+<!-- ══════════════ QUIZ ══════════════ -->
+<div class="screen" id="quiz">
+  <div class="q-nav">
+    <div class="q-nav-in">
+      <button class="quit-btn" onclick="showScreen('welcome')" title="Exit">close</button>
+      <div class="prog-block">
+        <div class="prog-meta">
+          <span>Progress</span>
+          <span id="prog-txt">0 / 0</span>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" id="prog-fill" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="score-pill" id="score-pill">✓ 0</div>
+    </div>
+  </div>
+
+  <div class="q-body" id="q-body"></div>
+
+  <div class="q-foot">
+    <div class="q-foot-in">
+      <button class="btn-cta" id="check-btn" onclick="check()" disabled>Check Answer</button>
+      <button id="next-btn" onclick="nextQ()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ RESULTS ══════════════ -->
+<div class="screen" id="results">
+  <div class="res-card">
+    <div class="ring-wrap" id="ring">
+      <div class="ring-in">
+        <span class="ring-pct" id="r-pct">0%</span>
+        <span class="ring-lbl">Score</span>
+      </div>
+    </div>
+    <h2 class="res-ttl" id="r-title">Well done!</h2>
+    <p class="res-msg"  id="r-msg"></p>
+    <div class="res-stats">
+      <div class="rs">    <span class="n" id="r-ok">0</span>  <span class="l">Correct</span></div>
+      <div class="rs bad"><span class="n" id="r-bad">0</span> <span class="l">Wrong</span></div>
+      <div class="rs">    <span class="n" id="r-tot">0</span> <span class="l">Total</span></div>
+    </div>
+    <div class="res-btns">
+      <button class="btn-cta"   onclick="retry()">Try Again</button>
+      <button class="btn-ghost" onclick="showScreen('welcome')">← Back to Home</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  QUESTION BANK — 98 questions
+// ══════════════════════════════════════════════
+const QS = [
+// ── MULTIPLE CHOICE ──
+{t:'mc',q:'The woman ___ lives upstairs is a doctor.',o:['who','which','whose','whom'],a:'who',e:'Use <b>who</b> for people as the <em>subject</em> of the relative clause.'},
+{t:'mc',q:'The cat ___ scratched me belongs to my neighbour.',o:['which','who','whom','whose'],a:'which',e:'Use <b>which</b> (or <em>that</em>) for animals and things.'},
+{t:'mc',q:'The students ___ passed the test were very happy.',o:['who','which','whose','whom'],a:'who',e:'Use <b>who</b> for people as the subject.'},
+{t:'mc',q:'The girl ___ brother is in my class is very talented.',o:['whose','who','whom','which'],a:'whose',e:'Use <b>whose</b> to show possession — "the girl\'s brother".'},
+{t:'mc',q:'The teacher ___ lessons are always interesting is retiring.',o:['whose','who','whom','which'],a:'whose',e:'Use <b>whose</b> before a noun to show possession.'},
+{t:'mc',q:'The book ___ I read last week was fascinating.',o:['that','who','whose','whom'],a:'that',e:'Use <b>that</b> or <em>which</em> for things as the object.'},
+{t:'mc',q:'The man ___ she married is a famous pianist.',o:['whom','who','whose','which'],a:'whom',e:'Use <b>whom</b> for people as the <em>object</em> of the relative clause (formal).'},
+{t:'mc',q:'The professor ___ we admire most has just published a new book.',o:['whom','who','whose','that'],a:'whom',e:'Use <b>whom</b> when the person is the object of the clause.'},
+{t:'mc',q:'She received many gifts, most of ___ were from her classmates.',o:['which','whom','who','whose'],a:'which',e:'Use <b>most of which</b> for things — the gifts are things.'},
+{t:'mc',q:'He has three brothers, none of ___ is married.',o:['whom','which','whose','who'],a:'whom',e:'Use <b>none of whom</b> for people.'},
+{t:'mc',q:'The company ___ headquarters are in London is very successful.',o:['whose','which','who','that'],a:'whose',e:'Use <b>whose</b> for organisations too — "the company\'s headquarters".'},
+{t:'mc',q:'My sister, ___ is a nurse, lives in Canada.',o:['who','that','which','whose'],a:'who',e:'In non-defining clauses, use <b>who</b> for people (never "that").'},
+{t:'mc',q:'The Eiffel Tower, ___ was built in 1889, attracts millions of tourists.',o:['which','that','who','whose'],a:'which',e:'In non-defining clauses (with commas), use <b>which</b> for things.'},
+{t:'mc',q:'The hotel ___ we stayed was very comfortable.',o:['where','which','that','who'],a:'where',e:'Use <b>where</b> for places as a relative adverb — or "in which we stayed".'},
+{t:'mc',q:'The reason ___ she was late is unclear.',o:['why','which','that','who'],a:'why',e:'Use <b>why</b> after "reason" as a relative adverb.'},
+{t:'mc',q:'They interviewed ten applicants, only two of ___ were shortlisted.',o:['whom','which','who','whose'],a:'whom',e:'Use <b>of whom</b> for people in quantifier structures.'},
+{t:'mc',q:'She brought five books, three of ___ were fiction.',o:['which','whom','who','whose'],a:'which',e:'Use <b>of which</b> for things in quantifier structures.'},
+{t:'mc',q:'The restaurant ___ we went to last night was terrible.',o:['that','who','whom','whose'],a:'that',e:'Use <b>that</b> or <em>which</em> for things/places as the object.'},
+{t:'mc',q:'The athlete ___ world record was broken ran faster than anyone expected.',o:['whose','who','whom','which'],a:'whose',e:'Use <b>whose</b> — "the athlete\'s world record was broken".'},
+{t:'mc',q:'Choose the grammatically correct sentence.',o:['London, which is the capital of England, has a population of over 9 million.','London, that is the capital of England, has a population of over 9 million.','London which is the capital of England has a population of over 9 million.','London who is the capital of England has a population of over 9 million.'],a:'London, which is the capital of England, has a population of over 9 million.',e:'Non-defining clauses use <b>which</b> (never "that") and are set off by commas.'},
+{t:'mc',q:'Choose the sentence with correct comma use.',o:['The car that I drive is electric.','The car, that I drive, is electric.','The car which I drive, is electric.','The car, which I drive is electric.'],a:'The car that I drive is electric.',e:'Defining clauses do NOT use commas. "That" is correct here.'},
+{t:'mc',q:'The school has 800 students, ___ of whom come from abroad.',o:['some','both','either','whether'],a:'some',e:'Use <b>some of whom</b> — a quantifier + of whom structure.'},
+{t:'mc',q:'I have two cats, ___ of which can do tricks.',o:['both','some','none','all'],a:'both',e:'Use <b>both of which</b> for exactly two things.'},
+{t:'mc',q:'Is this the house ___ Jack built?',o:['that','who','whom','where'],a:'that',e:'Use <b>that</b> or <em>which</em> for things — "that" is more common in defining clauses.'},
+{t:'mc',q:'The conference ___ he spoke was very well attended.',o:['at which','in who','for whom','where which'],a:'at which',e:'Use <b>preposition + which</b> for things: "at which" (= "which he spoke at").'},
+{t:'mc',q:'The painting, ___ colours are incredibly vibrant, was sold for millions.',o:['whose','which','that','who'],a:'whose',e:'Use <b>whose</b> even in non-defining clauses for possession.'},
+{t:'mc',q:'The woman ___ I was talking to is the new principal.',o:['whom','who','which','that'],a:'whom',e:'"Talking to" ends with a preposition; the person is an object, so use <b>whom</b>.'},
+{t:'mc',q:'My dog, ___ loves swimming, jumps into every puddle.',o:['which','that','who','whom'],a:'which',e:'For animals in non-defining clauses (with commas), use <b>which</b>.'},
+{t:'mc',q:'He applied to six universities, ___ of which offered him a place.',o:['three','much','very','few'],a:'three',e:'Any specific number works: <b>three of which</b>.'},
+{t:'mc',q:'There were 20 guests at the party, ___ of whom I had never met.',o:['half','much','little','less'],a:'half',e:'Use <b>half of whom</b> for people.'},
+{t:'mc',q:'The journalist ___ reported the story won an award.',o:['who','which','whose','whom'],a:'who',e:'The journalist is the subject of "reported" → use <b>who</b>.'},
+{t:'mc',q:'The student ___ essay won first prize is in Class 3B.',o:['whose','who','which','that'],a:'whose',e:'Use <b>whose</b> to replace a possessive: "the student\'s essay".'},
+{t:'mc',q:'The charity received 500 donations, ___ of which came from overseas.',o:['many','much','every','each'],a:'many',e:'<b>Many of which</b> is correct for things.'},
+{t:'mc',q:'We spoke to twenty teachers, ___ of whom supported the proposal.',o:['most','much','very','highly'],a:'most',e:'<b>Most of whom</b> is correct for people.'},
+{t:'mc',q:'Select the non-defining relative clause sentence.',o:['Mr Chan, who taught me for three years, retired last month.','The teacher who taught me for three years retired last month.','The teacher that taught me for three years retired last month.','A teacher who teaches for a long time often retires early.'],a:'Mr Chan, who taught me for three years, retired last month.',e:'Non-defining clauses give extra (non-essential) information and use commas. Proper nouns always use non-defining clauses.'},
+{t:'mc',q:'The topic ___ the government is most concerned is air pollution.',o:['about which','in that','for whom','at who'],a:'about which',e:'"Concerned about the issue" → <b>about which</b> the government is most concerned.'},
+{t:'mc',q:'The phone ___ I lost was a birthday gift.',o:['that','who','whose','whom'],a:'that',e:'Use <b>that</b> or <em>which</em> for things as the object.'},
+{t:'mc',q:'The candidate ___ they selected proved to be excellent.',o:['whom','who','that','whose'],a:'whom',e:'"They selected the candidate" → the candidate is the object → use <b>whom</b>.'},
+{t:'mc',q:'The novel ___ I recommended is now a bestseller.',o:['that','who','where','whom'],a:'that',e:'Defining clause (no commas): use <b>that</b> or <em>which</em>.'},
+{t:'mc',q:'The man ___ wallet I found is waiting outside.',o:['whose','who','which','that'],a:'whose',e:'Use <b>whose</b> — "the man\'s wallet I found".'},
+{t:'mc',q:'She has five siblings, ___ of whom are older than her.',o:['four','much','more','very'],a:'four',e:'Specific numbers work in quantifier clauses: <b>four of whom</b>.'},
+{t:'mc',q:'Hong Kong, ___ is a major financial centre, has a population of about 7 million.',o:['which','that','who','whose'],a:'which',e:'Non-defining clause (Hong Kong is a proper noun) → use <b>which</b>.'},
+{t:'mc',q:'The country ___ she was born has changed dramatically.',o:['in which','in that','of which','for whom'],a:'in which',e:'"Born in a country" → <b>in which</b> she was born.'},
+{t:'mc',q:'The volunteers ___ helped clean up the beach deserve recognition.',o:['who','which','whose','whom'],a:'who',e:'Use <b>who</b> for people as the subject.'},
+{t:'mc',q:'We visited many interesting places, ___ of which I had never heard before.',o:['several','much','very','quite'],a:'several',e:'<b>Several of which</b> — quantifier structure for things.'},
+{t:'mc',q:'The author ___ this book is dedicated is my English teacher.',o:['to whom','for who','of which','whose'],a:'to whom',e:'"Dedicated to someone" → <b>to whom</b> this book is dedicated.'},
+{t:'mc',q:'Children ___ spend too much time online may have trouble sleeping.',o:['who','whom','whose','which'],a:'who',e:'Defining clause — <b>who</b> for people, no commas.'},
+{t:'mc',q:'The company, ___ profits fell last year, announced major layoffs.',o:['whose','which','who','that'],a:'whose',e:'"The company\'s profits" → <b>whose profits</b> (non-defining clause with commas).'},
+{t:'mc',q:'She invited forty guests, ___ of whom came from overseas.',o:['ten','much','very','too'],a:'ten',e:'Specific numbers: <b>ten of whom</b>.'},
+{t:'mc',q:'The documentary ___ I watched last night was very moving.',o:['that','who','whose','whom'],a:'that',e:'Use <b>that</b> or <em>which</em> for things as the object.'},
+{t:'mc',q:'The Mona Lisa, ___ hangs in the Louvre, is arguably the most famous painting in the world.',o:['which','that','who','whose'],a:'which',e:'Non-defining clause for a specific unique thing → use <b>which</b>.'},
+{t:'mc',q:'The council approved twelve projects, ___ of which had already been started.',o:['a few','much','many of that','very'],a:'a few',e:'<b>A few of which</b> — for things.'},
+{t:'mc',q:'The director cast thirty actors, ___ of whom had worked with her before.',o:['eight','much','very','hardly'],a:'eight',e:'Specific number: <b>eight of whom</b>.'},
+{t:'mc',q:'Anyone ___ wants to join should contact the secretary.',o:['who','which','whose','whom'],a:'who',e:'Use <b>who</b> for people.'},
+{t:'mc',q:'The situation ___ we find ourselves is quite serious.',o:['in which','in that','for whom','of which'],a:'in which',e:'"In this situation" → <b>in which</b> we find ourselves.'},
+{t:'mc',q:'She is someone ___ always makes others feel welcome.',o:['who','which','whose','that'],a:'who',e:'Defining clause for a person → use <b>who</b>.'},
+{t:'mc',q:'The architect, ___ buildings are admired worldwide, has won many prizes.',o:['whose','who','which','that'],a:'whose',e:'"The architect\'s buildings" → <b>whose buildings</b>.'},
+{t:'mc',q:'There were six options on the menu, ___ of which were suitable for vegetarians.',o:['three','much','much of','very'],a:'three',e:'<b>Three of which</b> — specific number for things.'},
+{t:'mc',q:'The colleague with ___ I share an office is very helpful.',o:['whom','who','which','that'],a:'whom',e:'"With whom" — preposition + object → <b>whom</b>.'},
+{t:'mc',q:'Anything ___ can go wrong will go wrong.',o:['that','who','whom','whose'],a:'that',e:'Use <b>that</b> for things/ideas in defining clauses.'},
+{t:'mc',q:'He applied to four universities, ___ of which offered a full scholarship.',o:['one','much','very much','quite'],a:'one',e:'<b>One of which</b> — for a single thing out of a group.'},
+{t:'mc',q:'The information ___ he gave us was completely wrong.',o:['that','who','whom','where'],a:'that',e:'Defining clause with <b>that</b> or <em>which</em> for things/information.'},
+{t:'mc',q:'The new park ___ opened last month is very popular.',o:['that','who','whom','whose'],a:'that',e:'Use <b>that</b> or <em>which</em> for things/places as the subject.'},
+{t:'mc',q:'The scientist ___ discovery changed modern medicine won the Nobel Prize.',o:['whose','who','which','that'],a:'whose',e:'"The scientist\'s discovery" → <b>whose discovery</b>.'},
+{t:'mc',q:'The class has thirty students, ___ of whom speak English at home.',o:['few','much','very','quite'],a:'few',e:'<b>Few of whom</b> — a quantifier structure for people.'},
+
+// ── SENTENCE COMBINING ──
+{t:'ty',s1:'The boy was very upset.',s2:'His phone was stolen on the bus.',a:['The boy, whose phone was stolen on the bus, was very upset.','The boy whose phone was stolen on the bus was very upset.','The boy, whose phone had been stolen on the bus, was very upset.'],k:'whose',e:'The boy, whose phone was stolen on the bus, was very upset.'},
+{t:'ty',s1:'We interviewed five candidates yesterday.',s2:'Only two of them had relevant experience.',a:['We interviewed five candidates yesterday, only two of whom had relevant experience.'],k:'of whom',e:'We interviewed five candidates yesterday, only two of whom had relevant experience.'},
+{t:'ty',s1:'The building was completed last year.',s2:'Its design won several awards.',a:['The building, whose design won several awards, was completed last year.','The building whose design won several awards was completed last year.'],k:'whose',e:'The building, whose design won several awards, was completed last year.'},
+{t:'ty',s1:'She has three older brothers.',s2:'All of them work in the medical field.',a:['She has three older brothers, all of whom work in the medical field.'],k:'all of whom',e:'She has three older brothers, all of whom work in the medical field.'},
+{t:'ty',s1:'The movie was sold out.',s2:'We wanted to watch it on opening night.',a:['The movie, which we wanted to watch on opening night, was sold out.'],k:'which',e:'The movie, which we wanted to watch on opening night, was sold out.'},
+{t:'ty',s1:'The teacher gave us a long list of vocabulary words.',s2:'Most of them are very useful.',a:['The teacher gave us a long list of vocabulary words, most of which are very useful.'],k:'most of which',e:'The teacher gave us a long list of vocabulary words, most of which are very useful.'},
+{t:'ty',s1:'The team captain spoke to the reporters.',s2:'Everyone respects her leadership.',a:['The team captain, whose leadership everyone respects, spoke to the reporters.'],k:'whose',e:'The team captain, whose leadership everyone respects, spoke to the reporters.'},
+{t:'ty',s1:'They visited six European countries.',s2:'None of the countries required a visa.',a:['They visited six European countries, none of which required a visa for Hong Kong passport holders.','They visited six European countries, none of which required a visa.'],k:'none of which',e:'They visited six European countries, none of which required a visa.'},
+{t:'ty',s1:'The painting hangs in the living room.',s2:'My grandmother painted it in 1985.',a:['The painting, which my grandmother painted in 1985, hangs in the living room.'],k:'which',e:'The painting, which my grandmother painted in 1985, hangs in the living room.'},
+{t:'ty',s1:'The children were playing in the park.',s2:'Their parents were watching from a bench nearby.',a:['The children, whose parents were watching from a bench nearby, were playing in the park.'],k:'whose',e:'The children, whose parents were watching from a bench nearby, were playing in the park.'},
+{t:'ty',s1:'I bought four new books last week.',s2:'Two of them are science fiction novels.',a:['I bought four new books last week, two of which are science fiction novels.'],k:'two of which',e:'I bought four new books last week, two of which are science fiction novels.'},
+{t:'ty',s1:'The manager organised a team-building day.',s2:'Everyone enjoyed it very much.',a:['The manager organised a team-building day, which everyone enjoyed very much.'],k:'which',e:'The manager organised a team-building day, which everyone enjoyed very much.'},
+{t:'ty',s1:'The professor published ten research papers last year.',s2:'Several of them were about climate change.',a:['The professor published ten research papers last year, several of which were about climate change.'],k:'several of which',e:'The professor published ten research papers last year, several of which were about climate change.'},
+{t:'ty',s1:'The tour guide showed us many beautiful temples.',s2:'Some of them are over 500 years old.',a:['The tour guide showed us many beautiful temples, some of which are over 500 years old.'],k:'some of which',e:'The tour guide showed us many beautiful temples, some of which are over 500 years old.'},
+{t:'ty',s1:'My best friend moved to Canada.',s2:'I still talk to her almost every week.',a:['My best friend, who I still talk to almost every week, moved to Canada.','My best friend, whom I still talk to almost every week, moved to Canada.','My best friend, to whom I still talk almost every week, moved to Canada.'],k:'who / whom',e:'My best friend, who(m) I still talk to almost every week, moved to Canada.'},
+{t:'ty',s1:'The company hired twenty new employees.',s2:'Half of them are recent university graduates.',a:['The company hired twenty new employees, half of whom are recent university graduates.'],k:'half of whom',e:'The company hired twenty new employees, half of whom are recent university graduates.'},
+{t:'ty',s1:'The concert lasted three hours.',s2:'The final song received a standing ovation.',a:['The concert, whose final song received a standing ovation, lasted three hours.','The concert lasted three hours, during which the final song received a standing ovation.'],k:'whose / during which',e:'The concert, whose final song received a standing ovation, lasted three hours.'},
+{t:'ty',s1:'She met three old classmates at the reunion.',s2:'None of them had changed much.',a:['She met three old classmates at the reunion, none of whom had changed much.'],k:'none of whom',e:'She met three old classmates at the reunion, none of whom had changed much.'},
+{t:'ty',s1:'The restaurant serves traditional dim sum.',s2:'Many of the dishes are very popular.',a:['The restaurant serves traditional dim sum, many of which are very popular.'],k:'many of which',e:'The restaurant serves traditional dim sum, many of which are very popular.'},
+{t:'ty',s1:'The athlete broke two national records.',s2:'Both records had stood for more than ten years.',a:['The athlete broke two national records, both of which had stood for more than ten years.'],k:'both of which',e:'The athlete broke two national records, both of which had stood for more than ten years.'},
+{t:'ty',s1:'The hotel offers luxury suites.',s2:'Most of them have an ocean view.',a:['The hotel offers luxury suites, most of which have an ocean view.'],k:'most of which',e:'The hotel offers luxury suites, most of which have an ocean view.'},
+{t:'ty',s1:'We spoke to several eyewitnesses.',s2:'One of them recorded the entire incident on video.',a:['We spoke to several eyewitnesses, one of whom recorded the entire incident on video.'],k:'one of whom',e:'We spoke to several eyewitnesses, one of whom recorded the entire incident on video.'},
+{t:'ty',s1:'The old tree stands in the garden.',s2:'Its branches reach over the fence.',a:['The old tree, whose branches reach over the fence, stands in the garden.','The old tree whose branches reach over the fence stands in the garden.'],k:'whose',e:'The old tree, whose branches reach over the fence, stands in the garden.'},
+{t:'ty',s1:'The charity received generous donations from many people.',s2:'Few of them asked for recognition.',a:['The charity received generous donations from many people, few of whom asked for recognition.'],k:'few of whom',e:'The charity received generous donations from many people, few of whom asked for recognition.'},
+{t:'ty',s1:'The smartphone has many advanced features.',s2:"I don't use most of them.",a:["The smartphone has many advanced features, most of which I don't use."],k:'most of which',e:"The smartphone has many advanced features, most of which I don't use."},
+{t:'ty',s1:'The singer performed five songs in the encore.',s2:'All of them were requested by the audience.',a:['The singer performed five songs in the encore, all of which were requested by the audience.'],k:'all of which',e:'The singer performed five songs in the encore, all of which were requested by the audience.'},
+{t:'ty',s1:'The man is my uncle.',s2:'He invented this machine.',a:['The man who invented this machine is my uncle.','The man that invented this machine is my uncle.'],k:'who',e:'The man who invented this machine is my uncle.'},
+{t:'ty',s1:'The film was fantastic.',s2:'We watched it on Friday.',a:['The film that we watched on Friday was fantastic.','The film which we watched on Friday was fantastic.','The film we watched on Friday was fantastic.'],k:'that / which',e:'The film that we watched on Friday was fantastic.'},
+{t:'ty',s1:'The author is very famous.',s2:'Her novels have been translated into 30 languages.',a:['The author, whose novels have been translated into 30 languages, is very famous.','The author whose novels have been translated into 30 languages is very famous.'],k:'whose',e:'The author, whose novels have been translated into 30 languages, is very famous.'},
+{t:'ty',s1:'The government consulted many experts.',s2:'A few of them disagreed with the plan.',a:['The government consulted many experts, a few of whom disagreed with the plan.'],k:'a few of whom',e:'The government consulted many experts, a few of whom disagreed with the plan.'},
+{t:'ty',s1:'The supermarket sells hundreds of products.',s2:'Many of them are imported from Japan.',a:['The supermarket sells hundreds of products, many of which are imported from Japan.'],k:'many of which',e:'The supermarket sells hundreds of products, many of which are imported from Japan.'},
+{t:'ty',s1:'My grandmother is 90 years old.',s2:'She still goes for a walk every morning.',a:['My grandmother, who still goes for a walk every morning, is 90 years old.'],k:'who',e:'My grandmother, who still goes for a walk every morning, is 90 years old.'},
+{t:'ty',s1:'The report was published this morning.',s2:'It caused great controversy.',a:['The report, which caused great controversy, was published this morning.'],k:'which',e:'The report, which caused great controversy, was published this morning.'},
+{t:'ty',s1:'She submitted five job applications.',s2:'Only one of them led to an interview.',a:['She submitted five job applications, only one of which led to an interview.'],k:'only one of which',e:'She submitted five job applications, only one of which led to an interview.'},
+{t:'ty',s1:'The club has fifty members.',s2:'Twenty of them are under 18.',a:['The club has fifty members, twenty of whom are under 18.'],k:'twenty of whom',e:'The club has fifty members, twenty of whom are under 18.'},
+
+// ══════════════════════════════════════════════
+//  PATTERN 1: DEFINING RELATIVE CLAUSES
+//  (where · when · why · that as contact clause)
+// ══════════════════════════════════════════════
+{t:'mc',q:'The city ___ I grew up has changed a lot.',o:['where','which','that','when'],a:'where',e:'Use <b>where</b> as a relative adverb to refer to a place: "the city where I grew up" = "the city in which I grew up".'},
+{t:'mc',q:'Do you remember the day ___ we first met?',o:['when','where','which','that'],a:'when',e:'Use <b>when</b> as a relative adverb to refer to a point in time: "the day when we met".'},
+{t:'mc',q:"I don't understand the reason ___ she left so suddenly.",o:['why','which','that','when'],a:'why',e:'Use <b>why</b> after "reason" as a relative adverb: "the reason why she left".'},
+{t:'mc',q:'The café ___ we had our first meeting has closed down.',o:['where','when','which','who'],a:'where',e:'Use <b>where</b> for places in a defining relative clause.'},
+{t:'mc',q:'That was the year ___ the school was founded.',o:['when','where','why','which'],a:'when',e:'Use <b>when</b> for points or periods of time.'},
+{t:'mc',q:'Is there a reason ___ you are always late?',o:['why','that','when','where'],a:'why',e:'Use <b>why</b> or <b>that</b> after "reason": "the reason why/that you are late".'},
+{t:'mc',q:'The village ___ my grandmother was born no longer exists.',o:['where','when','which','who'],a:'where',e:'Use <b>where</b> for places. "Where" = "in which" or "at which".'},
+{t:'mc',q:'The moment ___ the results were announced was unforgettable.',o:['when','where','why','whose'],a:'when',e:'Use <b>when</b> for moments in time.'},
+{t:'mc',q:'She never told me the reason ___ she had changed her mind.',o:['why','when','where','which'],a:'why',e:'"Reason" takes <b>why</b> (or <em>that</em>) as a relative adverb.'},
+{t:'mc',q:'The office ___ he works is on the 30th floor.',o:['where','when','that','whose'],a:'where',e:'Use <b>where</b> for locations. "The office where he works" = "the office at which he works".'},
+{t:'mc',q:'That was the era ___ people did not have mobile phones.',o:['when','where','why','which'],a:'when',e:'Use <b>when</b> to refer to historical periods.'},
+{t:'mc',q:'The school ___ she studied is now a shopping mall.',o:['where','when','why','whom'],a:'where',e:'Use <b>where</b> for places. It can refer to any location, not just geographical places.'},
+// contact clauses — omitting the relative pronoun
+{t:'mc',q:'The book ___ I told you about is on the shelf. (Choose the option where the blank is correctly left empty.)',o:['[omit — no pronoun needed]','which','that','who'],a:'[omit — no pronoun needed]',e:'When the relative pronoun is the <b>object</b> of the clause, it can be omitted (contact clause): "The book I told you about…"'},
+{t:'mc',q:"Which sentence is a correct 'contact clause' (relative pronoun omitted)?",o:['The man I spoke to was very helpful.','The man who he spoke to was very helpful.','The man whom was very helpful.','The man which I spoke to was helpful.'],a:'The man I spoke to was very helpful.',e:'In a <b>contact clause</b>, the object relative pronoun is omitted. "The man [whom] I spoke to" → "The man I spoke to".'},
+{t:'mc',q:"Which sentence correctly omits the relative pronoun?",o:['The film we saw last night was brilliant.','The film which we saw last night was brilliant.','The film who we saw was brilliant.','The film whose we saw was brilliant.'],a:'The film we saw last night was brilliant.',e:'When "which/that" is the <b>object</b> of the clause, it can be dropped: "The film [that] we saw…"'},
+
+// combining: where / when / why
+{t:'ty',s1:'I remember the summer.',s2:'We visited Japan that summer.',a:['I remember the summer when we visited Japan.'],k:'when',e:'I remember the summer when we visited Japan.'},
+{t:'ty',s1:'This is the park.',s2:'We used to play here as children.',a:['This is the park where we used to play as children.'],k:'where',e:'This is the park where we used to play as children.'},
+{t:'ty',s1:'She could not explain the reason.',s2:'She had made that decision for this reason.',a:['She could not explain the reason why she had made that decision.'],k:'why',e:'She could not explain the reason why she had made that decision.'},
+{t:'ty',s1:'I still visit the café.',s2:'I met my best friend there.',a:['I still visit the café where I met my best friend.'],k:'where',e:'I still visit the café where I met my best friend.'},
+{t:'ty',s1:'Can you recall the day?',s2:'You started at this school on that day.',a:['Can you recall the day when you started at this school?'],k:'when',e:'Can you recall the day when you started at this school?'},
+
+// ══════════════════════════════════════════════
+//  PATTERN 2: NON-DEFINING RELATIVE CLAUSES
+//  (extra questions beyond what's already in the bank)
+// ══════════════════════════════════════════════
+{t:'mc',q:'Choose the sentence that correctly uses a non-defining relative clause.',o:['My brother, who lives in London, is a doctor.','My brother who lives in London is a doctor.','My brother that lives in London, is a doctor.','My brother, that lives in London, is a doctor.'],a:'My brother, who lives in London, is a doctor.',e:'Non-defining clauses: (1) use commas, (2) use <b>who</b> for people (never "that"), (3) give extra, removable information.'},
+{t:'mc',q:'Shakespeare, ___ wrote Hamlet, is considered the greatest playwright in the English language.',o:['who','that','which','whom'],a:'who',e:'Shakespeare is a specific, unique person → non-defining clause → use <b>who</b>, with commas.'},
+{t:'mc',q:'The Great Wall of China, ___ stretches over 21,000 km, was built over many centuries.',o:['which','that','who','whose'],a:'which',e:'Proper noun / unique thing → non-defining clause → use <b>which</b> (never "that") with commas.'},
+{t:'mc',q:'My parents, ___ married in 1990, have been together for over 35 years.',o:['who','that','which','whom'],a:'who',e:'Non-defining clause about people → use <b>who</b>, commas required.'},
+{t:'mc',q:'The Amazon River, ___ flows through Brazil, is the largest river by discharge in the world.',o:['which','that','who','where'],a:'which',e:'Unique geographical thing → non-defining clause → <b>which</b> with commas.'},
+{t:'mc',q:'He blamed his failure on bad luck, ___ was not entirely fair.',o:['which','that','who','whose'],a:'which',e:'<b>Which</b> can refer back to the whole preceding idea or clause in a non-defining structure.'},
+{t:'mc',q:'She passed the exam on her first attempt, ___ surprised everyone.',o:['which','that','who','whose'],a:'which',e:'"Which" here refers to the entire previous event (passing the exam), not a single noun.'},
+{t:'mc',q:'Dr Lee, ___ research I have been following, will speak at the conference.',o:['whose','who','which','that'],a:'whose',e:'Non-defining clause showing possession: "Dr Lee\'s research" → <b>whose research</b>. Commas required.'},
+{t:'mc',q:'Which sentence is INCORRECT?',o:['Venice, that is famous for its canals, attracts millions of tourists.','Venice, which is famous for its canals, attracts millions of tourists.','Venice, which I visited last year, is a beautiful city.','Venice, whose architecture is stunning, was once a powerful republic.'],a:'Venice, that is famous for its canals, attracts millions of tourists.',e:'"That" can NEVER be used in non-defining (comma) relative clauses.'},
+// combining: non-defining
+{t:'ty',s1:'Tokyo is the capital of Japan.',s2:'It has a population of nearly 14 million.',a:['Tokyo, which has a population of nearly 14 million, is the capital of Japan.','Tokyo, which is the capital of Japan, has a population of nearly 14 million.'],k:'which',e:'Tokyo, which has a population of nearly 14 million, is the capital of Japan.'},
+{t:'ty',s1:'Professor Wong gave an inspiring lecture.',s2:'She has taught here for 30 years.',a:['Professor Wong, who has taught here for 30 years, gave an inspiring lecture.'],k:'who',e:'Professor Wong, who has taught here for 30 years, gave an inspiring lecture.'},
+{t:'ty',s1:'He decided to drop out of university.',s2:'This shocked his whole family.',a:['He decided to drop out of university, which shocked his whole family.'],k:'which',e:'He decided to drop out of university, which shocked his whole family. (Which refers to the whole idea.)'},
+{t:'ty',s1:'The new policy was announced yesterday.',s2:'It has been widely criticised.',a:['The new policy, which has been widely criticised, was announced yesterday.','The new policy was announced yesterday, which has been widely criticised.'],k:'which',e:'The new policy, which has been widely criticised, was announced yesterday.'},
+
+// ══════════════════════════════════════════════
+//  PATTERN 3: RELATIVE CLAUSES WITH PREPOSITIONS
+//  (formal: preposition + which/whom)
+//  (quantifiers: some/one/three/each/many/much/any/none + of which/whom)
+// ══════════════════════════════════════════════
+{t:'mc',q:'That is the problem ___ we have been talking.',o:['about which','about that','which about','of whom'],a:'about which',e:'Formal style: preposition comes before "which". "The problem about which we have been talking" = "the problem that we have been talking about".'},
+{t:'mc',q:'The committee ___ she belongs is very influential.',o:['to which','to that','in who','for whom'],a:'to which',e:'"Belong to" → <b>to which</b> she belongs. In formal writing, prepositions precede the relative pronoun.'},
+{t:'mc',q:'The surgeon ___ I was referred is one of the best in the country.',o:['to whom','to who','whom to','which'],a:'to whom',e:'"Referred to a person" → <b>to whom</b> I was referred. Formal preposition + whom structure.'},
+{t:'mc',q:'The charity ___ he has donated millions is based in Geneva.',o:['to which','to that','in whom','about which'],a:'to which',e:'"Donated to a charity" → <b>to which</b> he has donated millions.'},
+{t:'mc',q:'The candidates ___ we spoke all had impressive credentials.',o:['with whom','with who','with which','of which'],a:'with whom',e:'"Spoke with candidates" → <b>with whom</b> we spoke. Formal preposition + whom for people.'},
+{t:'mc',q:'The period ___ the novel is set was the Victorian era.',o:['in which','in that','where','when which'],a:'in which',e:'"Set in a period" → <b>in which</b> the novel is set. Formal preposition + which for times/periods.'},
+{t:'mc',q:'The class received ten assignments, ___ of which were submitted on time.',o:['none','most of','much','few of that'],a:'none',e:'Quantifier structure: <b>none of which</b> were submitted on time. "None" + of which for things.'},
+{t:'mc',q:'She interviewed eight applicants, each ___ had a different background.',o:['of whom','of which','of who','of that'],a:'of whom',e:'<b>Each of whom</b> — "each" can be used in quantifier structures for people.'},
+{t:'mc',q:'The report contained twelve recommendations, ___ of which have already been implemented.',o:['many','much','very','quite'],a:'many',e:'<b>Many of which</b> — quantifier + of which for things (recommendations).'},
+{t:'mc',q:'There were thirty volunteers, ___ of whom were university students.',o:['any','much','little','less'],a:'any',e:'<b>Any of whom</b> — can be used in questions or negative-like contexts for people.'},
+{t:'mc',q:'The company launched five new products, ___ of which became bestsellers.',o:['one','much','very much','quite'],a:'one',e:'<b>One of which</b> — specific number + of which for things.'},
+{t:'mc',q:'She was given three options, ___ of which appealed to her.',o:['none','much','very','little'],a:'none',e:'<b>None of which</b> — none + of which when referring to things.'},
+{t:'mc',q:'They sent invitations to a hundred people, ___ of whom actually came.',o:['few','much','more','very'],a:'few',e:'<b>Few of whom</b> — few + of whom for people, implying a small number.'},
+{t:'mc',q:'The museum displayed fifty artefacts, ___ of which were on loan from overseas.',o:['some','much','very','too'],a:'some',e:'<b>Some of which</b> — some + of which for things.'},
+// combining: prepositions
+{t:'ty',s1:'The company is based in London.',s2:'She has worked for the company for ten years.',a:['The company for which she has worked for ten years is based in London.'],k:'for which',e:'The company for which she has worked for ten years is based in London.'},
+{t:'ty',s1:'He introduced me to the professor.',s2:'I had heard so much about her.',a:['He introduced me to the professor about whom I had heard so much.'],k:'about whom',e:'He introduced me to the professor about whom I had heard so much.'},
+{t:'ty',s1:'She applied to five universities.',s2:'She was accepted by two of them.',a:['She applied to five universities, two of which accepted her.'],k:'two of which',e:'She applied to five universities, two of which accepted her.'},
+{t:'ty',s1:'The council hired fifty workers.',s2:'Each of them had specialist skills.',a:['The council hired fifty workers, each of whom had specialist skills.'],k:'each of whom',e:'The council hired fifty workers, each of whom had specialist skills.'},
+{t:'ty',s1:'They bought six horses.',s2:'None of them had ever been ridden.',a:['They bought six horses, none of which had ever been ridden.'],k:'none of which',e:'They bought six horses, none of which had ever been ridden.'},
+{t:'ty',s1:'The charity raised donations from many supporters.',s2:'Much of the money came from overseas.',a:['The charity raised donations from many supporters, much of which came from overseas.'],k:'much of which',e:'The charity raised donations from many supporters, much of which came from overseas.'},
+{t:'ty',s1:'They proposed a dozen solutions.',s2:'Any of them would have been acceptable.',a:['They proposed a dozen solutions, any of which would have been acceptable.'],k:'any of which',e:'They proposed a dozen solutions, any of which would have been acceptable.'},
+
+// ══════════════════════════════════════════════
+//  PATTERN 4: REDUCED RELATIVE CLAUSES
+//  (participial phrases — active & passive)
+// ══════════════════════════════════════════════
+{t:'mc',q:'"The woman who is standing by the window is my aunt." The reduced form is:',o:['The woman standing by the window is my aunt.','The woman stood by the window is my aunt.','The woman by the window standing is my aunt.','The woman who stands is my aunt.'],a:'The woman standing by the window is my aunt.',e:'Active progressive relative clauses can be reduced by dropping "who is" and keeping the <b>-ing participle</b>: "who is standing" → "standing".'},
+{t:'mc',q:'"The documents that were submitted yesterday are incomplete." The reduced form is:',o:['The documents submitted yesterday are incomplete.','The documents submitting yesterday are incomplete.','The documents which submitted are incomplete.','The documents that submitting are incomplete.'],a:'The documents submitted yesterday are incomplete.',e:'Passive relative clauses are reduced by dropping "that were" and keeping the <b>past participle</b>: "that were submitted" → "submitted".'},
+{t:'mc',q:'Which is the correct reduced form of "The boy who was injured in the accident recovered quickly"?',o:['The boy injured in the accident recovered quickly.','The boy injuring in the accident recovered quickly.','The boy whom injured recovered quickly.','The boy to be injured recovered quickly.'],a:'The boy injured in the accident recovered quickly.',e:'Passive reduction: drop "who was", keep past participle <b>injured</b>.'},
+{t:'mc',q:'Which is the correct reduced form of "Anyone who wants to join should register online"?',o:['Anyone wanting to join should register online.','Anyone wanted to join should register online.','Anyone whom wants to join should register online.','Anyone who wanting to join should register.'],a:'Anyone wanting to join should register online.',e:'Active reduction: drop "who", keep <b>-ing participle</b>: "who wants" → "wanting".'},
+{t:'mc',q:'Which sentence shows a correctly reduced relative clause?',o:['Students participating in the competition must arrive early.','Students who participating must arrive early.','Students which participate must arrive early.','Students participated in the competition must arrive.'],a:'Students participating in the competition must arrive early.',e:'"Students who are participating" → "Students participating" (active reduction, drop "who are").'},
+{t:'mc',q:'"The letter written by the principal was formal." This is a reduced form of:',o:['The letter that was written by the principal was formal.','The letter that writing by the principal was formal.','The letter which writing was formal.','The letter who wrote by the principal.'],a:'The letter that was written by the principal was formal.',e:'"Written" is a <b>past participle</b> from a passive relative clause: "that was written" → "written".'},
+{t:'mc',q:'Choose the sentence with a correctly reduced relative clause.',o:['The results announced this morning shocked everyone.','The results that announcing shocked everyone.','The results whom announced shocked everyone.','The results which is announced shocked everyone.'],a:'The results announced this morning shocked everyone.',e:'"The results that were announced" → "The results announced" (passive reduction, drop "that were").'},
+{t:'mc',q:'"The child sitting at the front raised her hand." The full form of the reduced clause is:',o:['The child who was sitting at the front raised her hand.','The child who sat at the front raised her hand.','The child that sitting raised her hand.','The child whom sitting raised her hand.'],a:'The child who was sitting at the front raised her hand.',e:'"Sitting" is an active -ing participle; the full form is "who was sitting".'},
+{t:'mc',q:'Which sentence is NOT a correct reduced relative clause?',o:['The people waited for the bus got wet.','The people waiting for the bus got wet.','The package sent last week has not arrived.','The man driving the car was arrested.'],a:'The people waited for the bus got wet.',e:'"Waited" is a past simple, NOT a participle used for reduction. The correct form is "The people waiting for the bus…" (active) or "The people who waited…" (full).'},
+{t:'mc',q:'"The scientist working on the vaccine has made a breakthrough." This contains:',o:['A reduced active relative clause (who is working → working)','A reduced passive relative clause (who was worked → working)','A non-defining relative clause without commas','A defining clause with a conjunction'],a:'A reduced active relative clause (who is working → working)',e:'Active progressive reduction: "the scientist who is working" → "the scientist working".'},
+// combining: reduced
+{t:'ty',s1:'The girl is my cousin.',s2:'She is waving at us.',a:['The girl waving at us is my cousin.'],k:'waving (reduced active)',e:'The girl waving at us is my cousin. (Reduced from "The girl who is waving at us…")'},
+{t:'ty',s1:'The car belongs to the headmaster.',s2:'It is parked outside the gate.',a:['The car parked outside the gate belongs to the headmaster.'],k:'parked (reduced passive)',e:'The car parked outside the gate belongs to the headmaster. (Reduced from "The car that is parked…")'},
+{t:'ty',s1:'The students must hand in their forms today.',s2:'They are applying for the scholarship.',a:['The students applying for the scholarship must hand in their forms today.'],k:'applying (reduced active)',e:'The students applying for the scholarship must hand in their forms today.'},
+{t:'ty',s1:'The wallet was handed in to the police.',s2:'It was found on the train.',a:['The wallet found on the train was handed in to the police.'],k:'found (reduced passive)',e:'The wallet found on the train was handed in to the police.'},
+{t:'ty',s1:'The essay will be awarded first prize.',s2:'It was written by a Form 3 student.',a:['The essay written by a Form 3 student will be awarded first prize.'],k:'written (reduced passive)',e:'The essay written by a Form 3 student will be awarded first prize.'},
+{t:'ty',s1:'The tourists were taken to the hospital.',s2:'They were injured in the accident.',a:['The tourists injured in the accident were taken to the hospital.'],k:'injured (reduced passive)',e:'The tourists injured in the accident were taken to the hospital.'},
+
+// ══════════════════════════════════════════════
+//  PATTERN 5: RELATIVE CLAUSES AS ADJ. PHRASES
+//  (Reduction to adj. / prepositional phrase)
+// ══════════════════════════════════════════════
+{t:'mc',q:'"The boy who is afraid of dogs refused to enter." The adjectival phrase form is:',o:['The boy afraid of dogs refused to enter.','The boy fearing of dogs refused to enter.','The boy feared of dogs refused to enter.','The boy who afraid refused to enter.'],a:'The boy afraid of dogs refused to enter.',e:'A relative clause with a <b>predicative adjective</b> ("who is afraid") can be reduced to an adjectival phrase: drop "who is", keep "afraid of dogs".'},
+{t:'mc',q:'"The students who are eager to learn will succeed." The adjectival phrase form is:',o:['The students eager to learn will succeed.','The students eagering to learn will succeed.','The students who eagerly succeed.','The students to be eager will succeed.'],a:'The students eager to learn will succeed.',e:'Drop "who are", keep the adjective phrase: "eager to learn".'},
+{t:'mc',q:'"The road which is under construction will be closed for a month." The reduced form is:',o:['The road under construction will be closed for a month.','The road constructing will be closed.','The road constructed will be closed for a month.','The road being under will be closed.'],a:'The road under construction will be closed for a month.',e:'A prepositional phrase can replace the relative clause: "which is under construction" → "under construction".'},
+{t:'mc',q:'"The child who was full of energy ran around the playground all day." The adjectival phrase form is:',o:['The child full of energy ran around the playground all day.','The child energetic ran around the playground all day.','The child being full of energy ran all day.','The child who energised ran all day.'],a:'The child full of energy ran around the playground all day.',e:'Drop "who was", keep the adjectival phrase "full of energy".'},
+{t:'mc',q:'Which sentence correctly uses an adjectival phrase to replace a relative clause?',o:['Any student responsible for the damage must report to the office.','Any student who responsible must report to the office.','Any student who is responsibly must report.','Any student whom responsible must report.'],a:'Any student responsible for the damage must report to the office.',e:'"Any student who is responsible for the damage" → "Any student responsible for the damage" (adjectival phrase).'},
+{t:'mc',q:'"A woman rich enough to retire decided to open a school instead." This is a reduction of:',o:['A woman who was rich enough to retire decided to open a school instead.','A woman who richer decided to open a school.','A woman whom rich decided to open a school.','A woman which is rich enough decided.'],a:'A woman who was rich enough to retire decided to open a school instead.',e:'"Rich enough to retire" is an adjectival phrase replacing "who was rich enough to retire".'},
+{t:'mc',q:'"The package, due to arrive on Monday, has been delayed." This is a reduction of:',o:['The package, which was due to arrive on Monday, has been delayed.','The package, that was due, has been delayed.','The package, who was due to arrive, has been delayed.','The package due arrived on Monday has been delayed.'],a:'The package, which was due to arrive on Monday, has been delayed.',e:'"Due to arrive on Monday" (adjectival phrase) replaces "which was due to arrive on Monday".'},
+{t:'mc',q:'Choose the sentence that correctly reduces a relative clause to an adjectival phrase.',o:['People unable to attend should notify the organiser in advance.','People who unable to attend should notify.','People whom unable should notify the organiser.','People which are unable attending should notify.'],a:'People unable to attend should notify the organiser in advance.',e:'"People who are unable to attend" → "People unable to attend". Drop "who are", keep "unable to attend".'},
+{t:'mc',q:'"The plan, likely to succeed, was approved by the board." This reduces:',o:['The plan, which was likely to succeed, was approved by the board.','The plan, that likely succeeded, was approved.','The plan, who was likely, was approved.','The plan, whose likely success, was approved.'],a:'The plan, which was likely to succeed, was approved by the board.',e:'"Likely to succeed" is an adjectival phrase in apposition, replacing "which was likely to succeed".'},
+// combining: adjectival phrase reduction
+{t:'ty',s1:'The candidate is the best choice for the role.',s2:'She is confident and well-prepared.',a:['The candidate confident and well-prepared is the best choice for the role.','The confident and well-prepared candidate is the best choice for the role.'],k:'confident and well-prepared (adj. phrase)',e:'The candidate confident and well-prepared is the best choice for the role. (Drop "who is".)'},
+{t:'ty',s1:'Any employee must complete the training.',s2:'He or she is new to the company.',a:['Any employee new to the company must complete the training.'],k:'new to the company (adj. phrase)',e:'Any employee new to the company must complete the training. ("who is new to the company" → "new to the company")'},
+{t:'ty',s1:'The athlete retired last year.',s2:'She was tired of the pressure.',a:['The athlete tired of the pressure retired last year.'],k:'tired of the pressure (adj. phrase)',e:'The athlete tired of the pressure retired last year. ("who was tired of the pressure" → "tired of the pressure")'},
+{t:'ty',s1:'Volunteers must sign up before Friday.',s2:'They are willing to help.',a:['Volunteers willing to help must sign up before Friday.'],k:'willing to help (adj. phrase)',e:'Volunteers willing to help must sign up before Friday. ("who are willing to help" → "willing to help")'},
+];
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let questions=[], idx=0, score=0, mode='all', answered=false, picked=null;
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function scrollModes() {
+  document.getElementById('modes').scrollIntoView({behavior:'smooth'});
+}
+function shuffle(a) {
+  const b=[...a];
+  for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}
+  return b;
+}
+function norm(s) {
+  return s.toLowerCase().replace(/\s+/g,' ').replace(/['']/g,"'").trim();
+}
+function esc(s) {
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+// ══════════════════════════════════════════════
+//  SETUP
+// ══════════════════════════════════════════════
+function pickMode(el,m) {
+  document.querySelectorAll('.m-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); mode=m;
+}
+
+function startQuiz() {
+  score=0; idx=0; answered=false; picked=null;
+  let pool=[...QS];
+  if(mode==='mc')     pool=pool.filter(q=>q.t==='mc');
+  if(mode==='ty')     pool=pool.filter(q=>q.t==='ty');
+  pool=shuffle(pool);
+  if(mode==='random') pool=pool.slice(0,20);
+  questions=pool;
+  showScreen('quiz');
+  render();
+}
+function retry() { startQuiz(); }
+
+// ══════════════════════════════════════════════
+//  PROGRESS
+// ══════════════════════════════════════════════
+function updateProg() {
+  const pct = questions.length ? (idx/questions.length)*100 : 0;
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-txt').textContent  = idx+' / '+questions.length;
+  document.getElementById('score-pill').textContent = '✓ '+score;
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+function render() {
+  if(idx>=questions.length){showResults();return;}
+  answered=false; picked=null;
+  updateProg();
+  document.getElementById('check-btn').style.display='block';
+  document.getElementById('check-btn').disabled=true;
+  document.getElementById('next-btn').style.display='none';
+
+  const q=questions[idx];
+  let h='';
+  h+=`<div class="q-num">Question ${idx+1} of ${questions.length}</div>`;
+
+  if(q.t==='mc'){
+    h+=`<div class="type-badge mc"><span class="dot"></span>Multiple Choice</div>`;
+    h+=`<div class="s-card">
+      <div class="q-instr">Choose the correct option</div>
+      <p class="q-sent">${q.q.replace(/___/g,'<span class="blank">___</span>')}</p>
+    </div>`;
+    const opts=shuffle(q.o);
+    h+=`<div class="opts-list">`;
+    opts.forEach(opt=>{
+      const sv=opt.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      h+=`<button class="opt-btn" onclick="pickOpt(this,'${sv}')" data-v="${esc(opt)}">
+        <span>${esc(opt)}</span>
+        <div class="opt-circle"></div>
+      </button>`;
+    });
+    h+=`</div>`;
+  } else {
+    // determine label based on hint keyword to show what pattern is being practised
+    const patLabel = q.k ? `Hint: use <strong>${esc(q.k)}</strong>` : '';
+    h+=`<div class="type-badge ty"><span class="dot"></span>Sentence Combining</div>`;
+    h+=`<div class="s-card">
+      <div class="q-instr">Combine the two sentences using a relative clause</div>
+      <p class="q-sent">
+        <span class="s1">1.&ensp;${esc(q.s1)}</span>
+        <span class="s2">2.&ensp;${esc(q.s2)}</span>
+        <span class="arr">↓</span>
+      </p>
+      ${patLabel ? `<div class="hint-row"><span class="material-symbols-outlined">lightbulb</span>${patLabel}</div>` : ''}
+    </div>
+    <div class="ty-area">
+      <div class="ty-lbl">Your combined sentence</div>
+      <textarea class="ty-inp" id="ti" rows="3" placeholder="Type your answer here…" oninput="onType()"></textarea>
+      <p class="ty-hint">Pay attention to comma placement and word order.</p>
+    </div>`;
+  }
+
+  h+=`<div class="fb-box" id="fb">
+    <div class="fb-ico" id="fb-ico"></div>
+    <div style="flex:1">
+      <div class="fb-ttl" id="fb-ttl"></div>
+      <div class="fb-body" id="fb-bdy"></div>
+      <span class="fb-ans" id="fb-ans"></span>
+    </div>
+  </div>`;
+
+  document.getElementById('q-body').innerHTML=h;
+  window.scrollTo(0,0);
+}
+
+function pickOpt(btn,val){
+  if(answered)return;
+  picked=btn.dataset.v||val;
+  document.querySelectorAll('.opt-btn').forEach(b=>b.style.background='');
+  btn.style.background='rgba(0,106,113,.07)';
+  document.getElementById('check-btn').disabled=false;
+}
+function onType(){
+  const v=(document.getElementById('ti')||{}).value||'';
+  document.getElementById('check-btn').disabled=v.trim().length<5;
+}
+
+// ══════════════════════════════════════════════
+//  CHECK ANSWER
+// ══════════════════════════════════════════════
+function check(){
+  if(answered)return;
+  answered=true;
+  const q=questions[idx];
+  let ok=false;
+
+  if(q.t==='mc'){
+    ok=picked===q.a;
+    document.querySelectorAll('.opt-btn').forEach(btn=>{
+      btn.disabled=true;
+      if(btn.dataset.v===q.a){btn.classList.add('correct');btn.querySelector('.opt-circle').textContent='✓';}
+      else if(btn.dataset.v===picked&&!ok){btn.classList.add('wrong');btn.querySelector('.opt-circle').textContent='✕';}
+    });
+  } else {
+    const typed=(document.getElementById('ti')||{}).value||'';
+    ok=q.a.some(a=>norm(typed)===norm(a));
+    const inp=document.getElementById('ti');
+    inp.classList.add(ok?'correct':'wrong');
+    inp.disabled=true;
+    if(!ok) document.getElementById('fb-ans').textContent='✓ '+q.a[0];
+  }
+
+  if(ok) score++;
+
+  const fb=document.getElementById('fb');
+  fb.classList.add('show',ok?'ok':'err');
+  document.getElementById('fb-ico').textContent=ok?'🎉':'📖';
+  const ttl=document.getElementById('fb-ttl');
+  ttl.className='fb-ttl '+(ok?'c':'w');
+  ttl.textContent=ok?'Excellent!':'Not quite!';
+  document.getElementById('fb-bdy').innerHTML=q.e;
+  if(ok) document.getElementById('fb-ans').textContent='';
+
+  updateProg();
+  document.getElementById('check-btn').style.display='none';
+  const nb=document.getElementById('next-btn');
+  nb.style.display='block';
+  nb.textContent=idx+1>=questions.length?'See Results →':'Continue →';
+}
+
+function nextQ(){idx++;render();}
+
+// ══════════════════════════════════════════════
+//  RESULTS
+// ══════════════════════════════════════════════
+function showResults(){
+  const total=questions.length;
+  const pct=total?Math.round((score/total)*100):0;
+  document.getElementById('r-pct').textContent=pct+'%';
+  document.getElementById('r-ok').textContent=score;
+  document.getElementById('r-bad').textContent=total-score;
+  document.getElementById('r-tot').textContent=total;
+  document.getElementById('ring').style.setProperty('--deg',(pct/100)+'turn');
+
+  let title,msg;
+  if(pct>=90){title='🏆 Outstanding!';msg='Impressive command of relative clauses. You are well-prepared for the Uniform Test.';}
+  else if(pct>=75){title='🌟 Great Work!';msg='Solid understanding. Review the questions you missed and try again.';}
+  else if(pct>=60){title='👍 Good Effort!';msg='You are getting there. Focus especially on <em>whose</em> and the <em>of which / of whom</em> structures.';}
+  else{title='📚 Keep Practising!';msg='Relative clauses take time to master. Try again — each attempt builds your instinct.';}
+
+  document.getElementById('r-title').textContent=title;
+  document.getElementById('r-msg').innerHTML=msg;
+  showScreen('results');
+}
+</script>
+</body>
+</html>
