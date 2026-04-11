@@ -1,9 +1,9 @@
 const CACHE = 'pm-v1';
 const APP_SHELL = [
-  '/9jgCSHsfKTTOHU6D/',
-  '/9jgCSHsfKTTOHU6D/index.html',
-  '/9jgCSHsfKTTOHU6D/manifest.json',
-  '/9jgCSHsfKTTOHU6D/icon.svg',
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon.svg',
 ];
 
 self.addEventListener('install', e => {
@@ -32,7 +32,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
           return res;
         })
-        .catch(() => caches.match('/9jgCSHsfKTTOHU6D/index.html'))
+        .catch(() => caches.match('/index.html'))
     );
     return;
   }
