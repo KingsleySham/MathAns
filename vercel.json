@@ -1,5 +1,10 @@
 {
   "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "9jgCSHsfKTTOHU6D.mathans.app" }],
+      "destination": "/9jgCSHsfKTTOHU6D/:path*"
+    },
     { "source": "/edit1125",  "destination": "/editor/index.html" },
     { "source": "/edit1125/", "destination": "/editor/index.html" },
     { "source": "/ces",  "destination": "/cesindex.html" },
