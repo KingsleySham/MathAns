@@ -91,19 +91,23 @@ const DEFAULT_REMINDERS = [
   { id: 'r3', title: 'Gentle Nudge', icon: 'history_edu',
     message: `Hi {name}! Quick reminder — duty on *{date}* from *{time}*.\nLocation: {location} ({duty})\nLet me know if you have any questions!` },
 ];
-const VARS = ['{name}', '{date}', '{time}', '{location}', '{duty}'];
+const VARS = ['{name}', '{full name}', '{class}', '{class no}', '{date}', '{time}', '{location}', '{duty}'];
 const ICONS = ['notifications_active','priority_high','history_edu','schedule','star','flag','bolt','campaign'];
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
 const getTomorrow = () => { const d = new Date(); d.setDate(d.getDate()+1); return d.toLocaleDateString('en-CA'); };
 const fmtDate = iso => { if (!iso) return ''; const [y,m,day] = iso.split('-'); return new Date(+y,+m-1,+day).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); };
 const fmtShort = iso => { if (!iso) return ''; const [y,m,day] = iso.split('-'); return new Date(+y,+m-1,+day).toLocaleDateString('en-US',{month:'short',day:'numeric'}); };
+const firstName = p => (p.name||'').split(' ')[0];
 const resolveMsg = (tpl,p,date,cfg) => tpl
-  .replace(/{name}/g,p.name||'')
-  .replace(/{date}/g,fmtDate(date)||date)
-  .replace(/{time}/g,p.dutyTime||(cfg?.defaultTime||''))
-  .replace(/{location}/g,cfg?.defaultLocation||'')
-  .replace(/{duty}/g,p.dutyDescription||(cfg?.defaultDuty||''));
+  .replace(/{name}/g, firstName(p))
+  .replace(/{full name}/g, p.fullName||p.name||'')
+  .replace(/{class no}/g, p.classNo||'')
+  .replace(/{class}/g, p.class||'')
+  .replace(/{date}/g, fmtDate(date)||date)
+  .replace(/{time}/g, p.dutyTime||(cfg?.defaultTime||''))
+  .replace(/{location}/g, cfg?.defaultLocation||'')
+  .replace(/{duty}/g, p.dutyDescription||(cfg?.defaultDuty||''));
 const waUrl = (p,tpl,date,cfg) => `https://wa.me/${p.phone.replace(/\D/g,'')}?text=${encodeURIComponent(resolveMsg(tpl,p,date,cfg))}`;
 const getInitials = name => name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const COLORS = ['bg-emerald-500','bg-blue-500','bg-violet-500','bg-amber-500','bg-pink-500','bg-teal-500','bg-indigo-500','bg-rose-500'];
@@ -173,16 +177,29 @@ function VarChips({taRef,value,onChange}) {
 
 // ── PrefectForm ───────────────────────────────────────────────────────────────
 function PrefectForm({initial,onSave,onCancel}) {
-  const [f,setF] = useState(initial??{name:'',phone:'+852',dutyTime:'',dutyDescription:''});
+  const [f,setF] = useState(initial??{name:'',fullName:'',class:'',classNo:'',phone:'+852',dutyTime:'',dutyDescription:''});
   const set = (k,v) => setF(p=>({...p,[k]:v}));
   const warn = f.phone&&!f.phone.startsWith('+')?'Start with + and country code':null;
   const ok = f.name.trim()&&f.phone.trim();
   return h(Modal,{title:initial?'Edit Prefect':'Add Prefect',onClose:onCancel},
     h('form',{onSubmit:e=>{e.preventDefault();if(ok)onSave({...initial,...f,name:f.name.trim(),phone:f.phone.trim()});}},
-      h(Field,{label:'Name *'},h(Inp,{value:f.name,onChange:e=>set('name',e.target.value),placeholder:'e.g. Alice Chan',autoFocus:true})),
-      h(Field,{label:'Phone *',hint:'Hong Kong: +852XXXXXXXX',warn},h(Inp,{value:f.phone,onChange:e=>set('phone',e.target.value),placeholder:'+85291234567'})),
-      h(Field,{label:'Override Time',hint:'Leave blank to use default from Settings'},h(Inp,{value:f.dutyTime||'',onChange:e=>set('dutyTime',e.target.value),placeholder:'e.g. 09:00 AM – 10:30 AM'})),
-      h(Field,{label:'Override Duty',hint:'Leave blank to use default from Settings'},h(Inp,{value:f.dutyDescription||'',onChange:e=>set('dutyDescription',e.target.value),placeholder:'e.g. Library supervision'})),
+      h(Field,{label:'Display Name *',hint:'Used for avatar and {name} → first word only'},
+        h(Inp,{value:f.name,onChange:e=>set('name',e.target.value),placeholder:'e.g. Alice',autoFocus:true})),
+      h(Field,{label:'Full Name',hint:'{full name} variable'},
+        h(Inp,{value:f.fullName||'',onChange:e=>set('fullName',e.target.value),placeholder:'e.g. Alice Chan Hei Lam'})),
+      h('div',{className:'flex gap-3'},
+        h('div',{className:'flex-1'},
+          h(Field,{label:'Class',hint:'{class}'},
+            h(Inp,{value:f.class||'',onChange:e=>set('class',e.target.value),placeholder:'e.g. 5A'}))),
+        h('div',{className:'w-24'},
+          h(Field,{label:'Class No.',hint:'{class no}'},
+            h(Inp,{value:f.classNo||'',onChange:e=>set('classNo',e.target.value),placeholder:'e.g. 12'})))),
+      h(Field,{label:'Phone *',hint:'Hong Kong: +852XXXXXXXX',warn},
+        h(Inp,{value:f.phone,onChange:e=>set('phone',e.target.value),placeholder:'+85291234567'})),
+      h(Field,{label:'Override Time',hint:'Leave blank to use default from Settings'},
+        h(Inp,{value:f.dutyTime||'',onChange:e=>set('dutyTime',e.target.value),placeholder:'e.g. 09:00 AM – 10:30 AM'})),
+      h(Field,{label:'Override Duty',hint:'Leave blank to use default from Settings'},
+        h(Inp,{value:f.dutyDescription||'',onChange:e=>set('dutyDescription',e.target.value),placeholder:'e.g. Library supervision'})),
       h('div',{className:'flex gap-3 mt-2'},
         h('button',{type:'button',onClick:onCancel,className:'flex-1 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant text-sm font-semibold'},'Cancel'),
         h('button',{type:'submit',disabled:!ok,className:'flex-1 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold disabled:opacity-40'},initial?'Save':'Add Prefect'))));
@@ -382,6 +399,7 @@ function ContactsPage({prefects,sendStatus,onAdd,onEdit,onDelete,onSendOne,onUpd
                 h('p',{className:'font-bold text-sm'},p.name),
                 sendStatus[p.id]==='opened'&&h('span',{className:'text-[9px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full uppercase'},'Sent')),
               h('p',{className:'text-xs text-on-surface-variant'},p.phone),
+              (p.class||p.classNo||p.fullName)&&h('p',{className:'text-xs text-on-surface-variant mt-0.5 truncate'},[p.class,p.classNo?`No.${p.classNo}`:null,p.fullName].filter(Boolean).join(' · ')),
               (p.dutyTime||p.dutyDescription)&&h('p',{className:'text-xs text-on-surface-variant mt-0.5 truncate'},[p.dutyTime,p.dutyDescription].filter(Boolean).join(' · '))),
             h('div',{className:'flex items-center gap-1.5'},
               h('button',{onClick:()=>onSendOne(p),className:'px-3 py-1.5 rounded-lg border border-primary text-primary text-xs font-bold hover:bg-primary hover:text-white transition-colors'},'Send'),
