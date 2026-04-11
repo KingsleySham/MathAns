@@ -1,0 +1,25 @@
+{
+  "name": "Prefect Messenger",
+  "short_name": "Prefects",
+  "description": "Send duty reminders to school prefects",
+  "start_url": "/9jgCSHsfKTTOHU6D/",
+  "scope": "/9jgCSHsfKTTOHU6D/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f9f6f5",
+  "theme_color": "#006a2e",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

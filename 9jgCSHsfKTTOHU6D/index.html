@@ -4,6 +4,12 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Prefect Messenger</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#006a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Prefects">
+<link rel="apple-touch-icon" href="icon.svg">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -770,6 +776,11 @@ function App() {
 }
 
 createRoot(document.getElementById('root')).render(h(App));
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/9jgCSHsfKTTOHU6D/sw.js', { scope: '/9jgCSHsfKTTOHU6D/' });
+  }
 </script>
 </body>
 </html>

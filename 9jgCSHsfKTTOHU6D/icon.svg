@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#006a2e"/>
+  <g fill="white">
+    <!-- Bell body -->
+    <path d="M256 96c-8.8 0-16 7.2-16 16v14.6C196.7 138.2 168 172.4 168 213.3V304l-24 24v16h224v-16l-24-24v-90.7c0-40.9-28.7-75.1-72-84.7V112c0-8.8-7.2-16-16-16z"/>
+    <!-- Clapper -->
+    <ellipse cx="256" cy="356" rx="28" ry="16"/>
+  </g>
+</svg>
