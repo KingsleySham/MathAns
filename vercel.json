@@ -1,8 +1,13 @@
 {
   "rewrites": [
     {
+      "source": "/",
+      "has": [{ "type": "host", "value": "9jgCSHsfKTTOHU6D\\.mathans\\.app" }],
+      "destination": "/9jgCSHsfKTTOHU6D/index.html"
+    },
+    {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "9jgCSHsfKTTOHU6D.mathans.app" }],
+      "has": [{ "type": "host", "value": "9jgCSHsfKTTOHU6D\\.mathans\\.app" }],
       "destination": "/9jgCSHsfKTTOHU6D/:path*"
     },
     { "source": "/edit1125",  "destination": "/editor/index.html" },
