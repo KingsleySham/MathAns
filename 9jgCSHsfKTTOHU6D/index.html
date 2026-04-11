@@ -60,18 +60,14 @@ tailwind.config = {
 <script type="module">
 import { createElement as h, useState, useEffect, useRef, useCallback } from 'https://esm.sh/react@18';
 import { createRoot } from 'https://esm.sh/react-dom@18/client';
+import { initializeApp, getApps, getApp } from 'https://esm.sh/firebase@10/app';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://esm.sh/firebase@10/auth';
+import { getFirestore, doc, setDoc, getDoc } from 'https://esm.sh/firebase@10/firestore';
 
-// ── Firebase loader (lazy) ────────────────────────────────────────────────────
-let _FB = null;
-async function loadFB() {
-  if (_FB) return _FB;
-  const [app, auth, fs] = await Promise.all([
-    import('https://esm.sh/firebase@10/app'),
-    import('https://esm.sh/firebase@10/auth'),
-    import('https://esm.sh/firebase@10/firestore'),
-  ]);
-  _FB = { ...app, ...auth, ...fs };
-  return _FB;
+// ── Firebase helpers ──────────────────────────────────────────────────────────
+function getFB() {
+  const app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG);
+  return { auth: getAuth(app), db: getFirestore(app) };
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -515,8 +511,7 @@ function App() {
   const [activeReminderId,setActiveReminderId] = useState(null);
   // Cloud sync state
   const [user,setUser] = useState(null);
-  const [syncStatus,setSyncStatus] = useState('local'); // local|connecting|syncing|synced|error
-  const fbRef = useRef(null); // { fb, auth, db }
+  const [syncStatus,setSyncStatus] = useState('local');
   const loadingCloud = useRef(false);
   const syncTimer = useRef(null);
 
@@ -536,30 +531,27 @@ function App() {
   const [syncError,setSyncError] = useState('');
   useEffect(()=>{
     setSyncStatus('connecting');
-    loadFB().then(fb=>{
-      const app = fb.getApps().length ? fb.getApp() : fb.initializeApp(FIREBASE_CONFIG);
-      const auth = fb.getAuth(app);
-      const db = fb.getFirestore(app);
-      fbRef.current = { fb, auth, db };
-      fb.onAuthStateChanged(auth, u=>{
+    try {
+      const { auth } = getFB();
+      onAuthStateChanged(auth, u=>{
         if(u){ setUser(u); setSyncError(''); }
         else {
-          fb.signInAnonymously(auth).catch(e=>{
+          signInAnonymously(auth).catch(e=>{
             setSyncStatus('error');
             setSyncError(e.code+': '+e.message);
           });
         }
       });
-    }).catch(e=>{ setSyncStatus('error'); setSyncError(String(e)); });
+    } catch(e){ setSyncStatus('error'); setSyncError(String(e)); }
   },[]);
 
   // Load data from Firestore when user signs in
   useEffect(()=>{
-    if(!user||!fbRef.current) return;
-    const {fb,db}=fbRef.current;
+    if(!user) return;
+    const {db}=getFB();
     loadingCloud.current=true;
     setSyncStatus('syncing');
-    fb.getDoc(fb.doc(db,'pm',user.uid)).then(snap=>{
+    getDoc(doc(db,'pm',user.uid)).then(snap=>{
       if(snap.exists()){
         const d=snap.data();
         if(d.prefects!==undefined) setPrefects(d.prefects);
@@ -570,20 +562,20 @@ function App() {
       }
       setSyncStatus('synced');
       setTimeout(()=>{ loadingCloud.current=false; },300);
-    }).catch(()=>{ setSyncStatus('error'); loadingCloud.current=false; });
+    }).catch(e=>{ setSyncStatus('error'); setSyncError(e.message); loadingCloud.current=false; });
   },[user]);
 
   // Debounced save to Firestore on any data change
   useEffect(()=>{
-    if(!user||!fbRef.current||loadingCloud.current) return;
+    if(!user||loadingCloud.current) return;
     clearTimeout(syncTimer.current);
     setSyncStatus('syncing');
     syncTimer.current=setTimeout(async()=>{
       try{
-        const {fb,db}=fbRef.current;
-        await fb.setDoc(fb.doc(db,'pm',user.uid),{prefects,template,reminders,historyLog,settings},{merge:true});
+        const {db}=getFB();
+        await setDoc(doc(db,'pm',user.uid),{prefects,template,reminders,historyLog,settings},{merge:true});
         setSyncStatus('synced');
-      }catch(e){ setSyncStatus('error'); }
+      }catch(e){ setSyncStatus('error'); setSyncError(e.message); }
     },1500);
   },[prefects,template,reminders,historyLog,settings]);
 
