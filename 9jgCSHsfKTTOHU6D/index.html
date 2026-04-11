@@ -60,9 +60,9 @@ tailwind.config = {
 <script type="module">
 import { createElement as h, useState, useEffect, useRef, useCallback } from 'https://esm.sh/react@18';
 import { createRoot } from 'https://esm.sh/react-dom@18/client';
-import { initializeApp, getApps, getApp } from 'https://esm.sh/firebase@10/app';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://esm.sh/firebase@10/auth';
-import { getFirestore, doc, setDoc, getDoc } from 'https://esm.sh/firebase@10/firestore';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 // ── Firebase helpers ──────────────────────────────────────────────────────────
 function getFB() {
