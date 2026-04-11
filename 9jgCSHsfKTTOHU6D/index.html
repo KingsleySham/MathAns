@@ -230,8 +230,67 @@ function ReminderForm({initial,onSave,onCancel}) {
         h('button',{type:'submit',disabled:!ok,className:'flex-1 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold disabled:opacity-40'},initial?'Save':'Add'))));
 }
 
+// ── SendQueue modal ───────────────────────────────────────────────────────────
+function SendQueue({prefects,ignoredIds,date,onSendOne,onClose}) {
+  const queue = prefects.filter(p=>!(ignoredIds||[]).includes(p.id));
+  const [sent,setSent] = useState({});
+  const sentCount = Object.keys(sent).length;
+
+  function handleSend(p) {
+    onSendOne(p);
+    setSent(prev=>({...prev,[p.id]:true}));
+  }
+
+  return h('div',{className:'fixed inset-0 z-[70] flex flex-col bg-background'},
+    // Header
+    h('div',{className:'flex items-center justify-between px-5 h-16 border-b border-outline-variant/30 shrink-0'},
+      h('div',null,
+        h('h2',{className:'font-black text-lg'},'Send Queue'),
+        h('p',{className:'text-xs text-on-surface-variant'},
+          sentCount===queue.length&&queue.length>0
+            ? '✓ All sent!'
+            : `${sentCount} / ${queue.length} sent`)),
+      h('button',{onClick:onClose,className:'w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container'},
+        h(Icon,{name:'close'}))),
+
+    // Progress bar
+    queue.length>0&&h('div',{className:'h-1 bg-surface-container-high shrink-0'},
+      h('div',{className:'h-full bg-primary transition-all duration-500',
+        style:{width:`${(sentCount/queue.length)*100}%`}})),
+
+    // List
+    h('div',{className:'flex-1 overflow-y-auto px-4 py-4 space-y-2'},
+      queue.length===0&&h('div',{className:'text-center py-16 text-on-surface-variant'},
+        h('p',{className:'text-4xl mb-3'},'🎉'),
+        h('p',{className:'font-bold'},'Everyone is ignored'),
+        h('p',{className:'text-sm'},'Go to Settings → Send Queue to manage.')),
+      queue.map(p=>{
+        const isSent = sent[p.id];
+        const nextDate = getNextDate(p, date);
+        return h('div',{key:p.id,
+          className:`flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${isSent?'bg-green-50 border-green-200':'bg-surface-container-low border-transparent'}`},
+          h(Avatar,{name:p.name}),
+          h('div',{className:'flex-1 min-w-0'},
+            h('p',{className:'font-bold text-sm'},p.name),
+            h('p',{className:'text-xs text-on-surface-variant truncate'},
+              [p.class,p.classNo?`No.${p.classNo}`:null,fmtShort(nextDate)].filter(Boolean).join(' · '))),
+          isSent
+            ? h('div',{className:'flex items-center gap-1 text-green-600 font-bold text-xs px-3'},
+                h(Icon,{name:'check_circle',cls:'text-base filled'}),'Sent')
+            : h('button',{onClick:()=>handleSend(p),
+                className:'flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-xs font-bold active:scale-95 transition-transform'},
+                h(Icon,{name:'send',cls:'text-sm'}),'Send'));
+      })),
+
+    // Footer
+    h('div',{className:'px-4 pb-8 pt-3 shrink-0'},
+      h('button',{onClick:onClose,
+        className:'w-full py-3 rounded-2xl bg-surface-container text-on-surface font-bold text-sm active:scale-95 transition-transform'},
+        sentCount===queue.length&&queue.length>0?'Done ✓':'Close')));
+}
+
 // ── HOME PAGE ──────────────────────────────────────────────────────────────────
-function HomePage({prefects,reminders,activeReminderId,date,sendStatus,history,showWarn,onSendAll,onSendOne,onSelectReminder,onNavigate}) {
+function HomePage({prefects,ignoredIds,reminders,activeReminderId,date,sendStatus,history,showWarn,onSendAll,onSendOne,onSelectReminder,onNavigate,onOpenQueue}) {
   const openedCount = Object.values(sendStatus).filter(s=>s==='opened').length;
   const activeName = activeReminderId ? reminders.find(r=>r.id===activeReminderId)?.title : null;
   const recent = [...history].reverse().slice(0,3);
@@ -247,10 +306,14 @@ function HomePage({prefects,reminders,activeReminderId,date,sendStatus,history,s
           h('p',{className:'text-on-primary/80 text-sm font-medium max-w-[220px]'},
             activeName?`Template: ${activeName}`:'Send duty reminders to all prefects at once.'),
           openedCount>0&&h('p',{className:'text-on-primary/70 text-xs mt-1'},`✓ ${openedCount}/${prefects.length} opened`)),
-        h('button',{onClick:onSendAll,disabled:prefects.length===0,
-          className:'z-10 bg-surface-container-lowest text-primary font-bold px-6 py-3 rounded-xl flex items-center gap-2 active:scale-95 transition-transform disabled:opacity-50 w-fit'},
-          h('span',{className:'material-symbols-outlined text-lg'},'send'),
-          `Send All (${prefects.length})`),
+        h('div',{className:'z-10 flex gap-2 flex-wrap'},
+          h('button',{onClick:onOpenQueue,disabled:prefects.length===0,
+            className:'bg-surface-container-lowest text-primary font-bold px-6 py-3 rounded-xl flex items-center gap-2 active:scale-95 transition-transform disabled:opacity-50'},
+            h(Icon,{name:'queue',cls:'text-lg'}),
+            `Send Queue (${prefects.filter(p=>!(ignoredIds||[]).includes(p.id)).length})`),
+          h('button',{onClick:onSendAll,disabled:prefects.length===0,
+            className:'bg-white/20 text-white font-bold px-4 py-3 rounded-xl flex items-center gap-2 active:scale-95 transition-transform disabled:opacity-50 text-sm'},
+            h(Icon,{name:'send',cls:'text-base'}),'Burst')),
         h('div',{className:'absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl'}),
         h('div',{className:'absolute right-12 top-4 w-16 h-16 bg-primary-container/20 rotate-45 rounded-lg blur-xl'}))),
 
@@ -544,6 +607,26 @@ function SettingsPage({prefects,template,selectedDate,reminders,settings,history
       h(VarChips,{taRef,value:template,onChange:onTemplateChange}),
       h('p',{className:'text-xs text-on-surface-variant mt-1.5 text-right'},`${template.length} chars`)),
 
+    // Send Queue — ignored prefects
+    prefects.length>0&&h('div',{className:'bg-surface-container-low rounded-xl p-5 space-y-3'},
+      h('div',{className:'flex items-center gap-2'},
+        h(Icon,{name:'queue',cls:'text-primary'}),
+        h('h3',{className:'font-bold text-sm'},'Send Queue'),
+        h('span',{className:'text-xs text-on-surface-variant ml-1'},'— skip these prefects')),
+      prefects.map(p=>{
+        const ignored = (settings.ignoredIds||[]).includes(p.id);
+        return h('button',{key:p.id,onClick:()=>{
+            const ids = settings.ignoredIds||[];
+            onSettingsChange({...settings,ignoredIds:ignored?ids.filter(id=>id!==p.id):[...ids,p.id]});
+          },
+          className:`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 transition-all text-left ${ignored?'border-outline-variant/40 opacity-50':'border-primary/30 bg-primary-container/10'}`},
+          h(Avatar,{name:p.name,size:'sm'}),
+          h('div',{className:'flex-1 min-w-0'},
+            h('p',{className:'text-xs font-bold truncate'},p.name),
+            h('p',{className:'text-[10px] text-on-surface-variant'},[p.class,p.classNo?`No.${p.classNo}`:null].filter(Boolean).join(' · ')||'No class set')),
+          h('div',{className:`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${ignored?'border-outline-variant':'border-primary bg-primary'}`},
+            !ignored&&h(Icon,{name:'check',cls:'text-white text-[12px]'})))})),
+
     // Special Reminders manager
     h('div',{className:'space-y-3'},
       h('div',{className:'flex items-center justify-between'},
@@ -578,6 +661,8 @@ function App() {
   const [showWarn,setShowWarn] = useState(false);
   const [page,setPage] = useState('home');
   const [activeReminderId,setActiveReminderId] = useState(null);
+  const [showQueue,setShowQueue] = useState(false);
+  const ignoredIds = settings.ignoredIds||[];
   // Cloud sync state
   const [syncStatus,setSyncStatus] = useState('idle'); // idle|pushing|pulling|done|error
   const [lastSynced,setLastSynced] = useState(null);
@@ -661,7 +746,7 @@ function App() {
           h('button',{onClick:()=>{setSendStatus({});setShowWarn(false);},className:'text-xs text-on-surface-variant border border-outline-variant rounded-lg px-2.5 py-1 hover:bg-surface-container'},'Reset'))),
 
     h('main',{className:'pt-20 px-5 max-w-2xl mx-auto'},
-      page==='home'&&h(HomePage,{prefects,reminders,activeReminderId,date,sendStatus,history:historyLog,showWarn,onSendAll:sendAll,onSendOne:sendOne,onSelectReminder:setActiveReminderId,onNavigate:setPage}),
+      page==='home'&&h(HomePage,{prefects,ignoredIds,reminders,activeReminderId,date,sendStatus,history:historyLog,showWarn,onSendAll:sendAll,onSendOne:sendOne,onSelectReminder:setActiveReminderId,onNavigate:setPage,onOpenQueue:()=>setShowQueue(true)}),
       page==='contacts'&&h(ContactsPage,{prefects,sendStatus,
         onAdd:p=>setPrefects(prev=>[...prev,{...p,dutyDates:p.dutyDates||[],id:crypto.randomUUID()}]),
         onEdit:p=>setPrefects(prev=>prev.map(x=>x.id===p.id?p:x)),
@@ -678,6 +763,8 @@ function App() {
           if(d.historyLog) setHistoryLog(d.historyLog);
         },
         onTemplateChange:setTemplate,onDateChange:setDate,onRemindersChange:setReminders,onSettingsChange:setSettings})),
+
+    showQueue&&h(SendQueue,{prefects,ignoredIds,date,onSendOne:sendOne,onClose:()=>setShowQueue(false)}),
 
     h('nav',{className:'fixed bottom-0 left-0 w-full h-20 bg-stone-50/80 backdrop-blur-xl flex justify-around items-center px-4 pb-4 z-50 rounded-t-3xl shadow-[0px_-12px_32px_rgba(47,46,46,0.06)]'},
       NAV.map(({id,icon,label})=>h('a',{key:id,onClick:e=>{e.preventDefault();setPage(id);},href:'#',
