@@ -61,7 +61,7 @@ tailwind.config = {
 import { createElement as h, useState, useEffect, useRef, useCallback } from 'https://esm.sh/react@18';
 import { createRoot } from 'https://esm.sh/react-dom@18/client';
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 // ── Firebase helpers ──────────────────────────────────────────────────────────
@@ -546,6 +546,12 @@ function App() {
   useEffect(()=>{
     try {
       const { auth } = getFB();
+      // Handle redirect result (after returning from Google sign-in)
+      getRedirectResult(auth).catch(e=>{
+        setSyncStatus('error');
+        setSyncError(e.code+': '+e.message);
+      });
+      // Watch auth state
       onAuthStateChanged(auth, u=>{
         if(u){ setUser(u); setSyncError(''); }
         else { setUser(null); setSyncStatus('local'); }
@@ -557,7 +563,7 @@ function App() {
     try {
       setSyncStatus('connecting');
       const { auth } = getFB();
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      await signInWithRedirect(auth, new GoogleAuthProvider());
     } catch(e){ setSyncStatus('error'); setSyncError(e.code+': '+e.message); }
   }
   async function handleSignOut(){
