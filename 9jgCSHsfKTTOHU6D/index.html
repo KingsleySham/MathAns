@@ -393,7 +393,7 @@ function ContactsPage({prefects,sendStatus,onAdd,onEdit,onDelete,onSendOne,onUpd
 }
 
 // ── HISTORY PAGE ──────────────────────────────────────────────────────────────
-function HistoryPage({history,prefects,onResend}) {
+function HistoryPage({history,prefects,onResend,onClear}) {
   if(history.length===0) return h('div',{className:'text-center py-16 text-on-surface-variant'},
     h('div',{className:'text-5xl mb-3'},'📭'),
     h('p',{className:'font-bold mb-1'},'No history yet'),
@@ -401,7 +401,10 @@ function HistoryPage({history,prefects,onResend}) {
   return h('div',{className:'space-y-4'},
     h('div',{className:'mb-2'},
       h('h2',{className:'font-black text-xl'},'History'),
-      h('p',{className:'text-xs text-on-surface-variant mt-0.5'},`${history.length} messages sent`)),
+      h('p',{className:'text-xs text-on-surface-variant mt-0.5'},`${history.length} messages sent`),
+      history.length>0&&h('button',{onClick:()=>{ if(window.confirm('Clear all history?')) onClear(); },
+        className:'text-xs text-red-500 font-bold border border-red-200 rounded-lg px-2.5 py-1 hover:bg-red-50 active:scale-95 transition-transform'},
+        'Clear History')),
     [...history].reverse().map(item=>h('div',{key:item.id,className:'group bg-surface-container-low rounded-xl p-4 flex items-start gap-3 hover:bg-surface-container transition-all'},
       h('div',{className:'w-10 h-10 rounded-xl bg-primary-container/30 flex items-center justify-center text-primary shrink-0 mt-0.5'},h(Icon,{name:'history_edu'})),
       h('div',{className:'flex-1 min-w-0'},
@@ -646,7 +649,7 @@ function App() {
         onEdit:p=>setPrefects(prev=>prev.map(x=>x.id===p.id?p:x)),
         onDelete:id=>{setPrefects(prev=>prev.filter(p=>p.id!==id));setSendStatus(prev=>{const n={...prev};delete n[id];return n;});},
         onSendOne:sendOne,onUpdateDates:updatePrefectDates}),
-      page==='history'&&h(HistoryPage,{history:historyLog,prefects,onResend:sendOne}),
+      page==='history'&&h(HistoryPage,{history:historyLog,prefects,onResend:sendOne,onClear:()=>setHistoryLog([])}),
       page==='settings'&&h(SettingsPage,{prefects,template,selectedDate:date,reminders,settings,historyLog,syncStatus,syncError,lastSynced,
         onPush:handlePush,onPull:handlePull,
         onImport:d=>{
