@@ -1,4 +1,4 @@
-const CACHE = 'pm-v1';
+const CACHE = 'pm-v2';
 const APP_SHELL = [
   '/',
   '/index.html',
