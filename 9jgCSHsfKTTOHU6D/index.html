@@ -418,10 +418,10 @@ function HistoryPage({history,prefects,onResend}) {
 }
 
 // ── CloudSync panel ───────────────────────────────────────────────────────────
-function CloudSync({user,syncStatus}) {
+function CloudSync({user,syncStatus,syncError}) {
   const dot = syncStatus==='synced'?'bg-green-500':syncStatus==='syncing'?'bg-amber-400 animate-pulse':syncStatus==='error'?'bg-red-500':'bg-stone-300 animate-pulse';
   const label = syncStatus==='synced'?'Synced':syncStatus==='syncing'?'Syncing…':syncStatus==='error'?'Sync error':'Connecting…';
-  return h('div',{className:'bg-surface-container-low rounded-xl p-5'},
+  return h('div',{className:'bg-surface-container-low rounded-xl p-5 space-y-2'},
     h('div',{className:'flex items-center justify-between'},
       h('div',{className:'flex items-center gap-2'},
         h(Icon,{name:syncStatus==='synced'?'cloud_done':'cloud_sync',cls:'text-primary'}),
@@ -429,11 +429,16 @@ function CloudSync({user,syncStatus}) {
       h('div',{className:'flex items-center gap-1.5'},
         h('span',{className:`w-2 h-2 rounded-full ${dot}`}),
         h('span',{className:'text-xs font-bold text-on-surface-variant'},label))),
-    user&&h('p',{className:'text-[10px] text-on-surface-variant font-mono mt-2 break-all'},`UID: ${user.uid}`));
+    syncError&&h('p',{className:'text-[10px] font-mono text-red-500 bg-red-50 rounded-lg px-2.5 py-1.5 break-all'},syncError),
+    syncError&&h('div',{className:'text-[10px] text-on-surface-variant space-y-0.5'},
+      h('p',{className:'font-bold'},'Fix:'),
+      h('p',null,'① Firebase Console → Authentication → Sign-in method → Anonymous → Enable'),
+      h('p',null,'② Authentication → Settings → Authorized domains → Add your domain')),
+    user&&h('p',{className:'text-[10px] text-on-surface-variant font-mono break-all'},`UID: ${user.uid}`));
 }
 
 // ── SETTINGS PAGE ──────────────────────────────────────────────────────────────
-function SettingsPage({template,selectedDate,reminders,settings,user,syncStatus,onTemplateChange,onDateChange,onRemindersChange,onSettingsChange}) {
+function SettingsPage({template,selectedDate,reminders,settings,user,syncStatus,syncError,onTemplateChange,onDateChange,onRemindersChange,onSettingsChange}) {
   const [editR,setEditR] = useState(null);
   const [showRForm,setShowRForm] = useState(false);
   const taRef = useRef(null);
@@ -447,7 +452,7 @@ function SettingsPage({template,selectedDate,reminders,settings,user,syncStatus,
     h('h2',{className:'font-black text-xl'},'Settings'),
 
     // Cloud Sync
-    h(CloudSync,{user,syncStatus}),
+    h(CloudSync,{user,syncStatus,syncError}),
 
     // Default Duty Settings
     h('div',{className:'bg-surface-container-low rounded-xl p-5 space-y-4'},
@@ -528,6 +533,7 @@ function App() {
   },[]);
 
   // Auto-init Firebase on mount
+  const [syncError,setSyncError] = useState('');
   useEffect(()=>{
     setSyncStatus('connecting');
     loadFB().then(fb=>{
@@ -536,10 +542,15 @@ function App() {
       const db = fb.getFirestore(app);
       fbRef.current = { fb, auth, db };
       fb.onAuthStateChanged(auth, u=>{
-        if(u){ setUser(u); }
-        else { fb.signInAnonymously(auth).catch(()=>setSyncStatus('error')); }
+        if(u){ setUser(u); setSyncError(''); }
+        else {
+          fb.signInAnonymously(auth).catch(e=>{
+            setSyncStatus('error');
+            setSyncError(e.code+': '+e.message);
+          });
+        }
       });
-    }).catch(()=>setSyncStatus('error'));
+    }).catch(e=>{ setSyncStatus('error'); setSyncError(String(e)); });
   },[]);
 
   // Load data from Firestore when user signs in
@@ -625,7 +636,7 @@ function App() {
         onDelete:id=>{setPrefects(prev=>prev.filter(p=>p.id!==id));setSendStatus(prev=>{const n={...prev};delete n[id];return n;});},
         onSendOne:sendOne,onUpdateDates:updatePrefectDates}),
       page==='history'&&h(HistoryPage,{history:historyLog,prefects,onResend:sendOne}),
-      page==='settings'&&h(SettingsPage,{template,selectedDate:date,reminders,settings,user,syncStatus,onTemplateChange:setTemplate,onDateChange:setDate,onRemindersChange:setReminders,onSettingsChange:setSettings})),
+      page==='settings'&&h(SettingsPage,{template,selectedDate:date,reminders,settings,user,syncStatus,syncError,onTemplateChange:setTemplate,onDateChange:setDate,onRemindersChange:setReminders,onSettingsChange:setSettings})),
 
     h('nav',{className:'fixed bottom-0 left-0 w-full h-20 bg-stone-50/80 backdrop-blur-xl flex justify-around items-center px-4 pb-4 z-50 rounded-t-3xl shadow-[0px_-12px_32px_rgba(47,46,46,0.06)]'},
       NAV.map(({id,icon,label})=>h('a',{key:id,onClick:e=>{e.preventDefault();setPage(id);},href:'#',
