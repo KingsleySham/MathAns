@@ -62,7 +62,7 @@ import { createElement as h, useState, useEffect, useRef, useCallback } from 'ht
 import { createRoot } from 'https://esm.sh/react-dom@18/client';
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 // ── Firebase helpers ──────────────────────────────────────────────────────────
 function getFB() {
@@ -526,8 +526,10 @@ function App() {
   // Cloud sync state
   const [user,setUser] = useState(null);
   const [syncStatus,setSyncStatus] = useState('local');
+  const [lastSynced,setLastSynced] = useState(null);
   const loadingCloud = useRef(false);
   const syncTimer = useRef(null);
+  const unsubSnapshot = useRef(null);
 
   // migrate old single-date prefects to dutyDates array
   useEffect(()=>{
@@ -567,29 +569,60 @@ function App() {
     } catch(e){ setSyncStatus('error'); setSyncError(e.code+': '+e.message); }
   }
   async function handleSignOut(){
+    if(unsubSnapshot.current) unsubSnapshot.current();
     const { auth } = getFB();
     await signOut(auth);
-    setUser(null); setSyncStatus('local');
+    setUser(null); setSyncStatus('local'); setLastSynced(null);
   }
 
-  // Load data from Firestore when user signs in
+  function handlePullNow(){
+    // Re-trigger listener by toggling loadingCloud and re-reading
+    if(!user) return;
+    setSyncStatus('syncing');
+    loadingCloud.current=true;
+    const {db}=getFB();
+    import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js').then(({getDoc})=>{
+      getDoc(doc(db,'pm',user.uid)).then(snap=>{
+        if(snap.exists()){
+          const d=snap.data();
+          if(d.prefects!==undefined) setPrefects(d.prefects);
+          if(d.template!==undefined) setTemplate(d.template);
+          if(d.reminders!==undefined) setReminders(d.reminders);
+          if(d.historyLog!==undefined) setHistoryLog(d.historyLog);
+          if(d.settings!==undefined) setSettings(d.settings);
+        }
+        setLastSynced(Date.now()); setSyncStatus('synced');
+        setTimeout(()=>{ loadingCloud.current=false; },400);
+      }).catch(e=>{ setSyncStatus('error'); setSyncError(e.message); loadingCloud.current=false; });
+    });
+  }
+
+  // Live listener — fires immediately on sign-in and on every remote change
   useEffect(()=>{
+    if(unsubSnapshot.current) { unsubSnapshot.current(); unsubSnapshot.current=null; }
     if(!user) return;
     const {db}=getFB();
-    loadingCloud.current=true;
     setSyncStatus('syncing');
-    getDoc(doc(db,'pm',user.uid)).then(snap=>{
-      if(snap.exists()){
-        const d=snap.data();
-        if(d.prefects!==undefined) setPrefects(d.prefects);
-        if(d.template!==undefined) setTemplate(d.template);
-        if(d.reminders!==undefined) setReminders(d.reminders);
-        if(d.historyLog!==undefined) setHistoryLog(d.historyLog);
-        if(d.settings!==undefined) setSettings(d.settings);
-      }
-      setSyncStatus('synced');
-      setTimeout(()=>{ loadingCloud.current=false; },300);
-    }).catch(e=>{ setSyncStatus('error'); setSyncError(e.message); loadingCloud.current=false; });
+    loadingCloud.current=true;
+    unsubSnapshot.current = onSnapshot(
+      doc(db,'pm',user.uid),
+      snap=>{
+        if(snap.exists()){
+          const d=snap.data();
+          if(d.prefects!==undefined) setPrefects(d.prefects);
+          if(d.template!==undefined) setTemplate(d.template);
+          if(d.reminders!==undefined) setReminders(d.reminders);
+          if(d.historyLog!==undefined) setHistoryLog(d.historyLog);
+          if(d.settings!==undefined) setSettings(d.settings);
+        }
+        setLastSynced(Date.now());
+        setSyncStatus('synced');
+        // suppress the write-back triggered by these state updates
+        setTimeout(()=>{ loadingCloud.current=false; },400);
+      },
+      e=>{ setSyncStatus('error'); setSyncError(e.message); loadingCloud.current=false; }
+    );
+    return ()=>{ if(unsubSnapshot.current) unsubSnapshot.current(); };
   },[user]);
 
   // Debounced save to Firestore on any data change
@@ -659,6 +692,18 @@ function App() {
         onSendOne:sendOne,onUpdateDates:updatePrefectDates}),
       page==='history'&&h(HistoryPage,{history:historyLog,prefects,onResend:sendOne}),
       page==='settings'&&h(SettingsPage,{template,selectedDate:date,reminders,settings,user,syncStatus,syncError,onSignIn:handleGoogleSignIn,onSignOut:handleSignOut,onTemplateChange:setTemplate,onDateChange:setDate,onRemindersChange:setReminders,onSettingsChange:setSettings})),
+
+    user&&h('div',{className:'fixed bottom-20 left-0 w-full z-40 flex justify-center pointer-events-none pb-1'},
+      h('button',{onClick:handlePullNow,
+        className:`pointer-events-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-full shadow-md text-[11px] font-bold transition-all active:scale-95
+          ${syncStatus==='syncing'?'bg-amber-100 text-amber-700 border border-amber-200':
+            syncStatus==='error'?'bg-red-50 text-red-600 border border-red-200':
+            'bg-white/90 backdrop-blur-sm text-on-surface-variant border border-outline-variant/60 hover:text-primary hover:border-primary'}`},
+        h('span',{className:`material-symbols-outlined text-[14px] ${syncStatus==='syncing'?'animate-spin':''}`,
+          style:{fontVariationSettings:"'wght' 300"}},'sync'),
+        syncStatus==='syncing'?'Syncing…':
+        syncStatus==='error'?'Sync error — tap to retry':
+        lastSynced?`Updated ${timeAgo(lastSynced)}`:'Tap to sync')),
 
     h('nav',{className:'fixed bottom-0 left-0 w-full h-20 bg-stone-50/80 backdrop-blur-xl flex justify-around items-center px-4 pb-4 z-50 rounded-t-3xl shadow-[0px_-12px_32px_rgba(47,46,46,0.06)]'},
       NAV.map(({id,icon,label})=>h('a',{key:id,onClick:e=>{e.preventDefault();setPage(id);},href:'#',
