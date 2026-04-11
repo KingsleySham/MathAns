@@ -447,8 +447,51 @@ function CloudSync({user,syncStatus,syncError,onSignIn,onSignOut}) {
       h('button',{onClick:onSignOut,className:'text-xs text-on-surface-variant border border-outline-variant rounded-lg px-2.5 py-1 hover:text-red-500 hover:border-red-200'},'Sign out')));
 }
 
+// ── DataPortability ───────────────────────────────────────────────────────────
+function DataPortability({prefects,template,reminders,settings,historyLog,onImport}) {
+  const [showImport,setShowImport] = useState(false);
+  const [importText,setImportText] = useState('');
+  const [err,setErr] = useState('');
+
+  function doExport() {
+    const blob = JSON.stringify({prefects,template,reminders,settings,historyLog},null,2);
+    const url = URL.createObjectURL(new Blob([blob],{type:'application/json'}));
+    const a = document.createElement('a');
+    a.href=url; a.download=`prefect-messenger-${new Date().toLocaleDateString('en-CA')}.json`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
+  function doImport() {
+    setErr('');
+    try {
+      const d = JSON.parse(importText.trim());
+      if(!d.prefects&&!d.template&&!d.reminders) { setErr('Invalid file — does not look like a Prefect Messenger export.'); return; }
+      onImport(d);
+      setShowImport(false); setImportText('');
+    } catch { setErr('Invalid JSON. Make sure you pasted the full file content.'); }
+  }
+
+  return h('div',{className:'bg-surface-container-low rounded-xl p-5 space-y-3'},
+    h('div',{className:'flex items-center gap-2'},
+      h(Icon,{name:'import_export',cls:'text-primary'}),
+      h('h3',{className:'font-bold text-sm'},'Export / Import Data')),
+    !showImport&&h('div',{className:'flex gap-2'},
+      h('button',{onClick:doExport,className:'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-outline-variant text-xs font-bold text-on-surface hover:bg-surface-container active:scale-95 transition-transform'},
+        h(Icon,{name:'download',cls:'text-sm'}),'Export'),
+      h('button',{onClick:()=>setShowImport(true),className:'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-outline-variant text-xs font-bold text-on-surface hover:bg-surface-container active:scale-95 transition-transform'},
+        h(Icon,{name:'upload',cls:'text-sm'}),'Import')),
+    showImport&&h('div',{className:'space-y-2'},
+      h('textarea',{value:importText,onChange:e=>setImportText(e.target.value),autoFocus:true,
+        placeholder:'Paste exported JSON here…',
+        className:'w-full border border-outline-variant rounded-xl px-3 py-2.5 text-xs font-mono outline-none focus:border-primary bg-surface-container-lowest resize-none h-28'}),
+      err&&h('p',{className:'text-xs text-red-500'},err),
+      h('div',{className:'flex gap-2'},
+        h('button',{onClick:()=>{setShowImport(false);setImportText('');setErr('');},className:'flex-1 py-2 rounded-xl border border-outline-variant text-xs font-bold text-on-surface-variant'},'Cancel'),
+        h('button',{onClick:doImport,disabled:!importText.trim(),className:'flex-1 py-2 rounded-xl bg-primary text-on-primary text-xs font-bold disabled:opacity-40'},'Import & Replace'))));
+}
+
 // ── SETTINGS PAGE ──────────────────────────────────────────────────────────────
-function SettingsPage({template,selectedDate,reminders,settings,user,syncStatus,syncError,onSignIn,onSignOut,onTemplateChange,onDateChange,onRemindersChange,onSettingsChange}) {
+function SettingsPage({prefects,template,selectedDate,reminders,settings,historyLog,user,syncStatus,syncError,onSignIn,onSignOut,onImport,onTemplateChange,onDateChange,onRemindersChange,onSettingsChange}) {
   const [editR,setEditR] = useState(null);
   const [showRForm,setShowRForm] = useState(false);
   const taRef = useRef(null);
@@ -463,6 +506,9 @@ function SettingsPage({template,selectedDate,reminders,settings,user,syncStatus,
 
     // Cloud Sync
     h(CloudSync,{user,syncStatus,syncError,onSignIn,onSignOut}),
+
+    // Export / Import
+    h(DataPortability,{prefects,template,reminders,settings,historyLog,onImport}),
 
     // Default Duty Settings
     h('div',{className:'bg-surface-container-low rounded-xl p-5 space-y-4'},
@@ -691,7 +737,16 @@ function App() {
         onDelete:id=>{setPrefects(prev=>prev.filter(p=>p.id!==id));setSendStatus(prev=>{const n={...prev};delete n[id];return n;});},
         onSendOne:sendOne,onUpdateDates:updatePrefectDates}),
       page==='history'&&h(HistoryPage,{history:historyLog,prefects,onResend:sendOne}),
-      page==='settings'&&h(SettingsPage,{template,selectedDate:date,reminders,settings,user,syncStatus,syncError,onSignIn:handleGoogleSignIn,onSignOut:handleSignOut,onTemplateChange:setTemplate,onDateChange:setDate,onRemindersChange:setReminders,onSettingsChange:setSettings})),
+      page==='settings'&&h(SettingsPage,{prefects,template,selectedDate:date,reminders,settings,historyLog,user,syncStatus,syncError,
+        onSignIn:handleGoogleSignIn,onSignOut:handleSignOut,
+        onImport:d=>{
+          if(d.prefects) setPrefects(d.prefects);
+          if(d.template) setTemplate(d.template);
+          if(d.reminders) setReminders(d.reminders);
+          if(d.settings) setSettings(d.settings);
+          if(d.historyLog) setHistoryLog(d.historyLog);
+        },
+        onTemplateChange:setTemplate,onDateChange:setDate,onRemindersChange:setReminders,onSettingsChange:setSettings})),
 
     user&&h('div',{className:'fixed bottom-20 left-0 w-full z-40 flex justify-center pointer-events-none pb-1'},
       h('button',{onClick:handlePullNow,
