@@ -58,11 +58,24 @@ tailwind.config = {
 <body class="bg-background text-on-surface min-h-screen pb-24">
 <div id="root"></div>
 <script type="module">
-import { createElement as h, useState, useEffect, useRef } from 'https://esm.sh/react@18';
+import { createElement as h, useState, useEffect, useRef, useCallback } from 'https://esm.sh/react@18';
 import { createRoot } from 'https://esm.sh/react-dom@18/client';
 
+// ── Firebase loader (lazy) ────────────────────────────────────────────────────
+let _FB = null;
+async function loadFB() {
+  if (_FB) return _FB;
+  const [app, auth, fs] = await Promise.all([
+    import('https://esm.sh/firebase@10/app'),
+    import('https://esm.sh/firebase@10/auth'),
+    import('https://esm.sh/firebase@10/firestore'),
+  ]);
+  _FB = { ...app, ...auth, ...fs };
+  return _FB;
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
-const KEYS = { PREFECTS: 'pm_prefects', TEMPLATE: 'pm_template', REMINDERS: 'pm_reminders', HISTORY: 'pm_history', SETTINGS: 'pm_settings' };
+const KEYS = { PREFECTS: 'pm_prefects', TEMPLATE: 'pm_template', REMINDERS: 'pm_reminders', HISTORY: 'pm_history', SETTINGS: 'pm_settings', DB_CFG: 'pm_db_config' };
 const DEFAULT_SETTINGS = { defaultTime: '07:45 AM – 08:10 AM', defaultDuty: 'Morning Duty', defaultLocation: 'Rear Gate' };
 const DEFAULT_TEMPLATE = `Hello {name},\n\nYou are scheduled for duty on *{date}* from *{time}*.\nLocation: {location}\nDuty: {duty}\n\nPlease ensure you are punctual and in full uniform.\n\nThank you.`;
 const DEFAULT_REMINDERS = [
@@ -395,8 +408,76 @@ function HistoryPage({history,prefects,onResend}) {
         h(Icon,{name:'refresh'})))));
 }
 
+// ── CloudSync panel ───────────────────────────────────────────────────────────
+function CloudSync({dbConfig,onDbConfig,user,syncStatus,onConnect,onDisconnect}) {
+  const [showSetup,setShowSetup] = useState(false);
+  const [cfgText,setCfgText] = useState('');
+  const [err,setErr] = useState('');
+  const [busy,setBusy] = useState(false);
+
+  async function handleConnect(e) {
+    e.preventDefault(); setErr(''); setBusy(true);
+    try {
+      let cfg = dbConfig;
+      if (!cfg) {
+        const raw = cfgText.trim();
+        // Accept both bare object and const firebaseConfig = {...}
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (!match) { setErr('Could not find a config object — copy the block inside { }'); setBusy(false); return; }
+        try { cfg = JSON.parse(match[0]); onDbConfig(cfg); }
+        catch { setErr('Invalid JSON — make sure you copied the full config block.'); setBusy(false); return; }
+      }
+      await onConnect(cfg);
+      setShowSetup(false);
+    } catch(ex) {
+      setErr(ex.message.replace('Firebase: ','').replace(/ \(auth\/.*\)/,''));
+    }
+    setBusy(false);
+  }
+
+  const statusColor = syncStatus==='synced'?'bg-green-500':syncStatus==='syncing'?'bg-amber-400 animate-pulse':syncStatus==='error'?'bg-red-500':'bg-stone-300';
+  const statusLabel = syncStatus==='synced'?'Synced':syncStatus==='syncing'?'Syncing…':syncStatus==='error'?'Error':'—';
+
+  if (user) return h('div',{className:'bg-surface-container-low rounded-xl p-5 space-y-3'},
+    h('div',{className:'flex items-center justify-between'},
+      h('div',{className:'flex items-center gap-2'},
+        h(Icon,{name:'cloud_done',cls:'text-primary'}),
+        h('h3',{className:'font-bold text-sm'},'Cloud Sync')),
+      h('div',{className:'flex items-center gap-1.5'},
+        h('span',{className:`w-2 h-2 rounded-full ${statusColor}`}),
+        h('span',{className:'text-xs font-bold text-on-surface-variant'},statusLabel))),
+    h('p',{className:'text-[11px] text-on-surface-variant font-mono bg-surface-container-highest rounded-lg px-2.5 py-1.5 break-all select-all'},`UID: ${user.uid}`),
+    h('p',{className:'text-[10px] text-on-surface-variant'},'Save this UID — you\'ll need it to link a new browser if you reinstall.'),
+    h('button',{onClick:onDisconnect,className:'text-xs text-red-500 font-bold border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50'},'Disconnect'));
+
+  if (!showSetup) return h('div',{className:'bg-surface-container-low rounded-xl p-5'},
+    h('div',{className:'flex items-center gap-2 mb-2'},
+      h(Icon,{name:'cloud_off',cls:'text-on-surface-variant'}),
+      h('h3',{className:'font-bold text-sm'},'Cloud Sync'),
+      h('span',{className:'text-xs text-on-surface-variant'},'— local only')),
+    h('p',{className:'text-xs text-on-surface-variant mb-3'},'Sync your data across devices with Firebase. Anonymous — no account needed.'),
+    h('button',{onClick:()=>setShowSetup(true),className:'bg-primary text-on-primary text-xs font-bold px-4 py-2 rounded-xl active:scale-95 transition-transform'},'Set Up Cloud Sync'));
+
+  return h('div',{className:'bg-surface-container-low rounded-xl p-5 space-y-4'},
+    h('div',{className:'flex items-center justify-between'},
+      h('div',{className:'flex items-center gap-2'},h(Icon,{name:'cloud',cls:'text-primary'}),h('h3',{className:'font-bold text-sm'},'Set Up Cloud Sync')),
+      h('button',{onClick:()=>setShowSetup(false),className:'text-on-surface-variant'},h(Icon,{name:'close'}))),
+    h('ol',{className:'text-xs text-on-surface-variant list-decimal pl-4 space-y-1'},
+      h('li',null,'Firebase Console → Authentication → Sign-in method → ',h('strong',null,'Anonymous'),' → Enable'),
+      h('li',null,'Firestore → Rules → paste the rules from the chat'),
+      h('li',null,'Paste your Firebase config below')),
+    h('form',{onSubmit:handleConnect,className:'space-y-3'},
+      h('textarea',{value:cfgText,onChange:e=>setCfgText(e.target.value),
+        placeholder:'const firebaseConfig = {\n  apiKey: "...",\n  ...\n}',
+        className:'w-full border border-outline-variant rounded-xl px-3 py-2.5 text-xs font-mono outline-none focus:border-primary bg-surface-container-lowest resize-none h-32',
+        spellCheck:false,autoFocus:true}),
+      err&&h('p',{className:'text-xs text-red-500'},err),
+      h('button',{type:'submit',disabled:busy||!cfgText.trim(),className:'w-full py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold disabled:opacity-50'},
+        busy?'Connecting…':'Connect & Sync')));
+}
+
 // ── SETTINGS PAGE ──────────────────────────────────────────────────────────────
-function SettingsPage({template,selectedDate,reminders,settings,onTemplateChange,onDateChange,onRemindersChange,onSettingsChange}) {
+function SettingsPage({template,selectedDate,reminders,settings,dbConfig,user,syncStatus,onDbConfig,onConnect,onDisconnect,onTemplateChange,onDateChange,onRemindersChange,onSettingsChange}) {
   const [editR,setEditR] = useState(null);
   const [showRForm,setShowRForm] = useState(false);
   const taRef = useRef(null);
@@ -408,6 +489,9 @@ function SettingsPage({template,selectedDate,reminders,settings,onTemplateChange
   const setSetting = (k,v) => onSettingsChange({...settings,[k]:v});
   return h('div',{className:'space-y-6'},
     h('h2',{className:'font-black text-xl'},'Settings'),
+
+    // Cloud Sync
+    h(CloudSync,{dbConfig,onDbConfig,user,syncStatus,onConnect,onDisconnect}),
 
     // Default Duty Settings
     h('div',{className:'bg-surface-container-low rounded-xl p-5 space-y-4'},
@@ -463,11 +547,18 @@ function App() {
   const [reminders,setReminders] = useLS(KEYS.REMINDERS,DEFAULT_REMINDERS);
   const [historyLog,setHistoryLog] = useLS(KEYS.HISTORY,[]);
   const [settings,setSettings] = useLS(KEYS.SETTINGS,DEFAULT_SETTINGS);
+  const [dbConfig,setDbConfig] = useLS(KEYS.DB_CFG,null);
   const [date,setDate] = useState(getTomorrow());
   const [sendStatus,setSendStatus] = useState({});
   const [showWarn,setShowWarn] = useState(false);
   const [page,setPage] = useState('home');
   const [activeReminderId,setActiveReminderId] = useState(null);
+  // Cloud sync state
+  const [user,setUser] = useState(null);
+  const [syncStatus,setSyncStatus] = useState('local'); // local|connecting|syncing|synced|error
+  const fbRef = useRef(null); // { fb, auth, db }
+  const loadingCloud = useRef(false);
+  const syncTimer = useRef(null);
 
   // migrate old single-date prefects to dutyDates array
   useEffect(()=>{
@@ -480,6 +571,71 @@ function App() {
       return p;
     }));
   },[]);
+
+  // Init Firebase when config is available
+  useEffect(()=>{
+    if(!dbConfig) return;
+    setSyncStatus('connecting');
+    loadFB().then(fb=>{
+      const app = fb.getApps().length ? fb.getApp() : fb.initializeApp(dbConfig);
+      const auth = fb.getAuth(app);
+      const db = fb.getFirestore(app);
+      fbRef.current = { fb, auth, db };
+      fb.onAuthStateChanged(auth, u=>{
+        setUser(u);
+        setSyncStatus(u?'synced':'local');
+      });
+    }).catch(()=>setSyncStatus('error'));
+  },[dbConfig]);
+
+  // Load data from Firestore when user signs in
+  useEffect(()=>{
+    if(!user||!fbRef.current) return;
+    const {fb,db}=fbRef.current;
+    loadingCloud.current=true;
+    setSyncStatus('syncing');
+    fb.getDoc(fb.doc(db,'pm',user.uid)).then(snap=>{
+      if(snap.exists()){
+        const d=snap.data();
+        if(d.prefects!==undefined) setPrefects(d.prefects);
+        if(d.template!==undefined) setTemplate(d.template);
+        if(d.reminders!==undefined) setReminders(d.reminders);
+        if(d.historyLog!==undefined) setHistoryLog(d.historyLog);
+        if(d.settings!==undefined) setSettings(d.settings);
+      }
+      setSyncStatus('synced');
+      setTimeout(()=>{ loadingCloud.current=false; },300);
+    }).catch(()=>{ setSyncStatus('error'); loadingCloud.current=false; });
+  },[user]);
+
+  // Debounced save to Firestore on any data change
+  useEffect(()=>{
+    if(!user||!fbRef.current||loadingCloud.current) return;
+    clearTimeout(syncTimer.current);
+    setSyncStatus('syncing');
+    syncTimer.current=setTimeout(async()=>{
+      try{
+        const {fb,db}=fbRef.current;
+        await fb.setDoc(fb.doc(db,'pm',user.uid),{prefects,template,reminders,historyLog,settings},{merge:true});
+        setSyncStatus('synced');
+      }catch(e){ setSyncStatus('error'); }
+    },1500);
+  },[prefects,template,reminders,historyLog,settings]);
+
+  // Auth handlers — anonymous only
+  async function handleConnect(cfg){
+    const fb=await loadFB();
+    const app=fb.getApps().length?fb.getApp():fb.initializeApp(cfg);
+    const auth=fb.getAuth(app);
+    const db=fb.getFirestore(app);
+    fbRef.current={fb,auth,db};
+    await fb.signInAnonymously(auth);
+  }
+  async function handleDisconnect(){
+    if(!fbRef.current) return;
+    await fbRef.current.fb.signOut(fbRef.current.auth);
+    setUser(null); setSyncStatus('local');
+  }
 
   const activeTpl = () => activeReminderId ? (reminders.find(r=>r.id===activeReminderId)?.message||template) : template;
   const cfg = settings;
@@ -514,8 +670,12 @@ function App() {
         h('div',{className:'w-8 h-8 rounded-full bg-primary flex items-center justify-center'},
           h('span',{className:'material-symbols-outlined text-white text-base'},'notifications_active')),
         h('h1',{className:'font-black tracking-tighter text-primary'},'Prefect Messenger')),
-      Object.values(sendStatus).some(s=>s==='opened')&&
-        h('button',{onClick:()=>{setSendStatus({});setShowWarn(false);},className:'text-xs text-on-surface-variant border border-outline-variant rounded-lg px-2.5 py-1 hover:bg-surface-container'},'Reset')),
+      h('div',{className:'flex items-center gap-2'},
+        user&&h('span',{className:`text-[10px] font-bold flex items-center gap-1 ${syncStatus==='synced'?'text-green-600':syncStatus==='syncing'?'text-amber-500':syncStatus==='error'?'text-red-500':'text-stone-400'}`},
+          h('span',{className:`w-1.5 h-1.5 rounded-full inline-block ${syncStatus==='synced'?'bg-green-500':syncStatus==='syncing'?'bg-amber-400 animate-pulse':'bg-red-400'}`}),
+          syncStatus==='synced'?'Synced':syncStatus==='syncing'?'Syncing':'Error'),
+        Object.values(sendStatus).some(s=>s==='opened')&&
+          h('button',{onClick:()=>{setSendStatus({});setShowWarn(false);},className:'text-xs text-on-surface-variant border border-outline-variant rounded-lg px-2.5 py-1 hover:bg-surface-container'},'Reset'))),
 
     h('main',{className:'pt-20 px-5 max-w-2xl mx-auto'},
       page==='home'&&h(HomePage,{prefects,reminders,activeReminderId,date,sendStatus,history:historyLog,showWarn,onSendAll:sendAll,onSendOne:sendOne,onSelectReminder:setActiveReminderId,onNavigate:setPage}),
@@ -525,7 +685,7 @@ function App() {
         onDelete:id=>{setPrefects(prev=>prev.filter(p=>p.id!==id));setSendStatus(prev=>{const n={...prev};delete n[id];return n;});},
         onSendOne:sendOne,onUpdateDates:updatePrefectDates}),
       page==='history'&&h(HistoryPage,{history:historyLog,prefects,onResend:sendOne}),
-      page==='settings'&&h(SettingsPage,{template,selectedDate:date,reminders,settings,onTemplateChange:setTemplate,onDateChange:setDate,onRemindersChange:setReminders,onSettingsChange:setSettings})),
+      page==='settings'&&h(SettingsPage,{template,selectedDate:date,reminders,settings,dbConfig,user,syncStatus,onDbConfig:setDbConfig,onConnect:handleConnect,onDisconnect:handleDisconnect,onTemplateChange:setTemplate,onDateChange:setDate,onRemindersChange:setReminders,onSettingsChange:setSettings})),
 
     h('nav',{className:'fixed bottom-0 left-0 w-full h-20 bg-stone-50/80 backdrop-blur-xl flex justify-around items-center px-4 pb-4 z-50 rounded-t-3xl shadow-[0px_-12px_32px_rgba(47,46,46,0.06)]'},
       NAV.map(({id,icon,label})=>h('a',{key:id,onClick:e=>{e.preventDefault();setPage(id);},href:'#',
