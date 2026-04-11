@@ -1,355 +1,540 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html class="light" lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Prefect Messenger</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #f0f2f5; --surface: #fff; --border: #e0e0e0;
-      --primary: #25d366; --primary-dark: #1da851;
-      --text: #1a1a1a; --muted: #6b7280;
-      --danger: #ef4444; --radius: 10px;
-      --shadow: 0 1px 4px rgba(0,0,0,.08), 0 2px 12px rgba(0,0,0,.06);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 15px; color: var(--text); background: var(--bg);
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Prefect Messenger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "inverse-on-surface": "#9e9c9c", "on-primary": "#ceffd0",
+        "on-secondary-fixed": "#00492c", "surface-variant": "#dfdcdc",
+        "on-surface-variant": "#5c5b5b", "inverse-primary": "#5dfd8a",
+        "on-secondary-fixed-variant": "#006942", "primary-container": "#5dfd8a",
+        "surface-dim": "#d6d4d3", "on-tertiary-fixed-variant": "#005561",
+        "outline-variant": "#afacac", "error": "#b02500",
+        "on-primary-fixed-variant": "#00682d", "primary-fixed": "#5dfd8a",
+        "background": "#f9f6f5", "surface-container": "#eae7e7",
+        "tertiary-container": "#00e0fe", "tertiary-dim": "#005865",
+        "surface-container-high": "#e5e2e1", "primary": "#006a2e",
+        "on-primary-container": "#005d27", "on-error": "#ffefec",
+        "inverse-surface": "#0e0e0e", "secondary-dim": "#005c39",
+        "on-tertiary-fixed": "#00363e", "secondary": "#006942",
+        "surface-container-low": "#f3f0ef", "primary-fixed-dim": "#4cee7d",
+        "tertiary-fixed-dim": "#00d1ed", "surface-bright": "#f9f6f5",
+        "outline": "#787676", "on-tertiary-container": "#004b56",
+        "surface": "#f9f6f5", "secondary-fixed-dim": "#6aecaa",
+        "tertiary-fixed": "#00e0fe", "tertiary": "#006573",
+        "on-primary-fixed": "#00481d", "error-dim": "#b92902",
+        "surface-tint": "#006a2e", "on-surface": "#2f2e2e",
+        "secondary-fixed": "#79fbb7", "on-tertiary": "#dbf8ff",
+        "error-container": "#f95630", "on-background": "#2f2e2e",
+        "primary-dim": "#005d27", "on-secondary": "#caffdc",
+        "on-secondary-container": "#005e3a", "on-error-container": "#520c00",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-highest": "#dfdcdc", "secondary-container": "#79fbb7"
+      },
+      borderRadius: { DEFAULT: "0.5rem", lg: "1rem", xl: "1.25rem", full: "9999px" },
+      fontFamily: { headline: ["Inter"], body: ["Inter"], label: ["Inter"] }
     }
-    body { min-height: 100vh; background: var(--bg); }
-    button { cursor: pointer; font-family: inherit; font-size: inherit; }
-    input, textarea { font-family: inherit; font-size: inherit; }
-
-    /* Header */
-    .app-header { background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 1rem 1.5rem; display: flex; align-items: center; gap: .75rem;
-      box-shadow: var(--shadow); }
-    .app-header h1 { font-size: 1.2rem; font-weight: 700; }
-    .wa-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; }
-
-    /* Layout */
-    .app-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
-      padding: 1.5rem; max-width: 1300px; margin: 0 auto; align-items: start; }
-    @media (max-width: 768px) { .app-layout { grid-template-columns: 1fr; padding: 1rem; gap: 1rem; } }
-
-    /* Panel */
-    .panel { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-    .panel__header { display: flex; align-items: center; justify-content: space-between;
-      padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
-    .panel__title { font-size: 1rem; font-weight: 600; }
-    .panel__count { font-size: .8rem; color: var(--muted); margin-left: .4rem; }
-    .panel__body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
-
-    /* Buttons */
-    .btn-add { background: var(--primary); color: #fff; border: none; border-radius: 6px;
-      padding: .45rem .9rem; font-size: .875rem; font-weight: 600;
-      display: flex; align-items: center; gap: .35rem; transition: background .15s; }
-    .btn-add:hover { background: var(--primary-dark); }
-    .btn-cancel { background: none; border: 1px solid var(--border); border-radius: 6px;
-      padding: .5rem 1.1rem; font-size: .875rem; color: var(--muted); transition: background .12s; }
-    .btn-cancel:hover { background: #f1f5f9; }
-    .btn-save { background: var(--primary); border: none; border-radius: 6px;
-      padding: .5rem 1.25rem; font-size: .875rem; font-weight: 600; color: #fff; transition: background .15s; }
-    .btn-save:hover { background: var(--primary-dark); }
-    .btn-save:disabled { opacity: .5; cursor: not-allowed; }
-    .btn-reset { background: none; border: 1px solid var(--border); border-radius: 6px;
-      padding: .35rem .75rem; font-size: .8rem; color: var(--muted); transition: background .12s, color .12s; }
-    .btn-reset:hover { background: #f1f5f9; color: var(--text); }
-    .send-all-btn { width: 100%; background: var(--primary); border: none; border-radius: 8px;
-      padding: .8rem 1.25rem; font-size: 1rem; font-weight: 700; color: #fff;
-      display: flex; align-items: center; justify-content: center; gap: .5rem;
-      transition: background .15s, transform .1s; box-shadow: 0 2px 8px rgba(37,211,102,.35); }
-    .send-all-btn:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); }
-    .send-all-btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
-    .btn-icon { background: none; border: 1px solid transparent; border-radius: 6px;
-      padding: .35rem; display: flex; align-items: center; color: var(--muted);
-      transition: background .12s, color .12s, border-color .12s; }
-    .btn-icon:hover { background: #f1f5f9; border-color: var(--border); color: var(--text); }
-    .btn-icon--danger:hover { background: #fef2f2; border-color: #fecaca; color: var(--danger); }
-    .btn-send-one { background: none; border: 1px solid var(--primary); border-radius: 6px;
-      padding: .3rem .6rem; color: var(--primary-dark); font-size: .78rem; font-weight: 600;
-      transition: background .12s, color .12s; }
-    .btn-send-one:hover { background: var(--primary); color: #fff; }
-    .btn-send-preview { background: var(--primary); border: none; border-radius: 6px;
-      padding: .3rem .75rem; font-size: .78rem; font-weight: 600; color: #fff;
-      display: flex; align-items: center; gap: .3rem; transition: background .12s; flex-shrink: 0; }
-    .btn-send-preview:hover { background: var(--primary-dark); }
-
-    /* Badge */
-    .badge { font-size: .7rem; font-weight: 600; padding: .15rem .5rem; border-radius: 999px;
-      text-transform: uppercase; letter-spacing: .04em; }
-    .badge--opened { background: #dcfce7; color: #15803d; }
-    .badge--pending { background: #f3f4f6; color: var(--muted); }
-
-    /* Prefect Card */
-    .prefect-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
-      padding: .85rem 1rem; margin-bottom: .6rem; display: flex; align-items: flex-start; gap: .75rem; }
-    .prefect-card__avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary);
-      color: #fff; font-weight: 700; font-size: .95rem; display: flex; align-items: center;
-      justify-content: center; flex-shrink: 0; }
-    .prefect-card__info { flex: 1; min-width: 0; }
-    .prefect-card__name { font-weight: 600; font-size: .95rem; display: flex; align-items: center;
-      gap: .5rem; flex-wrap: wrap; }
-    .prefect-card__sub { font-size: .8rem; color: var(--muted); margin-top: .15rem; }
-    .prefect-card__sub span { color: var(--text); }
-    .prefect-card__actions { display: flex; align-items: center; gap: .35rem; flex-shrink: 0; }
-
-    /* Empty state */
-    .empty { text-align: center; padding: 2.5rem 1rem; color: var(--muted); }
-    .empty__icon { font-size: 2.5rem; margin-bottom: .75rem; }
-    .empty p { font-size: .9rem; }
-
-    /* Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4);
-      display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
-    .modal { background: var(--surface); border-radius: var(--radius);
-      box-shadow: 0 8px 32px rgba(0,0,0,.18); padding: 1.5rem; width: 100%; max-width: 440px; }
-    .modal__title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1.25rem; }
-    .form-field { margin-bottom: 1rem; }
-    .form-field label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .35rem; }
-    .form-field input { width: 100%; border: 1px solid var(--border); border-radius: 6px;
-      padding: .55rem .75rem; font-size: .9rem; outline: none; transition: border-color .15s; }
-    .form-field input:focus { border-color: var(--primary); }
-    .field-hint { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
-    .field-warning { font-size: .75rem; color: #f59e0b; margin-top: .25rem; }
-    .form-actions { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1.5rem; }
-
-    /* Template editor */
-    .template-editor textarea { width: 100%; min-height: 140px; border: 1px solid var(--border);
-      border-radius: 6px; padding: .65rem .75rem; font-size: .875rem; line-height: 1.5;
-      resize: vertical; outline: none; transition: border-color .15s; }
-    .template-editor textarea:focus { border-color: var(--primary); }
-    .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
-    .chip { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 999px;
-      padding: .2rem .65rem; font-size: .78rem; font-weight: 600; color: #15803d;
-      cursor: pointer; font-family: 'SF Mono','Fira Code',monospace; transition: background .12s; }
-    .chip:hover { background: #dcfce7; }
-    .char-count { font-size: .75rem; color: var(--muted); text-align: right; margin-top: .3rem; }
-
-    /* Preview card */
-    .preview-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
-      padding: .85rem 1rem; margin-bottom: .6rem; }
-    .preview-card__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; }
-    .preview-card__name { font-weight: 600; font-size: .9rem; display: flex; align-items: center; gap: .5rem; }
-    .preview-card__msg { background: #fff; border: 1px solid #e9ecef; border-radius: 6px;
-      padding: .65rem .85rem; font-size: .82rem; line-height: 1.6; white-space: pre-wrap;
-      word-break: break-word; max-height: 120px; overflow-y: auto; }
-
-    /* Misc */
-    .section-label { font-size: .8rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: .05em; color: var(--muted); margin-bottom: .5rem; }
-    .popup-warning { background: #fefce8; border: 1px solid #fde68a; border-radius: 6px;
-      padding: .65rem .9rem; font-size: .82rem; color: #92400e; }
-    .previews-section { border-top: 1px solid var(--border); padding-top: 1rem; }
-    #root { min-height: 100vh; }
-  </style>
+  }
+}
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; min-height: max(884px, 100dvh); }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .kinetic-gradient { background: linear-gradient(135deg, #006a2e 0%, #5dfd8a 100%); }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
 </head>
-<body>
+<body class="bg-background text-on-surface min-h-screen pb-24">
 <div id="root"></div>
 <script type="module">
-import { createElement as h, useState, useEffect, useRef, StrictMode } from 'https://esm.sh/react@18';
+import { createElement as h, useState, useEffect, useRef } from 'https://esm.sh/react@18';
 import { createRoot } from 'https://esm.sh/react-dom@18/client';
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-const KEYS = { CONTACTS: 'prefect_messenger_contacts', TEMPLATE: 'prefect_messenger_template' };
-const DEFAULT_TEMPLATE = `Hello {name},\n\nYou are scheduled for duty on *{date}* from *{time}*.\nDuty: {duty}\n\nPlease ensure you are punctual and in full uniform.\n\nThank you.`;
-const VARS = ['{name}', '{date}', '{time}', '{duty}'];
+// ── Constants ─────────────────────────────────────────────────────────────────
+const KEYS = { PREFECTS: 'pm_prefects', TEMPLATE: 'pm_template', REMINDERS: 'pm_reminders', HISTORY: 'pm_history', SETTINGS: 'pm_settings' };
+const DEFAULT_SETTINGS = { defaultTime: '07:45 AM – 08:10 AM', defaultDuty: 'Morning Duty', defaultLocation: 'Rear Gate' };
+const DEFAULT_TEMPLATE = `Hello {name},\n\nYou are scheduled for duty on *{date}* from *{time}*.\nLocation: {location}\nDuty: {duty}\n\nPlease ensure you are punctual and in full uniform.\n\nThank you.`;
+const DEFAULT_REMINDERS = [
+  { id: 'r1', title: 'Duty Reminder', icon: 'notifications_active',
+    message: `Hello {name}, you are on duty on *{date}* from *{time}*.\nLocation: {location}\nDuty: {duty}\nPlease be punctual and in full uniform. Thank you.` },
+  { id: 'r2', title: 'Urgent Notice', icon: 'priority_high',
+    message: `⚠️ URGENT: {name}, your duty is on *{date}* at *{time}*.\nLocation: {location} — {duty}\nPlease confirm attendance immediately.` },
+  { id: 'r3', title: 'Gentle Nudge', icon: 'history_edu',
+    message: `Hi {name}! Quick reminder — duty on *{date}* from *{time}*.\nLocation: {location} ({duty})\nLet me know if you have any questions!` },
+];
+const VARS = ['{name}', '{date}', '{time}', '{location}', '{duty}'];
+const ICONS = ['notifications_active','priority_high','history_edu','schedule','star','flag','bolt','campaign'];
 
-// ─── Utils ────────────────────────────────────────────────────────────────────
-function getTomorrow() {
-  const d = new Date(); d.setDate(d.getDate() + 1);
-  return d.toLocaleDateString('en-CA');
-}
-function fmtDate(iso) {
-  if (!iso) return '';
-  const [y, m, day] = iso.split('-');
-  return new Date(+y, +m - 1, +day).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-}
-function resolve(tpl, p, date) {
-  return tpl.replace(/{name}/g, p.name||'').replace(/{date}/g, fmtDate(date)||date)
-            .replace(/{time}/g, p.dutyTime||'').replace(/{duty}/g, p.dutyDescription||'');
-}
-function waUrl(p, tpl, date) {
-  const phone = p.phone.replace(/\D/g, '');
-  return `https://wa.me/${phone}?text=${encodeURIComponent(resolve(tpl, p, date))}`;
-}
+// ── Utils ─────────────────────────────────────────────────────────────────────
+const getTomorrow = () => { const d = new Date(); d.setDate(d.getDate()+1); return d.toLocaleDateString('en-CA'); };
+const fmtDate = iso => { if (!iso) return ''; const [y,m,day] = iso.split('-'); return new Date(+y,+m-1,+day).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); };
+const fmtShort = iso => { if (!iso) return ''; const [y,m,day] = iso.split('-'); return new Date(+y,+m-1,+day).toLocaleDateString('en-US',{month:'short',day:'numeric'}); };
+const resolveMsg = (tpl,p,date,cfg) => tpl
+  .replace(/{name}/g,p.name||'')
+  .replace(/{date}/g,fmtDate(date)||date)
+  .replace(/{time}/g,p.dutyTime||(cfg?.defaultTime||''))
+  .replace(/{location}/g,cfg?.defaultLocation||'')
+  .replace(/{duty}/g,p.dutyDescription||(cfg?.defaultDuty||''));
+const waUrl = (p,tpl,date,cfg) => `https://wa.me/${p.phone.replace(/\D/g,'')}?text=${encodeURIComponent(resolveMsg(tpl,p,date,cfg))}`;
+const getInitials = name => name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const COLORS = ['bg-emerald-500','bg-blue-500','bg-violet-500','bg-amber-500','bg-pink-500','bg-teal-500','bg-indigo-500','bg-rose-500'];
+const avatarBg = str => { let h=0; for(const c of str) h=c.charCodeAt(0)+((h<<5)-h); return COLORS[Math.abs(h)%COLORS.length]; };
+const timeAgo = ts => { const d=Date.now()-ts; if(d<60000) return 'Just now'; if(d<3600000) return `${Math.floor(d/60000)}m ago`; if(d<86400000) return `${Math.floor(d/3600000)}h ago`; return `${Math.floor(d/86400000)}d ago`; };
+// Quick date parser: "0411" → "2026-04-11", also accepts "YYYY-MM-DD"
+const parseQuickDate = str => {
+  const s = str.replace(/\D/g,'');
+  let iso;
+  if (s.length===4) { const y=new Date().getFullYear(); iso=`${y}-${s.slice(0,2)}-${s.slice(2,4)}`; }
+  else if (s.length===8) { iso=`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`; }
+  else { iso = str.trim(); } // pass-through for YYYY-MM-DD from date input
+  const dt=new Date(iso); return (!iso||isNaN(dt))?null:iso;
+};
+// Returns the next upcoming duty date for a prefect, or globalDate fallback
+const getNextDate = (p,globalDate) => {
+  const dates = p.dutyDates||[];
+  if (!dates.length) return globalDate;
+  const today=new Date().toLocaleDateString('en-CA');
+  const upcoming=dates.filter(d=>d>=today).sort();
+  return upcoming[0]||[...dates].sort().pop()||globalDate;
+};
 
-// ─── useLocalStorage ─────────────────────────────────────────────────────────
-function useLocalStorage(key, def) {
-  const [val, setVal] = useState(() => {
-    try { const s = localStorage.getItem(key); return s !== null ? JSON.parse(s) : def; } catch { return def; }
-  });
-  useEffect(() => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }, [key, val]);
-  return [val, setVal];
-}
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-const WaIcon = () => h('svg', { viewBox:'0 0 24 24', width:18, height:18, fill:'white' },
-  h('path', { d:'M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z' }));
-
-const EditIcon = () => h('svg', { width:15, height:15, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:2, strokeLinecap:'round', strokeLinejoin:'round' },
-  h('path', { d:'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
-  h('path', { d:'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' }));
-
-const TrashIcon = () => h('svg', { width:15, height:15, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:2, strokeLinecap:'round', strokeLinejoin:'round' },
-  h('polyline', { points:'3 6 5 6 21 6' }),
-  h('path', { d:'M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6' }),
-  h('path', { d:'M10 11v6M14 11v6' }),
-  h('path', { d:'M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2' }));
-
-const PlusIcon = () => h('svg', { width:14, height:14, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:2.5, strokeLinecap:'round' },
-  h('line', { x1:12, y1:5, x2:12, y2:19 }), h('line', { x1:5, y1:12, x2:19, y2:12 }));
-
-// ─── PrefectForm ──────────────────────────────────────────────────────────────
-function PrefectForm({ initial, onSave, onCancel }) {
-  const [form, setForm] = useState(initial || { name:'', phone:'', dutyTime:'', dutyDescription:'' });
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-  const phoneWarn = form.phone && !form.phone.startsWith('+')
-    ? 'Phone should start with + and country code (e.g. +233241234567)' : null;
-  const canSave = form.name.trim() && form.phone.trim();
-  const submit = e => { e.preventDefault(); if (!canSave) return; onSave({ ...initial, ...form, name: form.name.trim(), phone: form.phone.trim() }); };
-  return h('div', { className:'modal-overlay', onClick: e => e.target === e.currentTarget && onCancel() },
-    h('div', { className:'modal' },
-      h('div', { className:'modal__title' }, initial ? 'Edit Prefect' : 'Add Prefect'),
-      h('form', { onSubmit: submit },
-        h('div', { className:'form-field' },
-          h('label', null, 'Name *'),
-          h('input', { value: form.name, onChange: e => set('name', e.target.value), placeholder:'e.g. Alice Mensah', autoFocus: true })),
-        h('div', { className:'form-field' },
-          h('label', null, 'Phone Number *'),
-          h('input', { value: form.phone, onChange: e => set('phone', e.target.value), placeholder:'+[country code][number] e.g. +233241234567' }),
-          phoneWarn ? h('div', { className:'field-warning' }, phoneWarn)
-                    : h('div', { className:'field-hint' }, 'Include country code with + prefix')),
-        h('div', { className:'form-field' },
-          h('label', null, 'Duty Time'),
-          h('input', { value: form.dutyTime, onChange: e => set('dutyTime', e.target.value), placeholder:'e.g. 07:00 AM – 09:00 AM' })),
-        h('div', { className:'form-field' },
-          h('label', null, 'Duty Description'),
-          h('input', { value: form.dutyDescription, onChange: e => set('dutyDescription', e.target.value), placeholder:'e.g. Gate duty, main entrance' })),
-        h('div', { className:'form-actions' },
-          h('button', { type:'button', className:'btn-cancel', onClick: onCancel }, 'Cancel'),
-          h('button', { type:'submit', className:'btn-save', disabled: !canSave }, initial ? 'Save Changes' : 'Add Prefect')))));
+// ── Hook ──────────────────────────────────────────────────────────────────────
+function useLS(key, def) {
+  const [v,setV] = useState(()=>{ try{ const s=localStorage.getItem(key); return s?JSON.parse(s):def; }catch{ return def; } });
+  useEffect(()=>{ try{ localStorage.setItem(key,JSON.stringify(v)); }catch{} },[key,v]);
+  return [v,setV];
 }
 
-// ─── PrefectCard ──────────────────────────────────────────────────────────────
-function PrefectCard({ prefect: p, status, onEdit, onDelete, onSendOne }) {
-  const initials = p.name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
-  return h('div', { className:'prefect-card' },
-    h('div', { className:'prefect-card__avatar' }, initials),
-    h('div', { className:'prefect-card__info' },
-      h('div', { className:'prefect-card__name' }, p.name,
-        h('span', { className:`badge badge--${status||'pending'}` }, status === 'opened' ? 'Opened' : 'Pending')),
-      h('div', { className:'prefect-card__sub' }, p.phone),
-      p.dutyTime && h('div', { className:'prefect-card__sub' }, 'Time: ', h('span', null, p.dutyTime)),
-      p.dutyDescription && h('div', { className:'prefect-card__sub' }, 'Duty: ', h('span', null, p.dutyDescription))),
-    h('div', { className:'prefect-card__actions' },
-      h('button', { className:'btn-send-one', onClick: () => onSendOne(p), title:'Send WhatsApp message' }, 'Send'),
-      h('button', { className:'btn-icon', onClick: () => onEdit(p), title:'Edit' }, h(EditIcon)),
-      h('button', { className:'btn-icon btn-icon--danger', onClick: () => onDelete(p.id), title:'Remove' }, h(TrashIcon))));
+// ── Primitives ────────────────────────────────────────────────────────────────
+const Icon = ({name,filled,cls=''}) => h('span',{className:`material-symbols-outlined ${filled?'filled':''} ${cls}`},name);
+const Avatar = ({name,size='md'}) => {
+  const sz = size==='lg'?'w-14 h-14 text-base':size==='sm'?'w-9 h-9 text-xs':'w-11 h-11 text-sm';
+  return h('div',{className:`${sz} ${avatarBg(name)} rounded-full flex items-center justify-center text-white font-bold shrink-0`},getInitials(name));
+};
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function Modal({title,onClose,children}) {
+  return h('div',{className:'fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-[60] p-4',onClick:e=>e.target===e.currentTarget&&onClose()},
+    h('div',{className:'bg-surface w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto'},
+      h('div',{className:'flex items-center justify-between mb-5'},
+        h('h3',{className:'font-bold text-lg'},title),
+        h('button',{onClick:onClose,className:'text-on-surface-variant hover:text-on-surface'},h(Icon,{name:'close'}))),
+      children));
 }
 
-// ─── PrefectsPanel ────────────────────────────────────────────────────────────
-function PrefectsPanel({ prefects, sendStatus, onAdd, onEdit, onDelete, onSendOne }) {
-  const [showForm, setShowForm] = useState(false);
-  const [editTarget, setEditTarget] = useState(null);
-  return h('section', { className:'panel' },
-    h('div', { className:'panel__header' },
-      h('div', null, h('span', { className:'panel__title' }, 'Prefects'), h('span', { className:'panel__count' }, `(${prefects.length})`)),
-      h('button', { className:'btn-add', onClick: () => setShowForm(true) }, h(PlusIcon), 'Add Prefect')),
-    h('div', { className:'panel__body', style:{ padding:'1.25rem' } },
-      prefects.length === 0
-        ? h('div', { className:'empty' }, h('div', { className:'empty__icon' }, '👤'), h('p', null, 'No prefects yet.'), h('p', null, h('strong', null, 'Add Prefect'), ' to get started.'))
-        : prefects.map(p => h(PrefectCard, { key: p.id, prefect: p, status: sendStatus[p.id], onEdit: setEditTarget, onDelete, onSendOne }))),
-    showForm && h(PrefectForm, { onSave: data => { onAdd(data); setShowForm(false); }, onCancel: () => setShowForm(false) }),
-    editTarget && h(PrefectForm, { initial: editTarget, onSave: data => { onEdit(data); setEditTarget(null); }, onCancel: () => setEditTarget(null) }));
-}
+// ── Input / Textarea ──────────────────────────────────────────────────────────
+const Inp = (props) => h('input',{...props,className:`w-full border border-outline-variant rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary bg-surface-container-lowest ${props.className||''}`});
+const Field = ({label,hint,warn,children}) => h('div',{className:'mb-4'},
+  h('label',{className:'block text-xs font-bold text-on-surface mb-1'},label),
+  children,
+  warn?h('p',{className:'text-xs text-amber-600 mt-1'},warn):hint?h('p',{className:'text-xs text-on-surface-variant mt-1'},hint):null);
 
-// ─── TemplateEditor ───────────────────────────────────────────────────────────
-function TemplateEditor({ value, onChange }) {
-  const ref = useRef(null);
-  function insertVar(v) {
-    const el = ref.current; if (!el) return;
-    const s = el.selectionStart, e = el.selectionEnd;
-    const next = value.slice(0, s) + v + value.slice(e);
+// ── VarChips ──────────────────────────────────────────────────────────────────
+function VarChips({taRef,value,onChange}) {
+  function insert(v) {
+    const el=taRef.current; if(!el) return;
+    const s=el.selectionStart,e=el.selectionEnd;
+    const next=value.slice(0,s)+v+value.slice(e);
     onChange(next);
-    requestAnimationFrame(() => { el.focus(); el.selectionStart = el.selectionEnd = s + v.length; });
+    requestAnimationFrame(()=>{ el.focus(); el.selectionStart=el.selectionEnd=s+v.length; });
   }
-  return h('div', { className:'template-editor' },
-    h('div', { className:'section-label' }, 'Message Template'),
-    h('textarea', { ref, value, onChange: e => onChange(e.target.value), placeholder:'Type your message. Use chips to insert variables.' }),
-    h('div', { className:'chips' }, VARS.map(v => h('button', { key: v, type:'button', className:'chip', onClick: () => insertVar(v) }, v))),
-    h('div', { className:'char-count' }, `${value.length} chars`));
+  return h('div',{className:'flex gap-1.5 flex-wrap mt-2'},
+    VARS.map(v=>h('button',{key:v,type:'button',onClick:()=>insert(v),className:'text-xs bg-primary-container/30 text-primary font-mono px-2 py-0.5 rounded-full border border-primary-container/50 hover:bg-primary-container/50'},v)));
 }
 
-// ─── PreviewCard ──────────────────────────────────────────────────────────────
-function PreviewCard({ prefect, template, date, status, onSendOne }) {
-  return h('div', { className:'preview-card' },
-    h('div', { className:'preview-card__header' },
-      h('div', { className:'preview-card__name' }, prefect.name,
-        h('span', { className:`badge badge--${status||'pending'}` }, status === 'opened' ? 'Opened' : 'Pending')),
-      h('button', { className:'btn-send-preview', onClick: () => onSendOne(prefect) }, h(WaIcon), 'Send')),
-    h('div', { className:'preview-card__msg' }, resolve(template, prefect, date)));
+// ── PrefectForm ───────────────────────────────────────────────────────────────
+function PrefectForm({initial,onSave,onCancel}) {
+  const [f,setF] = useState(initial??{name:'',phone:'+852',dutyTime:'',dutyDescription:''});
+  const set = (k,v) => setF(p=>({...p,[k]:v}));
+  const warn = f.phone&&!f.phone.startsWith('+')?'Start with + and country code':null;
+  const ok = f.name.trim()&&f.phone.trim();
+  return h(Modal,{title:initial?'Edit Prefect':'Add Prefect',onClose:onCancel},
+    h('form',{onSubmit:e=>{e.preventDefault();if(ok)onSave({...initial,...f,name:f.name.trim(),phone:f.phone.trim()});}},
+      h(Field,{label:'Name *'},h(Inp,{value:f.name,onChange:e=>set('name',e.target.value),placeholder:'e.g. Alice Chan',autoFocus:true})),
+      h(Field,{label:'Phone *',hint:'Hong Kong: +852XXXXXXXX',warn},h(Inp,{value:f.phone,onChange:e=>set('phone',e.target.value),placeholder:'+85291234567'})),
+      h(Field,{label:'Override Time',hint:'Leave blank to use default from Settings'},h(Inp,{value:f.dutyTime||'',onChange:e=>set('dutyTime',e.target.value),placeholder:'e.g. 09:00 AM – 10:30 AM'})),
+      h(Field,{label:'Override Duty',hint:'Leave blank to use default from Settings'},h(Inp,{value:f.dutyDescription||'',onChange:e=>set('dutyDescription',e.target.value),placeholder:'e.g. Library supervision'})),
+      h('div',{className:'flex gap-3 mt-2'},
+        h('button',{type:'button',onClick:onCancel,className:'flex-1 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant text-sm font-semibold'},'Cancel'),
+        h('button',{type:'submit',disabled:!ok,className:'flex-1 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold disabled:opacity-40'},initial?'Save':'Add Prefect'))));
 }
 
-// ─── MessagePanel ─────────────────────────────────────────────────────────────
-function MessagePanel({ prefects, template, date, sendStatus, showWarn, onTplChange, onDateChange, onSendAll, onSendOne, onReset }) {
-  const hasOpened = Object.values(sendStatus).some(s => s === 'opened');
-  return h('section', { className:'panel' },
-    h('div', { className:'panel__header' },
-      h('span', { className:'panel__title' }, 'Message'),
-      hasOpened && h('button', { className:'btn-reset', onClick: onReset }, 'Reset Session')),
-    h('div', { className:'panel__body' },
-      h('div', null,
-        h('div', { className:'section-label' }, 'Duty Date'),
-        h('input', { type:'date', value: date, onChange: e => onDateChange(e.target.value),
-          style:{ border:'1px solid var(--border)', borderRadius:'6px', padding:'.5rem .75rem', fontSize:'.9rem', outline:'none', width:'100%', maxWidth:'220px' } })),
-      h(TemplateEditor, { value: template, onChange: onTplChange }),
-      h('button', { className:'send-all-btn', onClick: onSendAll, disabled: prefects.length === 0 },
-        h(WaIcon), `Send All (${prefects.length})`),
-      showWarn && h('div', { className:'popup-warning' },
-        'If some tabs didn\'t open, your browser may have blocked them. Use the individual ', h('strong', null, 'Send'), ' buttons below as a fallback.'),
-      prefects.length > 0
-        ? h('div', { className:'previews-section' },
-            h('div', { className:'section-label' }, 'Message Previews'),
-            prefects.map(p => h(PreviewCard, { key: p.id, prefect: p, template, date, status: sendStatus[p.id], onSendOne })))
-        : h('div', { style:{ textAlign:'center', color:'var(--muted)', fontSize:'.875rem', paddingBottom:'.5rem' } },
-            'Add prefects on the left to preview messages here.')));
+// ── ReminderForm ──────────────────────────────────────────────────────────────
+function ReminderForm({initial,onSave,onCancel}) {
+  const [f,setF] = useState(initial??{title:'',icon:'notifications_active',message:DEFAULT_TEMPLATE});
+  const set = (k,v) => setF(p=>({...p,[k]:v}));
+  const taRef = useRef(null);
+  const ok = f.title.trim()&&f.message.trim();
+  return h(Modal,{title:initial?'Edit Reminder':'New Special Reminder',onClose:onCancel},
+    h('form',{onSubmit:e=>{e.preventDefault();if(ok)onSave({...initial,...f,title:f.title.trim()});}},
+      h(Field,{label:'Title *'},h(Inp,{value:f.title,onChange:e=>set('title',e.target.value),placeholder:'e.g. Exam Invigilation',autoFocus:true})),
+      h('div',{className:'mb-4'},
+        h('label',{className:'block text-xs font-bold text-on-surface mb-2'},'Icon'),
+        h('div',{className:'flex gap-2 flex-wrap'},
+          ICONS.map(ic=>h('button',{key:ic,type:'button',onClick:()=>set('icon',ic),
+            className:`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${f.icon===ic?'bg-primary text-white':'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}`},
+            h(Icon,{name:ic}))))),
+      h('div',{className:'mb-4'},
+        h('label',{className:'block text-xs font-bold text-on-surface mb-1'},'Message *'),
+        h('textarea',{ref:taRef,value:f.message,onChange:e=>set('message',e.target.value),
+          className:'w-full border border-outline-variant rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary bg-surface-container-lowest resize-none min-h-[110px]'}),
+        h(VarChips,{taRef,value:f.message,onChange:v=>set('message',v)})),
+      h('div',{className:'flex gap-3 mt-2'},
+        h('button',{type:'button',onClick:onCancel,className:'flex-1 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant text-sm font-semibold'},'Cancel'),
+        h('button',{type:'submit',disabled:!ok,className:'flex-1 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-bold disabled:opacity-40'},initial?'Save':'Add'))));
 }
 
-// ─── App ──────────────────────────────────────────────────────────────────────
+// ── HOME PAGE ──────────────────────────────────────────────────────────────────
+function HomePage({prefects,reminders,activeReminderId,date,sendStatus,history,showWarn,onSendAll,onSendOne,onSelectReminder,onNavigate}) {
+  const openedCount = Object.values(sendStatus).filter(s=>s==='opened').length;
+  const activeName = activeReminderId ? reminders.find(r=>r.id===activeReminderId)?.title : null;
+  const recent = [...history].reverse().slice(0,3);
+  const iconCycle = ['history_edu','notifications_active','schedule'];
+  const colorCycle = ['text-primary bg-primary-container/30','text-tertiary bg-tertiary-container/30','text-secondary bg-secondary-container/30'];
+
+  return h('div',{className:'space-y-8'},
+    // Hero
+    h('section',{className:'mt-2'},
+      h('div',{className:'relative overflow-hidden rounded-2xl p-8 kinetic-gradient shadow-[0px_12px_32px_rgba(47,46,46,0.12)] flex flex-col gap-4'},
+        h('div',{className:'z-10'},
+          h('h2',{className:'text-on-primary text-3xl font-black tracking-tight leading-none mb-1'},'Instant Action'),
+          h('p',{className:'text-on-primary/80 text-sm font-medium max-w-[220px]'},
+            activeName?`Template: ${activeName}`:'Send duty reminders to all prefects at once.'),
+          openedCount>0&&h('p',{className:'text-on-primary/70 text-xs mt-1'},`✓ ${openedCount}/${prefects.length} opened`)),
+        h('button',{onClick:onSendAll,disabled:prefects.length===0,
+          className:'z-10 bg-surface-container-lowest text-primary font-bold px-6 py-3 rounded-xl flex items-center gap-2 active:scale-95 transition-transform disabled:opacity-50 w-fit'},
+          h('span',{className:'material-symbols-outlined text-lg'},'send'),
+          `Send All (${prefects.length})`),
+        h('div',{className:'absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl'}),
+        h('div',{className:'absolute right-12 top-4 w-16 h-16 bg-primary-container/20 rotate-45 rounded-lg blur-xl'}))),
+
+    // Special Reminders
+    h('section',{className:'space-y-3'},
+      h('div',{className:'flex items-center justify-between'},
+        h('h3',{className:'text-[11px] font-bold tracking-widest uppercase text-on-surface-variant'},'Special Reminders'),
+        h('button',{onClick:()=>onNavigate('settings'),className:'text-primary text-xs font-bold'},'Manage')),
+      h('div',{className:'flex gap-3 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide'},
+        reminders.map(r=>{
+          const active = activeReminderId===r.id;
+          return h('button',{key:r.id,onClick:()=>onSelectReminder(active?null:r.id),
+            className:`shrink-0 flex flex-col gap-2 p-4 rounded-xl border-2 transition-all active:scale-95 min-w-[88px] ${active?'bg-primary text-on-primary border-primary':'bg-surface-container-low border-transparent text-on-surface hover:border-outline-variant'}`},
+            h(Icon,{name:r.icon,cls:active?'text-white':'text-primary'}),
+            h('span',{className:'text-xs font-bold text-left leading-tight'},r.title));
+        }),
+        h('button',{onClick:()=>onNavigate('settings'),
+          className:'shrink-0 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-outline-variant text-outline min-w-[72px] hover:border-primary hover:text-primary transition-colors'},
+          h(Icon,{name:'add'}),
+          h('span',{className:'text-xs font-bold'},'New')))),
+
+    // Pinned Prefects
+    h('section',{className:'space-y-3'},
+      h('div',{className:'flex items-center justify-between'},
+        h('h3',{className:'text-[11px] font-bold tracking-widest uppercase text-on-surface-variant'},'Prefects'),
+        h('button',{onClick:()=>onNavigate('contacts'),className:'text-primary text-xs font-bold'},'View All')),
+      h('div',{className:'flex gap-4 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide'},
+        prefects.length===0
+          ? h('p',{className:'text-sm text-on-surface-variant py-2'},'No prefects yet — tap View All to add some.')
+          : prefects.slice(0,8).map(p=>
+              h('button',{key:p.id,onClick:()=>onSendOne(p),className:'flex flex-col items-center gap-1.5 shrink-0 active:scale-90 transition-transform'},
+                h('div',{className:`w-16 h-16 rounded-full p-1 ${sendStatus[p.id]==='opened'?'bg-primary/20 ring-2 ring-primary':'bg-surface-container-highest'}`},
+                  h('div',{className:`w-full h-full rounded-full ${avatarBg(p.name)} flex items-center justify-center text-white text-sm font-bold`},getInitials(p.name))),
+                h('span',{className:'text-[10px] font-bold text-on-surface max-w-[60px] truncate text-center'},p.name.split(' ')[0]))),
+        h('div',{className:'flex flex-col items-center gap-1.5 shrink-0'},
+          h('button',{onClick:()=>onNavigate('contacts'),className:'w-16 h-16 rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center text-outline hover:border-primary hover:text-primary transition-colors'},
+            h(Icon,{name:'add'})),
+          h('span',{className:'text-[10px] font-bold text-on-surface'},'New')))),
+
+    showWarn&&h('div',{className:'bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800'},
+      '⚠️ If some tabs were blocked, use individual Send buttons on the Contacts page as a fallback.'),
+
+    // Recent Activity
+    recent.length>0&&h('section',{className:'space-y-4'},
+      h('div',{className:'flex items-center justify-between'},
+        h('h3',{className:'text-[11px] font-bold tracking-widest uppercase text-on-surface-variant'},'Recent Reminders'),
+        h('button',{onClick:()=>onNavigate('history'),className:'text-primary text-xs font-bold'},'View All')),
+      h('div',{className:'grid gap-3'},
+        recent.map((item,i)=>h('div',{key:item.id,className:'group bg-surface-container-low rounded-xl p-4 flex items-center justify-between gap-4 hover:bg-surface-container transition-all'},
+          h('div',{className:'flex items-center gap-3'},
+            h('div',{className:`w-11 h-11 rounded-xl ${colorCycle[i%3]} flex items-center justify-center`},h(Icon,{name:iconCycle[i%3]})),
+            h('div',null,
+              h('h4',{className:'font-bold text-on-surface text-sm'},item.prefectName),
+              h('p',{className:'text-on-surface-variant text-xs line-clamp-1'},`"${item.message.slice(0,50)}..."`),
+              h('span',{className:`text-[10px] font-medium mt-0.5 block ${i===0?'text-primary':'text-on-surface-variant'}`},timeAgo(item.timestamp)))),
+          h('button',{onClick:()=>{ const p=prefects.find(x=>x.id===item.prefectId); if(p)onSendOne(p); },
+            className:'w-9 h-9 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center text-primary group-active:scale-90 transition-transform'},
+            h(Icon,{name:'refresh'})))))),
+
+    // Stats
+    h('section',{className:'grid grid-cols-2 gap-4 pb-6'},
+      h('div',{className:'bg-surface-container-highest rounded-xl p-5 flex flex-col justify-between aspect-square'},
+        h('span',{className:'material-symbols-outlined text-primary text-3xl'},'auto_awesome'),
+        h('div',null,
+          h('div',{className:'text-2xl font-black text-on-surface'},history.length),
+          h('div',{className:'text-[10px] font-bold uppercase tracking-wider text-on-surface-variant'},'Total Sent'))),
+      h('div',{className:'bg-surface-container-lowest border border-outline-variant/10 rounded-xl p-5 flex flex-col justify-between aspect-square'},
+        h('span',{className:'material-symbols-outlined text-tertiary text-3xl'},'group'),
+        h('div',null,
+          h('div',{className:'text-2xl font-black text-on-surface'},prefects.length),
+          h('div',{className:'text-[10px] font-bold uppercase tracking-wider text-on-surface-variant'},'Prefects')))));
+}
+
+// ── DateInput — quick add for a prefect's duty dates ─────────────────────────
+function DateInput({dutyDates,onAddDate,onRemoveDate}) {
+  const [raw,setRaw] = useState('');
+  const inputRef = useRef(null);
+  function commit(val) {
+    const iso = parseQuickDate(val);
+    if (!iso) return;
+    if (dutyDates.includes(iso)) { setRaw(''); return; }
+    onAddDate(iso);
+    setRaw('');
+    inputRef.current?.focus();
+  }
+  function onKey(e) {
+    if (e.key==='Enter') { e.preventDefault(); commit(raw); }
+  }
+  const sorted = [...dutyDates].sort();
+  const today = new Date().toLocaleDateString('en-CA');
+  return h('div',{className:'flex flex-col gap-2 pt-2 border-t border-outline-variant/30'},
+    h('div',{className:'flex items-center gap-1.5'},
+      h(Icon,{name:'calendar_month',cls:'text-xs text-on-surface-variant shrink-0'}),
+      h('span',{className:'text-xs font-bold text-on-surface-variant shrink-0'},'Duty Dates'),
+      sorted.length===0&&h('span',{className:'text-[10px] italic text-on-surface-variant/60'},'— none scheduled')),
+    sorted.length>0&&h('div',{className:'flex flex-wrap gap-1.5'},
+      sorted.map(d=>h('span',{key:d,className:`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${d<today?'bg-surface-container-highest text-on-surface-variant':'bg-primary-container/40 text-primary'}`},
+        fmtShort(d),
+        h('button',{type:'button',onClick:()=>onRemoveDate(d),className:'hover:text-red-500 leading-none ml-0.5'},
+          h(Icon,{name:'close',cls:'text-[10px] leading-none'}))))),
+    h('div',{className:'flex gap-2'},
+      h('input',{ref:inputRef,value:raw,onChange:e=>setRaw(e.target.value),onKeyDown:onKey,
+        placeholder:'Type 0411 or pick →',
+        className:'flex-1 border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-primary bg-surface-container-lowest'}),
+      h('input',{type:'date',onChange:e=>{ if(e.target.value){ onAddDate(e.target.value); e.target.value=''; } },
+        className:'border border-outline-variant rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary bg-surface-container-lowest w-[38px] cursor-pointer',
+        title:'Pick from calendar'}),
+      h('button',{type:'button',onClick:()=>commit(raw),disabled:!raw.trim(),
+        className:'px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold disabled:opacity-30 active:scale-95 transition-transform'},
+        h(Icon,{name:'add',cls:'text-sm'}))));
+}
+
+// ── CONTACTS PAGE ──────────────────────────────────────────────────────────────
+function ContactsPage({prefects,sendStatus,onAdd,onEdit,onDelete,onSendOne,onUpdateDates}) {
+  const [showForm,setShowForm] = useState(false);
+  const [editTarget,setEditTarget] = useState(null);
+  function addDate(id,iso) {
+    const p=prefects.find(x=>x.id===id);
+    if(!p)return;
+    const dates=[...(p.dutyDates||[])];
+    if(!dates.includes(iso))dates.push(iso);
+    onUpdateDates(id,dates);
+  }
+  function removeDate(id,iso) {
+    const p=prefects.find(x=>x.id===id);
+    if(!p)return;
+    onUpdateDates(id,(p.dutyDates||[]).filter(d=>d!==iso));
+  }
+  return h('div',{className:'space-y-4'},
+    h('div',{className:'flex items-center justify-between mb-2'},
+      h('div',null,
+        h('h2',{className:'font-black text-xl'},'Prefects'),
+        h('p',{className:'text-xs text-on-surface-variant mt-0.5'},`${prefects.length} contact${prefects.length!==1?'s':''}`)),
+      h('button',{onClick:()=>setShowForm(true),className:'bg-primary text-on-primary font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 text-sm active:scale-95 transition-transform'},
+        h(Icon,{name:'add'}),'Add')),
+    prefects.length===0
+      ?h('div',{className:'text-center py-16 text-on-surface-variant'},
+          h('div',{className:'text-5xl mb-3'},'👤'),
+          h('p',{className:'font-bold mb-1'},'No prefects yet'),
+          h('p',{className:'text-sm'},'Tap Add to get started'))
+      :prefects.map(p=>h('div',{key:p.id,className:'bg-surface-container-low rounded-xl p-4 flex flex-col gap-3 hover:bg-surface-container transition-all'},
+          h('div',{className:'flex items-center gap-3'},
+            h(Avatar,{name:p.name}),
+            h('div',{className:'flex-1 min-w-0'},
+              h('div',{className:'flex items-center gap-2'},
+                h('p',{className:'font-bold text-sm'},p.name),
+                sendStatus[p.id]==='opened'&&h('span',{className:'text-[9px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full uppercase'},'Sent')),
+              h('p',{className:'text-xs text-on-surface-variant'},p.phone),
+              (p.dutyTime||p.dutyDescription)&&h('p',{className:'text-xs text-on-surface-variant mt-0.5 truncate'},[p.dutyTime,p.dutyDescription].filter(Boolean).join(' · '))),
+            h('div',{className:'flex items-center gap-1.5'},
+              h('button',{onClick:()=>onSendOne(p),className:'px-3 py-1.5 rounded-lg border border-primary text-primary text-xs font-bold hover:bg-primary hover:text-white transition-colors'},'Send'),
+              h('button',{onClick:()=>setEditTarget(p),className:'w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest'},h(Icon,{name:'edit',cls:'text-base'})),
+              h('button',{onClick:()=>{ if(window.confirm('Remove this prefect?'))onDelete(p.id); },className:'w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-red-500 hover:bg-red-50'},h(Icon,{name:'delete',cls:'text-base'})))),
+          h(DateInput,{dutyDates:p.dutyDates||[],onAddDate:iso=>addDate(p.id,iso),onRemoveDate:iso=>removeDate(p.id,iso)}))),
+    showForm&&h(PrefectForm,{onSave:d=>{onAdd(d);setShowForm(false);},onCancel:()=>setShowForm(false)}),
+    editTarget&&h(PrefectForm,{initial:editTarget,onSave:d=>{onEdit(d);setEditTarget(null);},onCancel:()=>setEditTarget(null)}));
+}
+
+// ── HISTORY PAGE ──────────────────────────────────────────────────────────────
+function HistoryPage({history,prefects,onResend}) {
+  if(history.length===0) return h('div',{className:'text-center py-16 text-on-surface-variant'},
+    h('div',{className:'text-5xl mb-3'},'📭'),
+    h('p',{className:'font-bold mb-1'},'No history yet'),
+    h('p',{className:'text-sm'},'Messages you send will appear here'));
+  return h('div',{className:'space-y-4'},
+    h('div',{className:'mb-2'},
+      h('h2',{className:'font-black text-xl'},'History'),
+      h('p',{className:'text-xs text-on-surface-variant mt-0.5'},`${history.length} messages sent`)),
+    [...history].reverse().map(item=>h('div',{key:item.id,className:'group bg-surface-container-low rounded-xl p-4 flex items-start gap-3 hover:bg-surface-container transition-all'},
+      h('div',{className:'w-10 h-10 rounded-xl bg-primary-container/30 flex items-center justify-center text-primary shrink-0 mt-0.5'},h(Icon,{name:'history_edu'})),
+      h('div',{className:'flex-1 min-w-0'},
+        h('p',{className:'font-bold text-sm'},item.prefectName),
+        h('p',{className:'text-xs text-on-surface-variant mt-0.5 line-clamp-2'},item.message),
+        h('span',{className:'text-[10px] text-on-surface-variant mt-1 block'},timeAgo(item.timestamp))),
+      h('button',{onClick:()=>{ const p=prefects.find(x=>x.id===item.prefectId); if(p)onResend(p); },
+        className:'w-9 h-9 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center text-primary shrink-0 group-active:scale-90 transition-transform'},
+        h(Icon,{name:'refresh'})))));
+}
+
+// ── SETTINGS PAGE ──────────────────────────────────────────────────────────────
+function SettingsPage({template,selectedDate,reminders,settings,onTemplateChange,onDateChange,onRemindersChange,onSettingsChange}) {
+  const [editR,setEditR] = useState(null);
+  const [showRForm,setShowRForm] = useState(false);
+  const taRef = useRef(null);
+  function saveR(data) {
+    if(data.id) onRemindersChange(reminders.map(r=>r.id===data.id?data:r));
+    else onRemindersChange([...reminders,{...data,id:crypto.randomUUID()}]);
+    setEditR(null); setShowRForm(false);
+  }
+  const setSetting = (k,v) => onSettingsChange({...settings,[k]:v});
+  return h('div',{className:'space-y-6'},
+    h('h2',{className:'font-black text-xl'},'Settings'),
+
+    // Default Duty Settings
+    h('div',{className:'bg-surface-container-low rounded-xl p-5 space-y-4'},
+      h('div',{className:'flex items-center gap-2'},h(Icon,{name:'tune',cls:'text-primary'}),h('h3',{className:'font-bold text-sm'},'Default Duty Settings')),
+      h(Field,{label:'Default Time',hint:'Used in messages when no per-prefect override is set'},
+        h(Inp,{value:settings.defaultTime,onChange:e=>setSetting('defaultTime',e.target.value),placeholder:'e.g. 07:45 AM – 08:10 AM'})),
+      h(Field,{label:'Default Location'},
+        h(Inp,{value:settings.defaultLocation,onChange:e=>setSetting('defaultLocation',e.target.value),placeholder:'e.g. Rear Gate'})),
+      h(Field,{label:'Default Duty'},
+        h(Inp,{value:settings.defaultDuty,onChange:e=>setSetting('defaultDuty',e.target.value),placeholder:'e.g. Morning Duty'}))),
+
+    // Fallback Global Date
+    h('div',{className:'bg-surface-container-low rounded-xl p-5'},
+      h('div',{className:'flex items-center gap-2 mb-3'},h(Icon,{name:'calendar_month',cls:'text-primary'}),h('h3',{className:'font-bold text-sm'},'Fallback Global Date'),
+        h('span',{className:'text-xs text-on-surface-variant ml-1'},'— used when a prefect has no dates scheduled')),
+      h('input',{type:'date',value:selectedDate,onChange:e=>onDateChange(e.target.value),
+        className:'border border-outline-variant rounded-xl px-3 py-2 text-sm outline-none focus:border-primary bg-surface-container-lowest'})),
+
+    // Default template
+    h('div',{className:'bg-surface-container-low rounded-xl p-5'},
+      h('div',{className:'flex items-center gap-2 mb-3'},h(Icon,{name:'edit_note',cls:'text-primary'}),h('h3',{className:'font-bold text-sm'},'Default Message Template')),
+      h('textarea',{ref:taRef,value:template,onChange:e=>onTemplateChange(e.target.value),
+        className:'w-full border border-outline-variant rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary bg-surface-container-lowest resize-none min-h-[130px]'}),
+      h(VarChips,{taRef,value:template,onChange:onTemplateChange}),
+      h('p',{className:'text-xs text-on-surface-variant mt-1.5 text-right'},`${template.length} chars`)),
+
+    // Special Reminders manager
+    h('div',{className:'space-y-3'},
+      h('div',{className:'flex items-center justify-between'},
+        h('div',{className:'flex items-center gap-2'},
+          h(Icon,{name:'auto_awesome',cls:'text-primary'}),
+          h('h3',{className:'font-bold text-sm'},'Special Reminders')),
+        h('button',{onClick:()=>setShowRForm(true),className:'bg-primary text-on-primary text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 active:scale-95 transition-transform'},
+          h(Icon,{name:'add',cls:'text-base'}),'New')),
+      reminders.length===0&&h('p',{className:'text-sm text-on-surface-variant text-center py-4'},'No special reminders yet. Tap New to add one.'),
+      reminders.map(r=>h('div',{key:r.id,className:'bg-surface-container-low rounded-xl p-4 flex items-start gap-3'},
+        h('div',{className:'w-10 h-10 rounded-xl bg-primary-container/30 flex items-center justify-center text-primary shrink-0'},h(Icon,{name:r.icon})),
+        h('div',{className:'flex-1 min-w-0'},
+          h('p',{className:'font-bold text-sm'},r.title),
+          h('p',{className:'text-xs text-on-surface-variant mt-0.5 line-clamp-2'},r.message)),
+        h('div',{className:'flex gap-1 shrink-0'},
+          h('button',{onClick:()=>setEditR(r),className:'w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest'},h(Icon,{name:'edit',cls:'text-base'})),
+          h('button',{onClick:()=>{ if(window.confirm('Remove this reminder?'))onRemindersChange(reminders.filter(x=>x.id!==r.id)); },className:'w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-red-500 hover:bg-red-50'},h(Icon,{name:'delete',cls:'text-base'})))))),
+
+    showRForm&&h(ReminderForm,{onSave:saveR,onCancel:()=>setShowRForm(false)}),
+    editR&&h(ReminderForm,{initial:editR,onSave:saveR,onCancel:()=>setEditR(null)}));
+}
+
+// ── APP ────────────────────────────────────────────────────────────────────────
 function App() {
-  const [prefects, setPrefects] = useLocalStorage(KEYS.CONTACTS, []);
-  const [template, setTemplate] = useLocalStorage(KEYS.TEMPLATE, DEFAULT_TEMPLATE);
-  const [date, setDate] = useState(getTomorrow());
-  const [sendStatus, setSendStatus] = useState({});
-  const [showWarn, setShowWarn] = useState(false);
+  const [prefects,setPrefects] = useLS(KEYS.PREFECTS,[]);
+  const [template,setTemplate] = useLS(KEYS.TEMPLATE,DEFAULT_TEMPLATE);
+  const [reminders,setReminders] = useLS(KEYS.REMINDERS,DEFAULT_REMINDERS);
+  const [historyLog,setHistoryLog] = useLS(KEYS.HISTORY,[]);
+  const [settings,setSettings] = useLS(KEYS.SETTINGS,DEFAULT_SETTINGS);
+  const [date,setDate] = useState(getTomorrow());
+  const [sendStatus,setSendStatus] = useState({});
+  const [showWarn,setShowWarn] = useState(false);
+  const [page,setPage] = useState('home');
+  const [activeReminderId,setActiveReminderId] = useState(null);
 
-  const addPrefect = p => setPrefects(prev => [...prev, { ...p, id: crypto.randomUUID() }]);
-  const editPrefect = p => setPrefects(prev => prev.map(x => x.id === p.id ? p : x));
-  const delPrefect = id => {
-    if (!window.confirm('Remove this prefect?')) return;
-    setPrefects(prev => prev.filter(p => p.id !== id));
-    setSendStatus(prev => { const n = { ...prev }; delete n[id]; return n; });
-  };
-  const sendOne = p => { window.open(waUrl(p, template, date), '_blank'); setSendStatus(prev => ({ ...prev, [p.id]: 'opened' })); };
-  const sendAll = () => {
+  // migrate old single-date prefects to dutyDates array
+  useEffect(()=>{
+    const needsMigration = prefects.some(p=>p.dutyDate!==undefined&&!p.dutyDates);
+    if(needsMigration) setPrefects(prev=>prev.map(p=>{
+      if(p.dutyDate!==undefined&&!p.dutyDates){
+        const {dutyDate,...rest}=p;
+        return {...rest,dutyDates:dutyDate?[dutyDate]:[]};
+      }
+      return p;
+    }));
+  },[]);
+
+  const activeTpl = () => activeReminderId ? (reminders.find(r=>r.id===activeReminderId)?.message||template) : template;
+  const cfg = settings;
+
+  function sendOne(p) {
+    const d = getNextDate(p, date);
+    window.open(waUrl(p,activeTpl(),d,cfg),'_blank');
+    setSendStatus(prev=>({...prev,[p.id]:'opened'}));
+    const msg = resolveMsg(activeTpl(),p,d,cfg);
+    setHistoryLog(prev=>[...prev,{id:crypto.randomUUID(),prefectId:p.id,prefectName:p.name,message:msg,timestamp:Date.now()}]);
+  }
+
+  function sendAll() {
     setShowWarn(false);
-    prefects.forEach(p => window.open(waUrl(p, template, date), '_blank'));
-    setSendStatus(prev => ({ ...prev, ...Object.fromEntries(prefects.map(p => [p.id, 'opened'])) }));
+    const tpl = activeTpl();
+    prefects.forEach(p=>window.open(waUrl(p,tpl,getNextDate(p,date),cfg),'_blank'));
+    setSendStatus(prev=>({...prev,...Object.fromEntries(prefects.map(p=>[p.id,'opened']))}));
+    const entries = prefects.map(p=>({id:crypto.randomUUID(),prefectId:p.id,prefectName:p.name,message:resolveMsg(tpl,p,getNextDate(p,date),cfg),timestamp:Date.now()}));
+    setHistoryLog(prev=>[...prev,...entries]);
     setShowWarn(true);
-  };
-  const reset = () => { setSendStatus({}); setShowWarn(false); };
+  }
 
-  return h('div', null,
-    h('header', { className:'app-header' },
-      h('div', { className:'wa-icon' }, h(WaIcon)),
-      h('h1', null, 'Prefect Messenger')),
-    h('main', { className:'app-layout' },
-      h(PrefectsPanel, { prefects, sendStatus, onAdd: addPrefect, onEdit: editPrefect, onDelete: delPrefect, onSendOne: sendOne }),
-      h(MessagePanel, { prefects, template, date, sendStatus, showWarn, onTplChange: setTemplate, onDateChange: setDate, onSendAll: sendAll, onSendOne: sendOne, onReset: reset })));
+  function updatePrefectDates(id, dutyDates) {
+    setPrefects(prev=>prev.map(p=>p.id===id?{...p,dutyDates}:p));
+  }
+
+  const NAV = [{id:'home',icon:'home',label:'Home'},{id:'contacts',icon:'contacts',label:'Contacts'},{id:'history',icon:'history',label:'History'},{id:'settings',icon:'settings',label:'Settings'}];
+
+  return h('div',null,
+    h('header',{className:'fixed top-0 w-full z-50 bg-stone-50/80 backdrop-blur-xl flex items-center justify-between px-6 h-16'},
+      h('div',{className:'flex items-center gap-3'},
+        h('div',{className:'w-8 h-8 rounded-full bg-primary flex items-center justify-center'},
+          h('span',{className:'material-symbols-outlined text-white text-base'},'notifications_active')),
+        h('h1',{className:'font-black tracking-tighter text-primary'},'Prefect Messenger')),
+      Object.values(sendStatus).some(s=>s==='opened')&&
+        h('button',{onClick:()=>{setSendStatus({});setShowWarn(false);},className:'text-xs text-on-surface-variant border border-outline-variant rounded-lg px-2.5 py-1 hover:bg-surface-container'},'Reset')),
+
+    h('main',{className:'pt-20 px-5 max-w-2xl mx-auto'},
+      page==='home'&&h(HomePage,{prefects,reminders,activeReminderId,date,sendStatus,history:historyLog,showWarn,onSendAll:sendAll,onSendOne:sendOne,onSelectReminder:setActiveReminderId,onNavigate:setPage}),
+      page==='contacts'&&h(ContactsPage,{prefects,sendStatus,
+        onAdd:p=>setPrefects(prev=>[...prev,{...p,dutyDates:p.dutyDates||[],id:crypto.randomUUID()}]),
+        onEdit:p=>setPrefects(prev=>prev.map(x=>x.id===p.id?p:x)),
+        onDelete:id=>{setPrefects(prev=>prev.filter(p=>p.id!==id));setSendStatus(prev=>{const n={...prev};delete n[id];return n;});},
+        onSendOne:sendOne,onUpdateDates:updatePrefectDates}),
+      page==='history'&&h(HistoryPage,{history:historyLog,prefects,onResend:sendOne}),
+      page==='settings'&&h(SettingsPage,{template,selectedDate:date,reminders,settings,onTemplateChange:setTemplate,onDateChange:setDate,onRemindersChange:setReminders,onSettingsChange:setSettings})),
+
+    h('nav',{className:'fixed bottom-0 left-0 w-full h-20 bg-stone-50/80 backdrop-blur-xl flex justify-around items-center px-4 pb-4 z-50 rounded-t-3xl shadow-[0px_-12px_32px_rgba(47,46,46,0.06)]'},
+      NAV.map(({id,icon,label})=>h('a',{key:id,onClick:e=>{e.preventDefault();setPage(id);},href:'#',
+        className:`flex flex-col items-center justify-center px-5 py-2 rounded-2xl active:scale-90 duration-300 ease-out transition-all ${page===id?'bg-green-100 text-green-700':'text-stone-500 hover:bg-stone-200/50'}`},
+        h('span',{className:'material-symbols-outlined',style:page===id?{fontVariationSettings:"'FILL' 1"}:undefined},icon),
+        h('span',{className:'font-inter text-[11px] font-bold tracking-wide uppercase mt-1'},label)))));
 }
 
-createRoot(document.getElementById('root')).render(h(StrictMode, null, h(App)));
+createRoot(document.getElementById('root')).render(h(App));
 </script>
 </body>
 </html>
