@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registration &amp; ID | The Orchestral Frame</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="roster.js" defer></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface-container": "#eeeef0",
+          "secondary-container": "#d195ff",
+          "tertiary": "#540e00",
+          "inverse-surface": "#2f3132",
+          "surface-container-highest": "#e2e2e4",
+          "primary-fixed-dim": "#c0c1ff",
+          "on-primary-fixed-variant": "#373a9b",
+          "on-primary-container": "#9da1ff",
+          "primary": "#15157d",
+          "surface-container-high": "#e8e8ea",
+          "surface-variant": "#e2e2e4",
+          "primary-container": "#2e3192",
+          "surface-container-low": "#f3f3f5",
+          "on-tertiary-container": "#ff886a",
+          "surface-bright": "#f9f9fb",
+          "on-secondary": "#ffffff",
+          "tertiary-container": "#7b1800",
+          "on-primary-fixed": "#04006d",
+          "error-container": "#ffdad6",
+          "on-surface": "#1a1c1d",
+          "on-secondary-fixed": "#2e004d",
+          "surface-tint": "#4f54b4",
+          "on-tertiary-fixed": "#3c0700",
+          "on-tertiary": "#ffffff",
+          "primary-fixed": "#e1e0ff",
+          "inverse-on-surface": "#f0f0f2",
+          "tertiary-fixed": "#ffdad2",
+          "outline-variant": "#c7c5d4",
+          "on-surface-variant": "#464652",
+          "inverse-primary": "#c0c1ff",
+          "surface": "#f9f9fb",
+          "on-background": "#1a1c1d",
+          "secondary-fixed-dim": "#e1b6ff",
+          "error": "#ba1a1a",
+          "secondary": "#7c44a8",
+          "background": "#f9f9fb",
+          "on-primary": "#ffffff",
+          "on-secondary-container": "#5d2388",
+          "surface-dim": "#d9dadc",
+          "secondary-fixed": "#f2daff",
+          "on-error-container": "#93000a",
+          "outline": "#777683",
+          "tertiary-fixed-dim": "#ffb4a2",
+          "surface-container-lowest": "#ffffff",
+          "on-error": "#ffffff",
+          "on-tertiary-fixed-variant": "#8a1d00",
+          "on-secondary-fixed-variant": "#632a8e"
+        },
+        borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+        fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"], "label": ["Manrope"] }
+      }
+    }
+  }
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .backdrop-glass { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+
+<aside class="h-screen w-64 fixed left-0 flex flex-col border-r border-slate-200/20 bg-slate-50 font-['Manrope'] font-medium text-sm tracking-wide z-40">
+  <div class="p-8">
+    <h2 class="text-indigo-900 font-bold text-xl tracking-tighter">Main Stage</h2>
+    <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em] mt-1">Production HQ</p>
+  </div>
+  <nav class="flex-1 px-4 space-y-2">
+    <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors">
+      <span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
+    </a>
+    <a href="registration.html" class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-900 rounded-xl">
+      <span class="material-symbols-outlined">how_to_reg</span><span>Registration</span>
+    </a>
+    <a href="availability.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors">
+      <span class="material-symbols-outlined">event_available</span><span>Availability</span>
+    </a>
+    <a href="profile.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors">
+      <span class="material-symbols-outlined">account_circle</span><span>My Rehearsal Hub</span>
+    </a>
+    <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors">
+      <span class="material-symbols-outlined">group</span><span>Cast List</span>
+    </a>
+  </nav>
+  <div class="p-4 mb-8">
+    <button id="new-student-btn" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">
+      <span class="material-symbols-outlined text-sm">person_add</span>
+      Add Student
+    </button>
+  </div>
+  <div class="px-8 py-6 space-y-4 border-t border-slate-200/20">
+    <a href="support.html" class="flex items-center gap-3 text-slate-500 hover:text-indigo-900"><span class="material-symbols-outlined">help</span><span class="text-xs">Support</span></a>
+    <a href="legal.html" class="flex items-center gap-3 text-slate-500 hover:text-indigo-900"><span class="material-symbols-outlined">policy</span><span class="text-xs">Legal</span></a>
+    <button id="signout" class="flex items-center gap-3 text-slate-500 hover:text-error w-full text-left"><span class="material-symbols-outlined">logout</span><span class="text-xs">Sign out</span></button>
+  </div>
+</aside>
+
+<main class="ml-64 min-h-screen relative flex flex-col">
+  <header class="pt-20 px-24">
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Production Access</span>
+    <h1 class="font-headline text-6xl font-extrabold tracking-tighter text-on-surface max-w-2xl leading-none">
+      Identity <br/><span class="text-primary-container">Initialization.</span>
+    </h1>
+  </header>
+
+  <section class="flex-1 px-24 py-16 flex flex-col items-center">
+    <div class="w-full max-w-4xl space-y-8">
+
+      <div class="inline-flex items-center gap-4 px-6 py-4 bg-surface-container-low rounded-full border border-outline-variant/10">
+        <div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-secondary-fixed-variant" style="font-variation-settings: 'FILL' 1;">theater_comedy</span>
+        </div>
+        <div>
+          <p class="text-[10px] font-label font-bold uppercase tracking-widest text-on-surface-variant">Active Project</p>
+          <h3 class="text-sm font-bold text-primary" id="active-project">The Glass Menagerie (2024)</h3>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+        <div class="bg-surface-container-lowest p-10 rounded-[2rem] shadow-[0_20px_40px_rgba(26,28,29,0.06)] relative overflow-hidden group">
+          <div class="relative z-10 flex flex-col h-full">
+            <label class="font-label text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-4">01. Student Name</label>
+            <div class="relative mb-8">
+              <select id="student-select" class="w-full bg-surface-container-high border-none rounded-lg p-5 font-body text-on-surface appearance-none focus:ring-2 focus:ring-primary-fixed focus:bg-primary-fixed/20 transition-all cursor-pointer">
+                <option value="">Select from Ledger...</option>
+              </select>
+              <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <span class="material-symbols-outlined text-outline">expand_more</span>
+              </div>
+            </div>
+            <label class="font-label text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-4">02. Role / Part (optional)</label>
+            <input id="role-input" type="text" placeholder="e.g. Ensemble, Tom, Amanda..." class="w-full bg-surface-container-high border-none rounded-lg p-5 font-body text-on-surface focus:ring-2 focus:ring-primary-fixed focus:bg-primary-fixed/20 transition-all mb-8"/>
+            <button id="generate-btn" class="mt-auto w-full py-5 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-3 shadow-xl shadow-primary/30 hover:shadow-primary/40 transition-all active:scale-95">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">fingerprint</span>
+              <span>Generate My ID</span>
+            </button>
+          </div>
+          <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+        </div>
+
+        <div class="bg-surface-container-high/50 p-10 rounded-[2rem] flex flex-col justify-between border border-white/50 backdrop-glass">
+          <div class="flex items-start justify-between">
+            <div class="w-14 h-14 bg-on-primary-fixed-variant rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+              <span id="status-icon" class="material-symbols-outlined text-white text-3xl" style="font-variation-settings: 'FILL' 1;">fingerprint</span>
+            </div>
+            <div class="text-right">
+              <span class="block text-[10px] font-label font-bold text-outline-variant uppercase tracking-widest">Status</span>
+              <span id="status-label" class="text-xs font-bold text-outline">PENDING</span>
+            </div>
+          </div>
+          <div class="py-12">
+            <label class="font-label text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2 block">Assigned Script ID</label>
+            <p id="script-id" class="font-headline text-5xl font-extrabold text-primary-container tracking-tighter">/pending</p>
+            <p id="lookup-hint" class="mt-4 text-xs text-on-surface-variant hidden">Use this ID on the Availability page to check-in: <span class="font-bold text-primary" id="lookup-hint-id"></span></p>
+          </div>
+          <div class="flex gap-3">
+            <a id="proceed-btn" href="availability.html" class="flex-1 flex items-center justify-between group py-2 border-t border-outline-variant/20 hover:border-primary transition-colors opacity-40 pointer-events-none">
+              <span class="text-primary font-bold text-sm">Proceed to Availability</span>
+              <span class="material-symbols-outlined text-primary group-hover:translate-x-2 transition-transform">arrow_forward</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-surface-container-lowest p-8 rounded-[2rem] shadow-sm border border-outline-variant/10">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <label class="font-label text-[10px] font-bold text-primary uppercase tracking-[0.2em] block mb-1">Look up an existing ID</label>
+            <p class="text-xs text-on-surface-variant">Already have a Script ID? Enter it to jump to your rehearsal hub.</p>
+          </div>
+          <span class="material-symbols-outlined text-primary">search</span>
+        </div>
+        <div class="flex gap-3">
+          <input id="lookup-input" type="text" placeholder="/student01" class="flex-1 bg-surface-container-high border-none rounded-lg p-4 font-mono text-on-surface focus:ring-2 focus:ring-primary-fixed transition-all"/>
+          <button id="lookup-btn" class="px-6 py-4 bg-primary text-white rounded-full font-bold active:scale-95 transition-all">Look Up</button>
+        </div>
+        <p id="lookup-error" class="text-xs text-error mt-3 hidden">No student found with that ID.</p>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6 pt-8">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-outline-variant/5">
+          <span class="material-symbols-outlined text-secondary mb-2">stars</span>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Total Cast</h4>
+          <p class="text-2xl font-bold font-headline text-primary"><span id="cast-count">0</span> Active</p>
+        </div>
+        <div class="col-span-2 relative h-full rounded-3xl overflow-hidden bg-gradient-to-r from-primary to-primary-container flex items-center px-8 py-8">
+          <p class="text-white font-headline text-lg font-bold max-w-xs leading-tight">Syncing your script identity with rehearsal schedules.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="mt-auto bg-inverse-surface py-12 px-8 flex flex-col items-center justify-center gap-4">
+    <p class="font-body text-sm text-inverse-on-surface opacity-70 max-w-2xl text-center leading-relaxed">
+      Privacy Disclosure: The Orchestral Frame strictly limits data collection to student name, optional role label, and production availability. This information is used exclusively for internal cast scheduling and ID generation within "The Glass Menagerie (2024)". Data is stored locally in your browser, never sold, shared with third parties, or used for tracking purposes outside the scope of this production.
+    </p>
+    <div class="flex gap-8 mt-4 font-label text-[10px] uppercase tracking-[0.2em] text-inverse-on-surface/50">
+      <span class="cursor-pointer hover:text-white transition-colors">Security protocol v4.2</span>
+      <span class="cursor-pointer hover:text-white transition-colors">GDPR Compliant</span>
+      <span class="cursor-pointer hover:text-white transition-colors">Access Logs</span>
+    </div>
+    <p class="mt-6 font-label text-[10px] text-inverse-on-surface/30 tracking-widest">© 2024 THE ORCHESTRAL FRAME. ALL RIGHTS RESERVED.</p>
+  </footer>
+</main>
+
+<div id="add-student-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-[2rem] p-8 max-w-md w-full">
+    <h3 class="font-headline text-2xl font-extrabold text-primary mb-2">Add Student to Ledger</h3>
+    <p class="text-xs text-on-surface-variant mb-6">Admin-only: enter a student's name to add them to the roster ledger.</p>
+    <input id="new-student-name" type="text" placeholder="Full name" class="w-full bg-surface-container-high border-none rounded-lg p-4 mb-4 focus:ring-2 focus:ring-primary-fixed"/>
+    <div class="flex gap-3">
+      <button id="cancel-add-student" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
+      <button id="confirm-add-student" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Add</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof Roster === 'undefined') return;
+    const boot = Roster.bootstrap('registration');
+    if (boot.redirected) return;
+    document.getElementById('signout').addEventListener('click', () => { Roster.signOut(); location.href = 'index.html'; });
+    const select = document.getElementById('student-select');
+    const castCount = document.getElementById('cast-count');
+    const statusIcon = document.getElementById('status-icon');
+    const statusLabel = document.getElementById('status-label');
+    const scriptId = document.getElementById('script-id');
+    const proceedBtn = document.getElementById('proceed-btn');
+    const lookupHint = document.getElementById('lookup-hint');
+    const lookupHintId = document.getElementById('lookup-hint-id');
+
+    function render() {
+      const ledger = Roster.getLedger();
+      select.innerHTML = '<option value="">Select from Ledger...</option>' +
+        ledger.map(s => `<option value="${s.id}">${s.name}${s.role ? ' — ' + s.role : ''} (${s.scriptId})</option>`).join('');
+      castCount.textContent = ledger.length;
+    }
+    render();
+
+    document.getElementById('generate-btn').addEventListener('click', () => {
+      const name = select.options[select.selectedIndex]?.text?.split(' — ')[0]?.split(' (')[0];
+      const selectedId = select.value;
+      const role = document.getElementById('role-input').value.trim();
+      if (!selectedId) {
+        alert('Please select a student from the ledger first.');
+        return;
+      }
+      const student = Roster.assignScriptId(selectedId, role);
+      Roster.setCurrentStudent(student.id);
+      statusIcon.textContent = 'verified';
+      statusLabel.textContent = 'AUTHORIZED';
+      statusLabel.className = 'text-xs font-bold text-primary';
+      scriptId.textContent = student.scriptId;
+      lookupHint.classList.remove('hidden');
+      lookupHintId.textContent = student.scriptId;
+      proceedBtn.classList.remove('opacity-40', 'pointer-events-none');
+    });
+
+    document.getElementById('lookup-btn').addEventListener('click', () => {
+      const raw = document.getElementById('lookup-input').value.trim();
+      const found = Roster.findByScriptId(raw);
+      const err = document.getElementById('lookup-error');
+      if (!found) { err.classList.remove('hidden'); return; }
+      err.classList.add('hidden');
+      Roster.setCurrentStudent(found.id);
+      window.location.href = 'profile.html';
+    });
+
+    const modal = document.getElementById('add-student-modal');
+    document.getElementById('new-student-btn').addEventListener('click', () => modal.classList.replace('hidden', 'flex'));
+    document.getElementById('cancel-add-student').addEventListener('click', () => modal.classList.replace('flex', 'hidden'));
+    document.getElementById('confirm-add-student').addEventListener('click', () => {
+      const name = document.getElementById('new-student-name').value.trim();
+      if (!name) return;
+      Roster.addStudent(name);
+      document.getElementById('new-student-name').value = '';
+      modal.classList.replace('flex', 'hidden');
+      render();
+    });
+  });
+</script>
+</body>
+</html>

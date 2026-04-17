@@ -74,6 +74,59 @@
       return Roster.getLedger().find(s => (s.scriptId || '').toLowerCase() === q) || null;
     },
 
+    onboardNew(name, role = '') {
+      if (!name) return null;
+      const student = Roster.addStudent(name.trim(), (role || '').trim());
+      return Roster.assignScriptId(student.id);
+    },
+
+    markLegalAccepted(studentId) {
+      const ledger = Roster.getLedger();
+      const s = ledger.find(x => x.id === studentId);
+      if (!s) return;
+      s.legalAcceptedAt = Date.now();
+      writeJSON(KEYS.LEDGER, ledger);
+    },
+    hasAcceptedLegal(studentId) {
+      const s = Roster.getLedger().find(x => x.id === studentId);
+      return !!(s && s.legalAcceptedAt);
+    },
+    markTutorialSeen(studentId) {
+      const ledger = Roster.getLedger();
+      const s = ledger.find(x => x.id === studentId);
+      if (!s) return;
+      s.tutorialSeenAt = Date.now();
+      writeJSON(KEYS.LEDGER, ledger);
+    },
+    hasSeenTutorial(studentId) {
+      const s = Roster.getLedger().find(x => x.id === studentId);
+      return !!(s && s.tutorialSeenAt);
+    },
+
+    bootstrap(pageName) {
+      Roster.ensureSeed();
+      const current = Roster.getCurrentStudent();
+      if (pageName === 'landing') {
+        if (current) {
+          if (!Roster.hasAcceptedLegal(current.id)) { location.href = 'legal.html'; return { redirected: true }; }
+          if (!Roster.hasSeenTutorial(current.id)) { location.href = 'support.html?first=1'; return { redirected: true }; }
+          location.href = 'profile.html';
+          return { redirected: true };
+        }
+        return { student: null, redirected: false };
+      }
+      if (!current) { location.href = 'index.html'; return { redirected: true }; }
+      if (pageName !== 'legal' && !Roster.hasAcceptedLegal(current.id)) {
+        location.href = 'legal.html'; return { redirected: true };
+      }
+      if (pageName !== 'legal' && pageName !== 'support' && !Roster.hasSeenTutorial(current.id)) {
+        location.href = 'support.html?first=1'; return { redirected: true };
+      }
+      return { student: current, redirected: false };
+    },
+
+    signOut() { Roster.clearCurrent(); },
+
     setCurrentStudent(id) { writeJSON(KEYS.CURRENT, id); },
     getCurrentStudent() {
       const id = readJSON(KEYS.CURRENT, null);

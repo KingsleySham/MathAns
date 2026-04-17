@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Legal Disclaimer | The Orchestral Frame</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800;900&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="roster.js" defer></script>
+<script>
+  tailwind.config = { darkMode: "class", theme: { extend: {
+    colors: {
+      "primary": "#15157d", "primary-container": "#2e3192", "primary-fixed": "#e1e0ff", "primary-fixed-dim": "#c0c1ff",
+      "on-primary": "#ffffff", "on-primary-fixed-variant": "#373a9b",
+      "secondary": "#7c44a8", "secondary-fixed": "#f2daff",
+      "error": "#ba1a1a", "error-container": "#ffdad6",
+      "surface": "#f9f9fb", "surface-container-low": "#f3f3f5", "surface-container-lowest": "#ffffff",
+      "surface-container-high": "#e8e8ea", "on-surface": "#1a1c1d", "on-surface-variant": "#464652",
+      "outline": "#777683", "outline-variant": "#c7c5d4",
+      "inverse-surface": "#2f3132", "inverse-on-surface": "#f0f0f2"
+    },
+    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+    fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"], "label": ["Manrope"] }
+  }}}
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes revealLeft { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes pulseRing { 0%, 100% { box-shadow: 0 0 0 0 rgba(21,21,125,0.35); } 50% { box-shadow: 0 0 0 16px rgba(21,21,125,0); } }
+  .hero-reveal { animation: revealLeft 1.1s cubic-bezier(.77,0,.18,1) forwards; }
+  .section { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+  .section.in { opacity: 1; transform: translateY(0); }
+  .dot { animation: pulseRing 2s infinite; }
+  .progress-track { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: transparent; z-index: 50; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, #15157d, #7c44a8); width: 0%; transition: width .15s linear; }
+  .stamp-anim { animation: fadeUp .8s cubic-bezier(.17,.84,.32,1.17) forwards; opacity: 0; }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+
+<div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+
+<aside id="sidebar" class="h-screen w-64 fixed left-0 flex-col border-r border-slate-200/20 bg-slate-50 font-['Manrope'] font-medium text-sm tracking-wide z-40 hidden lg:flex">
+  <div class="p-8">
+    <h2 class="text-indigo-900 font-bold text-xl tracking-tighter">Main Stage</h2>
+    <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em] mt-1">Production HQ</p>
+  </div>
+  <nav class="flex-1 px-4 space-y-2">
+    <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl"><span class="material-symbols-outlined">dashboard</span><span>Dashboard</span></a>
+    <a href="registration.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl"><span class="material-symbols-outlined">how_to_reg</span><span>Registration</span></a>
+    <a href="availability.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl"><span class="material-symbols-outlined">event_available</span><span>Availability</span></a>
+    <a href="profile.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl"><span class="material-symbols-outlined">account_circle</span><span>My Rehearsal Hub</span></a>
+  </nav>
+  <div class="px-8 py-6 space-y-4 border-t border-slate-200/20">
+    <a href="support.html" class="flex items-center gap-3 text-slate-500 hover:text-primary"><span class="material-symbols-outlined">help</span><span class="text-xs">Support</span></a>
+    <a href="legal.html" class="flex items-center gap-3 text-primary"><span class="material-symbols-outlined">policy</span><span class="text-xs">Legal</span></a>
+    <button id="signout" class="flex items-center gap-3 text-slate-500 hover:text-error w-full text-left"><span class="material-symbols-outlined">logout</span><span class="text-xs">Sign out</span></button>
+  </div>
+</aside>
+
+<main id="content" class="lg:ml-64 min-h-screen flex flex-col">
+
+  <header class="relative overflow-hidden bg-gradient-to-br from-primary via-primary-container to-secondary text-white px-8 md:px-24 pt-24 pb-32">
+    <span class="font-label text-[10px] md:text-xs uppercase tracking-[0.4em] text-primary-fixed-dim font-bold mb-6 block">PRIVACY DISCLAIMER · v4.2</span>
+    <h1 class="font-headline text-5xl md:text-7xl font-black tracking-tighter leading-[0.95] max-w-4xl hero-reveal">
+      We collect what <br/>we must.<br/>
+      <span class="text-primary-fixed-dim">Nothing&nbsp;more.</span>
+    </h1>
+    <p class="mt-6 max-w-xl text-primary-fixed-dim text-base md:text-lg leading-relaxed stamp-anim" style="animation-delay:.6s;">
+      Before you continue, please review how this roster handles your information. Scroll to the bottom, check the box, and press Accept.
+    </p>
+    <div class="absolute -right-32 -bottom-32 w-[36rem] h-[36rem] bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute right-10 top-20 dot w-4 h-4 rounded-full bg-white hidden md:block"></div>
+  </header>
+
+  <section class="px-8 md:px-24 py-16 max-w-4xl w-full mx-auto space-y-16">
+
+    <div id="accepted-banner" class="hidden section bg-primary-fixed rounded-[2rem] p-6 flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified</span>
+      </div>
+      <div class="flex-1">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-primary">Already Accepted</p>
+        <p class="text-sm text-on-surface"><span id="accepted-name"></span> agreed to this disclaimer on <span id="accepted-date"></span>. You can re-read it any time.</p>
+      </div>
+    </div>
+
+    <article class="section space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">1</span>
+        <h2 class="font-headline text-3xl font-extrabold text-primary tracking-tight">What we collect</h2>
+      </div>
+      <p class="text-on-surface-variant leading-relaxed">The Orchestral Frame is a <span class="font-bold text-primary">local-first</span> roster tool. We collect strictly the following fields from you, and only when you voluntarily enter them:</p>
+      <ul class="space-y-2 text-on-surface-variant">
+        <li class="flex gap-3"><span class="material-symbols-outlined text-primary text-base">person</span><span><span class="font-bold text-on-surface">Name</span> — the name you type during onboarding or are added under by an admin.</span></li>
+        <li class="flex gap-3"><span class="material-symbols-outlined text-primary text-base">theater_comedy</span><span><span class="font-bold text-on-surface">Role / Part</span> — optional. Purely informational.</span></li>
+        <li class="flex gap-3"><span class="material-symbols-outlined text-primary text-base">event_available</span><span><span class="font-bold text-on-surface">Availability &amp; blockouts</span> — the dates and half-hour slots you tag.</span></li>
+        <li class="flex gap-3"><span class="material-symbols-outlined text-primary text-base">login</span><span><span class="font-bold text-on-surface">Check-in timestamps</span> — when you confirm attendance.</span></li>
+        <li class="flex gap-3"><span class="material-symbols-outlined text-primary text-base">event_busy</span><span><span class="font-bold text-on-surface">Leave requests</span> — the rehearsal and reason you submit.</span></li>
+      </ul>
+      <p class="text-on-surface-variant leading-relaxed text-sm italic">We do <span class="font-bold text-error">not</span> collect: email, phone, address, IP, device fingerprints, location, analytics identifiers, photos, or biometric data.</p>
+    </article>
+
+    <article class="section space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">2</span>
+        <h2 class="font-headline text-3xl font-extrabold text-primary tracking-tight">How it's used</h2>
+      </div>
+      <p class="text-on-surface-variant leading-relaxed">Your information is used <span class="font-bold text-primary">exclusively</span> to:</p>
+      <div class="grid md:grid-cols-3 gap-3">
+        <div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/10">
+          <span class="material-symbols-outlined text-primary">schedule</span>
+          <h4 class="font-bold text-sm mt-2">Schedule rehearsals</h4>
+          <p class="text-xs text-on-surface-variant mt-1">Recommend slots that work for the most people.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/10">
+          <span class="material-symbols-outlined text-primary">fingerprint</span>
+          <h4 class="font-bold text-sm mt-2">Generate your Script ID</h4>
+          <p class="text-xs text-on-surface-variant mt-1">So you can return without creating an account.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/10">
+          <span class="material-symbols-outlined text-primary">fact_check</span>
+          <h4 class="font-bold text-sm mt-2">Track attendance</h4>
+          <p class="text-xs text-on-surface-variant mt-1">Check-ins &amp; leave reasons for the production team only.</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="section space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">3</span>
+        <h2 class="font-headline text-3xl font-extrabold text-primary tracking-tight">Where it lives</h2>
+      </div>
+      <p class="text-on-surface-variant leading-relaxed">All data is stored in this browser's <span class="font-bold text-on-surface">localStorage</span>. Nothing is transmitted to an external server. Clearing your browser data erases your entry. We do not sell, share, or disclose data to third parties, and we never use it for marketing, tracking, or advertising.</p>
+    </article>
+
+    <article class="section space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">4</span>
+        <h2 class="font-headline text-3xl font-extrabold text-primary tracking-tight">Your rights</h2>
+      </div>
+      <ul class="space-y-2 text-on-surface-variant">
+        <li class="flex gap-3"><span class="material-symbols-outlined text-primary text-base">visibility</span>View every field we've stored about you from your profile hub.</li>
+        <li class="flex gap-3"><span class="material-symbols-outlined text-primary text-base">edit</span>Edit or revoke your availability at any time.</li>
+        <li class="flex gap-3"><span class="material-symbols-outlined text-primary text-base">delete</span>Ask the production admin to remove your ledger entry, or clear site data to remove it yourself.</li>
+        <li class="flex gap-3"><span class="material-symbols-outlined text-primary text-base">download</span>Request a copy of your data (exportable as JSON from localStorage).</li>
+      </ul>
+    </article>
+
+    <article class="section space-y-4">
+      <div class="flex items-center gap-3">
+        <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">5</span>
+        <h2 class="font-headline text-3xl font-extrabold text-primary tracking-tight">Scope &amp; liability</h2>
+      </div>
+      <p class="text-on-surface-variant leading-relaxed">This tool is provided for the current production only. It is not a contract of employment. The production team remains responsible for all casting, attendance, and leave decisions. Recommendations produced by this tool are advisory, not binding.</p>
+    </article>
+
+    <article class="section bg-surface-container-lowest p-8 md:p-10 rounded-[2rem] shadow-[0_20px_40px_rgba(26,28,29,0.06)] border border-outline-variant/10">
+      <h3 class="font-headline text-2xl font-extrabold text-primary mb-4">Accept &amp; continue</h3>
+      <label class="flex items-start gap-3 cursor-pointer mb-6">
+        <input id="agree-check" type="checkbox" class="mt-1 w-5 h-5 rounded text-primary focus:ring-primary-fixed"/>
+        <span class="text-sm text-on-surface-variant">I have read and understood this disclaimer. I consent to the collection and use of the fields listed above for the duration of this production.</span>
+      </label>
+      <p id="scroll-hint" class="text-xs text-on-surface-variant mb-4 hidden">Please scroll to read the full disclaimer before accepting.</p>
+      <button id="accept-btn" disabled class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-3 shadow-xl shadow-primary/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95">
+        <span class="material-symbols-outlined">check_circle</span>
+        <span>I accept — take me to the tutorial</span>
+      </button>
+    </article>
+  </section>
+
+  <footer class="mt-auto bg-inverse-surface py-10 px-8 text-center">
+    <p class="font-body text-xs text-inverse-on-surface opacity-70 max-w-2xl mx-auto leading-relaxed">This disclaimer is version 4.2 and applies to The Glass Menagerie (2024). Revisions will be versioned and re-consented.</p>
+    <p class="font-label text-[10px] text-inverse-on-surface/40 tracking-widest mt-4">© 2024 THE ORCHESTRAL FRAME · ALL RIGHTS RESERVED</p>
+  </footer>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const boot = Roster.bootstrap('legal');
+    if (boot.redirected) return;
+    const student = boot.student;
+
+    const alreadyAccepted = Roster.hasAcceptedLegal(student.id);
+    if (alreadyAccepted) {
+      document.getElementById('accepted-banner').classList.remove('hidden');
+      document.getElementById('accepted-name').textContent = student.name;
+      const acceptedAt = new Date(student.legalAcceptedAt);
+      document.getElementById('accepted-date').textContent = acceptedAt.toLocaleString();
+    }
+
+    const sections = document.querySelectorAll('.section');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+    }, { threshold: 0.15 });
+    sections.forEach(s => io.observe(s));
+
+    const bar = document.getElementById('progress-bar');
+    let scrolledToBottom = false;
+    function onScroll() {
+      const h = document.documentElement;
+      const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight);
+      bar.style.width = Math.min(100, Math.max(0, scrolled * 100)) + '%';
+      if (scrolled >= 0.92) scrolledToBottom = true;
+      updateBtn();
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    const check = document.getElementById('agree-check');
+    const btn = document.getElementById('accept-btn');
+    const hint = document.getElementById('scroll-hint');
+    function updateBtn() {
+      const ready = check.checked && (scrolledToBottom || alreadyAccepted);
+      btn.disabled = !ready;
+      hint.classList.toggle('hidden', !(check.checked && !scrolledToBottom && !alreadyAccepted));
+    }
+    check.addEventListener('change', updateBtn);
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      Roster.markLegalAccepted(student.id);
+      location.href = Roster.hasSeenTutorial(student.id) ? 'profile.html' : 'support.html?first=1';
+    });
+
+    document.getElementById('signout').addEventListener('click', () => { Roster.signOut(); location.href = 'index.html'; });
+
+    onScroll();
+  });
+</script>
+</body>
+</html>

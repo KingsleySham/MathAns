@@ -35,13 +35,14 @@
   </div>
   <nav class="flex-1 px-4 space-y-2">
     <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-900 rounded-xl"><span class="material-symbols-outlined">dashboard</span><span>Dashboard</span></a>
-    <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">how_to_reg</span><span>Registration</span></a>
+    <a href="registration.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">how_to_reg</span><span>Registration</span></a>
     <a href="availability.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">event_available</span><span>Availability</span></a>
     <a href="profile.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">account_circle</span><span>My Rehearsal Hub</span></a>
   </nav>
   <div class="px-8 py-6 space-y-4 border-t border-slate-200/20">
-    <div class="flex items-center gap-3 text-slate-500"><span class="material-symbols-outlined">help</span><span class="text-xs">Support</span></div>
-    <div class="flex items-center gap-3 text-slate-500"><span class="material-symbols-outlined">policy</span><span class="text-xs">Legal</span></div>
+    <a href="support.html" class="flex items-center gap-3 text-slate-500 hover:text-primary"><span class="material-symbols-outlined">help</span><span class="text-xs">Support</span></a>
+    <a href="legal.html" class="flex items-center gap-3 text-slate-500 hover:text-primary"><span class="material-symbols-outlined">policy</span><span class="text-xs">Legal</span></a>
+    <button id="signout" class="flex items-center gap-3 text-slate-500 hover:text-error w-full text-left"><span class="material-symbols-outlined">logout</span><span class="text-xs">Sign out</span></button>
   </div>
 </aside>
 
@@ -225,7 +226,9 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    Roster.ensureSeed();
+    const boot = Roster.bootstrap('dashboard');
+    if (boot.redirected) return;
+    document.getElementById('signout').addEventListener('click', () => { Roster.signOut(); location.href = 'index.html'; });
     document.getElementById('refresh-btn').addEventListener('click', render);
     render();
   });
