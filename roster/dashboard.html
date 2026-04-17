@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scheduling Dashboard | The Orchestral Frame</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="roster.js" defer></script>
+<script>
+  tailwind.config = { darkMode: "class", theme: { extend: {
+    colors: {
+      "primary": "#15157d", "primary-container": "#2e3192", "primary-fixed": "#e1e0ff", "primary-fixed-dim": "#c0c1ff",
+      "on-primary": "#ffffff", "on-primary-fixed-variant": "#373a9b",
+      "secondary": "#7c44a8", "secondary-fixed": "#f2daff",
+      "error": "#ba1a1a", "error-container": "#ffdad6",
+      "surface": "#f9f9fb", "surface-container-low": "#f3f3f5", "surface-container-lowest": "#ffffff",
+      "surface-container-high": "#e8e8ea", "on-surface": "#1a1c1d", "on-surface-variant": "#464652",
+      "outline": "#777683", "outline-variant": "#c7c5d4",
+      "inverse-surface": "#2f3132", "inverse-on-surface": "#f0f0f2"
+    },
+    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+    fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"], "label": ["Manrope"] }
+  }}}
+</script>
+<style>.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; }</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+
+<aside class="h-screen w-64 fixed left-0 flex flex-col border-r border-slate-200/20 bg-slate-50 font-['Manrope'] font-medium text-sm tracking-wide z-40">
+  <div class="p-8">
+    <h2 class="text-indigo-900 font-bold text-xl tracking-tighter">Main Stage</h2>
+    <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em] mt-1">Production HQ</p>
+  </div>
+  <nav class="flex-1 px-4 space-y-2">
+    <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-900 rounded-xl"><span class="material-symbols-outlined">dashboard</span><span>Dashboard</span></a>
+    <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">how_to_reg</span><span>Registration</span></a>
+    <a href="availability.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">event_available</span><span>Availability</span></a>
+    <a href="profile.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">account_circle</span><span>My Rehearsal Hub</span></a>
+  </nav>
+  <div class="px-8 py-6 space-y-4 border-t border-slate-200/20">
+    <div class="flex items-center gap-3 text-slate-500"><span class="material-symbols-outlined">help</span><span class="text-xs">Support</span></div>
+    <div class="flex items-center gap-3 text-slate-500"><span class="material-symbols-outlined">policy</span><span class="text-xs">Legal</span></div>
+  </div>
+</aside>
+
+<main class="ml-64 min-h-screen relative flex flex-col">
+  <header class="pt-20 px-24">
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin Overview</span>
+    <h1 class="font-headline text-6xl font-extrabold tracking-tighter text-on-surface max-w-3xl leading-none">
+      Scheduling <br/><span class="text-primary-container">Dashboard.</span>
+    </h1>
+    <p class="mt-4 max-w-xl text-on-surface-variant text-sm">Aggregated availability from your cast. Review recommended slots, confirm rehearsals, and see who's pending, blocked, or ready.</p>
+  </header>
+
+  <section class="flex-1 px-24 py-16">
+    <div class="max-w-6xl mx-auto space-y-8">
+
+      <div class="grid grid-cols-4 gap-4">
+        <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10">
+          <span class="material-symbols-outlined text-primary mb-2">group</span>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Cast</h4>
+          <p class="text-2xl font-bold font-headline text-primary" id="stat-cast">0</p>
+        </div>
+        <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10">
+          <span class="material-symbols-outlined text-secondary mb-2">how_to_reg</span>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Registered</h4>
+          <p class="text-2xl font-bold font-headline text-secondary" id="stat-registered">0</p>
+        </div>
+        <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10">
+          <span class="material-symbols-outlined text-primary mb-2">event</span>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Rehearsals</h4>
+          <p class="text-2xl font-bold font-headline text-primary" id="stat-rehearsals">0</p>
+        </div>
+        <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10">
+          <span class="material-symbols-outlined text-error mb-2">pending_actions</span>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Pending Leaves</h4>
+          <p class="text-2xl font-bold font-headline text-error" id="stat-leaves">0</p>
+        </div>
+      </div>
+
+      <div class="bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="font-headline text-2xl font-extrabold text-primary">Top rehearsal candidates</h2>
+            <p class="text-xs text-on-surface-variant mt-1">Next 14 days · ranked by cast availability minus blockouts</p>
+          </div>
+          <button id="refresh-btn" class="px-5 py-3 bg-surface-container-high rounded-full text-xs font-bold text-on-surface">Refresh</button>
+        </div>
+        <div id="candidates" class="space-y-3"></div>
+      </div>
+
+      <div class="bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10">
+        <h2 class="font-headline text-2xl font-extrabold text-primary mb-6">Confirmed rehearsals</h2>
+        <div id="confirmed" class="space-y-3"></div>
+      </div>
+
+      <div class="bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10">
+        <h2 class="font-headline text-2xl font-extrabold text-primary mb-6">Cast ledger</h2>
+        <div id="cast-table" class="divide-y divide-outline-variant/10"></div>
+      </div>
+
+      <div class="bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10">
+        <h2 class="font-headline text-2xl font-extrabold text-primary mb-6">Leave requests</h2>
+        <div id="leaves-list" class="space-y-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mt-auto bg-inverse-surface py-12 px-8 flex flex-col items-center justify-center gap-4">
+    <p class="font-body text-sm text-inverse-on-surface opacity-70 max-w-2xl text-center leading-relaxed">
+      Privacy Disclosure: Admin view shows aggregated availability and leave-request reasons supplied by students. Data stays in browser storage and is used only for "The Glass Menagerie (2024)" scheduling.
+    </p>
+    <div class="flex gap-8 mt-4 font-label text-[10px] uppercase tracking-[0.2em] text-inverse-on-surface/50">
+      <span>Security protocol v4.2</span><span>GDPR Compliant</span><span>Access Logs</span>
+    </div>
+    <p class="mt-6 font-label text-[10px] text-inverse-on-surface/30 tracking-widest">© 2024 THE ORCHESTRAL FRAME. ALL RIGHTS RESERVED.</p>
+  </footer>
+</main>
+
+<script>
+  const HOURS = [17, 18, 19, 20, 21];
+
+  function next14DaysSlotKeys() {
+    const keys = [];
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      HOURS.forEach(h => { keys.push(Roster.buildSlotKey(d, h, 0)); keys.push(Roster.buildSlotKey(d, h, 30)); });
+    }
+    return keys;
+  }
+
+  function render() {
+    const ledger = Roster.getLedger();
+    const rehearsals = Roster.getRehearsals();
+    const leaves = Roster.getLeaves();
+
+    document.getElementById('stat-cast').textContent = ledger.length;
+    document.getElementById('stat-registered').textContent = ledger.filter(s => s.scriptId).length;
+    document.getElementById('stat-rehearsals').textContent = rehearsals.length;
+    document.getElementById('stat-leaves').textContent = leaves.filter(l => l.status === 'pending').length;
+
+    const keys = next14DaysSlotKeys();
+    const top = Roster.recommendSlots(keys, 8);
+    const scheduledSet = new Set(rehearsals.map(r => r.slotKey));
+
+    document.getElementById('candidates').innerHTML = top.map(r => {
+      const pct = r.total ? Math.round((r.availableIds.length / r.total) * 100) : 0;
+      const scheduled = scheduledSet.has(r.slot);
+      return `<div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-low">
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slot)}</p>
+            ${scheduled ? '<span class="text-[10px] font-bold uppercase tracking-widest bg-primary text-white px-2 py-0.5 rounded-full">Scheduled</span>' : ''}
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1">${r.availableIds.length}/${r.total} available · ${r.blockedIds.length} blocked · ${r.pendingIds.length} pending</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="w-32 h-2 bg-white rounded-full overflow-hidden"><div class="h-full bg-primary" style="width:${pct}%"></div></div>
+          <span class="text-xs font-bold text-primary w-10 text-right">${pct}%</span>
+          ${scheduled
+            ? `<button data-remove="${r.slot}" class="px-4 py-2 bg-error-container text-error rounded-full text-xs font-bold">Unschedule</button>`
+            : `<button data-confirm="${r.slot}" class="px-4 py-2 bg-primary text-white rounded-full text-xs font-bold">Schedule</button>`}
+        </div>
+      </div>`;
+    }).join('') || '<p class="text-xs text-on-surface-variant">No availability data yet.</p>';
+
+    document.getElementById('candidates').querySelectorAll('[data-confirm]').forEach(btn => {
+      btn.addEventListener('click', () => { Roster.addRehearsal(btn.dataset.confirm); render(); });
+    });
+    document.getElementById('candidates').querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const slot = btn.dataset.remove;
+        const r = Roster.getRehearsals().find(x => x.slotKey === slot);
+        if (r) Roster.removeRehearsal(r.id);
+        render();
+      });
+    });
+
+    document.getElementById('confirmed').innerHTML = rehearsals
+      .sort((a, b) => a.slotKey.localeCompare(b.slotKey))
+      .map(r => {
+        const a = Roster.aggregateSlot(r.slotKey);
+        return `<div class="flex items-center justify-between p-4 rounded-xl bg-primary-fixed">
+          <div>
+            <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slotKey)}</p>
+            <p class="text-xs text-on-primary-fixed-variant mt-1">${a.availableIds.length}/${a.total} confirmed · ${a.blockedIds.length} blocked</p>
+          </div>
+          <button data-remove-reh="${r.id}" class="px-4 py-2 bg-white text-error rounded-full text-xs font-bold">Remove</button>
+        </div>`;
+      }).join('') || '<p class="text-xs text-on-surface-variant">No rehearsals scheduled yet.</p>';
+
+    document.getElementById('confirmed').querySelectorAll('[data-remove-reh]').forEach(btn => {
+      btn.addEventListener('click', () => { Roster.removeRehearsal(btn.dataset.removeReh); render(); });
+    });
+
+    document.getElementById('cast-table').innerHTML = ledger.map(s => {
+      const a = Roster.getAvailability(s.id);
+      return `<div class="flex items-center justify-between py-4">
+        <div>
+          <p class="font-bold text-sm text-primary">${s.name}${s.role ? ' — ' + s.role : ''}</p>
+          <p class="text-xs text-on-surface-variant font-mono">${s.scriptId || '— not registered —'}</p>
+        </div>
+        <div class="flex gap-6 text-xs">
+          <div><span class="font-bold text-primary">${a.available.length}</span> <span class="text-on-surface-variant">available</span></div>
+          <div><span class="font-bold text-error">${a.blocked.length}</span> <span class="text-on-surface-variant">blocked</span></div>
+        </div>
+      </div>`;
+    }).join('') || '<p class="text-xs text-on-surface-variant">Ledger is empty.</p>';
+
+    document.getElementById('leaves-list').innerHTML = leaves.length ? leaves.map(l => {
+      const student = ledger.find(s => s.id === l.studentId);
+      const reh = rehearsals.find(r => r.id === l.rehearsalId);
+      return `<div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-low">
+        <div>
+          <p class="font-bold text-sm text-primary">${student ? student.name : 'Unknown'} <span class="text-on-surface-variant font-mono text-xs">${student ? student.scriptId : ''}</span></p>
+          <p class="text-xs text-on-surface-variant mt-1">${reh ? Roster.formatSlot(reh.slotKey) : 'Rehearsal removed'}</p>
+          <p class="text-xs mt-2 italic text-on-surface-variant">"${l.reason || 'No reason provided'}"</p>
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${l.status === 'pending' ? 'bg-error-container text-error' : 'bg-primary-fixed text-primary'}">${l.status}</span>
+      </div>`;
+    }).join('') : '<p class="text-xs text-on-surface-variant">No leave requests.</p>';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    Roster.ensureSeed();
+    document.getElementById('refresh-btn').addEventListener('click', render);
+    render();
+  });
+</script>
+</body>
+</html>

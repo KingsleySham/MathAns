@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Rehearsal Hub | The Orchestral Frame</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="roster.js" defer></script>
+<script>
+  tailwind.config = { darkMode: "class", theme: { extend: {
+    colors: {
+      "primary": "#15157d", "primary-container": "#2e3192", "primary-fixed": "#e1e0ff", "primary-fixed-dim": "#c0c1ff",
+      "on-primary": "#ffffff", "on-primary-fixed-variant": "#373a9b",
+      "secondary": "#7c44a8", "secondary-fixed": "#f2daff",
+      "tertiary-fixed": "#ffdad2", "on-tertiary-fixed-variant": "#8a1d00",
+      "error": "#ba1a1a", "error-container": "#ffdad6",
+      "surface": "#f9f9fb", "surface-container-low": "#f3f3f5", "surface-container-lowest": "#ffffff",
+      "surface-container-high": "#e8e8ea", "on-surface": "#1a1c1d", "on-surface-variant": "#464652",
+      "outline": "#777683", "outline-variant": "#c7c5d4",
+      "inverse-surface": "#2f3132", "inverse-on-surface": "#f0f0f2"
+    },
+    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+    fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"], "label": ["Manrope"] }
+  }}}
+</script>
+<style>.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; } .backdrop-glass { backdrop-filter: blur(20px); }</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+
+<aside class="h-screen w-64 fixed left-0 flex flex-col border-r border-slate-200/20 bg-slate-50 font-['Manrope'] font-medium text-sm tracking-wide z-40">
+  <div class="p-8">
+    <h2 class="text-indigo-900 font-bold text-xl tracking-tighter">Main Stage</h2>
+    <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em] mt-1">Production HQ</p>
+  </div>
+  <nav class="flex-1 px-4 space-y-2">
+    <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">dashboard</span><span>Dashboard</span></a>
+    <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">how_to_reg</span><span>Registration</span></a>
+    <a href="availability.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">event_available</span><span>Availability</span></a>
+    <a href="profile.html" class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-900 rounded-xl"><span class="material-symbols-outlined">account_circle</span><span>My Rehearsal Hub</span></a>
+  </nav>
+  <div class="px-8 py-6 space-y-4 border-t border-slate-200/20">
+    <div class="flex items-center gap-3 text-slate-500"><span class="material-symbols-outlined">help</span><span class="text-xs">Support</span></div>
+    <div class="flex items-center gap-3 text-slate-500"><span class="material-symbols-outlined">policy</span><span class="text-xs">Legal</span></div>
+  </div>
+</aside>
+
+<main class="ml-64 min-h-screen relative flex flex-col">
+  <header class="pt-20 px-24">
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Your Script</span>
+    <h1 class="font-headline text-6xl font-extrabold tracking-tighter text-on-surface max-w-3xl leading-none">
+      My <br/><span class="text-primary-container">Rehearsal Hub.</span>
+    </h1>
+  </header>
+
+  <section id="no-student" class="hidden flex-1 px-24 py-16">
+    <div class="max-w-xl mx-auto bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10 text-center">
+      <span class="material-symbols-outlined text-5xl text-primary mb-4">lock</span>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-2">No student identity found</h2>
+      <p class="text-sm text-on-surface-variant mb-6">Head back to Registration and generate or look up a Script ID.</p>
+      <a href="index.html" class="inline-block px-6 py-3 bg-primary text-white rounded-full font-bold">Go to Registration</a>
+    </div>
+  </section>
+
+  <section id="hub" class="flex-1 px-24 py-16">
+    <div class="max-w-6xl mx-auto space-y-8">
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2 bg-gradient-to-br from-primary to-primary-container p-10 rounded-[2rem] text-white shadow-[0_20px_40px_rgba(21,21,125,0.25)] relative overflow-hidden">
+          <span class="font-label text-[10px] font-bold uppercase tracking-[0.3em] text-primary-fixed-dim">Next rehearsal in</span>
+          <div id="countdown-wrap" class="mt-4">
+            <p class="font-headline font-extrabold text-6xl tracking-tighter" id="countdown">—</p>
+            <p class="mt-3 text-sm text-primary-fixed-dim" id="next-rehearsal-label">No rehearsals scheduled.</p>
+          </div>
+          <div class="mt-10 flex items-center gap-3">
+            <button id="checkin-btn" class="px-6 py-3 bg-white text-primary rounded-full font-bold flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"><span class="material-symbols-outlined text-sm">login</span>Check in</button>
+            <button id="leave-btn" class="px-6 py-3 bg-white/10 border border-white/20 text-white rounded-full font-bold flex items-center gap-2 disabled:opacity-40"><span class="material-symbols-outlined text-sm">event_busy</span>Request leave</button>
+          </div>
+          <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="bg-surface-container-lowest p-8 rounded-[2rem] shadow-sm border border-outline-variant/10 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Signed in as</p>
+              <h3 id="student-name" class="font-headline text-2xl font-extrabold text-primary">—</h3>
+              <p id="student-id" class="text-xs font-mono text-on-surface-variant mt-1"></p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span></div>
+          </div>
+          <div class="mt-auto space-y-2">
+            <div class="flex justify-between text-xs"><span class="text-on-surface-variant">Role</span><span id="student-role" class="font-bold text-primary">—</span></div>
+            <div class="flex justify-between text-xs"><span class="text-on-surface-variant">Attended</span><span id="stat-attended" class="font-bold text-primary">0</span></div>
+            <div class="flex justify-between text-xs"><span class="text-on-surface-variant">Leaves</span><span id="stat-leaves" class="font-bold text-error">0</span></div>
+          </div>
+          <a href="availability.html" class="mt-6 w-full py-3 bg-primary text-white rounded-full font-bold text-center text-sm">Edit my availability</a>
+        </div>
+      </div>
+
+      <div class="bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-headline text-2xl font-extrabold text-primary">Scheduled rehearsals</h2>
+          <span class="text-xs text-on-surface-variant">Your attendance is based on the availability you marked.</span>
+        </div>
+        <div id="rehearsal-list" class="space-y-3"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-surface-container-lowest p-8 rounded-[2rem] shadow-sm border border-outline-variant/10">
+          <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Check-in history</h3>
+          <div id="checkin-history" class="space-y-2"></div>
+        </div>
+        <div class="bg-surface-container-lowest p-8 rounded-[2rem] shadow-sm border border-outline-variant/10">
+          <h3 class="font-headline text-xl font-extrabold text-primary mb-4">My leave requests</h3>
+          <div id="leaves-history" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mt-auto bg-inverse-surface py-12 px-8 flex flex-col items-center justify-center gap-4">
+    <p class="font-body text-sm text-inverse-on-surface opacity-70 max-w-2xl text-center leading-relaxed">
+      Privacy Disclosure: The Orchestral Frame stores only the following for this production: your name, optional role label, availability/blockout times, check-in timestamps, and leave reasons you submit. Data is saved locally in this browser and used exclusively for internal cast scheduling within "The Glass Menagerie (2024)". It is never sold, shared with third parties, or used for tracking.
+    </p>
+    <div class="flex gap-8 mt-4 font-label text-[10px] uppercase tracking-[0.2em] text-inverse-on-surface/50">
+      <span>Security protocol v4.2</span><span>GDPR Compliant</span><span>Access Logs</span>
+    </div>
+    <p class="mt-6 font-label text-[10px] text-inverse-on-surface/30 tracking-widest">© 2024 THE ORCHESTRAL FRAME. ALL RIGHTS RESERVED.</p>
+  </footer>
+</main>
+
+<div id="leave-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-[2rem] p-8 max-w-md w-full">
+    <h3 class="font-headline text-2xl font-extrabold text-primary mb-2">Request leave</h3>
+    <p id="leave-modal-slot" class="text-xs text-on-surface-variant mb-6">—</p>
+    <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Reason</label>
+    <textarea id="leave-reason" rows="4" placeholder="Please share why you can't attend this rehearsal..." class="w-full bg-surface-container-high border-none rounded-lg p-4 mb-4 focus:ring-2 focus:ring-primary-fixed"></textarea>
+    <p class="text-[10px] text-on-surface-variant mb-4">Your reason will only be visible to the production team for scheduling purposes.</p>
+    <div class="flex gap-3">
+      <button id="cancel-leave" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
+      <button id="confirm-leave" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Submit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentStudent = null;
+  let countdownTimer = null;
+
+  function nextRehearsalFor(student) {
+    const rehearsals = Roster.getRehearsals()
+      .map(r => ({ ...r, date: Roster.parseSlotKey(r.slotKey) }))
+      .filter(r => r.date.getTime() >= Date.now())
+      .sort((a, b) => a.date - b.date);
+    return rehearsals[0] || null;
+  }
+
+  function formatCountdown(ms) {
+    if (ms <= 0) return 'Now';
+    const sec = Math.floor(ms / 1000);
+    const days = Math.floor(sec / 86400);
+    const hours = Math.floor((sec % 86400) / 3600);
+    const minutes = Math.floor((sec % 3600) / 60);
+    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+    return `${hours}h ${minutes}m`;
+  }
+
+  function renderCountdown() {
+    const next = nextRehearsalFor(currentStudent);
+    const label = document.getElementById('next-rehearsal-label');
+    const el = document.getElementById('countdown');
+    const checkin = document.getElementById('checkin-btn');
+    const leave = document.getElementById('leave-btn');
+    if (!next) {
+      el.textContent = '—';
+      label.textContent = 'No rehearsals scheduled yet.';
+      checkin.disabled = true; leave.disabled = true;
+      return;
+    }
+    el.textContent = formatCountdown(next.date - Date.now());
+    label.textContent = Roster.formatSlot(next.slotKey);
+    const diff = next.date - Date.now();
+    const checkedIn = Roster.hasCheckedIn(currentStudent.id, next.id);
+    checkin.disabled = diff > 30 * 60 * 1000 || diff < -3 * 60 * 60 * 1000 || checkedIn;
+    checkin.innerHTML = checkedIn
+      ? '<span class="material-symbols-outlined text-sm">task_alt</span>Checked in'
+      : '<span class="material-symbols-outlined text-sm">login</span>Check in';
+    leave.disabled = diff < 0;
+    checkin.onclick = () => { Roster.checkIn(currentStudent.id, next.id); renderAll(); };
+    leave.onclick = () => openLeaveModal(next);
+  }
+
+  function openLeaveModal(rehearsal) {
+    const modal = document.getElementById('leave-modal');
+    document.getElementById('leave-modal-slot').textContent = Roster.formatSlot(rehearsal.slotKey);
+    document.getElementById('leave-reason').value = '';
+    modal.classList.replace('hidden', 'flex');
+    document.getElementById('confirm-leave').onclick = () => {
+      const reason = document.getElementById('leave-reason').value.trim();
+      Roster.requestLeave(currentStudent.id, rehearsal.id, reason);
+      modal.classList.replace('flex', 'hidden');
+      renderAll();
+    };
+  }
+
+  function renderRehearsalList() {
+    const list = document.getElementById('rehearsal-list');
+    const rehearsals = Roster.getRehearsals().sort((a, b) => a.slotKey.localeCompare(b.slotKey));
+    const avail = Roster.getAvailability(currentStudent.id);
+    const availSet = new Set(avail.available);
+    const blockSet = new Set(avail.blocked);
+    list.innerHTML = rehearsals.length ? rehearsals.map(r => {
+      const you = availSet.has(r.slotKey) ? 'available' : blockSet.has(r.slotKey) ? 'blocked' : 'pending';
+      const color = you === 'available' ? 'bg-primary-fixed text-primary' : you === 'blocked' ? 'bg-error-container text-error' : 'bg-surface-container-high text-on-surface-variant';
+      const checked = Roster.hasCheckedIn(currentStudent.id, r.id);
+      return `<div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-low">
+        <div>
+          <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slotKey)}</p>
+          <p class="text-xs text-on-surface-variant mt-1">${r.label}</p>
+        </div>
+        <div class="flex gap-2 items-center">
+          <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${color}">${you}</span>
+          ${checked ? '<span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-primary text-white">Checked in</span>' : ''}
+        </div>
+      </div>`;
+    }).join('') : '<p class="text-xs text-on-surface-variant">No rehearsals scheduled yet.</p>';
+  }
+
+  function renderCheckinHistory() {
+    const history = Roster.getCheckIns()[currentStudent.id] || {};
+    const rehearsals = Roster.getRehearsals();
+    const entries = Object.entries(history).map(([rid, ts]) => {
+      const r = rehearsals.find(x => x.id === rid);
+      return { ts, slot: r ? r.slotKey : null };
+    }).sort((a, b) => b.ts - a.ts);
+    document.getElementById('checkin-history').innerHTML = entries.length ? entries.map(e => `
+      <div class="flex justify-between py-2 text-xs border-b border-outline-variant/10 last:border-0">
+        <span class="text-primary font-bold">${e.slot ? Roster.formatSlot(e.slot) : '—'}</span>
+        <span class="text-on-surface-variant">${new Date(e.ts).toLocaleString()}</span>
+      </div>
+    `).join('') : '<p class="text-xs text-on-surface-variant">No check-ins yet.</p>';
+    document.getElementById('stat-attended').textContent = entries.length;
+  }
+
+  function renderLeaves() {
+    const leaves = Roster.getLeavesForStudent(currentStudent.id);
+    const rehearsals = Roster.getRehearsals();
+    document.getElementById('leaves-history').innerHTML = leaves.length ? leaves.map(l => {
+      const r = rehearsals.find(x => x.id === l.rehearsalId);
+      return `<div class="py-2 text-xs border-b border-outline-variant/10 last:border-0">
+        <div class="flex justify-between">
+          <span class="text-primary font-bold">${r ? Roster.formatSlot(r.slotKey) : 'Rehearsal removed'}</span>
+          <span class="uppercase tracking-widest text-[10px] font-bold ${l.status === 'pending' ? 'text-error' : 'text-primary'}">${l.status}</span>
+        </div>
+        <p class="text-on-surface-variant italic mt-1">"${l.reason || 'No reason provided'}"</p>
+      </div>`;
+    }).join('') : '<p class="text-xs text-on-surface-variant">No leave requests.</p>';
+    document.getElementById('stat-leaves').textContent = leaves.length;
+  }
+
+  function renderAll() {
+    renderCountdown();
+    renderRehearsalList();
+    renderCheckinHistory();
+    renderLeaves();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    Roster.ensureSeed();
+    currentStudent = Roster.getCurrentStudent();
+    if (!currentStudent) {
+      document.getElementById('hub').classList.add('hidden');
+      document.getElementById('no-student').classList.replace('hidden', 'flex');
+      return;
+    }
+    document.getElementById('student-name').textContent = currentStudent.name;
+    document.getElementById('student-id').textContent = currentStudent.scriptId || '(unregistered)';
+    document.getElementById('student-role').textContent = currentStudent.role || 'Ensemble';
+    renderAll();
+    countdownTimer = setInterval(renderCountdown, 30 * 1000);
+    document.getElementById('cancel-leave').addEventListener('click', () => {
+      document.getElementById('leave-modal').classList.replace('flex', 'hidden');
+    });
+  });
+</script>
+</body>
+</html>
