@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Support &amp; Tutorial | The Orchestral Frame</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800;900&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="roster.js" defer></script>
+<script>
+  tailwind.config = { darkMode: "class", theme: { extend: {
+    colors: {
+      "primary": "#15157d", "primary-container": "#2e3192", "primary-fixed": "#e1e0ff", "primary-fixed-dim": "#c0c1ff",
+      "on-primary": "#ffffff", "on-primary-fixed-variant": "#373a9b",
+      "secondary": "#7c44a8", "secondary-fixed": "#f2daff",
+      "error": "#ba1a1a", "error-container": "#ffdad6",
+      "surface": "#f9f9fb", "surface-container-low": "#f3f3f5", "surface-container-lowest": "#ffffff",
+      "surface-container-high": "#e8e8ea", "on-surface": "#1a1c1d", "on-surface-variant": "#464652",
+      "outline": "#777683", "outline-variant": "#c7c5d4",
+      "inverse-surface": "#2f3132", "inverse-on-surface": "#f0f0f2"
+    },
+    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+    fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"], "label": ["Manrope"] }
+  }}}
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  .reveal { opacity: 0; transform: translateY(24px); transition: all .6s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  .step-card { transition: transform .3s, box-shadow .3s; }
+  .step-card:hover { transform: translateY(-4px); box-shadow: 0 24px 40px rgba(21,21,125,0.12); }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+
+<aside class="h-screen w-64 fixed left-0 flex flex-col border-r border-slate-200/20 bg-slate-50 font-['Manrope'] font-medium text-sm tracking-wide z-40">
+  <div class="p-8">
+    <h2 class="text-indigo-900 font-bold text-xl tracking-tighter">Main Stage</h2>
+    <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em] mt-1">Production HQ</p>
+  </div>
+  <nav class="flex-1 px-4 space-y-2">
+    <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl"><span class="material-symbols-outlined">dashboard</span><span>Dashboard</span></a>
+    <a href="registration.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl"><span class="material-symbols-outlined">how_to_reg</span><span>Registration</span></a>
+    <a href="availability.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl"><span class="material-symbols-outlined">event_available</span><span>Availability</span></a>
+    <a href="profile.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl"><span class="material-symbols-outlined">account_circle</span><span>My Rehearsal Hub</span></a>
+  </nav>
+  <div class="px-8 py-6 space-y-4 border-t border-slate-200/20">
+    <a href="support.html" class="flex items-center gap-3 text-primary"><span class="material-symbols-outlined">help</span><span class="text-xs">Support</span></a>
+    <a href="legal.html" class="flex items-center gap-3 text-slate-500 hover:text-primary"><span class="material-symbols-outlined">policy</span><span class="text-xs">Legal</span></a>
+    <button id="signout" class="flex items-center gap-3 text-slate-500 hover:text-error w-full text-left"><span class="material-symbols-outlined">logout</span><span class="text-xs">Sign out</span></button>
+  </div>
+</aside>
+
+<main class="ml-64 min-h-screen flex flex-col">
+  <header class="pt-20 px-8 md:px-24">
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Support</span>
+    <h1 class="font-headline text-5xl md:text-7xl font-black tracking-tighter text-on-surface leading-[0.95] max-w-3xl">
+      Getting <br/><span class="text-primary-container">started.</span>
+    </h1>
+    <p class="mt-6 max-w-xl text-on-surface-variant text-base leading-relaxed">A five-step walkthrough of the roster, from your first Script ID to check-in day.</p>
+    <div id="first-time-banner" class="hidden mt-8 p-4 rounded-2xl bg-primary-fixed border border-primary/20 flex items-center gap-3 max-w-2xl">
+      <span class="material-symbols-outlined text-primary">celebration</span>
+      <p class="text-sm text-primary"><span class="font-bold">Welcome aboard.</span> Take a minute to learn the ropes — your rehearsal hub is waiting at the end.</p>
+    </div>
+  </header>
+
+  <section class="flex-1 px-8 md:px-24 py-16">
+    <div class="max-w-5xl mx-auto space-y-6">
+
+      <div class="reveal step-card bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex gap-6 items-start">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-2xl font-extrabold shrink-0">01</div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-primary">fingerprint</span><h3 class="font-headline text-2xl font-extrabold text-primary">Your Script ID is your key</h3></div>
+          <p class="text-on-surface-variant leading-relaxed">After onboarding we assign you a Script ID like <span class="font-mono text-primary">/student01</span>. Use it on the landing page to sign back in from any device. No password, no email — just your ID.</p>
+        </div>
+      </div>
+
+      <div class="reveal step-card bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex gap-6 items-start">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-2xl font-extrabold shrink-0">02</div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-primary">event_available</span><h3 class="font-headline text-2xl font-extrabold text-primary">Mark your availability</h3></div>
+          <p class="text-on-surface-variant leading-relaxed mb-4">On the Availability page you'll see a week view. <span class="font-bold">Tap a slot once</span> to mark yourself available, <span class="font-bold">tap again</span> to mark it blocked, and <span class="font-bold">tap a third time</span> to clear.</p>
+          <div class="flex gap-2 text-xs">
+            <span class="px-3 py-1 rounded-full bg-primary text-white font-bold">available</span>
+            <span class="px-3 py-1 rounded-full bg-error-container text-error font-bold line-through">blocked</span>
+            <span class="px-3 py-1 rounded-full bg-white border border-outline-variant/20 text-on-surface-variant font-bold">empty</span>
+            <span class="px-3 py-1 rounded-full ring-2 ring-secondary text-secondary font-bold">recommended</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal step-card bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex gap-6 items-start">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-2xl font-extrabold shrink-0">03</div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-primary">auto_awesome</span><h3 class="font-headline text-2xl font-extrabold text-primary">Let the system recommend</h3></div>
+          <p class="text-on-surface-variant leading-relaxed">Slots highlighted in purple are the ones most of the cast can attend. Tap a recommendation to instantly mark yourself available. Admins use the same ranking on the Dashboard to lock in a rehearsal.</p>
+        </div>
+      </div>
+
+      <div class="reveal step-card bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex gap-6 items-start">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-2xl font-extrabold shrink-0">04</div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-primary">login</span><h3 class="font-headline text-2xl font-extrabold text-primary">Check in at rehearsal</h3></div>
+          <p class="text-on-surface-variant leading-relaxed">On your Rehearsal Hub you'll see a live countdown to the next session. From 30 minutes before the call time, the <span class="font-bold">Check in</span> button activates — one tap to log your arrival.</p>
+        </div>
+      </div>
+
+      <div class="reveal step-card bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex gap-6 items-start">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-2xl font-extrabold shrink-0">05</div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-primary">event_busy</span><h3 class="font-headline text-2xl font-extrabold text-primary">Requesting leave</h3></div>
+          <p class="text-on-surface-variant leading-relaxed">Can't make it? Tap <span class="font-bold">Request leave</span>, give a short reason, and the production team will see it on the Dashboard. Reasons are only visible to admins.</p>
+        </div>
+      </div>
+
+      <div class="reveal p-8 rounded-[2rem] bg-gradient-to-br from-primary-fixed to-secondary-fixed border border-outline-variant/10">
+        <h3 class="font-headline text-2xl font-extrabold text-primary mb-3">Frequently asked</h3>
+        <details class="py-3 border-b border-outline-variant/20 group" open>
+          <summary class="flex justify-between items-center cursor-pointer font-bold text-on-surface text-sm">Will my name be visible to other cast members? <span class="material-symbols-outlined text-primary group-open:rotate-180 transition">expand_more</span></summary>
+          <p class="text-sm text-on-surface-variant mt-2 leading-relaxed">No — only the production admin sees the full cast ledger. On shared views, your availability is aggregated anonymously.</p>
+        </details>
+        <details class="py-3 border-b border-outline-variant/20 group">
+          <summary class="flex justify-between items-center cursor-pointer font-bold text-on-surface text-sm">What if I clear my browser data? <span class="material-symbols-outlined text-primary group-open:rotate-180 transition">expand_more</span></summary>
+          <p class="text-sm text-on-surface-variant mt-2 leading-relaxed">Your Script ID and availability are stored locally. Clearing site data will remove them — ask the admin to re-add you to the ledger if needed.</p>
+        </details>
+        <details class="py-3 group">
+          <summary class="flex justify-between items-center cursor-pointer font-bold text-on-surface text-sm">Can I change my Script ID? <span class="material-symbols-outlined text-primary group-open:rotate-180 transition">expand_more</span></summary>
+          <p class="text-sm text-on-surface-variant mt-2 leading-relaxed">Script IDs are permanent for the production run to keep scheduling consistent. An admin can re-issue one if yours is lost.</p>
+        </details>
+      </div>
+
+      <div id="continue-cta" class="hidden reveal flex justify-end">
+        <button id="continue-btn" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold shadow-xl shadow-primary/20 active:scale-95 transition-all">
+          <span>Continue to my hub</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mt-auto bg-inverse-surface py-10 px-8 text-center">
+    <p class="font-body text-xs text-inverse-on-surface opacity-70 max-w-2xl mx-auto leading-relaxed">Need human help? Ask your production admin — they have access to the full Dashboard and can reset availability, re-issue IDs, or process leave requests.</p>
+    <p class="font-label text-[10px] text-inverse-on-surface/40 tracking-widest mt-4">© 2024 THE ORCHESTRAL FRAME · ALL RIGHTS RESERVED</p>
+  </footer>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const boot = Roster.bootstrap('support');
+    if (boot.redirected) return;
+    const student = boot.student;
+
+    const isFirst = new URLSearchParams(location.search).get('first') === '1';
+    if (isFirst) {
+      document.getElementById('first-time-banner').classList.remove('hidden');
+      document.getElementById('continue-cta').classList.remove('hidden');
+    }
+
+    const reveals = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => io.observe(el));
+
+    document.getElementById('continue-btn').addEventListener('click', () => {
+      Roster.markTutorialSeen(student.id);
+      location.href = 'profile.html';
+    });
+    document.getElementById('signout').addEventListener('click', () => { Roster.signOut(); location.href = 'index.html'; });
+
+    if (!isFirst) Roster.markTutorialSeen(student.id);
+  });
+</script>
+</body>
+</html>
