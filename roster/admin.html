@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin | The Orchestral Frame</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="roster.js" defer></script>
+<script>
+  tailwind.config = { darkMode: "class", theme: { extend: {
+    colors: {
+      "primary": "#15157d", "primary-container": "#2e3192", "primary-fixed": "#e1e0ff", "primary-fixed-dim": "#c0c1ff",
+      "on-primary": "#ffffff", "on-primary-fixed-variant": "#373a9b",
+      "secondary": "#7c44a8", "secondary-fixed": "#f2daff",
+      "error": "#ba1a1a", "error-container": "#ffdad6",
+      "surface": "#f9f9fb", "surface-container-low": "#f3f3f5", "surface-container-lowest": "#ffffff",
+      "surface-container-high": "#e8e8ea", "on-surface": "#1a1c1d", "on-surface-variant": "#464652",
+      "outline": "#777683", "outline-variant": "#c7c5d4",
+      "inverse-surface": "#2f3132", "inverse-on-surface": "#f0f0f2"
+    },
+    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+    fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"], "label": ["Manrope"] }
+  }}}
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeUp 0.5s ease forwards; }
+  .tab-btn.active { background: #15157d; color: white; }
+  .tab-btn { transition: all .2s; }
+  .section-panel { display: none; }
+  .section-panel.active { display: block; }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen">
+
+<!-- PASSCODE GATE -->
+<div id="gate" class="min-h-screen flex items-center justify-center p-6" style="background: linear-gradient(135deg, #15157d 0%, #2e3192 50%, #7c44a8 100%);">
+  <div class="bg-white rounded-[2rem] p-10 max-w-md w-full shadow-2xl fade-in">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 rounded-2xl bg-primary mx-auto flex items-center justify-center mb-4">
+        <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1;">admin_panel_settings</span>
+      </div>
+      <h1 class="font-headline text-3xl font-extrabold text-primary tracking-tight">Admin Access</h1>
+      <p class="text-sm text-on-surface-variant mt-2">The Orchestral Frame · Production HQ</p>
+    </div>
+    <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Passcode</label>
+    <input id="passcode-input" type="password" placeholder="Enter passcode"
+      class="w-full bg-surface-container-high border-none rounded-xl p-4 text-center font-mono text-xl tracking-[0.5em] focus:ring-2 focus:ring-primary-fixed mb-4"/>
+    <p id="gate-error" class="text-xs text-error text-center mb-4 hidden">Incorrect passcode.</p>
+    <button id="gate-btn" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+      <span class="material-symbols-outlined">lock_open</span> Enter
+    </button>
+    <a href="index.html" class="block text-center text-xs text-on-surface-variant mt-4 hover:text-primary">← Back to landing</a>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD (hidden until authed) -->
+<div id="admin-app" class="hidden">
+
+<aside class="h-screen w-64 fixed left-0 flex flex-col border-r border-slate-200/20 bg-slate-900 text-white font-['Manrope'] font-medium text-sm tracking-wide z-40">
+  <div class="p-8">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-white text-base" style="font-variation-settings:'FILL' 1;">admin_panel_settings</span>
+      </div>
+      <div>
+        <h2 class="font-bold text-base tracking-tighter">Main Stage</h2>
+        <p class="text-slate-400 text-[10px] uppercase tracking-[0.2em]">Admin HQ</p>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 px-4 space-y-1">
+    <button data-tab="overview" class="tab-btn active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left">
+      <span class="material-symbols-outlined">dashboard</span><span>Overview</span>
+    </button>
+    <button data-tab="poll" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-slate-300 hover:bg-white/10">
+      <span class="material-symbols-outlined">poll</span><span>Poll Window</span>
+    </button>
+    <button data-tab="cast" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-slate-300 hover:bg-white/10">
+      <span class="material-symbols-outlined">group</span><span>Cast Ledger</span>
+    </button>
+    <button data-tab="leaves" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-slate-300 hover:bg-white/10">
+      <span class="material-symbols-outlined">event_busy</span><span>Leave Requests</span>
+      <span id="leave-badge" class="ml-auto hidden text-[10px] font-bold bg-error text-white px-2 py-0.5 rounded-full"></span>
+    </button>
+  </nav>
+  <div class="px-4 pb-8 space-y-2">
+    <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-xl w-full">
+      <span class="material-symbols-outlined">home</span><span class="text-xs">Student Landing</span>
+    </a>
+    <button id="admin-signout" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-error rounded-xl w-full">
+      <span class="material-symbols-outlined">logout</span><span class="text-xs">Sign out admin</span>
+    </button>
+  </div>
+</aside>
+
+<main class="ml-64 min-h-screen flex flex-col">
+
+  <!-- ── OVERVIEW ─────────────────────────────────────── -->
+  <div id="tab-overview" class="section-panel active flex-1 px-12 py-16">
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Overview</span>
+    <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-10">Scheduling<br/><span class="text-primary-container">Dashboard.</span></h1>
+
+    <div class="grid grid-cols-4 gap-4 mb-10">
+      <div class="bg-white p-6 rounded-3xl border border-outline-variant/10">
+        <span class="material-symbols-outlined text-primary mb-2">group</span>
+        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Cast</h4>
+        <p class="text-3xl font-extrabold font-headline text-primary" id="stat-cast">—</p>
+      </div>
+      <div class="bg-white p-6 rounded-3xl border border-outline-variant/10">
+        <span class="material-symbols-outlined text-secondary mb-2">how_to_reg</span>
+        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Responded</h4>
+        <p class="text-3xl font-extrabold font-headline text-secondary" id="stat-responded">—</p>
+      </div>
+      <div class="bg-white p-6 rounded-3xl border border-outline-variant/10">
+        <span class="material-symbols-outlined text-primary mb-2">event</span>
+        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Rehearsals</h4>
+        <p class="text-3xl font-extrabold font-headline text-primary" id="stat-rehearsals">—</p>
+      </div>
+      <div class="bg-white p-6 rounded-3xl border border-outline-variant/10">
+        <span class="material-symbols-outlined text-error mb-2">pending_actions</span>
+        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Pending Leaves</h4>
+        <p class="text-3xl font-extrabold font-headline text-error" id="stat-leaves-count">—</p>
+      </div>
+    </div>
+
+    <div id="no-poll-banner" class="hidden bg-primary-fixed rounded-2xl p-6 flex items-center gap-4 mb-6">
+      <span class="material-symbols-outlined text-primary text-3xl">info</span>
+      <div>
+        <p class="font-bold text-primary">No active poll window.</p>
+        <p class="text-sm text-on-surface-variant">Go to <button class="underline text-primary" data-tab="poll">Poll Window</button> to set which dates and times to ask students about.</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 mb-6">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="font-headline text-2xl font-extrabold text-primary">Top candidates</h2>
+          <p class="text-xs text-on-surface-variant mt-1">Ranked by available students · from current poll window</p>
+        </div>
+        <button id="refresh-overview" class="px-4 py-2 bg-surface-container-high rounded-full text-xs font-bold">Refresh</button>
+      </div>
+      <div id="candidates" class="space-y-3"></div>
+    </div>
+
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-6">Confirmed rehearsals</h2>
+      <div id="confirmed" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- ── POLL WINDOW ───────────────────────────────────── -->
+  <div id="tab-poll" class="section-panel flex-1 px-12 py-16">
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Poll Window</span>
+    <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-4">Ask&nbsp;students<br/><span class="text-primary-container">when they're free.</span></h1>
+    <p class="text-on-surface-variant text-sm max-w-xl mb-10">Define the date range and time slots you want students to respond to. Once you save and open the poll, students will only see these slots on their Availability page.</p>
+
+    <div id="poll-active-banner" class="hidden bg-primary-fixed rounded-2xl p-5 flex items-center gap-4 mb-6">
+      <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;">check_circle</span>
+      <div class="flex-1">
+        <p class="font-bold text-primary text-sm">Poll is open.</p>
+        <p class="text-xs text-on-surface-variant" id="poll-active-desc">—</p>
+      </div>
+      <button id="close-poll-btn" class="px-4 py-2 bg-error text-white rounded-full text-xs font-bold">Close poll</button>
+    </div>
+
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl">
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Start date</label>
+          <input id="poll-start" type="date" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"/>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">End date</label>
+          <input id="poll-end" type="date" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"/>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Days of week</label>
+        <div class="flex gap-2 flex-wrap" id="days-of-week">
+          <label class="dow-label"><input type="checkbox" value="1" class="dow-cb sr-only" checked/><span class="px-3 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer select-none transition-all">Mon</span></label>
+          <label class="dow-label"><input type="checkbox" value="2" class="dow-cb sr-only" checked/><span class="px-3 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer select-none transition-all">Tue</span></label>
+          <label class="dow-label"><input type="checkbox" value="3" class="dow-cb sr-only" checked/><span class="px-3 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer select-none transition-all">Wed</span></label>
+          <label class="dow-label"><input type="checkbox" value="4" class="dow-cb sr-only" checked/><span class="px-3 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer select-none transition-all">Thu</span></label>
+          <label class="dow-label"><input type="checkbox" value="5" class="dow-cb sr-only" checked/><span class="px-3 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer select-none transition-all">Fri</span></label>
+          <label class="dow-label"><input type="checkbox" value="6" class="dow-cb sr-only"/><span class="px-3 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer select-none transition-all">Sat</span></label>
+          <label class="dow-label"><input type="checkbox" value="0" class="dow-cb sr-only"/><span class="px-3 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer select-none transition-all">Sun</span></label>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Start time</label>
+          <select id="poll-hour-start" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed">
+            <option value="9">9:00 am</option><option value="10">10:00 am</option><option value="11">11:00 am</option>
+            <option value="12">12:00 pm</option><option value="13">1:00 pm</option><option value="14">2:00 pm</option>
+            <option value="15">3:00 pm</option><option value="16">4:00 pm</option><option value="17" selected>5:00 pm</option>
+            <option value="18">6:00 pm</option><option value="19">7:00 pm</option><option value="20">8:00 pm</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">End time</label>
+          <select id="poll-hour-end" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed">
+            <option value="10">10:00 am</option><option value="11">11:00 am</option><option value="12">12:00 pm</option>
+            <option value="13">1:00 pm</option><option value="14">2:00 pm</option><option value="15">3:00 pm</option>
+            <option value="16">4:00 pm</option><option value="17">5:00 pm</option><option value="18">6:00 pm</option>
+            <option value="19">7:00 pm</option><option value="20">8:00 pm</option><option value="21" selected>9:00 pm</option>
+            <option value="22">10:00 pm</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="flex items-center gap-3 cursor-pointer mb-8">
+        <input id="half-hour" type="checkbox" checked class="w-5 h-5 rounded text-primary focus:ring-primary-fixed"/>
+        <span class="text-sm font-medium">Include half-hour slots (e.g. 5:30 pm)</span>
+      </label>
+
+      <p id="poll-error" class="text-xs text-error mb-3 hidden">Please fix errors before saving.</p>
+      <button id="save-poll-btn" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+        <span class="material-symbols-outlined">save</span> Save &amp; open poll
+      </button>
+    </div>
+  </div>
+
+  <!-- ── CAST LEDGER ───────────────────────────────────── -->
+  <div id="tab-cast" class="section-panel flex-1 px-12 py-16">
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Cast Ledger</span>
+    <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-10">Cast<br/><span class="text-primary-container">Ledger.</span></h1>
+
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 mb-6">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Add student</h3>
+      <div class="flex gap-3 items-end flex-wrap">
+        <div class="flex-1 min-w-[180px]">
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Name</label>
+          <input id="new-name" type="text" placeholder="Full name" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"/>
+        </div>
+        <div class="flex-1 min-w-[160px]">
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Role (optional)</label>
+          <input id="new-role" type="text" placeholder="e.g. Tom, Ensemble" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"/>
+        </div>
+        <button id="add-student-btn" class="px-6 py-4 bg-primary text-white rounded-full font-bold flex items-center gap-2 active:scale-95 transition-all">
+          <span class="material-symbols-outlined">person_add</span> Add
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="font-headline text-xl font-extrabold text-primary">All students</h3>
+        <span id="cast-count-label" class="text-xs text-on-surface-variant">— members</span>
+      </div>
+      <div id="cast-table" class="divide-y divide-outline-variant/10"></div>
+    </div>
+  </div>
+
+  <!-- ── LEAVE REQUESTS ────────────────────────────────── -->
+  <div id="tab-leaves" class="section-panel flex-1 px-12 py-16">
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Leave Requests</span>
+    <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-10">Leave<br/><span class="text-primary-container">Requests.</span></h1>
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
+      <div id="leaves-list" class="space-y-4"></div>
+    </div>
+  </div>
+
+</main>
+</div><!-- /admin-app -->
+
+<style>
+  .dow-cb:checked + span { background: #15157d; color: white; border-color: #15157d; }
+</style>
+
+<script>
+  const DAY_NAMES_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  function fmtHour(h) {
+    const ampm = h >= 12 ? 'pm' : 'am';
+    const h12 = ((h + 11) % 12) + 1;
+    return `${h12}:00 ${ampm}`;
+  }
+
+  /* ── tab switching ── */
+  function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      const active = b.dataset.tab === name;
+      b.classList.toggle('active', active);
+      b.classList.toggle('text-slate-300', !active);
+      b.classList.toggle('hover:bg-white/10', !active);
+    });
+    document.querySelectorAll('.section-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+    if (name === 'overview') renderOverview();
+    if (name === 'cast') renderCast();
+    if (name === 'leaves') renderLeaves();
+    if (name === 'poll') renderPoll();
+  }
+
+  /* ── overview ── */
+  function renderOverview() {
+    const ledger = Roster.getLedger();
+    const rehearsals = Roster.getRehearsals();
+    const leaves = Roster.getLeaves().filter(l => l.status === 'pending');
+    const pollKeys = Roster.getPollSlotKeys();
+    const avMap = Roster.getAvailabilityMap();
+    const responded = ledger.filter(s => {
+      const a = avMap[s.id];
+      return a && (a.available.length > 0 || a.blocked.length > 0);
+    }).length;
+
+    document.getElementById('stat-cast').textContent = ledger.length;
+    document.getElementById('stat-responded').textContent = responded;
+    document.getElementById('stat-rehearsals').textContent = rehearsals.length;
+    document.getElementById('stat-leaves-count').textContent = leaves.length;
+
+    const leaveBadge = document.getElementById('leave-badge');
+    if (leaves.length) { leaveBadge.textContent = leaves.length; leaveBadge.classList.remove('hidden'); }
+    else leaveBadge.classList.add('hidden');
+
+    const noBanner = document.getElementById('no-poll-banner');
+    noBanner.classList.toggle('hidden', pollKeys.length > 0);
+
+    /* candidates */
+    const top = Roster.recommendSlots(pollKeys, 8);
+    const scheduled = new Set(rehearsals.map(r => r.slotKey));
+    const cEl = document.getElementById('candidates');
+    cEl.innerHTML = top.length ? top.map(r => {
+      const pct = r.total ? Math.round(r.availableIds.length / r.total * 100) : 0;
+      const isScheduled = scheduled.has(r.slot);
+      return `<div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-low gap-4">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slot)}</p>
+            ${isScheduled ? '<span class="text-[10px] font-bold uppercase tracking-widest bg-primary text-white px-2 py-0.5 rounded-full">Scheduled</span>' : ''}
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1">
+            <span class="font-bold text-primary">${r.availableIds.length}</span>/${r.total} available ·
+            <span class="font-bold text-error">${r.blockedIds.length}</span> blocked ·
+            ${r.pendingIds.length} pending
+          </p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <div class="w-24 h-2 bg-white rounded-full overflow-hidden"><div class="h-full bg-primary" style="width:${pct}%"></div></div>
+          <span class="text-xs font-bold text-primary w-8 text-right">${pct}%</span>
+          ${isScheduled
+            ? `<button data-remove="${r.slot}" class="px-3 py-2 bg-error-container text-error rounded-full text-xs font-bold">Remove</button>`
+            : `<button data-schedule="${r.slot}" class="px-3 py-2 bg-primary text-white rounded-full text-xs font-bold">Schedule</button>`}
+        </div>
+      </div>`;
+    }).join('') : '<p class="text-xs text-on-surface-variant">No availability data yet — open a poll window and ask students to respond.</p>';
+
+    cEl.querySelectorAll('[data-schedule]').forEach(btn => {
+      btn.addEventListener('click', () => { Roster.addRehearsal(btn.dataset.schedule); renderOverview(); });
+    });
+    cEl.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const r = Roster.getRehearsals().find(x => x.slotKey === btn.dataset.remove);
+        if (r) Roster.removeRehearsal(r.id);
+        renderOverview();
+      });
+    });
+
+    /* confirmed */
+    const confEl = document.getElementById('confirmed');
+    confEl.innerHTML = rehearsals.length ? rehearsals
+      .sort((a, b) => a.slotKey.localeCompare(b.slotKey))
+      .map(r => {
+        const a = Roster.aggregateSlot(r.slotKey);
+        return `<div class="flex items-center justify-between p-4 rounded-xl bg-primary-fixed gap-4">
+          <div>
+            <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slotKey)}</p>
+            <p class="text-xs text-on-primary-fixed-variant mt-1">${a.availableIds.length}/${a.total} available · ${a.blockedIds.length} blocked</p>
+          </div>
+          <button data-del="${r.id}" class="px-3 py-2 bg-white text-error rounded-full text-xs font-bold shrink-0">Remove</button>
+        </div>`;
+      }).join('')
+      : '<p class="text-xs text-on-surface-variant">No rehearsals scheduled yet.</p>';
+
+    confEl.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => { Roster.removeRehearsal(btn.dataset.del); renderOverview(); });
+    });
+  }
+
+  /* ── poll window ── */
+  function renderPoll() {
+    const win = Roster.getPollWindow();
+    const banner = document.getElementById('poll-active-banner');
+    if (win && win.active) {
+      banner.classList.remove('hidden');
+      const days = (win.daysOfWeek || []).map(d => DAY_NAMES_SHORT[d]).join(', ');
+      document.getElementById('poll-active-desc').textContent =
+        `${win.startDate} → ${win.endDate} · ${days || 'All days'} · ${fmtHour(win.startHour)}–${fmtHour(win.endHour)}${win.halfHour ? ' (30 min slots)' : ''}`;
+      /* pre-fill form */
+      document.getElementById('poll-start').value = win.startDate;
+      document.getElementById('poll-end').value = win.endDate;
+      document.getElementById('poll-hour-start').value = win.startHour;
+      document.getElementById('poll-hour-end').value = win.endHour;
+      document.getElementById('half-hour').checked = !!win.halfHour;
+      document.querySelectorAll('.dow-cb').forEach(cb => {
+        cb.checked = (win.daysOfWeek || []).includes(Number(cb.value));
+      });
+    } else {
+      banner.classList.add('hidden');
+    }
+  }
+
+  /* ── cast ── */
+  function renderCast() {
+    const ledger = Roster.getLedger();
+    const avMap = Roster.getAvailabilityMap();
+    document.getElementById('cast-count-label').textContent = `${ledger.length} member${ledger.length !== 1 ? 's' : ''}`;
+    document.getElementById('cast-table').innerHTML = ledger.length ? ledger.map(s => {
+      const a = avMap[s.id] || { available: [], blocked: [] };
+      return `<div class="flex items-center justify-between py-4 gap-4 flex-wrap">
+        <div>
+          <p class="font-bold text-sm text-primary">${s.name}${s.role ? ' <span class="text-on-surface-variant font-normal">— ' + s.role + '</span>' : ''}</p>
+          <p class="text-xs font-mono text-on-surface-variant">${s.scriptId || '<em>not yet registered</em>'}</p>
+        </div>
+        <div class="flex gap-6 text-xs items-center">
+          <span><span class="font-bold text-primary">${a.available.length}</span> <span class="text-on-surface-variant">available</span></span>
+          <span><span class="font-bold text-error">${a.blocked.length}</span> <span class="text-on-surface-variant">blocked</span></span>
+        </div>
+      </div>`;
+    }).join('') : '<p class="text-xs text-on-surface-variant">Ledger is empty.</p>';
+  }
+
+  /* ── leaves ── */
+  function renderLeaves() {
+    const leaves = Roster.getLeaves();
+    const ledger = Roster.getLedger();
+    const rehearsals = Roster.getRehearsals();
+    const el = document.getElementById('leaves-list');
+    if (!leaves.length) { el.innerHTML = '<p class="text-xs text-on-surface-variant">No leave requests.</p>'; return; }
+    el.innerHTML = leaves.sort((a, b) => b.createdAt - a.createdAt).map(l => {
+      const student = ledger.find(s => s.id === l.studentId);
+      const reh = rehearsals.find(r => r.id === l.rehearsalId);
+      const statusColor = l.status === 'pending' ? 'bg-error-container text-error' : 'bg-primary-fixed text-primary';
+      return `<div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/10">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <p class="font-bold text-sm text-primary">${student ? student.name : 'Unknown'} <span class="font-mono text-on-surface-variant text-xs">${student?.scriptId || ''}</span></p>
+            <p class="text-xs text-on-surface-variant mt-1">${reh ? Roster.formatSlot(reh.slotKey) : 'Rehearsal removed'}</p>
+            <p class="text-sm mt-3 italic text-on-surface">"${l.reason || 'No reason given'}"</p>
+          </div>
+          <div class="flex flex-col items-end gap-2 shrink-0">
+            <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${statusColor}">${l.status}</span>
+            ${l.status === 'pending' ? `<button data-approve="${l.id}" class="px-3 py-1 bg-primary text-white rounded-full text-xs font-bold">Approve</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('[data-approve]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const leaves = Roster.getLeaves();
+        const l = leaves.find(x => x.id === btn.dataset.approve);
+        if (l) { l.status = 'approved'; localStorage.setItem('roster.leaves', JSON.stringify(leaves)); }
+        renderLeaves();
+      });
+    });
+  }
+
+  /* ── init ── */
+  document.addEventListener('DOMContentLoaded', () => {
+    Roster.ensureSeed();
+
+    /* gate */
+    const gate = document.getElementById('gate');
+    const app = document.getElementById('admin-app');
+    function showApp() { gate.classList.add('hidden'); app.classList.remove('hidden'); renderOverview(); renderPoll(); }
+    if (Roster.isAdminAuthed()) showApp();
+
+    document.getElementById('gate-btn').addEventListener('click', () => {
+      const code = document.getElementById('passcode-input').value;
+      if (Roster.authenticateAdmin(code)) { showApp(); }
+      else { document.getElementById('gate-error').classList.remove('hidden'); }
+    });
+    document.getElementById('passcode-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('gate-btn').click();
+    });
+
+    /* tabs */
+    document.querySelectorAll('[data-tab]').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    /* admin sign out */
+    document.getElementById('admin-signout').addEventListener('click', () => {
+      Roster.signOutAdmin();
+      gate.classList.remove('hidden');
+      app.classList.add('hidden');
+      document.getElementById('passcode-input').value = '';
+      document.getElementById('gate-error').classList.add('hidden');
+    });
+
+    /* refresh */
+    document.getElementById('refresh-overview').addEventListener('click', renderOverview);
+
+    /* poll window save */
+    document.getElementById('save-poll-btn').addEventListener('click', () => {
+      const startDate = document.getElementById('poll-start').value;
+      const endDate = document.getElementById('poll-end').value;
+      const startHour = parseInt(document.getElementById('poll-hour-start').value);
+      const endHour = parseInt(document.getElementById('poll-hour-end').value);
+      const halfHour = document.getElementById('half-hour').checked;
+      const daysOfWeek = [...document.querySelectorAll('.dow-cb:checked')].map(cb => Number(cb.value));
+      const err = document.getElementById('poll-error');
+      if (!startDate || !endDate || startDate > endDate || startHour >= endHour) {
+        err.textContent = 'Start date/time must be before end date/time.';
+        err.classList.remove('hidden'); return;
+      }
+      err.classList.add('hidden');
+      Roster.setPollWindow({ startDate, endDate, startHour, endHour, halfHour, daysOfWeek, active: true, createdAt: Date.now() });
+      renderPoll();
+    });
+
+    /* close poll */
+    document.getElementById('close-poll-btn').addEventListener('click', () => {
+      const win = Roster.getPollWindow();
+      if (win) { win.active = false; Roster.setPollWindow(win); }
+      renderPoll();
+    });
+
+    /* add student */
+    document.getElementById('add-student-btn').addEventListener('click', () => {
+      const name = document.getElementById('new-name').value.trim();
+      if (!name) return;
+      Roster.addStudent(name, document.getElementById('new-role').value.trim());
+      document.getElementById('new-name').value = '';
+      document.getElementById('new-role').value = '';
+      renderCast();
+      renderOverview();
+    });
+
+    /* day-of-week toggle styling */
+    document.querySelectorAll('.dow-cb').forEach(cb => {
+      cb.addEventListener('change', () => {
+        cb.nextElementSibling.style.background = cb.checked ? '#15157d' : '';
+        cb.nextElementSibling.style.color = cb.checked ? 'white' : '';
+        cb.nextElementSibling.style.borderColor = cb.checked ? '#15157d' : '';
+      });
+      /* init */
+      if (cb.checked) {
+        cb.nextElementSibling.style.background = '#15157d';
+        cb.nextElementSibling.style.color = 'white';
+        cb.nextElementSibling.style.borderColor = '#15157d';
+      }
+    });
+  });
+</script>
+</body>
+</html>

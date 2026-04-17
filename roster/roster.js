@@ -6,8 +6,12 @@
     REHEARSALS: 'roster.rehearsals',
     CHECKINS: 'roster.checkins',
     LEAVES: 'roster.leaves',
-    PROJECT: 'roster.project'
+    PROJECT: 'roster.project',
+    POLL_WINDOW: 'roster.pollWindow'
   };
+
+  const ADMIN_PASSCODE = '20101125';
+  const ADMIN_SESSION_KEY = 'roster.adminAuthed';
 
   const SEED_NAMES = ['Alexander Hamilton', 'Eliza Schuyler', 'Aaron Burr', 'Angelica Schuyler', 'Lafayette', 'Hercules Mulligan'];
 
@@ -126,6 +130,41 @@
     },
 
     signOut() { Roster.clearCurrent(); },
+
+    authenticateAdmin(code) {
+      if ((code || '').trim() === ADMIN_PASSCODE) {
+        sessionStorage.setItem(ADMIN_SESSION_KEY, '1');
+        return true;
+      }
+      return false;
+    },
+    isAdminAuthed() {
+      return sessionStorage.getItem(ADMIN_SESSION_KEY) === '1';
+    },
+    signOutAdmin() { sessionStorage.removeItem(ADMIN_SESSION_KEY); },
+
+    getPollWindow() { return readJSON(KEYS.POLL_WINDOW, null); },
+    setPollWindow(win) { writeJSON(KEYS.POLL_WINDOW, win); },
+    clearPollWindow() { localStorage.removeItem(KEYS.POLL_WINDOW); },
+
+    getPollSlotKeys() {
+      const win = Roster.getPollWindow();
+      if (!win || !win.active) return [];
+      const [sy, sm, sd] = win.startDate.split('-').map(Number);
+      const [ey, em, ed] = win.endDate.split('-').map(Number);
+      const start = new Date(sy, sm - 1, sd);
+      const end = new Date(ey, em - 1, ed);
+      const allowed = new Set(win.daysOfWeek && win.daysOfWeek.length ? win.daysOfWeek : [0,1,2,3,4,5,6]);
+      const keys = [];
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        if (!allowed.has(d.getDay())) continue;
+        for (let h = win.startHour; h < win.endHour; h++) {
+          keys.push(Roster.buildSlotKey(d, h, 0));
+          if (win.halfHour) keys.push(Roster.buildSlotKey(d, h, 30));
+        }
+      }
+      return keys;
+    },
 
     setCurrentStudent(id) { writeJSON(KEYS.CURRENT, id); },
     getCurrentStudent() {

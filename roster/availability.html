@@ -3,39 +3,33 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Availability Hub | The Orchestral Frame</title>
+<title>My Availability | The Orchestral Frame</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="roster.js" defer></script>
-<script id="tailwind-config">
-  tailwind.config = {
-    darkMode: "class",
-    theme: { extend: {
-      colors: {
-        "primary": "#15157d", "primary-container": "#2e3192", "primary-fixed": "#e1e0ff", "primary-fixed-dim": "#c0c1ff",
-        "on-primary": "#ffffff", "on-primary-fixed-variant": "#373a9b",
-        "secondary": "#7c44a8", "secondary-fixed": "#f2daff", "on-secondary-fixed-variant": "#632a8e",
-        "tertiary": "#540e00", "tertiary-container": "#7b1800", "tertiary-fixed": "#ffdad2",
-        "error": "#ba1a1a", "error-container": "#ffdad6", "on-error": "#ffffff",
-        "surface": "#f9f9fb", "surface-bright": "#f9f9fb", "surface-dim": "#d9dadc",
-        "surface-container": "#eeeef0", "surface-container-low": "#f3f3f5", "surface-container-lowest": "#ffffff",
-        "surface-container-high": "#e8e8ea", "surface-container-highest": "#e2e2e4",
-        "on-surface": "#1a1c1d", "on-surface-variant": "#464652",
-        "outline": "#777683", "outline-variant": "#c7c5d4",
-        "inverse-surface": "#2f3132", "inverse-on-surface": "#f0f0f2"
-      },
-      borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
-      fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"], "label": ["Manrope"] }
-    }}
-  }
+<script>
+  tailwind.config = { darkMode: "class", theme: { extend: {
+    colors: {
+      "primary": "#15157d", "primary-container": "#2e3192", "primary-fixed": "#e1e0ff", "primary-fixed-dim": "#c0c1ff",
+      "on-primary": "#ffffff", "on-primary-fixed-variant": "#373a9b",
+      "secondary": "#7c44a8", "secondary-fixed": "#f2daff",
+      "error": "#ba1a1a", "error-container": "#ffdad6",
+      "surface": "#f9f9fb", "surface-container-low": "#f3f3f5", "surface-container-lowest": "#ffffff",
+      "surface-container-high": "#e8e8ea", "on-surface": "#1a1c1d", "on-surface-variant": "#464652",
+      "outline": "#777683", "outline-variant": "#c7c5d4",
+      "inverse-surface": "#2f3132", "inverse-on-surface": "#f0f0f2"
+    },
+    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+    fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"], "label": ["Manrope"] }
+  }}}
 </script>
 <style>
-  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-  .slot { transition: all 0.15s ease; cursor: pointer; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; }
+  .slot { transition: background .15s, color .15s; cursor: pointer; user-select: none; }
   .slot.available { background: #15157d; color: white; border-color: #15157d; }
-  .slot.blocked { background: #ffdad6; color: #ba1a1a; border-color: #ba1a1a; text-decoration: line-through; }
-  .slot.recommended { box-shadow: inset 0 0 0 2px #7c44a8; }
+  .slot.blocked  { background: #ffdad6; color: #ba1a1a; border-color: #ba1a1a; text-decoration: line-through; }
+  .slot:not(.available):not(.blocked):hover { background: #e1e0ff; }
 </style>
 </head>
 <body class="bg-surface font-body text-on-surface antialiased">
@@ -46,11 +40,12 @@
     <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em] mt-1">Production HQ</p>
   </div>
   <nav class="flex-1 px-4 space-y-2">
-    <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">dashboard</span><span>Dashboard</span></a>
-    <a href="registration.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">how_to_reg</span><span>Registration</span></a>
-    <a href="availability.html" class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-900 rounded-xl"><span class="material-symbols-outlined">event_available</span><span>Availability</span></a>
-    <a href="profile.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">account_circle</span><span>My Rehearsal Hub</span></a>
-    <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"><span class="material-symbols-outlined">group</span><span>Cast List</span></a>
+    <a href="availability.html" class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-indigo-900 rounded-xl">
+      <span class="material-symbols-outlined">event_available</span><span>Availability</span>
+    </a>
+    <a href="profile.html" class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors">
+      <span class="material-symbols-outlined">account_circle</span><span>My Rehearsal Hub</span>
+    </a>
   </nav>
   <div class="px-8 py-6 space-y-4 border-t border-slate-200/20">
     <a href="support.html" class="flex items-center gap-3 text-slate-500 hover:text-primary"><span class="material-symbols-outlined">help</span><span class="text-xs">Support</span></a>
@@ -59,215 +54,185 @@
   </div>
 </aside>
 
-<main class="ml-64 min-h-screen relative flex flex-col">
+<main class="ml-64 min-h-screen flex flex-col">
   <header class="pt-20 px-24">
-    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Production Access</span>
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">My Availability</span>
     <h1 class="font-headline text-6xl font-extrabold tracking-tighter text-on-surface max-w-3xl leading-none">
-      Select <br/><span class="text-primary-container">Availability.</span>
+      Mark your<br/><span class="text-primary-container">availability.</span>
     </h1>
-    <p class="mt-4 max-w-xl text-on-surface-variant text-sm">Tap a slot once to mark yourself <span class="font-bold text-primary">available</span>, tap again to mark it <span class="font-bold text-error">blocked</span>, once more to clear. Purple borders indicate slots the admin recommends.</p>
+    <p class="mt-4 max-w-xl text-on-surface-variant text-sm">Tap a slot once to mark yourself <span class="font-bold text-primary">available</span>, tap again to mark it <span class="font-bold text-error">blocked</span>, tap once more to clear.</p>
   </header>
 
-  <section id="no-student" class="hidden flex-1 px-24 py-16">
-    <div class="max-w-xl mx-auto bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10 text-center">
-      <span class="material-symbols-outlined text-5xl text-primary mb-4">lock</span>
-      <h2 class="font-headline text-2xl font-extrabold text-primary mb-2">No student identity found</h2>
-      <p class="text-sm text-on-surface-variant mb-6">You need to generate or look up a Script ID before marking availability.</p>
-      <a href="registration.html" class="inline-block px-6 py-3 bg-primary text-white rounded-full font-bold">Go to Registration</a>
+  <!-- No poll window yet -->
+  <section id="no-poll" class="hidden flex-1 px-24 py-16">
+    <div class="max-w-xl bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10 text-center">
+      <span class="material-symbols-outlined text-5xl text-outline mb-4">schedule</span>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-2">Poll not open yet</h2>
+      <p class="text-sm text-on-surface-variant">The production admin hasn't opened an availability poll yet. Check back soon — you'll see dates and times to respond to here.</p>
     </div>
   </section>
 
-  <section id="hub" class="flex-1 px-24 py-16">
+  <!-- Calendar -->
+  <section id="hub" class="hidden flex-1 px-24 py-16">
     <div class="max-w-6xl mx-auto">
 
-      <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
-        <div class="flex items-center gap-4 px-6 py-4 bg-surface-container-low rounded-full">
-          <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
-          </div>
-          <div>
-            <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Signed in as</p>
-            <h3 class="text-sm font-bold text-primary"><span id="student-name">—</span> <span id="student-id" class="text-on-surface-variant font-mono text-xs ml-1"></span></h3>
-          </div>
+      <!-- identity chip -->
+      <div class="flex items-center gap-4 px-6 py-4 bg-surface-container-low rounded-full inline-flex mb-8">
+        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
+          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">person</span>
         </div>
-        <div class="flex items-center gap-3 text-sm">
-          <button id="prev-week" class="w-10 h-10 rounded-full bg-surface-container-high hover:bg-primary-fixed transition-colors"><span class="material-symbols-outlined">chevron_left</span></button>
-          <span id="week-label" class="font-bold font-headline text-lg text-primary min-w-[14rem] text-center">—</span>
-          <button id="next-week" class="w-10 h-10 rounded-full bg-surface-container-high hover:bg-primary-fixed transition-colors"><span class="material-symbols-outlined">chevron_right</span></button>
-          <span class="ml-4 text-xs text-on-surface-variant hidden md:inline">(GMT+08:00) Asia/Hong Kong</span>
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Signed in as</p>
+          <h3 class="text-sm font-bold text-primary"><span id="student-name">—</span> <span id="student-id" class="text-on-surface-variant font-mono text-xs ml-1"></span></h3>
         </div>
       </div>
 
-      <div class="bg-surface-container-lowest rounded-[2rem] shadow-[0_20px_40px_rgba(26,28,29,0.06)] overflow-hidden">
-        <div id="calendar-grid" class="grid" style="grid-template-columns: 80px repeat(7, 1fr);"></div>
+      <!-- week nav -->
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <button id="prev-week" class="w-10 h-10 rounded-full bg-surface-container-high hover:bg-primary-fixed transition-colors flex items-center justify-center"><span class="material-symbols-outlined">chevron_left</span></button>
+          <span id="week-label" class="font-bold font-headline text-lg text-primary min-w-[16rem] text-center">—</span>
+          <button id="next-week" class="w-10 h-10 rounded-full bg-surface-container-high hover:bg-primary-fixed transition-colors flex items-center justify-center"><span class="material-symbols-outlined">chevron_right</span></button>
+        </div>
+        <div class="flex gap-3 text-xs font-bold">
+          <span class="px-3 py-1 rounded-full bg-primary text-white">= Available</span>
+          <span class="px-3 py-1 rounded-full bg-error-container text-error line-through">= Blocked</span>
+          <span class="px-3 py-1 rounded-full bg-surface-container-highest text-on-surface-variant">= Not in poll</span>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      <!-- grid -->
+      <div class="bg-surface-container-lowest rounded-[2rem] shadow-[0_20px_40px_rgba(26,28,29,0.06)] overflow-auto">
+        <div id="calendar-grid"></div>
+      </div>
+
+      <!-- my stats -->
+      <div class="grid grid-cols-2 gap-6 mt-8">
         <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10">
           <span class="material-symbols-outlined text-primary mb-2">check_circle</span>
-          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Your Available</h4>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">My available</h4>
           <p class="text-2xl font-bold font-headline text-primary"><span id="stat-available">0</span> slots</p>
         </div>
         <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10">
           <span class="material-symbols-outlined text-error mb-2">block</span>
-          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Your Blocked</h4>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">My blocked</h4>
           <p class="text-2xl font-bold font-headline text-error"><span id="stat-blocked">0</span> slots</p>
         </div>
-        <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10">
-          <span class="material-symbols-outlined text-secondary mb-2">auto_awesome</span>
-          <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Recommended</h4>
-          <p class="text-2xl font-bold font-headline text-secondary"><span id="stat-recommended">0</span> slots</p>
-        </div>
-      </div>
-
-      <div class="mt-8 bg-surface-container-lowest p-8 rounded-[2rem] border border-outline-variant/10">
-        <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Recommended rehearsal slots</h3>
-        <p class="text-xs text-on-surface-variant mb-6">Ranked by how many cast members are available minus how many are blocked. Tap any card to mark yourself available for that slot.</p>
-        <div id="recommend-list" class="space-y-3"></div>
       </div>
 
       <div class="mt-8 flex justify-end">
         <a href="profile.html" class="inline-flex items-center gap-2 px-6 py-4 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all">
-          Save &amp; continue to My Hub
-          <span class="material-symbols-outlined">arrow_forward</span>
+          Continue to my hub <span class="material-symbols-outlined">arrow_forward</span>
         </a>
       </div>
     </div>
   </section>
 
-  <footer class="mt-auto bg-inverse-surface py-12 px-8 flex flex-col items-center justify-center gap-4">
+  <footer class="mt-auto bg-inverse-surface py-12 px-8 flex flex-col items-center gap-4">
     <p class="font-body text-sm text-inverse-on-surface opacity-70 max-w-2xl text-center leading-relaxed">
-      Privacy Disclosure: The Orchestral Frame strictly limits data collection to student name, optional role label, and production availability (dates and times you mark). This information is used exclusively for internal cast scheduling within "The Glass Menagerie (2024)". Data is stored locally in your browser.
+      Privacy: we store only your availability selections (available/blocked) for the slots in this poll window. This data is used solely for scheduling rehearsals in "The Glass Menagerie (2024)".
     </p>
-    <div class="flex gap-8 mt-4 font-label text-[10px] uppercase tracking-[0.2em] text-inverse-on-surface/50">
-      <span>Security protocol v4.2</span><span>GDPR Compliant</span><span>Access Logs</span>
-    </div>
-    <p class="mt-6 font-label text-[10px] text-inverse-on-surface/30 tracking-widest">© 2024 THE ORCHESTRAL FRAME. ALL RIGHTS RESERVED.</p>
+    <p class="font-label text-[10px] text-inverse-on-surface/30 tracking-widest">© 2024 THE ORCHESTRAL FRAME · ALL RIGHTS RESERVED</p>
   </footer>
 </main>
 
 <script>
-  const HOURS = [17, 18, 19, 20, 21];
-  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  let weekStart;
+  let student, pollSlotKeys, weekStart;
 
   function startOfWeek(d) {
-    const copy = new Date(d);
-    copy.setHours(0, 0, 0, 0);
-    copy.setDate(copy.getDate() - copy.getDay());
-    return copy;
+    const c = new Date(d); c.setHours(0,0,0,0);
+    c.setDate(c.getDate() - c.getDay()); return c;
   }
-
   function addDays(d, n) { const c = new Date(d); c.setDate(c.getDate() + n); return c; }
-
-  function fmtWeekLabel(start) {
-    const end = addDays(start, 6);
-    return `${MONTH_NAMES[start.getMonth()]} ${start.getDate()} – ${MONTH_NAMES[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+  function fmtWeek(s) {
+    const e = addDays(s, 6);
+    return `${MONTH_NAMES[s.getMonth()]} ${s.getDate()} – ${MONTH_NAMES[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
   }
 
-  function allWeekSlotKeys() {
-    const keys = [];
-    for (let i = 0; i < 7; i++) {
-      const day = addDays(weekStart, i);
-      HOURS.forEach(h => {
-        keys.push(Roster.buildSlotKey(day, h, 0));
-        keys.push(Roster.buildSlotKey(day, h, 30));
-      });
-    }
-    return keys;
-  }
-
-  function render() {
-    document.getElementById('week-label').textContent = fmtWeekLabel(weekStart);
-    const grid = document.getElementById('calendar-grid');
-    grid.innerHTML = '';
-
-    const blank = document.createElement('div');
-    blank.className = 'p-3 border-b border-r border-outline-variant/10 bg-surface-container-low';
-    grid.appendChild(blank);
-    for (let i = 0; i < 7; i++) {
-      const day = addDays(weekStart, i);
-      const h = document.createElement('div');
-      h.className = 'p-3 text-center border-b border-r border-outline-variant/10 bg-surface-container-low';
-      h.innerHTML = `<div class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">${DAY_NAMES[day.getDay()]}</div>
-        <div class="text-2xl font-headline font-extrabold text-primary">${day.getDate()}</div>`;
-      grid.appendChild(h);
-    }
-
-    const student = Roster.getCurrentStudent();
+  function buildWeekGrid() {
+    const pollSet = new Set(pollSlotKeys);
     const avail = Roster.getAvailability(student.id);
     const availSet = new Set(avail.available);
     const blockSet = new Set(avail.blocked);
-    const allKeys = allWeekSlotKeys();
-    const recommended = new Set(Roster.recommendSlots(allKeys, 5).map(r => r.slot));
 
-    HOURS.forEach(hour => {
-      [0, 30].forEach(minute => {
-        const label = document.createElement('div');
-        label.className = 'p-3 text-right text-xs text-on-surface-variant border-r border-outline-variant/10 border-b';
-        if (minute === 0) {
-          const ampm = hour >= 12 ? 'pm' : 'am';
-          const h12 = ((hour + 11) % 12) + 1;
-          label.textContent = `${h12}:00${ampm}`;
-        } else {
-          label.textContent = '';
-        }
-        grid.appendChild(label);
+    /* collect hours and days visible this week that are in the poll */
+    const days = [];
+    for (let i = 0; i < 7; i++) days.push(addDays(weekStart, i));
 
-        for (let i = 0; i < 7; i++) {
-          const day = addDays(weekStart, i);
-          const key = Roster.buildSlotKey(day, hour, minute);
-          const cell = document.createElement('button');
-          cell.className = 'slot border border-outline-variant/10 border-r p-3 text-xs font-bold text-on-surface-variant h-14 bg-white hover:bg-primary-fixed';
-          cell.dataset.slot = key;
-          const h12 = ((hour + 11) % 12) + 1;
-          const ampm = hour >= 12 ? 'pm' : 'am';
-          cell.textContent = `${h12}:${String(minute).padStart(2, '0')}${ampm}`;
-          if (availSet.has(key)) cell.classList.add('available');
-          else if (blockSet.has(key)) cell.classList.add('blocked');
-          if (recommended.has(key)) cell.classList.add('recommended');
-          cell.addEventListener('click', () => toggle(key));
-          grid.appendChild(cell);
-        }
-      });
+    /* all poll slots this week */
+    const weekPollSlots = pollSlotKeys.filter(k => {
+      const d = Roster.parseSlotKey(k);
+      return d >= weekStart && d < addDays(weekStart, 7);
     });
 
-    document.getElementById('stat-available').textContent = avail.available.length;
-    document.getElementById('stat-blocked').textContent = avail.blocked.length;
-    document.getElementById('stat-recommended').textContent = recommended.size;
+    document.getElementById('week-label').textContent = fmtWeek(weekStart);
 
-    renderRecommendations(allKeys);
-  }
+    const grid = document.getElementById('calendar-grid');
 
-  function renderRecommendations(keys) {
-    const list = document.getElementById('recommend-list');
-    const top = Roster.recommendSlots(keys, 5);
-    list.innerHTML = top.map(r => {
-      const pct = r.total ? Math.round((r.availableIds.length / r.total) * 100) : 0;
-      return `<div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-low hover:bg-primary-fixed/30 transition-colors cursor-pointer" data-slot="${r.slot}">
-        <div>
-          <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slot)}</p>
-          <p class="text-xs text-on-surface-variant mt-1">${r.availableIds.length}/${r.total} available · ${r.blockedIds.length} blocked · ${r.pendingIds.length} pending</p>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="w-24 h-2 bg-white rounded-full overflow-hidden"><div class="h-full bg-primary" style="width:${pct}%"></div></div>
-          <span class="text-xs font-bold text-primary w-10 text-right">${pct}%</span>
-        </div>
-      </div>`;
-    }).join('') || '<p class="text-xs text-on-surface-variant">No data yet — ask cast members to mark availability.</p>';
-    list.querySelectorAll('[data-slot]').forEach(el => {
-      el.addEventListener('click', () => {
-        const student = Roster.getCurrentStudent();
-        Roster.toggleSlot(student.id, el.dataset.slot, 'available');
-        render();
-      });
+    if (!weekPollSlots.length) {
+      grid.innerHTML = '<div class="p-10 text-center text-on-surface-variant text-sm">No poll slots in this week. Use the arrows to navigate to the poll dates.</div>';
+      return;
+    }
+
+    /* build hours set from this week's poll slots */
+    const hoursSet = new Set(weekPollSlots.map(k => { const d = Roster.parseSlotKey(k); return d.getHours() * 60 + d.getMinutes(); }));
+    const sortedMinutes = [...hoursSet].sort((a,b) => a-b);
+
+    /* which days have any poll slot this week? */
+    const activeDayIndices = [...new Set(weekPollSlots.map(k => Roster.parseSlotKey(k).getDay()))].sort((a,b)=>a-b);
+    const colCount = activeDayIndices.length;
+
+    let html = `<table class="w-full border-collapse text-xs">`;
+    /* header */
+    html += '<thead><tr><th class="w-20 p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-on-surface-variant font-bold text-right">Time</th>';
+    activeDayIndices.forEach(di => {
+      const dayDate = days[di];
+      html += `<th class="p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-center">
+        <div class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">${DAY_NAMES[di]}</div>
+        <div class="text-2xl font-headline font-extrabold text-primary">${dayDate.getDate()}</div>
+      </th>`;
     });
+    html += '</tr></thead><tbody>';
+
+    sortedMinutes.forEach(totalMin => {
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      const ampm = h >= 12 ? 'pm' : 'am';
+      const h12 = ((h + 11) % 12) + 1;
+      const timeLabel = m === 0 ? `${h12}:00${ampm}` : `${h12}:30${ampm}`;
+      html += `<tr>`;
+      html += `<td class="p-3 text-right text-on-surface-variant border-r border-b border-outline-variant/10 font-medium">${m === 0 ? timeLabel : ''}</td>`;
+      activeDayIndices.forEach(di => {
+        const dayDate = days[di];
+        const key = Roster.buildSlotKey(dayDate, h, m);
+        const inPoll = pollSet.has(key);
+        if (!inPoll) {
+          html += `<td class="p-2 border-r border-b border-outline-variant/10 bg-surface-container-highest/30"></td>`;
+          return;
+        }
+        const isAvail = availSet.has(key);
+        const isBlocked = blockSet.has(key);
+        const cls = isAvail ? 'available' : isBlocked ? 'blocked' : '';
+        html += `<td class="p-1 border-r border-b border-outline-variant/10">
+          <button class="slot w-full h-12 rounded-lg text-xs font-bold border border-outline-variant/20 ${cls}" data-key="${key}">${timeLabel}</button>
+        </td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('.slot[data-key]').forEach(btn => {
+      btn.addEventListener('click', () => { toggle(btn.dataset.key); });
+    });
+
+    updateStats();
   }
 
   function toggle(key) {
-    const student = Roster.getCurrentStudent();
     const data = Roster.getAvailability(student.id);
     const isAvail = data.available.includes(key);
     const isBlocked = data.blocked.includes(key);
@@ -275,20 +240,41 @@
     if (isAvail) next = 'blocked';
     else if (isBlocked) next = 'clear';
     Roster.toggleSlot(student.id, key, next);
-    render();
+    buildWeekGrid();
+  }
+
+  function updateStats() {
+    const avail = Roster.getAvailability(student.id);
+    const pollSet = new Set(pollSlotKeys);
+    document.getElementById('stat-available').textContent = avail.available.filter(k => pollSet.has(k)).length;
+    document.getElementById('stat-blocked').textContent   = avail.blocked.filter(k => pollSet.has(k)).length;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     const boot = Roster.bootstrap('availability');
     if (boot.redirected) return;
-    const student = boot.student;
-    document.getElementById('signout').addEventListener('click', () => { Roster.signOut(); location.href = 'index.html'; });
+    student = boot.student;
     document.getElementById('student-name').textContent = student.name;
-    document.getElementById('student-id').textContent = student.scriptId || '';
-    weekStart = startOfWeek(new Date());
-    document.getElementById('prev-week').addEventListener('click', () => { weekStart = addDays(weekStart, -7); render(); });
-    document.getElementById('next-week').addEventListener('click', () => { weekStart = addDays(weekStart, 7); render(); });
-    render();
+    document.getElementById('student-id').textContent   = student.scriptId || '';
+    document.getElementById('signout').addEventListener('click', () => { Roster.signOut(); location.href = 'index.html'; });
+
+    pollSlotKeys = Roster.getPollSlotKeys();
+
+    if (!pollSlotKeys.length) {
+      document.getElementById('no-poll').classList.remove('hidden');
+      return;
+    }
+
+    document.getElementById('hub').classList.remove('hidden');
+
+    /* find first week with poll slots */
+    const firstPollDate = Roster.parseSlotKey(pollSlotKeys[0]);
+    weekStart = startOfWeek(firstPollDate);
+
+    document.getElementById('prev-week').addEventListener('click', () => { weekStart = addDays(weekStart, -7); buildWeekGrid(); });
+    document.getElementById('next-week').addEventListener('click', () => { weekStart = addDays(weekStart,  7); buildWeekGrid(); });
+
+    buildWeekGrid();
   });
 </script>
 </body>
