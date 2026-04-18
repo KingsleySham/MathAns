@@ -62,7 +62,7 @@
 <!-- ADMIN DASHBOARD (hidden until authed) -->
 <div id="admin-app" class="hidden">
 
-<aside class="h-screen w-64 fixed left-0 flex flex-col border-r border-slate-200/20 bg-slate-900 text-white font-['Manrope'] font-medium text-sm tracking-wide z-40">
+<aside class="h-screen w-64 fixed left-0 flex flex-col border-r border-slate-200/20 bg-slate-900 text-white font-['Manrope'] font-medium text-sm tracking-wide z-40 overflow-y-auto">
   <div class="p-8">
     <div class="flex items-center gap-3">
       <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -105,14 +105,21 @@
   </div>
 </aside>
 
-<main class="ml-64 min-h-screen flex flex-col">
+<main class="ml-0 md:ml-64 min-h-screen flex flex-col">
+
+  <div id="mobile-menu-bar" class="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 text-white px-4 flex items-center gap-4 z-50 border-b border-slate-200/20">
+    <button id="mobile-menu-toggle" class="p-2">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <h2 class="font-bold text-sm">Admin HQ</h2>
+  </div>
 
   <!-- ── OVERVIEW ─────────────────────────────────────── -->
-  <div id="tab-overview" class="section-panel active flex-1 px-12 py-16">
+  <div id="tab-overview" class="section-panel active flex-1 px-6 sm:px-12 py-8 sm:py-16">
     <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Overview</span>
-    <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-10">Scheduling<br/><span class="text-primary-container">Dashboard.</span></h1>
+    <h1 class="font-headline text-3xl sm:text-5xl font-black tracking-tighter text-on-surface mb-10">Scheduling<br/><span class="text-primary-container">Dashboard.</span></h1>
 
-    <div class="grid grid-cols-4 gap-4 mb-10">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
       <div class="bg-white p-6 rounded-3xl border border-outline-variant/10">
         <span class="material-symbols-outlined text-primary mb-2">group</span>
         <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Cast</h4>
@@ -161,9 +168,9 @@
   </div>
 
   <!-- ── POLL WINDOW ───────────────────────────────────── -->
-  <div id="tab-poll" class="section-panel flex-1 px-12 py-16 overflow-y-auto">
+  <div id="tab-poll" class="section-panel flex-1 px-6 sm:px-12 py-8 sm:py-16 overflow-y-auto">
     <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Poll Window</span>
-    <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-4">Ask&nbsp;students<br/><span class="text-primary-container">when they're free.</span></h1>
+    <h1 class="font-headline text-3xl sm:text-5xl font-black tracking-tighter text-on-surface mb-4">Ask&nbsp;students<br/><span class="text-primary-container">when they're free.</span></h1>
     <p class="text-on-surface-variant text-sm max-w-xl mb-10">Define the date range, time slots, and any blockovers you want to exclude. Format, and optional reason prompts.</p>
 
     <div id="poll-active-banner" class="hidden bg-primary-fixed rounded-2xl p-5 flex items-center gap-4 mb-6">
@@ -249,6 +256,18 @@
       </button>
     </div>
 
+    <!-- Poll Preview -->
+    <div id="poll-preview-section" class="hidden bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-4xl mb-8">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Poll Preview</h3>
+      <p class="text-xs text-on-surface-variant mb-6">Review generated slots. Click to toggle "Require reason" for unavailable slots.</p>
+      <div id="preview-controls" class="flex gap-2 mb-6 flex-wrap">
+        <select id="preview-week-select" class="flex-1 min-w-[200px] bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"></select>
+        <button id="preview-collapse-all" class="px-4 py-3 bg-surface-container-high text-on-surface rounded-full font-bold text-xs">Collapse all</button>
+        <button id="preview-expand-all" class="px-4 py-3 bg-surface-container-high text-on-surface rounded-full font-bold text-xs">Expand all</button>
+      </div>
+      <div id="preview-slots-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
+    </div>
+
     <!-- Blockout Dates -->
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl mb-8">
       <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Blockout dates</h3>
@@ -269,9 +288,9 @@
   </div>
 
   <!-- ── CAST LEDGER ───────────────────────────────────── -->
-  <div id="tab-cast" class="section-panel flex-1 px-12 py-16">
+  <div id="tab-cast" class="section-panel flex-1 px-6 sm:px-12 py-8 sm:py-16">
     <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Cast Ledger</span>
-    <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-10">Cast<br/><span class="text-primary-container">Ledger.</span></h1>
+    <h1 class="font-headline text-3xl sm:text-5xl font-black tracking-tighter text-on-surface mb-10">Cast<br/><span class="text-primary-container">Ledger.</span></h1>
 
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 mb-6">
       <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Add student</h3>
@@ -300,18 +319,18 @@
   </div>
 
   <!-- ── LEAVE REQUESTS ────────────────────────────────── -->
-  <div id="tab-leaves" class="section-panel flex-1 px-12 py-16">
+  <div id="tab-leaves" class="section-panel flex-1 px-6 sm:px-12 py-8 sm:py-16">
     <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Leave Requests</span>
-    <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-10">Leave<br/><span class="text-primary-container">Requests.</span></h1>
+    <h1 class="font-headline text-3xl sm:text-5xl font-black tracking-tighter text-on-surface mb-10">Leave<br/><span class="text-primary-container">Requests.</span></h1>
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
       <div id="leaves-list" class="space-y-4"></div>
     </div>
   </div>
 
   <!-- ── NOTICES ────────────────────────────────────────── -->
-  <div id="tab-notices" class="section-panel flex-1 px-12 py-16">
+  <div id="tab-notices" class="section-panel flex-1 px-6 sm:px-12 py-8 sm:py-16">
     <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Notices</span>
-    <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-10">Broadcast<br/><span class="text-primary-container">Notices.</span></h1>
+    <h1 class="font-headline text-3xl sm:text-5xl font-black tracking-tighter text-on-surface mb-10">Broadcast<br/><span class="text-primary-container">Notices.</span></h1>
 
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl mb-8">
       <h3 class="font-headline text-xl font-extrabold text-primary mb-4">New notice</h3>
@@ -342,6 +361,11 @@
 <style>
   .dow-cb:checked + span { background: #15157d; color: white; border-color: #15157d; }
   .format-radio:checked + span { background: #15157d; color: white; border-color: #15157d; }
+  @media (max-width: 767px) {
+    aside { transform: translateX(-100%); transition: transform 0.3s; position: absolute; }
+    aside.sidebar-open { transform: translateX(0); }
+    main { padding-top: 60px; }
+  }
 </style>
 
 <script>
@@ -527,12 +551,14 @@
       renderBlockouts();
       renderReasonSlots();
       renderSlotBlocks();
+      renderPollPreview();
       document.getElementById('reason-required-section').classList.remove('hidden');
     } else {
       banner.classList.add('hidden');
       blocksSect.classList.add('hidden');
       renderBlockouts();
       document.getElementById('reason-required-section').classList.add('hidden');
+      document.getElementById('poll-preview-section').classList.add('hidden');
     }
   }
 
@@ -578,6 +604,99 @@
         else if (!cb.checked) win.reasonRequiredSlots = win.reasonRequiredSlots.filter(x => x !== k);
         Roster.setPollWindow(win);
       });
+    });
+  }
+
+  function getPreviewWeeks() {
+    const pollKeys = Roster.getPollSlotKeys();
+    if (!pollKeys.length) return [];
+    const firstDate = Roster.parseSlotKey(pollKeys[0]);
+    const lastDate = Roster.parseSlotKey(pollKeys[pollKeys.length - 1]);
+    const weeks = [];
+    const startOfWeekDate = new Date(firstDate);
+    startOfWeekDate.setDate(startOfWeekDate.getDate() - startOfWeekDate.getDay());
+    for (let d = new Date(startOfWeekDate); d <= lastDate; d.setDate(d.getDate() + 7)) {
+      weeks.push(new Date(d));
+    }
+    return weeks;
+  }
+
+  function renderPollPreview() {
+    const pollKeys = Roster.getPollSlotKeys();
+    const win = Roster.getPollWindow();
+    const previewSection = document.getElementById('poll-preview-section');
+    if (!win || !win.active) { previewSection.classList.add('hidden'); return; }
+    previewSection.classList.remove('hidden');
+
+    const weeks = getPreviewWeeks();
+    const weekSelect = document.getElementById('preview-week-select');
+    weekSelect.innerHTML = weeks.map((w, i) => {
+      const weekEnd = new Date(w);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const weekLabel = w.getMonth() === weekEnd.getMonth()
+        ? `${monthNames[w.getMonth()]} ${w.getDate()}–${weekEnd.getDate()}`
+        : `${monthNames[w.getMonth()]} ${w.getDate()} – ${monthNames[weekEnd.getMonth()]} ${weekEnd.getDate()}`;
+      return `<option value="${i}">Week of ${weekLabel}</option>`;
+    }).join('');
+    weekSelect.addEventListener('change', renderPollPreview);
+
+    const selectedWeekIdx = parseInt(weekSelect.value || 0);
+    const selectedWeekStart = weeks[selectedWeekIdx];
+    const selectedWeekEnd = new Date(selectedWeekStart);
+    selectedWeekEnd.setDate(selectedWeekEnd.getDate() + 6);
+
+    const weekSlots = pollKeys.filter(k => {
+      const d = Roster.parseSlotKey(k);
+      return d >= selectedWeekStart && d < new Date(selectedWeekEnd.getTime() + 86400000);
+    });
+
+    const reasonReq = new Set(win ? (win.reasonRequiredSlots || []) : []);
+    const byDate = {};
+    weekSlots.forEach(k => {
+      const date = k.split('T')[0];
+      if (!byDate[date]) byDate[date] = [];
+      byDate[date].push(k);
+    });
+
+    const list = document.getElementById('preview-slots-list');
+    list.innerHTML = Object.entries(byDate).sort().map(([date, slots]) => {
+      const d = new Date(date + 'T12:00:00');
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const dateLabel = `${dayNames[d.getDay()]}, ${monthNames[d.getMonth()]} ${d.getDate()}`;
+      const slotsHtml = slots.sort().map(k => {
+        const checked = reasonReq.has(k);
+        const timeStr = Roster.formatSlot(k);
+        return `<label class="flex items-center gap-3 p-2 ml-4 rounded-lg bg-surface-container-lowest cursor-pointer hover:bg-surface-container-low">
+          <input type="checkbox" data-preview-reason="${k}" ${checked ? 'checked' : ''} class="w-4 h-4 rounded text-primary"/>
+          <span class="flex-1 text-xs">${timeStr}</span>
+        </label>`;
+      }).join('');
+      return `<div class="p-3 rounded-lg bg-surface-container-low border border-outline-variant/10">
+        <p class="font-bold text-sm text-primary mb-2">${dateLabel}</p>
+        <div>${slotsHtml}</div>
+      </div>`;
+    }).join('');
+
+    list.querySelectorAll('[data-preview-reason]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const win = Roster.getPollWindow();
+        if (!win) return;
+        win.reasonRequiredSlots = win.reasonRequiredSlots || [];
+        const k = cb.dataset.previewReason;
+        if (cb.checked && !win.reasonRequiredSlots.includes(k)) win.reasonRequiredSlots.push(k);
+        else if (!cb.checked) win.reasonRequiredSlots = win.reasonRequiredSlots.filter(x => x !== k);
+        Roster.setPollWindow(win);
+        renderReasonSlots();
+      });
+    });
+
+    document.getElementById('preview-collapse-all').addEventListener('click', () => {
+      list.querySelectorAll('[data-preview-reason]').forEach(cb => cb.parentElement.parentElement.style.display = 'none');
+    });
+    document.getElementById('preview-expand-all').addEventListener('click', () => {
+      list.querySelectorAll('[data-preview-reason]').forEach(cb => cb.parentElement.parentElement.style.display = 'block');
     });
   }
 
@@ -672,6 +791,19 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     Roster.ensureSeed();
+
+    const sidebar = document.querySelector('aside');
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    if (mobileMenuToggle) {
+      mobileMenuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('sidebar-open');
+      });
+      document.addEventListener('click', (e) => {
+        if (!sidebar.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+          sidebar.classList.remove('sidebar-open');
+        }
+      });
+    }
 
     const gate = document.getElementById('gate');
     const app = document.getElementById('admin-app');

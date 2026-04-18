@@ -244,19 +244,22 @@
         const dd = String(d.getDate()).padStart(2, '0');
         if (blockouts.has(`${y}-${mo}-${dd}`)) continue;
 
+        const step     = (win.halfHour !== false) ? 30 : 60;
+        const startMin = win.startHour * 60 + (win.startMinute || 0);
+        const endMin   = win.endHour   * 60 + (win.endMinute   || 0);
+        for (let t = startMin; t <= endMin; t += step) {
+          keys.push(Roster.buildSlotKey(d, Math.floor(t / 60), t % 60));
+        }
+
         if (useBlocks) {
           win.slotBlocks.forEach(block => {
             const h = Math.floor(block.startMinute / 60);
             const m = block.startMinute % 60;
-            keys.push(Roster.buildSlotKey(d, h, m));
+            const blockKey = Roster.buildSlotKey(d, h, m);
+            if (!keys.includes(blockKey)) {
+              keys.push(blockKey);
+            }
           });
-        } else {
-          const step     = (win.halfHour !== false) ? 30 : 60;
-          const startMin = win.startHour * 60 + (win.startMinute || 0);
-          const endMin   = win.endHour   * 60 + (win.endMinute   || 0);
-          for (let t = startMin; t <= endMin; t += step) {
-            keys.push(Roster.buildSlotKey(d, Math.floor(t / 60), t % 60));
-          }
         }
       }
       return keys;

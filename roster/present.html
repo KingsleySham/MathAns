@@ -40,7 +40,7 @@
 <body class="bg-surface font-body text-on-surface antialiased min-h-screen flex items-center justify-center p-8">
 
 <!-- STEP 1: Welcome + Name selector + Disclaimer -->
-<div id="step-welcome" class="max-w-md w-full bg-white rounded-[2rem] p-8 shadow-lg">
+<div id="step-welcome" class="max-w-md w-full bg-white rounded-2xl sm:rounded-[2rem] p-6 sm:p-8 shadow-lg">
   <div class="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-6">
     <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1;">event_available</span>
   </div>
@@ -74,7 +74,7 @@
 </div>
 
 <!-- STEP 2: Slot picker -->
-<div id="step-slots" class="hidden max-w-4xl w-full bg-white rounded-[2rem] p-8 shadow-lg">
+<div id="step-slots" class="hidden max-w-4xl w-full bg-white rounded-2xl sm:rounded-[2rem] p-6 sm:p-8 shadow-lg mx-auto">
   <div class="mb-8">
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -90,21 +90,36 @@
     </div>
   </div>
 
-  <div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-auto mb-8">
+  <div class="mb-6 flex items-center justify-between gap-4">
+    <button id="prev-week-btn" class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full text-xs font-bold flex items-center gap-2 active:scale-95 transition-all">
+      <span class="material-symbols-outlined text-sm">chevron_left</span> <span class="hidden sm:inline">Prev week</span>
+    </button>
+    <p id="current-week-label" class="text-xs font-bold text-on-surface-variant flex-1 text-center"></p>
+    <button id="next-week-btn" class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full text-xs font-bold flex items-center gap-2 active:scale-95 transition-all">
+      <span class="hidden sm:inline">Next week</span> <span class="material-symbols-outlined text-sm">chevron_right</span>
+    </button>
+  </div>
+
+  <div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-x-auto mb-8">
     <div id="calendar-grid"></div>
   </div>
 
-  <div class="flex justify-between items-center gap-4">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div class="flex-1">
       <p class="text-xs text-on-surface-variant mb-2">Marked so far:</p>
-      <div class="flex gap-4">
+      <div class="flex gap-4 flex-wrap">
         <div><span class="px-3 py-1 rounded-full bg-primary text-white text-xs font-bold"><span id="stat-avail">0</span> available</span></div>
         <div><span class="px-3 py-1 rounded-full bg-error-container text-error text-xs font-bold"><span id="stat-block">0</span> unavailable</span></div>
       </div>
     </div>
-    <button id="submit-btn" class="px-8 py-4 bg-primary text-white rounded-full font-bold flex items-center gap-2 shadow-lg active:scale-95 transition-all">
-      <span class="material-symbols-outlined">check</span> Submit
-    </button>
+    <div class="flex gap-2 w-full sm:w-auto">
+      <button id="clear-all-btn" class="flex-1 sm:flex-none px-6 py-4 bg-surface-container-high text-on-surface rounded-full font-bold text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-sm">clear_all</span> Clear all
+      </button>
+      <button id="submit-btn" class="flex-1 sm:flex-none px-8 py-4 bg-primary text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+        <span class="material-symbols-outlined">check</span> Submit
+      </button>
+    </div>
   </div>
 </div>
 
@@ -128,6 +143,7 @@
   let currentSlots = { available: [], blocked: [] };
   let pollSlotKeys = [];
   let weekStart = null;
+  let currentWeekIndex = 0;
 
   function startOfWeek(d) {
     const c = new Date(d); c.setHours(0,0,0,0);
@@ -187,15 +203,42 @@
     document.getElementById('continue-btn').disabled = !ok;
   }
 
+  function getAllWeekStarts() {
+    if (!pollSlotKeys.length) return [];
+    const firstDate = Roster.parseSlotKey(pollSlotKeys[0]);
+    const lastDate = Roster.parseSlotKey(pollSlotKeys[pollSlotKeys.length - 1]);
+    const weeks = [];
+    for (let d = startOfWeek(firstDate); d <= lastDate; d.setDate(d.getDate() + 7)) {
+      weeks.push(new Date(d));
+    }
+    return weeks;
+  }
+
   function buildWeekGrid() {
     if (!pollSlotKeys.length) return;
     const pollSet = new Set(pollSlotKeys);
+    const allWeeks = getAllWeekStarts();
+    if (currentWeekIndex < 0 || currentWeekIndex >= allWeeks.length) currentWeekIndex = 0;
+
+    const displayWeekStart = allWeeks[currentWeekIndex];
     const days = [];
-    for (let i = 0; i < 7; i++) days.push(addDays(weekStart, i));
+    for (let i = 0; i < 7; i++) days.push(addDays(displayWeekStart, i));
+
+    document.getElementById('prev-week-btn').disabled = currentWeekIndex === 0;
+    document.getElementById('next-week-btn').disabled = currentWeekIndex === allWeeks.length - 1;
+    const weekEnd = new Date(displayWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const weekLabel = displayWeekStart.getDate() === weekEnd.getDate()
+      ? `${monthNames[displayWeekStart.getMonth()]} ${displayWeekStart.getDate()}`
+      : displayWeekStart.getMonth() === weekEnd.getMonth()
+        ? `${monthNames[displayWeekStart.getMonth()]} ${displayWeekStart.getDate()}–${weekEnd.getDate()}`
+        : `${monthNames[displayWeekStart.getMonth()]} ${displayWeekStart.getDate()} – ${monthNames[weekEnd.getMonth()]} ${weekEnd.getDate()}`;
+    document.getElementById('current-week-label').textContent = `Week of ${weekLabel}`;
 
     const weekPollSlots = pollSlotKeys.filter(k => {
       const d = Roster.parseSlotKey(k);
-      return d >= weekStart && d < addDays(weekStart, 7);
+      return d >= displayWeekStart && d < addDays(displayWeekStart, 7);
     });
 
     const grid = document.getElementById('calendar-grid');
@@ -208,13 +251,14 @@
     const sortedMinutes = [...minutesSet].sort((a,b) => a-b);
     const activeDayIndices = [...new Set(weekPollSlots.map(k => Roster.parseSlotKey(k).getDay()))].sort((a,b)=>a-b);
 
+    const isMobile = window.innerWidth < 768;
     let html = `<table class="w-full border-collapse text-xs">`;
-    html += '<thead><tr><th class="w-32 p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-right">Slot</th>';
+    html += '<thead><tr><th class="p-2 sm:p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-right text-[10px] sm:text-xs">Slot</th>';
     activeDayIndices.forEach(di => {
       const dayDate = days[di];
-      html += `<th class="p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-center">
-        <div class="text-[10px] uppercase tracking-widest">${DAY_NAMES[di]}</div>
-        <div class="text-2xl font-headline font-extrabold text-primary">${dayDate.getDate()}</div>
+      html += `<th class="p-2 sm:p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-center">
+        <div class="text-[8px] sm:text-[10px] uppercase tracking-widest">${DAY_NAMES[di]}</div>
+        <div class="text-lg sm:text-2xl font-headline font-extrabold text-primary">${dayDate.getDate()}</div>
       </th>`;
     });
     html += '</tr></thead><tbody>';
@@ -232,22 +276,22 @@
       const blockLabel = block ? block.label : '';
       const timeLabel = block ? `${startStr}–${blockEndStr}` : startStr;
       html += `<tr>`;
-      html += `<td class="p-2 text-right text-on-surface-variant border-r border-b border-outline-variant/10 font-medium">
-        <div class="text-[11px] font-bold text-primary">${timeLabel}</div>
-        ${blockLabel ? `<div class="text-[10px] text-secondary">${blockLabel}</div>` : ''}
+      html += `<td class="p-1 sm:p-2 text-right text-on-surface-variant border-r border-b border-outline-variant/10 font-medium whitespace-nowrap">
+        <div class="text-[9px] sm:text-[11px] font-bold text-primary">${timeLabel}</div>
+        ${blockLabel ? `<div class="text-[7px] sm:text-[10px] text-secondary">${blockLabel}</div>` : ''}
       </td>`;
       activeDayIndices.forEach(di => {
         const dayDate = days[di];
         const key = Roster.buildSlotKey(dayDate, h, m);
         if (!pollSet.has(key)) {
-          html += `<td class="p-2 border-r border-b border-outline-variant/10 bg-surface-container-highest/30"></td>`;
+          html += `<td class="p-1 border-r border-b border-outline-variant/10 bg-surface-container-highest/30"></td>`;
           return;
         }
         const isAvail = currentSlots.available.includes(key);
         const isBlocked = currentSlots.blocked.includes(key);
         const cls = isAvail ? 'available' : isBlocked ? 'blocked' : '';
-        html += `<td class="p-1 border-r border-b border-outline-variant/10">
-          <button class="slot w-full h-12 rounded-lg text-xs font-bold border border-outline-variant/20 ${cls}" data-key="${key}">${isAvail ? '✓' : isBlocked ? '✗' : ''}</button>
+        html += `<td class="p-0.5 sm:p-1 border-r border-b border-outline-variant/10">
+          <button class="slot w-full h-10 sm:h-12 rounded-lg text-xs font-bold border border-outline-variant/20 ${cls}" data-key="${key}">${isAvail ? '✓' : isBlocked ? '✗' : ''}</button>
         </td>`;
       });
       html += '</tr>';
@@ -357,6 +401,24 @@
     });
 
     document.getElementById('back-btn').addEventListener('click', reset);
+
+    document.getElementById('prev-week-btn').addEventListener('click', () => {
+      currentWeekIndex = Math.max(0, currentWeekIndex - 1);
+      buildWeekGrid();
+    });
+
+    document.getElementById('next-week-btn').addEventListener('click', () => {
+      const allWeeks = getAllWeekStarts();
+      currentWeekIndex = Math.min(allWeeks.length - 1, currentWeekIndex + 1);
+      buildWeekGrid();
+    });
+
+    document.getElementById('clear-all-btn').addEventListener('click', () => {
+      currentSlots.available = [];
+      currentSlots.blocked = [];
+      buildWeekGrid();
+      updateStats();
+    });
 
     document.getElementById('submit-btn').addEventListener('click', () => {
       if (!currentStudent) return;
