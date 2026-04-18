@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="roster.js" defer></script>
+<script type="module" src="firebase-init.js"></script>
 <script>
   tailwind.config = { darkMode: "class", theme: { extend: {
     colors: {
@@ -53,15 +54,6 @@
     </h1>
   </header>
 
-  <section id="no-student" class="hidden flex-1 px-24 py-16">
-    <div class="max-w-xl mx-auto bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10 text-center">
-      <span class="material-symbols-outlined text-5xl text-primary mb-4">lock</span>
-      <h2 class="font-headline text-2xl font-extrabold text-primary mb-2">No student identity found</h2>
-      <p class="text-sm text-on-surface-variant mb-6">Head back to Registration and generate or look up a Script ID.</p>
-      <a href="registration.html" class="inline-block px-6 py-3 bg-primary text-white rounded-full font-bold">Go to Registration</a>
-    </div>
-  </section>
-
   <section id="hub" class="flex-1 px-24 py-16">
     <div class="max-w-6xl mx-auto space-y-8">
 
@@ -97,10 +89,23 @@
         </div>
       </div>
 
+      <!-- Notices section -->
+      <div id="notices-section" class="hidden bg-gradient-to-r from-secondary-fixed to-primary-fixed rounded-[2rem] p-8 border-l-4 border-secondary">
+        <div class="flex items-start gap-4">
+          <span class="material-symbols-outlined text-secondary text-3xl mt-1" style="font-variation-settings:'FILL' 1;">notifications_active</span>
+          <div class="flex-1">
+            <h3 class="font-headline text-lg font-extrabold text-secondary mb-3">Notices from admin</h3>
+            <div id="notices-list" class="space-y-2"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10">
         <div class="flex items-center justify-between mb-6">
           <h2 class="font-headline text-2xl font-extrabold text-primary">Scheduled rehearsals</h2>
-          <span class="text-xs text-on-surface-variant">Your attendance is based on the availability you marked.</span>
+          <button id="print-rehearsal-btn" class="flex items-center gap-2 px-4 py-2 bg-surface-container-high rounded-full text-xs font-bold hover:bg-outline-variant/20">
+            <span class="material-symbols-outlined">print</span> Print
+          </button>
         </div>
         <div id="rehearsal-list" class="space-y-3"></div>
       </div>
@@ -128,6 +133,20 @@
     <p class="mt-6 font-label text-[10px] text-inverse-on-surface/30 tracking-widest">© 2024 THE ORCHESTRAL FRAME. ALL RIGHTS RESERVED.</p>
   </footer>
 </main>
+
+<!-- Poll popup modal -->
+<div id="poll-popup" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl">
+    <div class="w-16 h-16 rounded-2xl bg-primary-fixed flex items-center justify-center mb-4">
+      <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings:'FILL' 1;">poll</span>
+    </div>
+    <h2 class="font-headline text-2xl font-extrabold text-primary mb-2">New availability poll</h2>
+    <p id="poll-popup-desc" class="text-sm text-on-surface-variant mb-6">—</p>
+    <a href="availability.html" class="w-full py-3 bg-primary text-white rounded-full font-bold flex items-center justify-center gap-2">
+      <span class="material-symbols-outlined">arrow_forward</span> Go to availability
+    </a>
+  </div>
+</div>
 
 <div id="leave-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
   <div class="bg-white rounded-[2rem] p-8 max-w-md w-full">
@@ -216,7 +235,7 @@
       return `<div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-low">
         <div>
           <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slotKey)}</p>
-          <p class="text-xs text-on-surface-variant mt-1">${r.label}</p>
+          <p class="text-xs text-on-surface-variant mt-1">${r.label}${r.format ? ' · ' + (r.format === 'video' ? '📹 VC' : '📍 Offline') : ''}</p>
         </div>
         <div class="flex gap-2 items-center">
           <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${color}">${you}</span>
@@ -258,11 +277,29 @@
     document.getElementById('stat-leaves').textContent = leaves.length;
   }
 
+  function renderNotices() {
+    const notices = Roster.getNotices();
+    if (notices.length === 0) {
+      document.getElementById('notices-section').classList.add('hidden');
+      return;
+    }
+    document.getElementById('notices-section').classList.remove('hidden');
+    const list = document.getElementById('notices-list');
+    list.innerHTML = notices.map(n => {
+      const icon = n.severity === 'urgent' ? '🚨' : n.severity === 'warning' ? '⚠️' : 'ℹ️';
+      return `<div class="p-3 bg-white/50 rounded-lg">
+        <p class="font-bold text-sm">${icon} ${n.title}</p>
+        <p class="text-xs text-on-surface-variant mt-1">${n.body}</p>
+      </div>`;
+    }).join('');
+  }
+
   function renderAll() {
     renderCountdown();
     renderRehearsalList();
     renderCheckinHistory();
     renderLeaves();
+    renderNotices();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -273,10 +310,40 @@
     document.getElementById('student-name').textContent = currentStudent.name;
     document.getElementById('student-id').textContent = currentStudent.scriptId || '(unregistered)';
     document.getElementById('student-role').textContent = currentStudent.role || 'Ensemble';
+
+    /* check for new poll */
+    const win = Roster.getPollWindow();
+    if (win && !Roster.hasSeenPoll(currentStudent.id, win.id)) {
+      const popup = document.getElementById('poll-popup');
+      document.getElementById('poll-popup-desc').textContent = `${win.startDate} → ${win.endDate} · Go to Availability to mark your slots.`;
+      popup.classList.remove('hidden');
+      Roster.markPollSeen(currentStudent.id, win.id);
+    }
+
     renderAll();
     countdownTimer = setInterval(renderCountdown, 30 * 1000);
     document.getElementById('cancel-leave').addEventListener('click', () => {
       document.getElementById('leave-modal').classList.replace('flex', 'hidden');
+    });
+
+    document.getElementById('print-rehearsal-btn').addEventListener('click', () => {
+      const printWin = window.open('', '', 'width=900,height=700');
+      printWin.document.write(`<html><head><title>My Rehearsals - Print</title>
+        <style>
+          body { font-family: sans-serif; padding: 20px; }
+          h2 { color: #15157d; }
+          .item { padding: 12px; border-bottom: 1px solid #ccc; }
+          .item p { margin: 4px 0; }
+        </style>
+      </head><body>`);
+      printWin.document.write('<h2>' + currentStudent.name + ' - Scheduled Rehearsals</h2>');
+      const rehearsals = Roster.getRehearsals().sort((a, b) => a.slotKey.localeCompare(b.slotKey));
+      rehearsals.forEach(r => {
+        printWin.document.write(`<div class="item"><p><b>${Roster.formatSlot(r.slotKey)}</b></p></div>`);
+      });
+      printWin.document.write('</body></html>');
+      printWin.document.close();
+      setTimeout(() => printWin.print(), 500);
     });
   });
 </script>

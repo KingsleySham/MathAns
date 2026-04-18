@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="roster.js" defer></script>
+<script type="module" src="firebase-init.js"></script>
 <script>
   tailwind.config = { darkMode: "class", theme: { extend: {
     colors: {
@@ -26,19 +27,18 @@
 </script>
 <style>
   .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  .fade-in { animation: fadeUp 0.5s ease forwards; }
   .tab-btn.active { background: #15157d; color: white; }
   .tab-btn { transition: all .2s; }
   .section-panel { display: none; }
   .section-panel.active { display: block; }
+  .format-radio:checked + label { background: #15157d; color: white; border-color: #15157d; }
 </style>
 </head>
 <body class="bg-surface font-body text-on-surface antialiased min-h-screen">
 
 <!-- PASSCODE GATE -->
 <div id="gate" class="min-h-screen flex items-center justify-center p-6" style="background: linear-gradient(135deg, #15157d 0%, #2e3192 50%, #7c44a8 100%);">
-  <div class="bg-white rounded-[2rem] p-10 max-w-md w-full shadow-2xl fade-in">
+  <div class="bg-white rounded-[2rem] p-10 max-w-md w-full shadow-2xl">
     <div class="text-center mb-8">
       <div class="w-16 h-16 rounded-2xl bg-primary mx-auto flex items-center justify-center mb-4">
         <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1;">admin_panel_settings</span>
@@ -86,8 +86,14 @@
       <span class="material-symbols-outlined">event_busy</span><span>Leave Requests</span>
       <span id="leave-badge" class="ml-auto hidden text-[10px] font-bold bg-error text-white px-2 py-0.5 rounded-full"></span>
     </button>
+    <button data-tab="notices" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-slate-300 hover:bg-white/10">
+      <span class="material-symbols-outlined">notifications</span><span>Notices</span>
+    </button>
   </nav>
   <div class="px-4 pb-8 space-y-2">
+    <a href="present.html" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-xl w-full text-left">
+      <span class="material-symbols-outlined">screen_share</span><span class="text-xs">Present Mode</span>
+    </a>
     <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-xl w-full">
       <span class="material-symbols-outlined">home</span><span class="text-xs">Student Landing</span>
     </a>
@@ -138,12 +144,12 @@
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 mb-6">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="font-headline text-2xl font-extrabold text-primary">Top candidates</h2>
-          <p class="text-xs text-on-surface-variant mt-1">Ranked by available students · from current poll window</p>
+          <h2 class="font-headline text-2xl font-extrabold text-primary">Availability by slot</h2>
+          <p class="text-xs text-on-surface-variant mt-1">Appointment view of cast availability</p>
         </div>
         <button id="refresh-overview" class="px-4 py-2 bg-surface-container-high rounded-full text-xs font-bold">Refresh</button>
       </div>
-      <div id="candidates" class="space-y-3"></div>
+      <div id="appointment-view" class="space-y-6"></div>
     </div>
 
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
@@ -153,10 +159,10 @@
   </div>
 
   <!-- ── POLL WINDOW ───────────────────────────────────── -->
-  <div id="tab-poll" class="section-panel flex-1 px-12 py-16">
+  <div id="tab-poll" class="section-panel flex-1 px-12 py-16 overflow-y-auto">
     <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Poll Window</span>
     <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-4">Ask&nbsp;students<br/><span class="text-primary-container">when they're free.</span></h1>
-    <p class="text-on-surface-variant text-sm max-w-xl mb-10">Define the date range and time slots you want students to respond to. Once you save and open the poll, students will only see these slots on their Availability page.</p>
+    <p class="text-on-surface-variant text-sm max-w-xl mb-10">Define the date range, time slots, and any blockovers you want to exclude. Format, and optional reason prompts.</p>
 
     <div id="poll-active-banner" class="hidden bg-primary-fixed rounded-2xl p-5 flex items-center gap-4 mb-6">
       <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;">check_circle</span>
@@ -167,7 +173,7 @@
       <button id="close-poll-btn" class="px-4 py-2 bg-error text-white rounded-full text-xs font-bold">Close poll</button>
     </div>
 
-    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl">
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl mb-8">
       <div class="grid grid-cols-2 gap-6 mb-6">
         <div>
           <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Start date</label>
@@ -194,35 +200,56 @@
 
       <div class="grid grid-cols-2 gap-6 mb-6">
         <div>
-          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Start time</label>
-          <select id="poll-hour-start" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed">
-            <option value="9">9:00 am</option><option value="10">10:00 am</option><option value="11">11:00 am</option>
-            <option value="12">12:00 pm</option><option value="13">1:00 pm</option><option value="14">2:00 pm</option>
-            <option value="15">3:00 pm</option><option value="16">4:00 pm</option><option value="17" selected>5:00 pm</option>
-            <option value="18">6:00 pm</option><option value="19">7:00 pm</option><option value="20">8:00 pm</option>
-          </select>
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Start time (hour:minute)</label>
+          <select id="poll-time-start" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"></select>
         </div>
         <div>
-          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">End time</label>
-          <select id="poll-hour-end" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed">
-            <option value="10">10:00 am</option><option value="11">11:00 am</option><option value="12">12:00 pm</option>
-            <option value="13">1:00 pm</option><option value="14">2:00 pm</option><option value="15">3:00 pm</option>
-            <option value="16">4:00 pm</option><option value="17">5:00 pm</option><option value="18">6:00 pm</option>
-            <option value="19">7:00 pm</option><option value="20">8:00 pm</option><option value="21" selected>9:00 pm</option>
-            <option value="22">10:00 pm</option>
-          </select>
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">End time (hour:minute)</label>
+          <select id="poll-time-end" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"></select>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Format</label>
+        <div class="flex gap-4">
+          <label class="flex items-center cursor-pointer">
+            <input type="radio" name="format" value="video" class="format-radio sr-only"/>
+            <span class="px-4 py-2 rounded-full border-2 border-outline-variant text-xs font-bold transition-all">📹 Video Conference</span>
+          </label>
+          <label class="flex items-center cursor-pointer">
+            <input type="radio" name="format" value="offline" class="format-radio sr-only" checked/>
+            <span class="px-4 py-2 rounded-full border-2 border-outline-variant text-xs font-bold transition-all bg-primary text-white border-primary">📍 Offline</span>
+          </label>
         </div>
       </div>
 
       <label class="flex items-center gap-3 cursor-pointer mb-8">
         <input id="half-hour" type="checkbox" checked class="w-5 h-5 rounded text-primary focus:ring-primary-fixed"/>
-        <span class="text-sm font-medium">Include half-hour slots (e.g. 5:30 pm)</span>
+        <span class="text-sm font-medium">Include half-hour slots (e.g. 3:30 pm)</span>
       </label>
 
       <p id="poll-error" class="text-xs text-error mb-3 hidden">Please fix errors before saving.</p>
       <button id="save-poll-btn" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
         <span class="material-symbols-outlined">save</span> Save &amp; open poll
       </button>
+    </div>
+
+    <!-- Blockout Dates -->
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl mb-8">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Blockout dates</h3>
+      <p class="text-xs text-on-surface-variant mb-4">Exclude specific days (e.g., holidays) from the poll.</p>
+      <div class="flex gap-2 mb-4">
+        <input id="blockout-date" type="date" class="flex-1 bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"/>
+        <button id="add-blockout-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Add</button>
+      </div>
+      <div id="blockout-list" class="space-y-2"></div>
+    </div>
+
+    <!-- Reason-Required Slots (shown when poll is active) -->
+    <div id="reason-required-section" class="hidden bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Require typed reason</h3>
+      <p class="text-xs text-on-surface-variant mb-4">Mark slots where students must provide a reason if they block their time.</p>
+      <div id="reason-slots-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
     </div>
   </div>
 
@@ -266,23 +293,60 @@
     </div>
   </div>
 
+  <!-- ── NOTICES ────────────────────────────────────────── -->
+  <div id="tab-notices" class="section-panel flex-1 px-12 py-16">
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Notices</span>
+    <h1 class="font-headline text-5xl font-black tracking-tighter text-on-surface mb-10">Broadcast<br/><span class="text-primary-container">Notices.</span></h1>
+
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl mb-8">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">New notice</h3>
+      <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Title</label>
+      <input id="notice-title" type="text" placeholder="e.g., Schedule Update" class="w-full bg-surface-container-high border-none rounded-xl p-4 mb-4 focus:ring-2 focus:ring-primary-fixed"/>
+      <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Message</label>
+      <textarea id="notice-body" rows="3" placeholder="What do students need to know?" class="w-full bg-surface-container-high border-none rounded-xl p-4 mb-4 focus:ring-2 focus:ring-primary-fixed"></textarea>
+      <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Type</label>
+      <div class="flex gap-3 mb-6">
+        <label class="flex items-center"><input type="radio" name="notice-severity" value="info" checked class="sr-only"/><span class="px-4 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer bg-primary text-white border-primary">ℹ️ Info</span></label>
+        <label class="flex items-center"><input type="radio" name="notice-severity" value="warning" class="sr-only"/><span class="px-4 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer">⚠️ Warning</span></label>
+        <label class="flex items-center"><input type="radio" name="notice-severity" value="urgent" class="sr-only"/><span class="px-4 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer">🚨 Urgent</span></label>
+      </div>
+      <button id="post-notice-btn" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined">send</span> Post Notice
+      </button>
+    </div>
+
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Current notices</h3>
+      <div id="notices-list" class="space-y-3"></div>
+    </div>
+  </div>
+
 </main>
 </div><!-- /admin-app -->
 
 <style>
   .dow-cb:checked + span { background: #15157d; color: white; border-color: #15157d; }
+  .format-radio:checked + span { background: #15157d; color: white; border-color: #15157d; }
 </style>
 
 <script>
   const DAY_NAMES_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-  function fmtHour(h) {
-    const ampm = h >= 12 ? 'pm' : 'am';
-    const h12 = ((h + 11) % 12) + 1;
-    return `${h12}:00 ${ampm}`;
+  function timeOptions(selected) {
+    let html = '';
+    for (let h = 9; h <= 22; h++) {
+      for (let m of [0, 30]) {
+        if (h === 22 && m === 30) break;
+        const ampm = h >= 12 ? 'pm' : 'am';
+        const h12 = ((h + 11) % 12) + 1;
+        const label = `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+        const val = `${h}:${m}`;
+        html += `<option value="${val}" ${val === selected ? 'selected' : ''}>${label}</option>`;
+      }
+    }
+    return html;
   }
 
-  /* ── tab switching ── */
   function switchTab(name) {
     document.querySelectorAll('.tab-btn').forEach(b => {
       const active = b.dataset.tab === name;
@@ -295,9 +359,9 @@
     if (name === 'cast') renderCast();
     if (name === 'leaves') renderLeaves();
     if (name === 'poll') renderPoll();
+    if (name === 'notices') renderNotices();
   }
 
-  /* ── overview ── */
   function renderOverview() {
     const ledger = Roster.getLedger();
     const rehearsals = Roster.getRehearsals();
@@ -321,39 +385,52 @@
     const noBanner = document.getElementById('no-poll-banner');
     noBanner.classList.toggle('hidden', pollKeys.length > 0);
 
-    /* candidates */
-    const top = Roster.recommendSlots(pollKeys, 8);
+    /* appointment view grouped by date */
     const scheduled = new Set(rehearsals.map(r => r.slotKey));
-    const cEl = document.getElementById('candidates');
-    cEl.innerHTML = top.length ? top.map(r => {
-      const pct = r.total ? Math.round(r.availableIds.length / r.total * 100) : 0;
-      const isScheduled = scheduled.has(r.slot);
-      return `<div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-low gap-4">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 flex-wrap">
-            <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slot)}</p>
-            ${isScheduled ? '<span class="text-[10px] font-bold uppercase tracking-widest bg-primary text-white px-2 py-0.5 rounded-full">Scheduled</span>' : ''}
-          </div>
-          <p class="text-xs text-on-surface-variant mt-1">
-            <span class="font-bold text-primary">${r.availableIds.length}</span>/${r.total} available ·
-            <span class="font-bold text-error">${r.blockedIds.length}</span> blocked ·
-            ${r.pendingIds.length} pending
-          </p>
-        </div>
-        <div class="flex items-center gap-3 shrink-0">
-          <div class="w-24 h-2 bg-white rounded-full overflow-hidden"><div class="h-full bg-primary" style="width:${pct}%"></div></div>
-          <span class="text-xs font-bold text-primary w-8 text-right">${pct}%</span>
-          ${isScheduled
-            ? `<button data-remove="${r.slot}" class="px-3 py-2 bg-error-container text-error rounded-full text-xs font-bold">Remove</button>`
-            : `<button data-schedule="${r.slot}" class="px-3 py-2 bg-primary text-white rounded-full text-xs font-bold">Schedule</button>`}
-        </div>
-      </div>`;
-    }).join('') : '<p class="text-xs text-on-surface-variant">No availability data yet — open a poll window and ask students to respond.</p>';
+    const byDate = {};
+    pollKeys.forEach(k => {
+      const date = k.split('T')[0];
+      if (!byDate[date]) byDate[date] = [];
+      byDate[date].push(k);
+    });
 
-    cEl.querySelectorAll('[data-schedule]').forEach(btn => {
+    const avEl = document.getElementById('appointment-view');
+    let html = '';
+    Object.entries(byDate).sort().forEach(([date, slots]) => {
+      const d = new Date(date + 'T12:00:00');
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      html += `<div><h3 class="text-sm font-bold text-on-surface-variant mb-2 px-2">${DAY_NAMES_SHORT[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}</h3><div class="space-y-2">`;
+      slots.forEach(k => {
+        const agg = Roster.aggregateSlot(k);
+        const pct = agg.total ? Math.round(agg.availableIds.length / agg.total * 100) : 0;
+        const isScheduled = scheduled.has(k);
+        const [, timePart] = k.split('T');
+        const [hh, mm] = timePart.split(':').map(Number);
+        const ampm = hh >= 12 ? 'pm' : 'am';
+        const h12 = ((hh + 11) % 12) + 1;
+        const timeStr = `${h12}:${String(mm).padStart(2,'0')}${ampm}`;
+        const barColor = isScheduled ? 'bg-primary' : pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-400' : 'bg-rose-400';
+        html += `<div class="flex items-center gap-4 px-4 py-3 rounded-xl ${isScheduled ? 'bg-primary-fixed' : 'bg-surface-container-low'}">
+          <div class="w-16 text-right text-sm font-bold ${isScheduled ? 'text-primary' : 'text-on-surface-variant'}">${timeStr}</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <div class="h-2 w-32 bg-white/60 rounded-full overflow-hidden"><div class="${barColor} h-full" style="width:${pct}%"></div></div>
+              <span class="text-xs font-bold">${agg.availableIds.length}/${agg.total}</span>
+              ${isScheduled ? '<span class="text-[10px] font-bold uppercase tracking-widest bg-primary text-white px-2 py-0.5 rounded-full">Scheduled</span>' : ''}
+            </div>
+            <p class="text-[10px] text-on-surface-variant mt-0.5">${agg.pendingIds.length} pending · ${agg.blockedIds.length} blocked</p>
+          </div>
+          <div>${isScheduled ? `<button data-remove="${k}" class="px-3 py-1.5 bg-white text-error rounded-full text-xs font-bold">Remove</button>` : `<button data-schedule="${k}" class="px-3 py-1.5 bg-primary text-white rounded-full text-xs font-bold">Schedule</button>`}</div>
+        </div>`;
+      });
+      html += '</div></div>';
+    });
+    avEl.innerHTML = html || '<p class="text-xs text-on-surface-variant">No poll slots yet.</p>';
+
+    avEl.querySelectorAll('[data-schedule]').forEach(btn => {
       btn.addEventListener('click', () => { Roster.addRehearsal(btn.dataset.schedule); renderOverview(); });
     });
-    cEl.querySelectorAll('[data-remove]').forEach(btn => {
+    avEl.querySelectorAll('[data-remove]').forEach(btn => {
       btn.addEventListener('click', () => {
         const r = Roster.getRehearsals().find(x => x.slotKey === btn.dataset.remove);
         if (r) Roster.removeRehearsal(r.id);
@@ -382,30 +459,78 @@
     });
   }
 
-  /* ── poll window ── */
   function renderPoll() {
     const win = Roster.getPollWindow();
     const banner = document.getElementById('poll-active-banner');
+    document.getElementById('poll-time-start').innerHTML = timeOptions(win ? `${win.startHour}:${win.startMinute || 0}` : '15:30');
+    document.getElementById('poll-time-end').innerHTML = timeOptions(win ? `${win.endHour}:${win.endMinute || 0}` : '18:00');
     if (win && win.active) {
       banner.classList.remove('hidden');
       const days = (win.daysOfWeek || []).map(d => DAY_NAMES_SHORT[d]).join(', ');
       document.getElementById('poll-active-desc').textContent =
-        `${win.startDate} → ${win.endDate} · ${days || 'All days'} · ${fmtHour(win.startHour)}–${fmtHour(win.endHour)}${win.halfHour ? ' (30 min slots)' : ''}`;
-      /* pre-fill form */
+        `${win.startDate} → ${win.endDate} · ${days || 'All days'}`;
       document.getElementById('poll-start').value = win.startDate;
       document.getElementById('poll-end').value = win.endDate;
-      document.getElementById('poll-hour-start').value = win.startHour;
-      document.getElementById('poll-hour-end').value = win.endHour;
-      document.getElementById('half-hour').checked = !!win.halfHour;
+      document.getElementById('half-hour').checked = win.halfHour !== false;
       document.querySelectorAll('.dow-cb').forEach(cb => {
         cb.checked = (win.daysOfWeek || []).includes(Number(cb.value));
       });
+      document.querySelector(`input[name="format"][value="${win.format || 'offline'}"]`).checked = true;
+      renderBlockouts();
+      renderReasonSlots();
+      document.getElementById('reason-required-section').classList.remove('hidden');
     } else {
       banner.classList.add('hidden');
+      renderBlockouts();
+      document.getElementById('reason-required-section').classList.add('hidden');
     }
   }
 
-  /* ── cast ── */
+  function renderBlockouts() {
+    const win = Roster.getPollWindow();
+    const blockouts = win ? (win.blockoutDates || []) : [];
+    const list = document.getElementById('blockout-list');
+    list.innerHTML = blockouts.length ? blockouts.map(d => `<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+      <span class="text-sm text-primary font-bold">${d}</span>
+      <button data-remove-blockout="${d}" class="px-2 py-1 text-error text-xs font-bold">Remove</button>
+    </div>`).join('') : '<p class="text-xs text-on-surface-variant">No blockout dates.</p>';
+    list.querySelectorAll('[data-remove-blockout]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const win = Roster.getPollWindow();
+        if (win) {
+          win.blockoutDates = (win.blockoutDates || []).filter(d => d !== btn.dataset.removeBlockout);
+          Roster.setPollWindow(win);
+          renderPoll();
+        }
+      });
+    });
+  }
+
+  function renderReasonSlots() {
+    const pollKeys = Roster.getPollSlotKeys();
+    const win = Roster.getPollWindow();
+    const reasonReq = new Set(win ? (win.reasonRequiredSlots || []) : []);
+    const list = document.getElementById('reason-slots-list');
+    list.innerHTML = pollKeys.map(k => {
+      const checked = reasonReq.has(k);
+      return `<label class="flex items-center gap-3 p-3 rounded-lg bg-surface-container-low cursor-pointer">
+        <input type="checkbox" data-reason-slot="${k}" ${checked ? 'checked' : ''} class="w-4 h-4 rounded text-primary"/>
+        <span class="flex-1 text-sm">${Roster.formatSlot(k)}</span>
+      </label>`;
+    }).join('');
+    list.querySelectorAll('[data-reason-slot]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const win = Roster.getPollWindow();
+        if (!win) return;
+        win.reasonRequiredSlots = win.reasonRequiredSlots || [];
+        const k = cb.dataset.reasonSlot;
+        if (cb.checked && !win.reasonRequiredSlots.includes(k)) win.reasonRequiredSlots.push(k);
+        else if (!cb.checked) win.reasonRequiredSlots = win.reasonRequiredSlots.filter(x => x !== k);
+        Roster.setPollWindow(win);
+      });
+    });
+  }
+
   function renderCast() {
     const ledger = Roster.getLedger();
     const avMap = Roster.getAvailabilityMap();
@@ -425,7 +550,6 @@
     }).join('') : '<p class="text-xs text-on-surface-variant">Ledger is empty.</p>';
   }
 
-  /* ── leaves ── */
   function renderLeaves() {
     const leaves = Roster.getLeaves();
     const ledger = Roster.getLedger();
@@ -460,11 +584,30 @@
     });
   }
 
-  /* ── init ── */
+  function renderNotices() {
+    const notices = Roster.getNotices();
+    const list = document.getElementById('notices-list');
+    list.innerHTML = notices.length ? notices.map(n => {
+      const icon = n.severity === 'urgent' ? '🚨' : n.severity === 'warning' ? '⚠️' : 'ℹ️';
+      return `<div class="p-4 rounded-xl bg-surface-container-low border-l-4 ${n.severity === 'urgent' ? 'border-error' : n.severity === 'warning' ? 'border-amber-400' : 'border-primary'}">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <p class="font-bold text-sm text-on-surface">${icon} ${n.title}</p>
+            <p class="text-sm text-on-surface-variant mt-1">${n.body}</p>
+            <p class="text-xs text-on-surface-variant mt-2">${new Date(n.createdAt).toLocaleString()}</p>
+          </div>
+          <button data-del-notice="${n.id}" class="px-2 py-1 text-error text-xs font-bold">Delete</button>
+        </div>
+      </div>`;
+    }).join('') : '<p class="text-xs text-on-surface-variant">No notices yet.</p>';
+    list.querySelectorAll('[data-del-notice]').forEach(btn => {
+      btn.addEventListener('click', () => { Roster.removeNotice(btn.dataset.delNotice); renderNotices(); });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     Roster.ensureSeed();
 
-    /* gate */
     const gate = document.getElementById('gate');
     const app = document.getElementById('admin-app');
     function showApp() { gate.classList.add('hidden'); app.classList.remove('hidden'); renderOverview(); renderPoll(); }
@@ -472,19 +615,17 @@
 
     document.getElementById('gate-btn').addEventListener('click', () => {
       const code = document.getElementById('passcode-input').value;
-      if (Roster.authenticateAdmin(code)) { showApp(); }
-      else { document.getElementById('gate-error').classList.remove('hidden'); }
+      if (Roster.authenticateAdmin(code)) showApp();
+      else document.getElementById('gate-error').classList.remove('hidden');
     });
     document.getElementById('passcode-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') document.getElementById('gate-btn').click();
     });
 
-    /* tabs */
     document.querySelectorAll('[data-tab]').forEach(btn => {
       btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
 
-    /* admin sign out */
     document.getElementById('admin-signout').addEventListener('click', () => {
       Roster.signOutAdmin();
       gate.classList.remove('hidden');
@@ -493,32 +634,59 @@
       document.getElementById('gate-error').classList.add('hidden');
     });
 
-    /* refresh */
     document.getElementById('refresh-overview').addEventListener('click', renderOverview);
 
-    /* poll window save */
+    /* poll save */
     document.getElementById('save-poll-btn').addEventListener('click', () => {
       const startDate = document.getElementById('poll-start').value;
       const endDate = document.getElementById('poll-end').value;
-      const startHour = parseInt(document.getElementById('poll-hour-start').value);
-      const endHour = parseInt(document.getElementById('poll-hour-end').value);
+      const [startH, startM] = document.getElementById('poll-time-start').value.split(':').map(Number);
+      const [endH, endM] = document.getElementById('poll-time-end').value.split(':').map(Number);
       const halfHour = document.getElementById('half-hour').checked;
       const daysOfWeek = [...document.querySelectorAll('.dow-cb:checked')].map(cb => Number(cb.value));
+      const format = document.querySelector('input[name="format"]:checked').value;
       const err = document.getElementById('poll-error');
-      if (!startDate || !endDate || startDate > endDate || startHour >= endHour) {
-        err.textContent = 'Start date/time must be before end date/time.';
-        err.classList.remove('hidden'); return;
+      if (!startDate || !endDate || startDate > endDate || (startDate === endDate && (startH * 60 + startM) >= (endH * 60 + endM))) {
+        err.textContent = 'Start time must be before end time.';
+        err.classList.remove('hidden');
+        return;
       }
       err.classList.add('hidden');
-      Roster.setPollWindow({ startDate, endDate, startHour, endHour, halfHour, daysOfWeek, active: true, createdAt: Date.now() });
+      Roster.setPollWindow({ startDate, endDate, startHour: startH, startMinute: startM, endHour: endH, endMinute: endM, halfHour, daysOfWeek, format, active: true, createdAt: Date.now() });
       renderPoll();
     });
 
-    /* close poll */
     document.getElementById('close-poll-btn').addEventListener('click', () => {
       const win = Roster.getPollWindow();
       if (win) { win.active = false; Roster.setPollWindow(win); }
       renderPoll();
+    });
+
+    /* blockout dates */
+    document.getElementById('add-blockout-btn').addEventListener('click', () => {
+      const date = document.getElementById('blockout-date').value;
+      if (!date) return;
+      const win = Roster.getPollWindow();
+      if (!win) { alert('Save poll first'); return; }
+      win.blockoutDates = win.blockoutDates || [];
+      if (!win.blockoutDates.includes(date)) {
+        win.blockoutDates.push(date);
+        Roster.setPollWindow(win);
+      }
+      document.getElementById('blockout-date').value = '';
+      renderPoll();
+    });
+
+    /* notices */
+    document.getElementById('post-notice-btn').addEventListener('click', () => {
+      const title = document.getElementById('notice-title').value.trim();
+      const body = document.getElementById('notice-body').value.trim();
+      const severity = document.querySelector('input[name="notice-severity"]:checked').value;
+      if (!title || !body) { alert('Enter title and message'); return; }
+      Roster.addNotice(title, body, severity);
+      document.getElementById('notice-title').value = '';
+      document.getElementById('notice-body').value = '';
+      renderNotices();
     });
 
     /* add student */
@@ -532,18 +700,31 @@
       renderOverview();
     });
 
-    /* day-of-week toggle styling */
-    document.querySelectorAll('.dow-cb').forEach(cb => {
+    /* day-of-week and format styling */
+    document.querySelectorAll('.dow-cb, .format-radio').forEach(cb => {
       cb.addEventListener('change', () => {
         cb.nextElementSibling.style.background = cb.checked ? '#15157d' : '';
         cb.nextElementSibling.style.color = cb.checked ? 'white' : '';
         cb.nextElementSibling.style.borderColor = cb.checked ? '#15157d' : '';
       });
-      /* init */
       if (cb.checked) {
         cb.nextElementSibling.style.background = '#15157d';
         cb.nextElementSibling.style.color = 'white';
         cb.nextElementSibling.style.borderColor = '#15157d';
+      }
+    });
+
+    /* notice severity radios */
+    document.querySelectorAll('input[name="notice-severity"]').forEach(rb => {
+      rb.addEventListener('change', () => {
+        rb.nextElementSibling.style.background = rb.checked ? '#15157d' : '';
+        rb.nextElementSibling.style.color = rb.checked ? 'white' : '';
+        rb.nextElementSibling.style.borderColor = rb.checked ? '#15157d' : '';
+      });
+      if (rb.checked) {
+        rb.nextElementSibling.style.background = '#15157d';
+        rb.nextElementSibling.style.color = 'white';
+        rb.nextElementSibling.style.borderColor = '#15157d';
       }
     });
   });
