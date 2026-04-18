@@ -17,7 +17,8 @@ const firebaseConfig = {
 const STATE_KEYS = [
   'roster.ledger', 'roster.availability', 'roster.rehearsals',
   'roster.checkins', 'roster.leaves', 'roster.project',
-  'roster.pollWindow', 'roster.notices', 'roster.presentSubmissions'
+  'roster.pollWindow', 'roster.notices', 'roster.presentSubmissions',
+  'roster.zoomConfig', 'roster.zoomSession', 'roster.zoomMeetings'
 ];
 
 function snapshotLocal() {

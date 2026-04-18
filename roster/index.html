@@ -104,8 +104,16 @@
       <p class="text-sm text-primary-fixed-dim mt-2 mb-6">Join the production in under 20 seconds. We'll generate a private Script ID for you — no email, no password.</p>
       <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary-fixed-dim mb-2">Your name</label>
       <input id="onboard-name" type="text" placeholder="e.g. Alexander Hamilton" class="w-full bg-white/10 placeholder-white/40 text-white border-none rounded-lg p-4 focus:ring-2 focus:ring-white/40 transition-all mb-4"/>
-      <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary-fixed-dim mb-2">Role / Part (optional)</label>
-      <input id="onboard-role" type="text" placeholder="e.g. Ensemble, Tom, Amanda" class="w-full bg-white/10 placeholder-white/40 text-white border-none rounded-lg p-4 focus:ring-2 focus:ring-white/40 transition-all mb-5"/>
+      <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary-fixed-dim mb-2">I am a</label>
+      <div id="onboard-role-group" class="grid grid-cols-2 gap-3 mb-5" role="radiogroup" aria-label="Role">
+        <button type="button" data-role="Cast Member" class="onboard-role-btn py-4 rounded-lg border border-white/25 bg-white/10 text-white font-bold text-sm transition-all hover:bg-white/20 focus:ring-2 focus:ring-white/50">
+          Cast Member
+        </button>
+        <button type="button" data-role="Technical Crew" class="onboard-role-btn py-4 rounded-lg border border-white/25 bg-white/10 text-white font-bold text-sm transition-all hover:bg-white/20 focus:ring-2 focus:ring-white/50">
+          Technical Crew
+        </button>
+      </div>
+      <input id="onboard-role" type="hidden"/>
       <p id="onboard-error" class="text-xs text-red-200 mb-3 hidden">Please enter your name to continue.</p>
       <button id="onboard-btn" class="w-full py-4 bg-white text-primary rounded-full font-bold flex items-center justify-center gap-3 shadow-lg hover:bg-primary-fixed-dim hover:text-primary transition-all active:scale-95">
         <span class="material-symbols-outlined text-sm">auto_awesome</span>
@@ -161,11 +169,32 @@
       if (e.key === 'Enter') document.getElementById('signin-btn').click();
     });
 
+    document.querySelectorAll('.onboard-role-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.onboard-role-btn').forEach(b => {
+          b.classList.remove('bg-white', 'text-primary');
+          b.classList.add('bg-white/10', 'text-white');
+        });
+        btn.classList.remove('bg-white/10', 'text-white');
+        btn.classList.add('bg-white', 'text-primary');
+        document.getElementById('onboard-role').value = btn.dataset.role;
+      });
+    });
+
     document.getElementById('onboard-btn').addEventListener('click', () => {
       const name = document.getElementById('onboard-name').value.trim();
       const role = document.getElementById('onboard-role').value.trim();
       const err = document.getElementById('onboard-error');
-      if (!name) { err.classList.remove('hidden'); return; }
+      if (!name) {
+        err.textContent = 'Please enter your name to continue.';
+        err.classList.remove('hidden');
+        return;
+      }
+      if (!role) {
+        err.textContent = 'Please choose Cast Member or Technical Crew.';
+        err.classList.remove('hidden');
+        return;
+      }
       err.classList.add('hidden');
       const student = Roster.onboardNew(name, role);
       Roster.setCurrentStudent(student.id);
