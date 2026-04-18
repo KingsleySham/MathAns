@@ -12,10 +12,8 @@
     PRESENT: 'roster.presentSubmissions'
   };
 
-  const ADMIN_PASSCODE = '20101125';
+  const ADMIN_PASSCODE = 'admin2026';
   const ADMIN_SESSION_KEY = 'roster.adminAuthed';
-
-  const SEED_NAMES = ['Alexander Hamilton', 'Eliza Schuyler', 'Aaron Burr', 'Angelica Schuyler', 'Lafayette', 'Hercules Mulligan'];
 
   function readJSON(key, fallback) {
     try {
@@ -46,18 +44,40 @@
     ensureSeed() {
       const ledger = readJSON(KEYS.LEDGER, null);
       if (!ledger) {
-        const seeded = SEED_NAMES.map(name => ({ id: uid(), name, role: '', scriptId: null, createdAt: Date.now() }));
-        writeJSON(KEYS.LEDGER, seeded);
+        writeJSON(KEYS.LEDGER, []);
       }
       if (!readJSON(KEYS.PROJECT, null)) {
-        writeJSON(KEYS.PROJECT, { title: 'The Glass Menagerie (2024)', venue: 'Main Stage' });
+        writeJSON(KEYS.PROJECT, {
+          title: 'The Redemption of the White Queen',
+          venue: 'Main Stage',
+          competitionDate: '2026-05-08',
+          competitionLocation: 'Hong Kong',
+          subtitle: 'S.3G4 English Drama'
+        });
       }
       if (!readJSON(KEYS.REHEARSALS, null)) writeJSON(KEYS.REHEARSALS, []);
       if (!readJSON(KEYS.NOTICES, null)) writeJSON(KEYS.NOTICES, []);
       if (!readJSON(KEYS.PRESENT, null)) writeJSON(KEYS.PRESENT, []);
     },
 
-    getProject() { return readJSON(KEYS.PROJECT, { title: 'The Glass Menagerie (2024)' }); },
+    resetForNewProduction() {
+      writeJSON(KEYS.LEDGER, []);
+      writeJSON(KEYS.AVAILABILITY, {});
+      writeJSON(KEYS.CHECKINS, {});
+      writeJSON(KEYS.LEAVES, []);
+      writeJSON(KEYS.PRESENT, []);
+      writeJSON(KEYS.CURRENT, null);
+      localStorage.removeItem(KEYS.POLL_WINDOW);
+      localStorage.removeItem(KEYS.CURRENT);
+    },
+
+    getProject() {
+      return readJSON(KEYS.PROJECT, {
+        title: 'The Redemption of the White Queen',
+        subtitle: 'S.3G4 English Drama',
+        competitionDate: '2026-05-08'
+      });
+    },
 
     getLedger() { return readJSON(KEYS.LEDGER, []); },
 
@@ -284,13 +304,30 @@
     },
 
     getRehearsals() { return readJSON(KEYS.REHEARSALS, []); },
-    addRehearsal(slotKey, label = 'Rehearsal') {
+    addRehearsal(slotKey, label = 'Rehearsal', type = 'rehearsal', venue = 'Main Stage') {
       const list = Roster.getRehearsals();
       if (list.some(r => r.slotKey === slotKey)) return null;
       const meta = Roster.getSlotMeta(slotKey);
-      const r = { id: genId('reh'), slotKey, label, format: meta.format, createdAt: Date.now() };
+      const r = {
+        id: genId('reh'),
+        slotKey,
+        label,
+        type,
+        venue,
+        format: meta.format,
+        createdAt: Date.now()
+      };
       list.push(r);
       writeJSON(KEYS.REHEARSALS, list);
+      return r;
+    },
+    updateRehearsal(id, updates) {
+      const list = Roster.getRehearsals();
+      const r = list.find(x => x.id === id);
+      if (r) {
+        Object.assign(r, updates);
+        writeJSON(KEYS.REHEARSALS, list);
+      }
       return r;
     },
     removeRehearsal(id) {
@@ -374,6 +411,55 @@
       const h12 = ((d.getHours() + 11) % 12) + 1;
       const mm = String(d.getMinutes()).padStart(2, '0');
       return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()} — ${h12}:${mm}${ampm}`;
+    },
+
+    /* ── notifications / email generation ─────────────────────── */
+    generateStudentNotification(studentId) {
+      const student = Roster.getLedger().find(s => s.id === studentId);
+      if (!student) return null;
+      const project = Roster.getProject();
+      const rehearsals = Roster.getRehearsals();
+      const avail = Roster.getAvailability(studentId);
+
+      const lines = [
+        `Dear ${student.name},`,
+        ``,
+        `Thank you for submitting your availability for "${project.title}" (${project.subtitle}).`,
+        ``
+      ];
+
+      if (avail.available && avail.available.length > 0) {
+        lines.push(`You marked the following times as AVAILABLE:`);
+        avail.available.forEach(key => {
+          lines.push(`  • ${Roster.formatSlot(key)}`);
+        });
+        lines.push(``);
+      }
+
+      if (avail.blocked && avail.blocked.length > 0) {
+        lines.push(`You marked the following times as UNAVAILABLE:`);
+        avail.blocked.forEach(key => {
+          const reason = avail.reasons && avail.reasons[key];
+          const reasonText = reason ? ` (${reason})` : '';
+          lines.push(`  • ${Roster.formatSlot(key)}${reasonText}`);
+        });
+        lines.push(``);
+      }
+
+      lines.push(`Production details:`);
+      lines.push(`  Title: ${project.title}`);
+      lines.push(`  Subtitle: ${project.subtitle}`);
+      lines.push(`  Competition Date: ${project.competitionDate}`);
+      if (project.competitionLocation) {
+        lines.push(`  Location: ${project.competitionLocation}`);
+      }
+      lines.push(``);
+      lines.push(`If you need to change your availability, please contact the production team.`);
+      lines.push(``);
+      lines.push(`Best regards,`);
+      lines.push(`Production Team`);
+
+      return lines.join('\n');
     }
   };
 
