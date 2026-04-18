@@ -28,10 +28,15 @@
 <style>
   .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; }
   .gap-cell { background: #ffdad6; border: 2px dashed #ba1a1a; }
+  .conflict-cell { background: #ffeaea; border: 2px dashed #FFB6C1; }
   .roster-cell { border: 1px solid #c7c5d4; padding: 8px; min-height: 60px; font-size: 12px; word-wrap: break-word; }
   .roster-cell.assigned { background: #e1e0ff; }
   .header-col { background: #f3f3f5; font-weight: bold; border: 1px solid #c7c5d4; padding: 8px; }
   .header-row { background: #f3f3f5; font-weight: bold; border: 1px solid #c7c5d4; padding: 8px; }
+  .tab-btn { padding: 0.5rem 1rem; font-size: 0.875rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; }
+  .tab-btn.active { background: #15157d; color: white; }
+  .tab-btn { background: #f3f3f5; color: #464652; }
+  .tab-btn:hover { background: #e8e8ea; }
 </style>
 </head>
 <body class="bg-surface font-body text-on-surface antialiased">
@@ -40,57 +45,108 @@
   <header class="bg-gradient-to-r from-primary to-primary-container text-white px-8 py-6">
     <div class="max-w-7xl mx-auto">
       <h1 class="font-headline text-4xl font-extrabold mb-2">The Redemption of the White Queen</h1>
-      <p class="text-sm text-primary-fixed-dim">S.3G4 English Drama | Competition: 8 May 2026 | Roster Preview Draft 1</p>
+      <p class="text-sm text-primary-fixed-dim">S.3G4 English Drama | Competition: 8 May 2026 | Roster Grid — Full Feature Preview</p>
     </div>
   </header>
 
   <main class="flex-1 px-8 py-8">
     <div class="max-w-7xl mx-auto space-y-8">
 
-      <!-- Session + Role Management Panel -->
-      <div class="bg-white rounded-2xl p-8 border border-outline-variant/10 shadow-sm">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="font-headline text-2xl font-extrabold text-primary">Sessions & Roles</h2>
-          <div class="flex gap-3">
-            <button id="add-session-btn" class="px-4 py-2 bg-primary text-white rounded-full text-xs font-bold">+ Session</button>
-            <button id="add-role-btn" class="px-4 py-2 bg-secondary text-white rounded-full text-xs font-bold">+ Role</button>
+      <!-- TAB NAVIGATION ──────────────────────────────────── -->
+      <div class="flex gap-2 border-b border-outline-variant/20">
+        <button data-tab="roster" class="tab-btn active">📊 Roster Grid</button>
+        <button data-tab="hours" class="tab-btn">⏱️ Hours Tracking</button>
+        <button data-tab="changelog" class="tab-btn">📝 History</button>
+        <button data-tab="notify" class="tab-btn">📧 Notifications</button>
+      </div>
+
+      <!-- TAB: ROSTER GRID ────────────────────────────────── -->
+      <div id="tab-roster" class="tab-content space-y-8">
+        <!-- Session + Role Management -->
+        <div class="bg-white rounded-2xl p-8 border border-outline-variant/10 shadow-sm">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="font-headline text-2xl font-extrabold text-primary">Configure</h2>
+            <div class="flex gap-3">
+              <button id="add-session-btn" class="px-4 py-2 bg-primary text-white rounded-full text-xs font-bold">+ Session</button>
+              <button id="add-role-btn" class="px-4 py-2 bg-secondary text-white rounded-full text-xs font-bold">+ Role</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-bold text-primary mb-4">Sessions</h3>
+              <div id="sessions-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
+            </div>
+            <div>
+              <h3 class="font-bold text-primary mb-4">Roles</h3>
+              <div id="roles-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
+            </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-6">
-          <!-- Sessions List -->
-          <div>
-            <h3 class="font-bold text-primary mb-4">Sessions</h3>
-            <div id="sessions-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
-          </div>
+        <!-- Act/Scene Filter -->
+        <div class="bg-white rounded-2xl p-6 border border-outline-variant/10 shadow-sm">
+          <h3 class="font-bold text-primary mb-3">Filter by Act/Scene</h3>
+          <div id="acts-filter" class="flex gap-2 flex-wrap"></div>
+        </div>
 
-          <!-- Roles List -->
-          <div>
-            <h3 class="font-bold text-primary mb-4">Roles</h3>
-            <div id="roles-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
+        <!-- Gaps Alert -->
+        <div id="gaps-alert" class="hidden bg-error-container rounded-2xl p-6 flex items-start gap-4">
+          <span class="material-symbols-outlined text-error text-3xl mt-1">warning</span>
+          <div class="flex-1">
+            <p class="font-bold text-error">Unfilled roles detected</p>
+            <p class="text-sm text-on-surface-variant mt-1" id="gaps-count">—</p>
+            <div id="gaps-list" class="mt-3 space-y-1"></div>
+          </div>
+        </div>
+
+        <!-- ROSTER GRID -->
+        <div class="bg-white rounded-2xl border border-outline-variant/10 shadow-sm overflow-auto">
+          <div class="p-6 border-b border-outline-variant/10">
+            <h2 class="font-headline text-2xl font-extrabold text-primary mb-2">Roster Grid</h2>
+            <p class="text-sm text-on-surface-variant">Sessions × Roles. Click cells to assign. <span class="text-red-500">Red dashed = unfilled</span>, <span class="text-pink-500">Pink dashed = conflict</span></p>
+          </div>
+          <div class="overflow-x-auto p-6">
+            <table class="border-collapse" id="roster-table"></table>
           </div>
         </div>
       </div>
 
-      <!-- Gaps Alert -->
-      <div id="gaps-alert" class="hidden bg-error-container rounded-2xl p-6 flex items-start gap-4">
-        <span class="material-symbols-outlined text-error text-3xl mt-1">warning</span>
-        <div class="flex-1">
-          <p class="font-bold text-error">Unfilled roles detected</p>
-          <p class="text-sm text-on-surface-variant mt-1" id="gaps-count">—</p>
-          <div id="gaps-list" class="mt-3 space-y-1"></div>
+      <!-- TAB: HOURS TRACKING ────────────────────────────── -->
+      <div id="tab-hours" class="tab-content hidden">
+        <div class="bg-white rounded-2xl p-8 border border-outline-variant/10 shadow-sm">
+          <h2 class="font-headline text-2xl font-extrabold text-primary mb-6">Total Hours Per Person</h2>
+          <div id="hours-table" class="space-y-3"></div>
         </div>
       </div>
 
-      <!-- ROSTER GRID ──────────────────────────────────── -->
-      <div class="bg-white rounded-2xl border border-outline-variant/10 shadow-sm overflow-auto">
-        <div class="p-6 border-b border-outline-variant/10">
-          <h2 class="font-headline text-2xl font-extrabold text-primary mb-2">Roster Grid</h2>
-          <p class="text-sm text-on-surface-variant">Click any cell to assign or remove crew</p>
+      <!-- TAB: CHANGELOG ──────────────────────────────────── -->
+      <div id="tab-changelog" class="tab-content hidden">
+        <div class="bg-white rounded-2xl p-8 border border-outline-variant/10 shadow-sm">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="font-headline text-2xl font-extrabold text-primary">Change Log</h2>
+            <button id="clear-changelog-btn" class="px-4 py-2 bg-error text-white rounded-full text-xs font-bold">Clear</button>
+          </div>
+          <div id="changelog-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
         </div>
+      </div>
 
-        <div class="overflow-x-auto p-6">
-          <table class="border-collapse" id="roster-table"></table>
+      <!-- TAB: NOTIFICATIONS ──────────────────────────────── -->
+      <div id="tab-notify" class="tab-content hidden space-y-6">
+        <div class="bg-white rounded-2xl p-8 border border-outline-variant/10 shadow-sm">
+          <h2 class="font-headline text-2xl font-extrabold text-primary mb-6">Crew Notifications</h2>
+          <div class="mb-6">
+            <label class="block text-xs font-bold uppercase tracking-widest text-primary mb-2">Select crew member</label>
+            <select id="notify-person" class="w-full bg-surface-container-high border-none rounded-lg p-4 focus:ring-2 focus:ring-primary-fixed">
+              <option value="">Choose...</option>
+            </select>
+          </div>
+          <div id="email-preview" class="hidden">
+            <div class="bg-surface-container-low p-6 rounded-lg font-mono text-xs mb-4 whitespace-pre-wrap" id="email-body"></div>
+            <button id="copy-email-btn" class="px-6 py-3 bg-primary text-white rounded-full font-bold flex items-center gap-2">
+              <span class="material-symbols-outlined">content_copy</span> Copy to clipboard
+            </button>
+          </div>
         </div>
       </div>
 
@@ -104,9 +160,9 @@
   </main>
 </div>
 
-<!-- Add Session Modal -->
+<!-- Modals (same as before) -->
 <div id="session-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
-  <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+  <div class="bg-white rounded-2xl p-8 max-w-md w-full max-h-96 overflow-y-auto">
     <h3 class="font-headline text-2xl font-extrabold text-primary mb-4">New Session</h3>
     <label class="block text-xs font-bold uppercase tracking-widest text-primary mb-2">Date & Time</label>
     <input id="session-datetime" type="datetime-local" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-fixed"/>
@@ -119,10 +175,12 @@
       <option value="bump_in">📦 Bump-in</option>
       <option value="bump_out">📦 Bump-out</option>
     </select>
-    <label class="block text-xs font-bold uppercase tracking-widest text-primary mb-2">Label</label>
-    <input id="session-label" type="text" placeholder="e.g., Day 3 Rehearsal" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-fixed"/>
     <label class="block text-xs font-bold uppercase tracking-widest text-primary mb-2">Venue</label>
-    <input id="session-venue" type="text" placeholder="e.g., Main Hall" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-6 focus:ring-2 focus:ring-primary-fixed"/>
+    <input id="session-venue" type="text" placeholder="e.g., Main Hall" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-fixed"/>
+    <label class="block text-xs font-bold uppercase tracking-widest text-primary mb-2">Duration (minutes)</label>
+    <input id="session-duration" type="number" value="120" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-fixed"/>
+    <label class="block text-xs font-bold uppercase tracking-widest text-primary mb-2">Acts/Scenes</label>
+    <div id="acts-checkboxes" class="mb-6 space-y-1"></div>
     <div class="flex gap-3">
       <button id="close-session-modal" class="flex-1 py-3 bg-surface-container-high rounded-full font-bold">Cancel</button>
       <button id="confirm-session-modal" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Add</button>
@@ -130,7 +188,6 @@
   </div>
 </div>
 
-<!-- Add Role Modal -->
 <div id="role-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
   <div class="bg-white rounded-2xl p-8 max-w-md w-full">
     <h3 class="font-headline text-2xl font-extrabold text-primary mb-4">New Role</h3>
@@ -145,11 +202,13 @@
   </div>
 </div>
 
-<!-- Assign Modal -->
 <div id="assign-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
   <div class="bg-white rounded-2xl p-8 max-w-md w-full">
     <h3 class="font-headline text-2xl font-extrabold text-primary mb-4">Assign Crew</h3>
     <p id="assign-modal-slot" class="text-sm text-on-surface-variant mb-4">—</p>
+    <div id="conflict-warning" class="hidden mb-4 p-3 rounded-lg bg-error-container border-2 border-error">
+      <p class="text-xs font-bold text-error" id="conflict-text">⚠️ Conflict detected</p>
+    </div>
     <label class="block text-xs font-bold uppercase tracking-widest text-primary mb-2">Select person</label>
     <select id="assign-person" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-fixed">
       <option value="">Choose...</option>
@@ -164,13 +223,26 @@
 </div>
 
 <script>
-  let currentAssignSlot = null; // { sessionId, roleId }
+  let currentAssignSlot = null;
+  let currentFilterAct = null;
 
   function ensureData() {
     Roster.ensureSeed();
     RosterGrid.ensureDefaults();
   }
 
+  /* ── TAB NAVIGATION ────────────────────────── */
+  function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.remove('hidden');
+    document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+    if (name === 'hours') renderHours();
+    if (name === 'changelog') renderChangelog();
+    if (name === 'notify') renderNotify();
+  }
+
+  /* ── RENDER FUNCTIONS ──────────────────────── */
   function renderSessions() {
     const sessions = RosterGrid.getSessions().sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
     const list = document.getElementById('sessions-list');
@@ -178,15 +250,12 @@
       <div class="flex-1 text-xs">
         <p class="font-bold text-primary">${RosterGrid.formatDateTime(s.dateTime)}</p>
         <p class="text-on-surface-variant">${RosterGrid.typeLabel(s.type)} · ${s.venue}</p>
+        <p class="text-[10px] text-on-surface-variant mt-1">${s.durationMinutes} min${s.acts && s.acts.length ? ' · ' + s.acts.join(', ') : ''}</p>
       </div>
       <button data-del-session="${s.id}" class="px-2 py-1 text-error text-xs font-bold">Delete</button>
-    </div>`).join('') : '<p class="text-xs text-on-surface-variant">No sessions yet. Add one to start.</p>';
+    </div>`).join('') : '<p class="text-xs text-on-surface-variant">No sessions yet.</p>';
     list.querySelectorAll('[data-del-session]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        RosterGrid.removeSession(btn.dataset.delSession);
-        renderSessions();
-        renderRoster();
-      });
+      btn.addEventListener('click', () => { RosterGrid.removeSession(btn.dataset.delSession); renderSessions(); renderRoster(); });
     });
   }
 
@@ -201,16 +270,28 @@
       <button data-del-role="${r.id}" class="px-2 py-1 text-error text-xs font-bold">Delete</button>
     </div>`).join('') : '<p class="text-xs text-on-surface-variant">No roles yet.</p>';
     list.querySelectorAll('[data-del-role]').forEach(btn => {
+      btn.addEventListener('click', () => { RosterGrid.removeRole(btn.dataset.delRole); renderRoles(); renderRoster(); });
+    });
+  }
+
+  function renderActsFilter() {
+    const acts = RosterGrid.getActs();
+    const filter = document.getElementById('acts-filter');
+    filter.innerHTML = '<button data-filter-act="" class="px-4 py-2 rounded-full text-xs font-bold ' + (currentFilterAct === null ? 'bg-primary text-white' : 'bg-surface-container-high') + '">All Sessions</button>' +
+      acts.map(a => `<button data-filter-act="${a.id}" class="px-4 py-2 rounded-full text-xs font-bold ${currentFilterAct === a.id ? 'bg-primary text-white' : 'bg-surface-container-high'}">${a.name}</button>`).join('');
+    filter.querySelectorAll('[data-filter-act]').forEach(btn => {
       btn.addEventListener('click', () => {
-        RosterGrid.removeRole(btn.dataset.delRole);
-        renderRoles();
+        currentFilterAct = btn.dataset.filterAct || null;
+        renderActsFilter();
         renderRoster();
       });
     });
   }
 
   function renderRoster() {
-    const sessions = RosterGrid.getSessions().sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+    const sessions = RosterGrid.getSessions()
+      .filter(s => !currentFilterAct || (s.acts && s.acts.length > 0))
+      .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
     const roles = RosterGrid.getRoles();
     const assignments = RosterGrid.getAssignments();
     const ledger = Roster.getLedger();
@@ -226,7 +307,13 @@
       sessions.forEach(session => {
         const assigned = assignments.filter(a => a.sessionId === session.id && a.roleId === role.id);
         const hasAssigned = assigned.length > 0;
-        html += `<td class="roster-cell ${hasAssigned ? 'assigned' : 'gap-cell'} cursor-pointer hover:opacity-80" data-session="${session.id}" data-role="${role.id}">`;
+        let cellClass = 'roster-cell';
+        if (hasAssigned) cellClass += ' assigned';
+        else {
+          const conflict = assigned.length === 0 ? RosterGrid.checkAvailabilityConflict(assigned[0]?.studentId, session.id) : null;
+          cellClass += conflict ? ' conflict-cell' : ' gap-cell';
+        }
+        html += `<td class="${cellClass} cursor-pointer hover:opacity-80" data-session="${session.id}" data-role="${role.id}">`;
         if (hasAssigned) {
           html += assigned.map(a => {
             const person = ledger.find(p => p.id === a.studentId);
@@ -243,7 +330,6 @@
 
     document.getElementById('roster-table').innerHTML = html;
 
-    // Cell click handlers
     document.querySelectorAll('[data-session][data-role]').forEach(cell => {
       cell.addEventListener('click', () => {
         const sessionId = cell.dataset.session;
@@ -268,7 +354,7 @@
   }
 
   function renderGaps() {
-    const gaps = RosterGrid.getGaps();
+    const gaps = RosterGrid.getGaps().filter(g => !currentFilterAct || (g.session.acts && g.session.acts.length > 0));
     const gapAlert = document.getElementById('gaps-alert');
     if (gaps.length === 0) {
       gapAlert.classList.add('hidden');
@@ -280,12 +366,82 @@
     list.innerHTML = gaps.slice(0, 5).map(g => `<p class="text-xs">• ${g.role.name} — ${RosterGrid.formatDateTime(g.session.dateTime)}</p>`).join('');
   }
 
+  function renderHours() {
+    const ledger = Roster.getLedger();
+    const table = document.getElementById('hours-table');
+    const data = ledger.map(person => ({
+      name: person.name,
+      hours: RosterGrid.getTotalHours(person.id),
+      breakdown: RosterGrid.getPersonHoursBreakdown(person.id)
+    })).sort((a, b) => parseFloat(b.hours) - parseFloat(a.hours));
+
+    table.innerHTML = data.map(d => `<div class="p-4 rounded-xl bg-surface-container-low">
+      <div class="flex items-center justify-between mb-2">
+        <p class="font-bold text-primary">${d.name}</p>
+        <span class="text-lg font-bold text-primary">${d.hours}h</span>
+      </div>
+      ${d.breakdown.length ? `<div class="text-xs text-on-surface-variant space-y-1">${d.breakdown.map(b => `<p>• ${b.role} (${b.session}) — ${b.hours}h</p>`).join('')}</div>` : '<p class="text-xs text-on-surface-variant">No assignments</p>'}
+    </div>`).join('');
+  }
+
+  function renderChangelog() {
+    const log = RosterGrid.getChangelog();
+    const ledger = Roster.getLedger();
+    const sessions = RosterGrid.getSessions();
+    const roles = RosterGrid.getRoles();
+    const list = document.getElementById('changelog-list');
+    list.innerHTML = log.length ? log.map(l => {
+      const data = l.data;
+      const person = ledger.find(p => p.id === data.studentId);
+      const session = sessions.find(s => s.id === data.sessionId);
+      const role = roles.find(r => r.id === data.roleId);
+      const action = l.action === 'ASSIGN' ? `✅ Assigned ${person?.name || 'Unknown'} to ${role?.name || 'Unknown'} for ${session?.label || 'Unknown'}` : `❌ Removed ${person?.name || 'Unknown'} from ${role?.name || 'Unknown'}`;
+      return `<div class="p-3 rounded-lg bg-surface-container-low text-xs">
+        <p class="font-bold text-on-surface">${action}</p>
+        <p class="text-on-surface-variant">${new Date(l.timestamp).toLocaleString()}</p>
+      </div>`;
+    }).join('') : '<p class="text-xs text-on-surface-variant">No changes yet.</p>';
+  }
+
+  function renderNotify() {
+    const ledger = Roster.getLedger();
+    const personSelect = document.getElementById('notify-person');
+    personSelect.innerHTML = '<option value="">Choose...</option>' + ledger.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    personSelect.addEventListener('change', () => {
+      const personId = personSelect.value;
+      if (!personId) {
+        document.getElementById('email-preview').classList.add('hidden');
+        return;
+      }
+      const person = ledger.find(p => p.id === personId);
+      const email = RosterGrid.generateCrewEmail(personId, person.name);
+      document.getElementById('email-body').textContent = email;
+      document.getElementById('email-preview').classList.remove('hidden');
+      document.getElementById('copy-email-btn').addEventListener('click', () => {
+        navigator.clipboard.writeText(email).then(() => {
+          alert('Email copied to clipboard!');
+        });
+      });
+    });
+  }
+
   function openAssignModal(sessionId, roleId, session, role) {
     currentAssignSlot = { sessionId, roleId };
     document.getElementById('assign-modal-slot').textContent = `${role.name} for ${RosterGrid.typeLabel(session.type)} (${session.venue})`;
     const personSelect = document.getElementById('assign-person');
     const ledger = Roster.getLedger();
     personSelect.innerHTML = '<option value="">Choose...</option>' + ledger.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    personSelect.addEventListener('change', () => {
+      const personId = personSelect.value;
+      const conflict = personId ? RosterGrid.checkAvailabilityConflict(personId, sessionId) : null;
+      const warningDiv = document.getElementById('conflict-warning');
+      if (conflict) {
+        document.getElementById('conflict-text').textContent = '⚠️ ' + conflict.reason;
+        warningDiv.classList.remove('hidden');
+      } else {
+        warningDiv.classList.add('hidden');
+      }
+    });
     document.getElementById('assign-notes').value = '';
     document.getElementById('assign-modal').classList.remove('hidden');
   }
@@ -294,29 +450,36 @@
     ensureData();
     renderSessions();
     renderRoles();
-    renderRoster();
+    renderActsFilter();
 
-    /* Add Session */
+    /* Acts checkboxes in modal */
     document.getElementById('add-session-btn').addEventListener('click', () => {
+      const acts = RosterGrid.getActs();
+      const actsCheckDiv = document.getElementById('acts-checkboxes');
+      actsCheckDiv.innerHTML = acts.map(a => `<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${a.id}" class="act-cb"/> <span class="text-xs">${a.name}</span></label>`).join('');
       document.getElementById('session-modal').classList.remove('hidden');
     });
+
     document.getElementById('close-session-modal').addEventListener('click', () => {
       document.getElementById('session-modal').classList.add('hidden');
     });
     document.getElementById('confirm-session-modal').addEventListener('click', () => {
       const dt = document.getElementById('session-datetime').value;
       const type = document.getElementById('session-type').value;
-      const label = document.getElementById('session-label').value.trim();
       const venue = document.getElementById('session-venue').value.trim();
+      const duration = parseInt(document.getElementById('session-duration').value) || 120;
+      const acts = [...document.querySelectorAll('.act-cb:checked')].map(cb => {
+        const act = RosterGrid.getActs().find(a => a.id === cb.value);
+        return act ? act.name : null;
+      }).filter(Boolean);
       if (dt && type && venue) {
-        RosterGrid.addSession(dt, type, label, venue);
+        RosterGrid.addSession(dt, type, venue, venue, duration, acts);
         renderSessions();
         renderRoster();
         document.getElementById('session-modal').classList.add('hidden');
       }
     });
 
-    /* Add Role */
     document.getElementById('add-role-btn').addEventListener('click', () => {
       document.getElementById('role-modal').classList.remove('hidden');
     });
@@ -334,7 +497,6 @@
       }
     });
 
-    /* Assign */
     document.getElementById('close-assign-modal').addEventListener('click', () => {
       document.getElementById('assign-modal').classList.add('hidden');
     });
@@ -347,6 +509,20 @@
         document.getElementById('assign-modal').classList.add('hidden');
       }
     });
+
+    document.getElementById('clear-changelog-btn').addEventListener('click', () => {
+      if (confirm('Clear all history?')) {
+        RosterGrid.clearChangelog();
+        renderChangelog();
+      }
+    });
+
+    /* Tab navigation */
+    document.querySelectorAll('[data-tab]').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    renderRoster();
   });
 </script>
 </body>
