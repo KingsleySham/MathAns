@@ -151,19 +151,68 @@
     </div>
 
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 mb-6">
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h2 class="font-headline text-2xl font-extrabold text-primary">Availability by slot</h2>
-          <p class="text-xs text-on-surface-variant mt-1">Appointment view of cast availability</p>
+          <p class="text-xs text-on-surface-variant mt-1">Week calendar · click a slot to schedule or remove it</p>
         </div>
-        <button id="refresh-overview" class="px-4 py-2 bg-surface-container-high rounded-full text-xs font-bold">Refresh</button>
+        <div class="flex items-center gap-2">
+          <button id="ov-prev-week" class="w-10 h-10 rounded-full bg-surface-container-high hover:bg-primary-fixed flex items-center justify-center"><span class="material-symbols-outlined">chevron_left</span></button>
+          <span id="ov-week-label" class="font-bold font-headline text-sm text-primary min-w-[12rem] text-center">—</span>
+          <button id="ov-next-week" class="w-10 h-10 rounded-full bg-surface-container-high hover:bg-primary-fixed flex items-center justify-center"><span class="material-symbols-outlined">chevron_right</span></button>
+          <button id="refresh-overview" class="ml-2 px-4 py-2 bg-surface-container-high rounded-full text-xs font-bold">Refresh</button>
+        </div>
       </div>
-      <div id="appointment-view" class="space-y-6"></div>
+      <div id="appointment-view" class="overflow-x-auto"></div>
     </div>
 
+    <!-- Manual rehearsals panel -->
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 mb-6">
-      <h2 class="font-headline text-2xl font-extrabold text-primary mb-6">Confirmed rehearsals</h2>
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary">event</span>
+          <h2 class="font-headline text-2xl font-extrabold text-primary">Rehearsals</h2>
+        </div>
+        <button id="add-manual-rehearsal-btn" class="px-4 py-2 bg-primary text-white rounded-full text-xs font-bold flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">add</span> Add rehearsal
+        </button>
+      </div>
+      <p class="text-xs text-on-surface-variant mb-4">Confirm a poll slot above, or add a custom rehearsal with its own title and time here.</p>
       <div id="confirmed" class="space-y-3"></div>
+    </div>
+
+    <!-- Manual rehearsal modal -->
+    <div id="manual-rehearsal-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-[2rem] p-8 max-w-md w-full">
+        <h3 class="font-headline text-2xl font-extrabold text-primary mb-4" id="manual-rehearsal-title">Add rehearsal</h3>
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Title</label>
+        <input id="mr-title" type="text" placeholder="Full run, Act 2..." class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"/>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Date</label>
+            <input id="mr-date" type="date" class="w-full bg-surface-container-high border-none rounded-lg p-3 focus:ring-2 focus:ring-primary-fixed"/>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Start</label>
+            <input id="mr-start" type="time" class="w-full bg-surface-container-high border-none rounded-lg p-3 focus:ring-2 focus:ring-primary-fixed"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">End (optional)</label>
+            <input id="mr-end" type="time" class="w-full bg-surface-container-high border-none rounded-lg p-3 focus:ring-2 focus:ring-primary-fixed"/>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Location / note</label>
+            <input id="mr-location" type="text" placeholder="Hall A" class="w-full bg-surface-container-high border-none rounded-lg p-3 focus:ring-2 focus:ring-primary-fixed"/>
+          </div>
+        </div>
+        <p id="mr-error" class="text-xs text-error mb-3 hidden">Please fill in a title, date and start time.</p>
+        <div class="flex gap-3">
+          <button id="cancel-manual-rehearsal" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
+          <button id="save-manual-rehearsal" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Save</button>
+        </div>
+      </div>
     </div>
 
     <!-- Zoom meetings panel -->
@@ -221,10 +270,9 @@
     <div class="max-w-4xl mb-6 overflow-x-auto">
       <div class="flex gap-2 min-w-max">
         <div class="poll-step-pill" data-step-pill="1"><span class="step-num">1</span> Dates</div>
-        <div class="poll-step-pill" data-step-pill="2"><span class="step-num">2</span> Times</div>
-        <div class="poll-step-pill" data-step-pill="3"><span class="step-num">3</span> Day-overrides</div>
-        <div class="poll-step-pill" data-step-pill="4"><span class="step-num">4</span> Settings</div>
-        <div class="poll-step-pill" data-step-pill="5"><span class="step-num">5</span> Review</div>
+        <div class="poll-step-pill" data-step-pill="2"><span class="step-num">2</span> Slots</div>
+        <div class="poll-step-pill" data-step-pill="3"><span class="step-num">3</span> Settings</div>
+        <div class="poll-step-pill" data-step-pill="4"><span class="step-num">4</span> Review</div>
       </div>
     </div>
 
@@ -268,60 +316,19 @@
       </div>
     </div>
 
-    <!-- STEP 2: Times -->
+    <!-- STEP 2: Slots -->
     <div class="poll-step bg-white rounded-[2rem] p-6 sm:p-8 border border-outline-variant/10 max-w-4xl mb-6 hidden" data-step="2">
-      <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 2 · Times</h3>
-      <p class="text-xs text-on-surface-variant mb-6">Choose the basic time band (e.g. 3:30pm – 5:30pm) which auto-splits into 30-min slots. Add any custom slots with titles below.</p>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-        <div>
-          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Start time</label>
-          <select id="poll-time-start" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"></select>
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">End time</label>
-          <select id="poll-time-end" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"></select>
-        </div>
-      </div>
-      <label class="flex items-center gap-3 cursor-pointer mb-6">
-        <input id="half-hour" type="checkbox" checked class="w-5 h-5 rounded text-primary focus:ring-primary-fixed"/>
-        <span class="text-sm font-medium">Include half-hour slots (e.g. 3:30 pm)</span>
-      </label>
-
-      <div class="border-t border-outline-variant/10 pt-6 mb-6">
-        <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Custom slot titles (optional)</label>
-        <p class="text-xs text-on-surface-variant mb-3">Give a slot a title (e.g. "Warm-up") or add a custom-period slot. These are added on top of the basic time band.</p>
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-3">
-          <input id="block-start-time" type="time" class="bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
-          <input id="block-end-time" type="time" class="bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
-          <input id="block-label" type="text" placeholder="Title (e.g. Warm-up)" class="bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
-          <button id="add-block-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Add slot</button>
-        </div>
-        <div id="blocks-list" class="space-y-2 max-h-48 overflow-y-auto"></div>
-      </div>
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 2 · Slots</h3>
+      <p class="text-xs text-on-surface-variant mb-6">Choose which of the fixed production slots to include in this poll. Each slot keeps its own duration.</p>
+      <div id="fixed-slots-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"></div>
       <div class="flex justify-between gap-2">
         <button class="poll-prev px-6 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold" data-prev="1">← Back</button>
         <button class="poll-next px-6 py-3 bg-primary text-white rounded-full text-xs font-bold" data-next="3">Continue →</button>
       </div>
     </div>
 
-    <!-- STEP 3: Day-overrides -->
+    <!-- STEP 3: Settings -->
     <div class="poll-step bg-white rounded-[2rem] p-6 sm:p-8 border border-outline-variant/10 max-w-4xl mb-6 hidden" data-step="3">
-      <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 3 · Day overrides</h3>
-      <p class="text-xs text-on-surface-variant mb-6">Sometimes a date doesn't fit all time slots (e.g. only morning that day). Skip times for specific dates here. Leave empty to apply all times to all dates.</p>
-      <div class="flex gap-2 mb-3 flex-wrap">
-        <input id="override-date" type="date" class="flex-1 min-w-[140px] bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
-        <input id="override-time" type="time" class="bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
-        <button id="add-override-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Skip this slot</button>
-      </div>
-      <div id="overrides-list" class="space-y-2 max-h-64 overflow-y-auto mb-6"></div>
-      <div class="flex justify-between gap-2">
-        <button class="poll-prev px-6 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold" data-prev="2">← Back</button>
-        <button class="poll-next px-6 py-3 bg-primary text-white rounded-full text-xs font-bold" data-next="4">Continue →</button>
-      </div>
-    </div>
-
-    <!-- STEP 4: Settings -->
-    <div class="poll-step bg-white rounded-[2rem] p-6 sm:p-8 border border-outline-variant/10 max-w-4xl mb-6 hidden" data-step="4">
       <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 4 · Settings</h3>
       <p class="text-xs text-on-surface-variant mb-6">Format, reasons, and check-in policy.</p>
 
@@ -360,15 +367,15 @@
       </div>
 
       <div class="flex justify-between gap-2">
-        <button class="poll-prev px-6 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold" data-prev="3">← Back</button>
-        <button class="poll-next px-6 py-3 bg-primary text-white rounded-full text-xs font-bold" data-next="5">Continue →</button>
+        <button class="poll-prev px-6 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold" data-prev="2">← Back</button>
+        <button class="poll-next px-6 py-3 bg-primary text-white rounded-full text-xs font-bold" data-next="4">Continue →</button>
       </div>
     </div>
 
-    <!-- STEP 5: Review -->
-    <div class="poll-step bg-white rounded-[2rem] p-6 sm:p-8 border border-outline-variant/10 max-w-5xl mb-6 hidden" data-step="5">
-      <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 5 · Review &amp; save</h3>
-      <p class="text-xs text-on-surface-variant mb-6">Calendar on the left shows the dates. Click a date to see the slots on the right.</p>
+    <!-- STEP 4: Review -->
+    <div class="poll-step bg-white rounded-[2rem] p-6 sm:p-8 border border-outline-variant/10 max-w-5xl mb-6 hidden" data-step="4">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 4 · Review &amp; save</h3>
+      <p class="text-xs text-on-surface-variant mb-6">Click a date on the calendar to see its slots — click a slot to remove it just for that date.</p>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div>
           <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">Calendar</h4>
@@ -381,7 +388,7 @@
       </div>
       <p id="poll-error" class="text-xs text-error mb-3 hidden">Please fix errors before saving.</p>
       <div class="flex justify-between gap-2">
-        <button class="poll-prev px-6 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold" data-prev="4">← Back</button>
+        <button class="poll-prev px-6 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold" data-prev="3">← Back</button>
         <button id="save-poll-btn" class="px-8 py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center gap-2 text-xs">
           <span class="material-symbols-outlined text-sm">save</span> Save &amp; open poll
         </button>
@@ -561,6 +568,103 @@
     return html;
   }
 
+  let overviewWeekStart = null;
+
+  function startOfWeek(d) {
+    const c = new Date(d); c.setHours(0,0,0,0);
+    c.setDate(c.getDate() - c.getDay()); return c;
+  }
+  function addDays(d, n) { const c = new Date(d); c.setDate(c.getDate() + n); return c; }
+
+  function renderOverviewCalendar(pollKeys, rehearsals) {
+    const avEl = document.getElementById('appointment-view');
+    if (!pollKeys.length) {
+      avEl.innerHTML = '<p class="text-xs text-on-surface-variant py-4">No poll slots yet.</p>';
+      document.getElementById('ov-week-label').textContent = '—';
+      return;
+    }
+    if (!overviewWeekStart) {
+      overviewWeekStart = startOfWeek(Roster.parseSlotKey(pollKeys[0]));
+    }
+    const weekEnd = addDays(overviewWeekStart, 7);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const labelEnd = addDays(overviewWeekStart, 6);
+    document.getElementById('ov-week-label').textContent =
+      `${months[overviewWeekStart.getMonth()]} ${overviewWeekStart.getDate()} – ${months[labelEnd.getMonth()]} ${labelEnd.getDate()}`;
+
+    const weekKeys = pollKeys.filter(k => {
+      const d = Roster.parseSlotKey(k);
+      return d >= overviewWeekStart && d < weekEnd;
+    });
+    if (!weekKeys.length) {
+      avEl.innerHTML = '<p class="text-xs text-on-surface-variant py-6 text-center">No slots in this week. Use the arrows to navigate.</p>';
+      return;
+    }
+    const scheduled = new Set(rehearsals.map(r => r.slotKey));
+    const slotStartMinutes = [...new Set(weekKeys.map(k => { const d = Roster.parseSlotKey(k); return d.getHours() * 60 + d.getMinutes(); }))].sort((a,b)=>a-b);
+    const activeDayIndices = [...new Set(weekKeys.map(k => Roster.parseSlotKey(k).getDay()))].sort((a,b)=>a-b);
+    const days = []; for (let i = 0; i < 7; i++) days.push(addDays(overviewWeekStart, i));
+
+    let html = '<table class="w-full border-collapse text-xs">';
+    html += '<thead><tr><th class="w-28 p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-right text-[10px]">Slot</th>';
+    activeDayIndices.forEach(di => {
+      html += `<th class="p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-center">
+        <div class="text-[10px] uppercase tracking-widest text-on-surface-variant">${DAY_NAMES_SHORT[di]}</div>
+        <div class="text-xl font-headline font-extrabold text-primary">${days[di].getDate()}</div>
+      </th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    slotStartMinutes.forEach(min => {
+      const block = Roster.getFixedSlots().find(s => s.startMinute === min);
+      const label = block ? block.label : Roster.formatTime(Math.floor(min/60), min%60);
+      html += `<tr><td class="p-2 text-right border-r border-b border-outline-variant/10 bg-surface-container-low">
+        <div class="text-[11px] font-bold text-primary">${label}</div>
+      </td>`;
+      activeDayIndices.forEach(di => {
+        const dayDate = days[di];
+        const h = Math.floor(min/60); const m = min%60;
+        const key = Roster.buildSlotKey(dayDate, h, m);
+        if (!weekKeys.includes(key)) {
+          html += '<td class="p-2 border-r border-b border-outline-variant/10 bg-surface-container-highest/20"></td>';
+          return;
+        }
+        const agg = Roster.aggregateSlot(key);
+        const pct = agg.total ? Math.round(agg.availableIds.length / agg.total * 100) : 0;
+        const isSched = scheduled.has(key);
+        const bg = isSched ? 'bg-primary text-white'
+          : pct >= 70 ? 'bg-emerald-100 text-emerald-900'
+          : pct >= 40 ? 'bg-amber-100 text-amber-900'
+          : 'bg-rose-100 text-rose-900';
+        html += `<td class="p-1 border-r border-b border-outline-variant/10 align-top">
+          <button data-ov-slot="${key}" class="w-full p-2 rounded-lg ${bg} text-left hover:opacity-90 transition">
+            <div class="text-[10px] font-bold ${isSched ? 'text-white/80' : 'text-on-surface-variant'}">${agg.availableIds.length}/${agg.total}</div>
+            <div class="text-[10px] ${isSched ? 'text-white/70' : 'text-on-surface-variant'}">${isSched ? 'Scheduled' : pct + '%'}</div>
+          </button>
+        </td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    avEl.innerHTML = html;
+
+    avEl.querySelectorAll('[data-ov-slot]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.ovSlot;
+        const existing = Roster.getRehearsals().find(r => r.slotKey === key);
+        if (existing) {
+          if (confirm('Remove the rehearsal scheduled at this slot?')) {
+            Roster.removeRehearsal(existing.id);
+            renderOverview();
+          }
+        } else {
+          Roster.addRehearsal(key);
+          renderOverview();
+        }
+      });
+    });
+  }
+
   function switchTab(name) {
     document.querySelectorAll('.tab-btn').forEach(b => {
       const active = b.dataset.tab === name;
@@ -599,58 +703,7 @@
     const noBanner = document.getElementById('no-poll-banner');
     noBanner.classList.toggle('hidden', pollKeys.length > 0);
 
-    /* appointment view grouped by date */
-    const scheduled = new Set(rehearsals.map(r => r.slotKey));
-    const byDate = {};
-    pollKeys.forEach(k => {
-      const date = k.split('T')[0];
-      if (!byDate[date]) byDate[date] = [];
-      byDate[date].push(k);
-    });
-
-    const avEl = document.getElementById('appointment-view');
-    let html = '';
-    Object.entries(byDate).sort().forEach(([date, slots]) => {
-      const d = new Date(date + 'T12:00:00');
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      html += `<div><h3 class="text-sm font-bold text-on-surface-variant mb-2 px-2">${DAY_NAMES_SHORT[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}</h3><div class="space-y-2">`;
-      slots.forEach(k => {
-        const agg = Roster.aggregateSlot(k);
-        const pct = agg.total ? Math.round(agg.availableIds.length / agg.total * 100) : 0;
-        const isScheduled = scheduled.has(k);
-        const [, timePart] = k.split('T');
-        const [hh, mm] = timePart.split(':').map(Number);
-        const ampm = hh >= 12 ? 'pm' : 'am';
-        const h12 = ((hh + 11) % 12) + 1;
-        const timeStr = `${h12}:${String(mm).padStart(2,'0')}${ampm}`;
-        const barColor = isScheduled ? 'bg-primary' : pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-400' : 'bg-rose-400';
-        html += `<div class="flex items-center gap-4 px-4 py-3 rounded-xl ${isScheduled ? 'bg-primary-fixed' : 'bg-surface-container-low'}">
-          <div class="w-16 text-right text-sm font-bold ${isScheduled ? 'text-primary' : 'text-on-surface-variant'}">${timeStr}</div>
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <div class="h-2 w-32 bg-white/60 rounded-full overflow-hidden"><div class="${barColor} h-full" style="width:${pct}%"></div></div>
-              <span class="text-xs font-bold">${agg.availableIds.length}/${agg.total}</span>
-              ${isScheduled ? '<span class="text-[10px] font-bold uppercase tracking-widest bg-primary text-white px-2 py-0.5 rounded-full">Scheduled</span>' : ''}
-            </div>
-            <p class="text-[10px] text-on-surface-variant mt-0.5">${agg.pendingIds.length} pending · ${agg.blockedIds.length} blocked</p>
-          </div>
-          <div>${isScheduled ? `<button data-remove="${k}" class="px-3 py-1.5 bg-white text-error rounded-full text-xs font-bold">Remove</button>` : `<button data-schedule="${k}" class="px-3 py-1.5 bg-primary text-white rounded-full text-xs font-bold">Schedule</button>`}</div>
-        </div>`;
-      });
-      html += '</div></div>';
-    });
-    avEl.innerHTML = html || '<p class="text-xs text-on-surface-variant">No poll slots yet.</p>';
-
-    avEl.querySelectorAll('[data-schedule]').forEach(btn => {
-      btn.addEventListener('click', () => { Roster.addRehearsal(btn.dataset.schedule); renderOverview(); });
-    });
-    avEl.querySelectorAll('[data-remove]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const r = Roster.getRehearsals().find(x => x.slotKey === btn.dataset.remove);
-        if (r) Roster.removeRehearsal(r.id);
-        renderOverview();
-      });
-    });
+    renderOverviewCalendar(pollKeys, rehearsals);
 
     /* confirmed */
     const confEl = document.getElementById('confirmed');
@@ -658,21 +711,69 @@
       .sort((a, b) => a.slotKey.localeCompare(b.slotKey))
       .map(r => {
         const a = Roster.aggregateSlot(r.slotKey);
+        const d = Roster.parseSlotKey(r.slotKey);
+        const startStr = Roster.formatTime(d.getHours(), d.getMinutes());
+        const block = Roster.getSlotBlock(r.slotKey);
+        const endMin = (r.endMinute != null) ? r.endMinute : (block ? block.endMinute : null);
+        const endStr = endMin != null ? Roster.formatTime(Math.floor(endMin / 60), endMin % 60) : '';
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const dateLabel = `${DAY_NAMES_SHORT[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()}`;
+        const title = r.customTitle || r.label || 'Rehearsal';
         return `<div class="p-4 rounded-xl bg-primary-fixed">
           <div class="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slotKey)}</p>
-              <p class="text-xs text-on-primary-fixed-variant mt-1">${a.availableIds.length}/${a.total} available · ${a.blockedIds.length} blocked</p>
+            <div class="min-w-0">
+              <p class="font-bold text-primary text-sm">${title}${r.manual ? ' <span class="text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full ml-1">Manual</span>' : ''}</p>
+              <p class="text-xs text-on-primary-fixed-variant mt-1">${dateLabel} · ${startStr}${endStr ? ' – ' + endStr : ''}${r.location ? ' · ' + r.location : ''}</p>
+              <p class="text-xs text-on-primary-fixed-variant mt-0.5">${a.availableIds.length}/${a.total} available · ${a.blockedIds.length} blocked</p>
             </div>
             <div class="flex gap-2 flex-wrap">
               <button data-checkin-code="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Check-in code</button>
               <button data-attendance="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Attendance</button>
+              <button data-edit-manual="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Edit</button>
               <button data-del="${r.id}" class="px-3 py-2 bg-white text-error rounded-full text-xs font-bold">Remove</button>
             </div>
           </div>
         </div>`;
       }).join('')
       : '<p class="text-xs text-on-surface-variant">No rehearsals scheduled yet.</p>';
+
+    confEl.querySelectorAll('[data-edit-manual]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.editManual;
+        const r = Roster.getRehearsals().find(x => x.id === id);
+        if (!r) return;
+        const d = Roster.parseSlotKey(r.slotKey);
+        document.getElementById('mr-title').value = r.customTitle || r.label || '';
+        document.getElementById('mr-date').value =
+          `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        document.getElementById('mr-start').value =
+          `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        const em = r.endMinute;
+        document.getElementById('mr-end').value = em != null
+          ? `${String(Math.floor(em/60)).padStart(2,'0')}:${String(em%60).padStart(2,'0')}`
+          : '';
+        document.getElementById('mr-location').value = r.location || '';
+        document.getElementById('mr-error').classList.add('hidden');
+        const save = document.getElementById('save-manual-rehearsal');
+        const orig = save.onclick;
+        save.onclick = () => {
+          const title = document.getElementById('mr-title').value.trim();
+          const end = document.getElementById('mr-end').value;
+          const loc = document.getElementById('mr-location').value.trim();
+          if (!title) { document.getElementById('mr-error').classList.remove('hidden'); return; }
+          let endMinute = null;
+          if (end) {
+            const [eh, em2] = end.split(':').map(Number);
+            endMinute = eh * 60 + em2;
+          }
+          Roster.updateRehearsal(id, { customTitle: title, label: title, endMinute, location: loc });
+          document.getElementById('manual-rehearsal-modal').classList.replace('flex', 'hidden');
+          save.onclick = orig;
+          renderOverview();
+        };
+        document.getElementById('manual-rehearsal-modal').classList.replace('hidden', 'flex');
+      });
+    });
 
     confEl.querySelectorAll('[data-del]').forEach(btn => {
       btn.addEventListener('click', () => { Roster.removeRehearsal(btn.dataset.del); renderOverview(); });
@@ -759,36 +860,6 @@
     document.getElementById('attendance-modal').classList.remove('hidden');
   }
 
-  function renderSlotBlocks() {
-    const win = Roster.getPollWindow();
-    const blocks = (win && Array.isArray(win.slotBlocks)) ? win.slotBlocks : [];
-    const list = document.getElementById('blocks-list');
-    list.innerHTML = blocks.length
-      ? blocks.map((b, i) => {
-        const startH = Math.floor(b.startMinute / 60);
-        const startM = b.startMinute % 60;
-        const endH = Math.floor(b.endMinute / 60);
-        const endM = b.endMinute % 60;
-        const pad = (n) => String(n).padStart(2, '0');
-        const timeStr = `${pad(startH)}:${pad(startM)}–${pad(endH)}:${pad(endM)}`;
-        return `<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
-          <div><span class="text-sm font-bold text-primary">${timeStr}</span><span class="text-xs text-on-surface-variant ml-2">${b.label}</span></div>
-          <button data-remove-block="${i}" class="px-2 py-1 text-error text-xs font-bold">Remove</button>
-        </div>`;
-      }).join('')
-      : '<p class="text-xs text-on-surface-variant">No custom blocks. (Uses half-hour increments if not defined.)</p>';
-
-    list.querySelectorAll('[data-remove-block]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const win = Roster.getPollWindow();
-        if (win && win.slotBlocks) {
-          win.slotBlocks.splice(Number(btn.dataset.removeBlock), 1);
-          Roster.setPollWindow(win);
-          renderSlotBlocks();
-        }
-      });
-    });
-  }
 
   let currentPollStep = 1;
 
@@ -802,19 +873,17 @@
       el.classList.toggle('active', sn === n);
       el.classList.toggle('done', sn < n);
     });
-    if (n === 5) renderReviewCalendar();
+    if (n === 2) renderFixedSlots();
+    if (n === 4) renderReviewCalendar();
   }
 
   function renderPoll() {
     const win = Roster.getPollWindow();
     const banner = document.getElementById('poll-active-banner');
-    document.getElementById('poll-time-start').innerHTML = timeOptions(win ? `${win.startHour}:${win.startMinute || 0}` : '15:30');
-    document.getElementById('poll-time-end').innerHTML = timeOptions(win ? `${win.endHour}:${win.endMinute || 0}` : '18:00');
 
     if (win) {
       document.getElementById('poll-start').value = win.startDate || '';
       document.getElementById('poll-end').value = win.endDate || '';
-      document.getElementById('half-hour').checked = win.halfHour !== false;
       document.querySelectorAll('.dow-cb').forEach(cb => {
         cb.checked = (win.daysOfWeek || [1,2,3,4,5]).includes(Number(cb.value));
         applyChipStyle(cb);
@@ -835,9 +904,23 @@
       banner.classList.add('hidden');
     }
     renderBlockouts();
-    renderSlotBlocks();
-    renderOverrides();
+    renderFixedSlots();
     renderCommonReasons();
+  }
+
+  function renderFixedSlots() {
+    const list = document.getElementById('fixed-slots-list');
+    if (!list) return;
+    const win = Roster.getPollWindow() || {};
+    const enabled = Array.isArray(win.enabledSlotIds) ? new Set(win.enabledSlotIds) : null;
+    const slots = Roster.getFixedSlots();
+    list.innerHTML = slots.map(s => {
+      const checked = enabled ? enabled.has(s.id) : true;
+      return `<label class="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low border border-outline-variant/10 cursor-pointer hover:bg-primary-fixed/30">
+        <input type="checkbox" class="fixed-slot-cb w-5 h-5 rounded text-primary" data-slot-id="${s.id}" ${checked ? 'checked' : ''}/>
+        <span class="font-bold text-sm text-primary">${s.label}</span>
+      </label>`;
+    }).join('');
   }
 
   function renderCommonReasons() {
@@ -854,25 +937,6 @@
     }));
   }
 
-  function renderOverrides() {
-    const win = Roster.getPollWindow() || {};
-    const overrides = win.dayOverrides || [];
-    const list = document.getElementById('overrides-list');
-    list.innerHTML = overrides.length ? overrides.map((o, i) =>
-      `<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
-        <span class="text-sm"><span class="font-bold text-primary">${o.date}</span> at <span class="font-bold">${o.time}</span> — skipped</span>
-        <button data-rm-override="${i}" class="px-2 py-1 text-error text-xs font-bold">Remove</button>
-      </div>`
-    ).join('') : '<p class="text-xs text-on-surface-variant">No overrides. All times apply to all dates.</p>';
-    list.querySelectorAll('[data-rm-override]').forEach(b => b.addEventListener('click', () => {
-      const w = Roster.getPollWindow() || {};
-      w.dayOverrides = w.dayOverrides || [];
-      w.dayOverrides.splice(Number(b.dataset.rmOverride), 1);
-      Roster.setPollWindow(w);
-      renderOverrides();
-    }));
-  }
-
   function applyChipStyle(cb) {
     const span = cb.nextElementSibling;
     if (!span) return;
@@ -885,23 +949,25 @@
     const startDate = document.getElementById('poll-start').value;
     const endDate = document.getElementById('poll-end').value;
     if (!startDate || !endDate) return null;
-    const [startH, startM] = (document.getElementById('poll-time-start').value || '15:30').split(':').map(Number);
-    const [endH, endM] = (document.getElementById('poll-time-end').value || '18:00').split(':').map(Number);
-    const halfHour = document.getElementById('half-hour').checked;
     const daysOfWeek = [...document.querySelectorAll('.dow-cb:checked')].map(cb => Number(cb.value));
     const format = (document.querySelector('input[name="format"]:checked') || {}).value || 'offline';
     const existing = Roster.getPollWindow() || {};
+    const checkedSlotCBs = document.querySelectorAll('.fixed-slot-cb');
+    let enabledSlotIds;
+    if (checkedSlotCBs.length) {
+      enabledSlotIds = [...checkedSlotCBs].filter(cb => cb.checked).map(cb => cb.dataset.slotId);
+    } else {
+      enabledSlotIds = existing.enabledSlotIds || Roster.getFixedSlots().map(s => s.id);
+    }
     return {
       ...existing,
       startDate, endDate,
-      startHour: startH, startMinute: startM,
-      endHour: endH, endMinute: endM,
-      halfHour, daysOfWeek, format,
+      daysOfWeek, format,
+      enabledSlotIds,
+      perDateExclusions: existing.perDateExclusions || {},
       reasonRequiredAll: document.getElementById('reason-required-all').checked,
       checkinRequired: document.getElementById('checkin-required').checked,
       blockoutDates: existing.blockoutDates || [],
-      slotBlocks: existing.slotBlocks || [],
-      dayOverrides: existing.dayOverrides || [],
       slotTitles: existing.slotTitles || {},
       active: true
     };
@@ -987,7 +1053,7 @@
     const titleEl = document.getElementById('review-slots-title');
     const allKeys = Roster.getPollSlotKeys();
     if (!allKeys.length) {
-      slotsEl.innerHTML = '<p class="text-xs text-on-surface-variant">No slots yet.</p>';
+      slotsEl.innerHTML = '<p class="text-xs text-on-surface-variant">No slots yet. Check dates and enabled slots.</p>';
       return;
     }
     if (!reviewSelectedDate) {
@@ -997,30 +1063,55 @@
         const dt = k.split('T')[0];
         byDate[dt] = (byDate[dt] || 0) + 1;
       });
-      slotsEl.innerHTML = Object.entries(byDate).sort().map(([d, c]) =>
-        `<div class="p-2 rounded-lg bg-white text-xs flex justify-between"><span class="font-bold">${d}</span><span>${c} slot${c>1?'s':''}</span></div>`
-      ).join('');
+      slotsEl.innerHTML = '<p class="text-xs text-on-surface-variant mb-2">Click a date on the calendar to remove specific slots.</p>' +
+        Object.entries(byDate).sort().map(([d, c]) =>
+          `<div class="p-2 rounded-lg bg-white text-xs flex justify-between"><span class="font-bold">${d}</span><span>${c} slot${c>1?'s':''}</span></div>`
+        ).join('');
       return;
     }
     const win = Roster.getPollWindow() || {};
     const titles = win.slotTitles || {};
-    const dateSlots = allKeys.filter(k => k.startsWith(reviewSelectedDate)).sort();
-    titleEl.textContent = `${reviewSelectedDate} (${dateSlots.length} slots)`;
-    if (!dateSlots.length) {
-      slotsEl.innerHTML = '<p class="text-xs text-on-surface-variant">No slots on this date.</p>';
-      return;
-    }
-    slotsEl.innerHTML = dateSlots.map(k => {
-      const d = Roster.parseSlotKey(k);
-      const time = Roster.formatTime(d.getHours(), d.getMinutes());
-      const title = titles[k] || '';
-      return `<div class="p-2 rounded-lg bg-white">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="text-sm font-bold text-primary">${time}</span>
-        </div>
-        <input type="text" placeholder="Slot title (optional)" data-slot-title="${k}" value="${title.replace(/"/g, '&quot;')}" class="w-full bg-surface-container-low border-none rounded-lg p-2 text-xs"/>
-      </div>`;
-    }).join('');
+    const allFixed = Roster.getFixedSlots();
+    const enabledGlobal = new Set(win.enabledSlotIds || allFixed.map(s => s.id));
+    const exclForDate = new Set((win.perDateExclusions || {})[reviewSelectedDate] || []);
+    const activeCount = allFixed.filter(s => enabledGlobal.has(s.id) && !exclForDate.has(s.id)).length;
+    titleEl.textContent = `${reviewSelectedDate} (${activeCount} slot${activeCount === 1 ? '' : 's'})`;
+
+    slotsEl.innerHTML = '<p class="text-xs text-on-surface-variant mb-3">Toggle a slot off to skip it only for this date.</p>' +
+      allFixed.map(s => {
+        const [y, mo, dd] = reviewSelectedDate.split('-').map(Number);
+        const d = new Date(y, mo - 1, dd);
+        const h = Math.floor(s.startMinute / 60);
+        const m = s.startMinute % 60;
+        const key = Roster.buildSlotKey(d, h, m);
+        const globalOff = !enabledGlobal.has(s.id);
+        const dateOff = exclForDate.has(s.id);
+        const off = globalOff || dateOff;
+        const title = titles[key] || '';
+        return `<div class="p-3 rounded-lg ${off ? 'bg-surface-container-high opacity-60' : 'bg-white'}">
+          <div class="flex items-center gap-2 mb-2">
+            <button data-toggle-date-slot="${s.id}" ${globalOff ? 'disabled' : ''} class="px-3 py-1.5 rounded-full text-[10px] font-bold ${off ? 'bg-error-container text-error' : 'bg-primary text-white'}">
+              ${off ? (globalOff ? 'Globally off' : 'Skipped') : 'Active'}
+            </button>
+            <span class="text-sm font-bold text-primary">${s.label}</span>
+          </div>
+          <input type="text" placeholder="Slot title (optional)" data-slot-title="${key}" value="${title.replace(/"/g, '&quot;')}" ${off ? 'disabled' : ''} class="w-full bg-surface-container-low border-none rounded-lg p-2 text-xs"/>
+        </div>`;
+      }).join('');
+
+    slotsEl.querySelectorAll('[data-toggle-date-slot]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const w = Roster.getPollWindow() || {};
+        w.perDateExclusions = w.perDateExclusions || {};
+        const list = new Set(w.perDateExclusions[reviewSelectedDate] || []);
+        const sid = btn.dataset.toggleDateSlot;
+        if (list.has(sid)) list.delete(sid); else list.add(sid);
+        w.perDateExclusions[reviewSelectedDate] = [...list];
+        Roster.setPollWindow(w);
+        renderReviewSlots();
+      });
+    });
+
     slotsEl.querySelectorAll('[data-slot-title]').forEach(inp => {
       inp.addEventListener('change', () => {
         const w = Roster.getPollWindow() || {};
@@ -1285,6 +1376,61 @@
 
     document.getElementById('refresh-overview').addEventListener('click', renderOverview);
 
+    document.getElementById('ov-prev-week').addEventListener('click', () => {
+      if (!overviewWeekStart) return;
+      overviewWeekStart = addDays(overviewWeekStart, -7);
+      renderOverview();
+    });
+    document.getElementById('ov-next-week').addEventListener('click', () => {
+      if (!overviewWeekStart) return;
+      overviewWeekStart = addDays(overviewWeekStart, 7);
+      renderOverview();
+    });
+
+    /* manual rehearsal modal */
+    const mrModal = document.getElementById('manual-rehearsal-modal');
+    document.getElementById('add-manual-rehearsal-btn').addEventListener('click', () => {
+      document.getElementById('mr-title').value = '';
+      document.getElementById('mr-date').value = '';
+      document.getElementById('mr-start').value = '';
+      document.getElementById('mr-end').value = '';
+      document.getElementById('mr-location').value = '';
+      document.getElementById('mr-error').classList.add('hidden');
+      mrModal.classList.replace('hidden', 'flex');
+    });
+    document.getElementById('cancel-manual-rehearsal').addEventListener('click', () => {
+      mrModal.classList.replace('flex', 'hidden');
+    });
+    document.getElementById('save-manual-rehearsal').addEventListener('click', () => {
+      const title = document.getElementById('mr-title').value.trim();
+      const date = document.getElementById('mr-date').value;
+      const start = document.getElementById('mr-start').value;
+      const end = document.getElementById('mr-end').value;
+      const location = document.getElementById('mr-location').value.trim();
+      if (!title || !date || !start) {
+        document.getElementById('mr-error').classList.remove('hidden');
+        return;
+      }
+      const [y, mo, d] = date.split('-').map(Number);
+      const [sh, sm] = start.split(':').map(Number);
+      const dateObj = new Date(y, mo - 1, d);
+      const slotKey = Roster.buildSlotKey(dateObj, sh, sm);
+      let endMinute = null;
+      if (end) {
+        const [eh, em] = end.split(':').map(Number);
+        endMinute = eh * 60 + em;
+      }
+      const rec = Roster.addRehearsal(slotKey, title, 'rehearsal', location || 'Main Stage');
+      if (rec) {
+        Roster.updateRehearsal(rec.id, { endMinute, location, customTitle: title, manual: true });
+      } else {
+        alert('A rehearsal already exists at that date/time.');
+        return;
+      }
+      mrModal.classList.replace('flex', 'hidden');
+      renderOverview();
+    });
+
     /* zoom add modal */
     document.getElementById('add-zoom-btn').addEventListener('click', () => {
       const sel = document.getElementById('zoom-rehearsal');
@@ -1378,21 +1524,11 @@
       renderBlockouts();
     });
 
-    /* day overrides */
-    document.getElementById('add-override-btn').addEventListener('click', () => {
-      const date = document.getElementById('override-date').value;
-      const time = document.getElementById('override-time').value;
-      if (!date || !time) { alert('Pick a date and a time'); return; }
-      persistPollDraft();
-      const win = Roster.getPollWindow() || {};
-      win.dayOverrides = win.dayOverrides || [];
-      if (!win.dayOverrides.find(o => o.date === date && o.time === time)) {
-        win.dayOverrides.push({ date, time });
-        Roster.setPollWindow(win);
+    /* fixed slot toggles (Step 2) persist immediately when checkbox flips */
+    document.addEventListener('change', (e) => {
+      if (e.target.classList && e.target.classList.contains('fixed-slot-cb')) {
+        persistPollDraft();
       }
-      document.getElementById('override-date').value = '';
-      document.getElementById('override-time').value = '';
-      renderOverrides();
     });
 
     /* common reasons */
@@ -1404,29 +1540,6 @@
       if (!arr.includes(val)) { arr.push(val); Roster.setCommonReasons(arr); }
       input.value = '';
       renderCommonReasons();
-    });
-
-    /* custom slot blocks */
-    document.getElementById('add-block-btn').addEventListener('click', () => {
-      const startStr = document.getElementById('block-start-time').value;
-      const endStr = document.getElementById('block-end-time').value;
-      const label = document.getElementById('block-label').value.trim();
-      if (!startStr || !endStr) { alert('Enter start and end times'); return; }
-      const [startH, startM] = startStr.split(':').map(Number);
-      const [endH, endM] = endStr.split(':').map(Number);
-      const startMin = startH * 60 + startM;
-      const endMin = endH * 60 + endM;
-      if (startMin >= endMin) { alert('Start must be before end'); return; }
-      persistPollDraft();
-      const win = Roster.getPollWindow() || {};
-      win.slotBlocks = Array.isArray(win.slotBlocks) ? win.slotBlocks : [];
-      win.slotBlocks.push({ startMinute: startMin, endMinute: endMin, label });
-      win.slotBlocks.sort((a, b) => a.startMinute - b.startMinute);
-      Roster.setPollWindow(win);
-      document.getElementById('block-start-time').value = '';
-      document.getElementById('block-end-time').value = '';
-      document.getElementById('block-label').value = '';
-      renderSlotBlocks();
     });
 
     /* cast profile modal */

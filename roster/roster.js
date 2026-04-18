@@ -20,6 +20,17 @@
   const DEFAULT_REASONS = ['School commitment', 'Family event', 'Health', 'Tutoring', 'Other'];
   const DEFAULT_LEAVE_REASONS = ['Sick', 'Family emergency', 'Academic conflict', 'Personal'];
 
+  /* Fixed, production-wide time slots. All polls use these. */
+  const FIXED_SLOTS = [
+    { id: 'slot-0950', startMinute:  9 * 60 + 50, endMinute: 10 * 60 + 10, label: '9:50am – 10:10am' },
+    { id: 'slot-1130', startMinute: 11 * 60 + 30, endMinute: 12 * 60 +  0, label: '11:30am – 12:00pm' },
+    { id: 'slot-1200', startMinute: 12 * 60 +  0, endMinute: 12 * 60 + 30, label: '12:00pm – 12:30pm' },
+    { id: 'slot-1350', startMinute: 13 * 60 + 50, endMinute: 14 * 60 +  0, label: '1:50pm – 2:00pm' },
+    { id: 'slot-1530', startMinute: 15 * 60 + 30, endMinute: 16 * 60 + 10, label: '3:30pm – 4:10pm' },
+    { id: 'slot-1610', startMinute: 16 * 60 + 10, endMinute: 16 * 60 + 50, label: '4:10pm – 4:50pm' },
+    { id: 'slot-1650', startMinute: 16 * 60 + 50, endMinute: 17 * 60 + 30, label: '4:50pm – 5:30pm' }
+  ];
+
   const ADMIN_PASSCODE = '20260508';
   const ADMIN_SESSION_KEY = 'roster.adminAuthed';
 
@@ -287,6 +298,9 @@
       return !!(win && Array.isArray(win.blockoutDates) && win.blockoutDates.includes(dateStr));
     },
 
+    /* Fixed production time slots. */
+    getFixedSlots() { return FIXED_SLOTS.slice(); },
+
     getPollSlotKeys() {
       const win = Roster.getPollWindow();
       if (!win || !win.active) return [];
@@ -296,54 +310,47 @@
       const end   = new Date(ey, em - 1, ed);
       const allowed  = new Set(win.daysOfWeek && win.daysOfWeek.length ? win.daysOfWeek : [0,1,2,3,4,5,6]);
       const blockouts = new Set(win.blockoutDates || []);
+      const enabledSlotIds = Array.isArray(win.enabledSlotIds) && win.enabledSlotIds.length
+        ? new Set(win.enabledSlotIds)
+        : new Set(FIXED_SLOTS.map(s => s.id));
+      const perDateExclusions = win.perDateExclusions || {};
       const keys = [];
-
-      const useBlocks = Array.isArray(win.slotBlocks) && win.slotBlocks.length > 0;
 
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         if (!allowed.has(d.getDay())) continue;
         const y  = d.getFullYear();
         const mo = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
-        if (blockouts.has(`${y}-${mo}-${dd}`)) continue;
+        const dateStr = `${y}-${mo}-${dd}`;
+        if (blockouts.has(dateStr)) continue;
+        const excludedForDate = new Set(perDateExclusions[dateStr] || []);
 
-        const step     = (win.halfHour !== false) ? 30 : 60;
-        const startMin = win.startHour * 60 + (win.startMinute || 0);
-        const endMin   = win.endHour   * 60 + (win.endMinute   || 0);
-        for (let t = startMin; t <= endMin; t += step) {
-          keys.push(Roster.buildSlotKey(d, Math.floor(t / 60), t % 60));
-        }
-
-        if (useBlocks) {
-          win.slotBlocks.forEach(block => {
-            const h = Math.floor(block.startMinute / 60);
-            const m = block.startMinute % 60;
-            const blockKey = Roster.buildSlotKey(d, h, m);
-            if (!keys.includes(blockKey)) {
-              keys.push(blockKey);
-            }
-          });
-        }
+        FIXED_SLOTS.forEach(s => {
+          if (!enabledSlotIds.has(s.id)) return;
+          if (excludedForDate.has(s.id)) return;
+          const h = Math.floor(s.startMinute / 60);
+          const m = s.startMinute % 60;
+          keys.push(Roster.buildSlotKey(d, h, m));
+        });
       }
       return keys;
     },
 
-    /* find slot block info (label, end time) for a given slot key */
+    /* returns the FIXED_SLOTS entry matching this slot-key's start time */
     getSlotBlock(slotKey) {
-      const win = Roster.getPollWindow();
-      if (!win || !Array.isArray(win.slotBlocks)) return null;
       const d = Roster.parseSlotKey(slotKey);
       const startMin = d.getHours() * 60 + d.getMinutes();
-      return win.slotBlocks.find(b => b.startMinute === startMin) || null;
+      return FIXED_SLOTS.find(b => b.startMinute === startMin) || null;
     },
 
     /* poll-slot metadata: format (video/offline) + whether a typed reason is required */
     getSlotMeta(slotKey) {
       const win = Roster.getPollWindow();
       if (!win) return { format: 'offline', reasonRequired: false };
+      const perSlot = !!(win.reasonRequiredSlots && win.reasonRequiredSlots.includes(slotKey));
       return {
         format: win.format || 'offline',
-        reasonRequired: !!(win.reasonRequiredSlots && win.reasonRequiredSlots.includes(slotKey))
+        reasonRequired: !!win.reasonRequiredAll || perSlot
       };
     },
 
