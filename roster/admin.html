@@ -175,6 +175,19 @@
       <button id="close-poll-btn" class="px-4 py-2 bg-error text-white rounded-full text-xs font-bold">Close poll</button>
     </div>
 
+    <!-- Custom Slot Blocks -->
+    <div id="slot-blocks-section" class="hidden bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl mb-8">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Custom time blocks</h3>
+      <p class="text-xs text-on-surface-variant mb-4">Define named slots like "9:50am-10:10am (First Recess)" instead of 30-min increments.</p>
+      <div class="flex gap-2 mb-3 flex-wrap">
+        <input id="block-start-time" type="time" placeholder="09:50" class="flex-1 min-w-[100px] bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"/>
+        <input id="block-end-time" type="time" placeholder="10:10" class="flex-1 min-w-[100px] bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"/>
+        <input id="block-label" type="text" placeholder="e.g., First Recess" class="flex-1 min-w-[150px] bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"/>
+        <button id="add-block-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Add</button>
+      </div>
+      <div id="blocks-list" class="space-y-2 max-h-48 overflow-y-auto"></div>
+    </div>
+
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl mb-8">
       <div class="grid grid-cols-2 gap-6 mb-6">
         <div>
@@ -461,13 +474,46 @@
     });
   }
 
+  function renderSlotBlocks() {
+    const win = Roster.getPollWindow();
+    const blocks = (win && Array.isArray(win.slotBlocks)) ? win.slotBlocks : [];
+    const list = document.getElementById('blocks-list');
+    list.innerHTML = blocks.length
+      ? blocks.map((b, i) => {
+        const startH = Math.floor(b.startMinute / 60);
+        const startM = b.startMinute % 60;
+        const endH = Math.floor(b.endMinute / 60);
+        const endM = b.endMinute % 60;
+        const pad = (n) => String(n).padStart(2, '0');
+        const timeStr = `${pad(startH)}:${pad(startM)}–${pad(endH)}:${pad(endM)}`;
+        return `<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+          <div><span class="text-sm font-bold text-primary">${timeStr}</span><span class="text-xs text-on-surface-variant ml-2">${b.label}</span></div>
+          <button data-remove-block="${i}" class="px-2 py-1 text-error text-xs font-bold">Remove</button>
+        </div>`;
+      }).join('')
+      : '<p class="text-xs text-on-surface-variant">No custom blocks. (Uses half-hour increments if not defined.)</p>';
+
+    list.querySelectorAll('[data-remove-block]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const win = Roster.getPollWindow();
+        if (win && win.slotBlocks) {
+          win.slotBlocks.splice(Number(btn.dataset.removeBlock), 1);
+          Roster.setPollWindow(win);
+          renderSlotBlocks();
+        }
+      });
+    });
+  }
+
   function renderPoll() {
     const win = Roster.getPollWindow();
     const banner = document.getElementById('poll-active-banner');
+    const blocksSect = document.getElementById('slot-blocks-section');
     document.getElementById('poll-time-start').innerHTML = timeOptions(win ? `${win.startHour}:${win.startMinute || 0}` : '15:30');
     document.getElementById('poll-time-end').innerHTML = timeOptions(win ? `${win.endHour}:${win.endMinute || 0}` : '18:00');
     if (win && win.active) {
       banner.classList.remove('hidden');
+      blocksSect.classList.remove('hidden');
       const days = (win.daysOfWeek || []).map(d => DAY_NAMES_SHORT[d]).join(', ');
       document.getElementById('poll-active-desc').textContent =
         `${win.startDate} → ${win.endDate} · ${days || 'All days'}`;
@@ -480,9 +526,11 @@
       document.querySelector(`input[name="format"][value="${win.format || 'offline'}"]`).checked = true;
       renderBlockouts();
       renderReasonSlots();
+      renderSlotBlocks();
       document.getElementById('reason-required-section').classList.remove('hidden');
     } else {
       banner.classList.add('hidden');
+      blocksSect.classList.add('hidden');
       renderBlockouts();
       document.getElementById('reason-required-section').classList.add('hidden');
     }
@@ -538,18 +586,33 @@
     const avMap = Roster.getAvailabilityMap();
     document.getElementById('cast-count-label').textContent = `${ledger.length} member${ledger.length !== 1 ? 's' : ''}`;
     document.getElementById('cast-table').innerHTML = ledger.length ? ledger.map(s => {
-      const a = avMap[s.id] || { available: [], blocked: [] };
+      const a = avMap[s.id] || { available: [], blocked: [], submittedAt: null };
+      const submitted = Roster.hasSubmitted(s.id);
+      const statusColor = submitted ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600';
+      const statusLabel = submitted ? '✓ Submitted' : 'Pending';
       return `<div class="flex items-center justify-between py-4 gap-4 flex-wrap">
-        <div>
+        <div class="flex-1">
           <p class="font-bold text-sm text-primary">${s.name}${s.role ? ' <span class="text-on-surface-variant font-normal">— ' + s.role + '</span>' : ''}</p>
           <p class="text-xs font-mono text-on-surface-variant">${s.scriptId || '<em>not yet registered</em>'}</p>
         </div>
-        <div class="flex gap-6 text-xs items-center">
-          <span><span class="font-bold text-primary">${a.available.length}</span> <span class="text-on-surface-variant">available</span></span>
-          <span><span class="font-bold text-error">${a.blocked.length}</span> <span class="text-on-surface-variant">blocked</span></span>
+        <div class="flex gap-4 text-xs items-center">
+          <span class="px-2 py-1 rounded-full ${statusColor} text-xs font-bold">${statusLabel}</span>
+          <span><span class="font-bold text-primary">${a.available.length}</span> avail</span>
+          <span><span class="font-bold text-error">${a.blocked.length}</span> blocked</span>
+          <button data-delete-student="${s.id}" class="px-2 py-1 text-error text-xs font-bold hover:bg-error-container rounded">Delete</button>
         </div>
       </div>`;
     }).join('') : '<p class="text-xs text-on-surface-variant">Ledger is empty.</p>';
+
+    document.querySelectorAll('[data-delete-student]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (confirm('Delete this cast member and all their data?')) {
+          Roster.removeStudent(btn.dataset.deleteStudent);
+          renderCast();
+          renderOverview();
+        }
+      });
+    });
   }
 
   function renderLeaves() {
@@ -677,6 +740,29 @@
       }
       document.getElementById('blockout-date').value = '';
       renderPoll();
+    });
+
+    /* custom slot blocks */
+    document.getElementById('add-block-btn').addEventListener('click', () => {
+      const startStr = document.getElementById('block-start-time').value;
+      const endStr = document.getElementById('block-end-time').value;
+      const label = document.getElementById('block-label').value.trim();
+      if (!startStr || !endStr) { alert('Enter start and end times'); return; }
+      const [startH, startM] = startStr.split(':').map(Number);
+      const [endH, endM] = endStr.split(':').map(Number);
+      const startMin = startH * 60 + startM;
+      const endMin = endH * 60 + endM;
+      if (startMin >= endMin) { alert('Start must be before end'); return; }
+      const win = Roster.getPollWindow();
+      if (!win) { alert('Save poll first'); return; }
+      win.slotBlocks = Array.isArray(win.slotBlocks) ? win.slotBlocks : [];
+      win.slotBlocks.push({ startMinute: startMin, endMinute: endMin, label });
+      win.slotBlocks.sort((a, b) => a.startMinute - b.startMinute);
+      Roster.setPollWindow(win);
+      document.getElementById('block-start-time').value = '';
+      document.getElementById('block-end-time').value = '';
+      document.getElementById('block-label').value = '';
+      renderSlotBlocks();
     });
 
     /* notices */

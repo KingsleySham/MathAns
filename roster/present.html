@@ -33,11 +33,13 @@
   .slot:not(.available):not(.blocked):hover { background: #e1e0ff; }
   @keyframes tick-pop { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
   .green-tick { animation: tick-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  .typeahead-list { max-height: 200px; overflow-y: auto; }
+  .typeahead-item:hover { background: #e1e0ff; }
 </style>
 </head>
 <body class="bg-surface font-body text-on-surface antialiased min-h-screen flex items-center justify-center p-8">
 
-<!-- STEP 1: Welcome + Name + Disclaimer -->
+<!-- STEP 1: Welcome + Name selector + Disclaimer -->
 <div id="step-welcome" class="max-w-md w-full bg-white rounded-[2rem] p-8 shadow-lg">
   <div class="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-6">
     <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1;">event_available</span>
@@ -46,17 +48,29 @@
   <p class="text-sm text-on-surface-variant text-center mb-8">Mark your availability for upcoming rehearsals.</p>
 
   <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Your name</label>
-  <input id="name-input" type="text" placeholder="Full name" class="w-full bg-surface-container-high border-none rounded-xl p-4 mb-4 focus:ring-2 focus:ring-primary-fixed"/>
+  <div class="relative">
+    <input id="name-input" type="text" placeholder="Type or pick from list" autocomplete="off"
+      class="w-full bg-surface-container-high border-none rounded-xl p-4 mb-1 focus:ring-2 focus:ring-primary-fixed pr-12"/>
+    <button type="button" id="dropdown-toggle"
+      class="absolute right-3 top-3 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">expand_more</span>
+    </button>
+  </div>
+  <div id="typeahead-list" class="typeahead-list hidden bg-white border border-outline-variant/20 rounded-xl mb-2 shadow-md"></div>
+  <p id="match-info" class="text-xs text-primary mb-4 hidden flex items-center gap-1">
+    <span class="material-symbols-outlined text-sm">info</span>
+    <span id="match-info-text"></span>
+  </p>
 
-  <label class="flex items-start gap-3 cursor-pointer mb-6">
+  <label class="flex items-start gap-3 cursor-pointer mb-6 mt-3">
     <input id="disclaimer-cb" type="checkbox" class="w-5 h-5 rounded text-primary focus:ring-primary-fixed mt-1"/>
     <span class="text-xs text-on-surface-variant">I understand my availability will be used by the production team to schedule rehearsals.</span>
   </label>
 
-  <button id="continue-btn" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+  <button id="continue-btn" disabled class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
     <span class="material-symbols-outlined">arrow_forward</span> Continue
   </button>
-  <p class="text-xs text-on-surface-variant text-center mt-4">No account needed. One-time sign-up.</p>
+  <p class="text-xs text-on-surface-variant text-center mt-4">Pick your name from the list, or type a new one.</p>
 </div>
 
 <!-- STEP 2: Slot picker -->
@@ -66,6 +80,7 @@
       <div>
         <h1 class="font-headline text-3xl font-extrabold text-primary">Pick your slots</h1>
         <p class="text-sm text-on-surface-variant mt-1" id="poll-dates">—</p>
+        <p class="text-xs text-on-surface-variant mt-1">Signed in as <span id="signed-name" class="font-bold text-primary"></span></p>
       </div>
       <button id="back-btn" class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full text-xs font-bold">← Back</button>
     </div>
@@ -99,7 +114,7 @@
     <span class="material-symbols-outlined text-5xl text-white" style="font-variation-settings:'FILL' 1;">check_circle</span>
   </div>
   <h2 class="font-headline text-3xl font-extrabold text-on-surface mb-2">Submitted!</h2>
-  <p class="text-sm text-on-surface-variant mb-8">Your availability has been recorded. Thank you!</p>
+  <p class="text-sm text-on-surface-variant mb-8">Your availability has been recorded. Thank you, <span id="success-name" class="font-bold text-primary"></span>!</p>
   <button id="next-person-btn" class="w-full py-4 bg-primary text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg">
     <span class="material-symbols-outlined">group_add</span> Next person
   </button>
@@ -107,9 +122,9 @@
 
 <script>
   const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   let currentName = '';
+  let currentStudent = null;
   let currentSlots = { available: [], blocked: [] };
   let pollSlotKeys = [];
   let weekStart = null;
@@ -119,6 +134,58 @@
     c.setDate(c.getDate() - c.getDay()); return c;
   }
   function addDays(d, n) { const c = new Date(d); c.setDate(c.getDate() + n); return c; }
+
+  function renderTypeahead(filter) {
+    const ledger = Roster.getLedger();
+    const q = (filter || '').trim().toLowerCase();
+    const matches = q ? ledger.filter(s => s.name.toLowerCase().includes(q)) : ledger;
+    const list = document.getElementById('typeahead-list');
+    if (!matches.length) {
+      list.innerHTML = q
+        ? `<div class="p-3 text-sm text-on-surface-variant">No match. Press <span class="font-bold">Continue</span> to add "<span class="font-bold text-primary">${q}</span>" as a new person.</div>`
+        : '<div class="p-3 text-sm text-on-surface-variant">No registered cast yet — type a name to add yourself.</div>';
+    } else {
+      list.innerHTML = matches.map(s => {
+        const submitted = Roster.hasSubmitted(s.id);
+        const dot = submitted ? '<span class="ml-2 inline-block w-2 h-2 rounded-full bg-emerald-500" title="Already submitted"></span>' : '';
+        return `<div class="typeahead-item p-3 cursor-pointer text-sm border-b border-outline-variant/10 last:border-0" data-id="${s.id}" data-name="${s.name}">
+          <span class="font-bold text-primary">${s.name}</span>${dot}
+          ${s.role ? `<span class="text-xs text-on-surface-variant ml-2">— ${s.role}</span>` : ''}
+        </div>`;
+      }).join('');
+      list.querySelectorAll('.typeahead-item').forEach(item => {
+        item.addEventListener('click', () => {
+          document.getElementById('name-input').value = item.dataset.name;
+          currentName = item.dataset.name;
+          list.classList.add('hidden');
+          updateMatchInfo();
+          updateContinueBtn();
+        });
+      });
+    }
+  }
+
+  function updateMatchInfo() {
+    const info = document.getElementById('match-info');
+    const text = document.getElementById('match-info-text');
+    if (!currentName) { info.classList.add('hidden'); return; }
+    const existing = Roster.findByName(currentName);
+    if (existing) {
+      const submitted = Roster.hasSubmitted(existing.id);
+      text.textContent = submitted
+        ? `Found existing entry — your previous submission will be replaced.`
+        : `Found existing entry — your availability will be saved.`;
+      info.classList.remove('hidden');
+    } else {
+      text.textContent = `New person — a new entry will be created.`;
+      info.classList.remove('hidden');
+    }
+  }
+
+  function updateContinueBtn() {
+    const ok = currentName && document.getElementById('disclaimer-cb').checked;
+    document.getElementById('continue-btn').disabled = !ok;
+  }
 
   function buildWeekGrid() {
     if (!pollSlotKeys.length) return;
@@ -137,12 +204,12 @@
       return;
     }
 
-    const hoursSet = new Set(weekPollSlots.map(k => { const d = Roster.parseSlotKey(k); return d.getHours() * 60 + d.getMinutes(); }));
-    const sortedMinutes = [...hoursSet].sort((a,b) => a-b);
+    const minutesSet = new Set(weekPollSlots.map(k => { const d = Roster.parseSlotKey(k); return d.getHours() * 60 + d.getMinutes(); }));
+    const sortedMinutes = [...minutesSet].sort((a,b) => a-b);
     const activeDayIndices = [...new Set(weekPollSlots.map(k => Roster.parseSlotKey(k).getDay()))].sort((a,b)=>a-b);
 
     let html = `<table class="w-full border-collapse text-xs">`;
-    html += '<thead><tr><th class="w-20 p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-right">Time</th>';
+    html += '<thead><tr><th class="w-32 p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-right">Slot</th>';
     activeDayIndices.forEach(di => {
       const dayDate = days[di];
       html += `<th class="p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-center">
@@ -155,11 +222,20 @@
     sortedMinutes.forEach(totalMin => {
       const h = Math.floor(totalMin / 60);
       const m = totalMin % 60;
-      const ampm = h >= 12 ? 'pm' : 'am';
-      const h12 = ((h + 11) % 12) + 1;
-      const timeLabel = m === 0 ? `${h12}:00${ampm}` : `${h12}:30${ampm}`;
+      const sampleKey = weekPollSlots.find(k => {
+        const d = Roster.parseSlotKey(k);
+        return d.getHours() === h && d.getMinutes() === m;
+      });
+      const block = sampleKey ? Roster.getSlotBlock(sampleKey) : null;
+      const startStr = Roster.formatTime(h, m);
+      const blockEndStr = block ? Roster.formatTime(Math.floor(block.endMinute / 60), block.endMinute % 60) : '';
+      const blockLabel = block ? block.label : '';
+      const timeLabel = block ? `${startStr}–${blockEndStr}` : startStr;
       html += `<tr>`;
-      html += `<td class="p-3 text-right text-on-surface-variant border-r border-b border-outline-variant/10 font-medium">${m === 0 ? timeLabel : ''}</td>`;
+      html += `<td class="p-2 text-right text-on-surface-variant border-r border-b border-outline-variant/10 font-medium">
+        <div class="text-[11px] font-bold text-primary">${timeLabel}</div>
+        ${blockLabel ? `<div class="text-[10px] text-secondary">${blockLabel}</div>` : ''}
+      </td>`;
       activeDayIndices.forEach(di => {
         const dayDate = days[di];
         const key = Roster.buildSlotKey(dayDate, h, m);
@@ -171,7 +247,7 @@
         const isBlocked = currentSlots.blocked.includes(key);
         const cls = isAvail ? 'available' : isBlocked ? 'blocked' : '';
         html += `<td class="p-1 border-r border-b border-outline-variant/10">
-          <button class="slot w-full h-12 rounded-lg text-xs font-bold border border-outline-variant/20 ${cls}" data-key="${key}">${timeLabel}</button>
+          <button class="slot w-full h-12 rounded-lg text-xs font-bold border border-outline-variant/20 ${cls}" data-key="${key}">${isAvail ? '✓' : isBlocked ? '✗' : ''}</button>
         </td>`;
       });
       html += '</tr>';
@@ -189,7 +265,6 @@
         if (!isAvail && !isBlocked) currentSlots.available.push(key);
         else if (isAvail) currentSlots.blocked.push(key);
         buildWeekGrid();
-        updateStats();
       });
     });
     updateStats();
@@ -201,6 +276,7 @@
   }
 
   function showSuccess() {
+    document.getElementById('success-name').textContent = currentName;
     document.getElementById('step-welcome').classList.add('hidden');
     document.getElementById('step-slots').classList.add('hidden');
     document.getElementById('step-success').classList.remove('hidden');
@@ -208,12 +284,16 @@
 
   function reset() {
     currentName = '';
+    currentStudent = null;
     currentSlots = { available: [], blocked: [] };
     document.getElementById('name-input').value = '';
     document.getElementById('disclaimer-cb').checked = false;
+    document.getElementById('match-info').classList.add('hidden');
+    document.getElementById('typeahead-list').classList.add('hidden');
     document.getElementById('step-welcome').classList.remove('hidden');
     document.getElementById('step-slots').classList.add('hidden');
     document.getElementById('step-success').classList.add('hidden');
+    updateContinueBtn();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -233,17 +313,44 @@
     const firstPollDate = Roster.parseSlotKey(pollSlotKeys[0]);
     weekStart = startOfWeek(firstPollDate);
 
-    document.getElementById('name-input').addEventListener('input', (e) => {
+    const nameInput = document.getElementById('name-input');
+    const dropdownToggle = document.getElementById('dropdown-toggle');
+    const typeaheadList = document.getElementById('typeahead-list');
+
+    nameInput.addEventListener('input', (e) => {
       currentName = e.target.value.trim();
-      document.getElementById('continue-btn').disabled = !currentName || !document.getElementById('disclaimer-cb').checked;
+      renderTypeahead(currentName);
+      typeaheadList.classList.remove('hidden');
+      updateMatchInfo();
+      updateContinueBtn();
+    });
+    nameInput.addEventListener('focus', () => {
+      renderTypeahead(currentName);
+      typeaheadList.classList.remove('hidden');
+    });
+    dropdownToggle.addEventListener('click', () => {
+      renderTypeahead('');
+      typeaheadList.classList.toggle('hidden');
+      nameInput.focus();
+    });
+    document.addEventListener('click', (e) => {
+      if (!nameInput.contains(e.target) && !dropdownToggle.contains(e.target) && !typeaheadList.contains(e.target)) {
+        typeaheadList.classList.add('hidden');
+      }
     });
 
-    document.getElementById('disclaimer-cb').addEventListener('change', () => {
-      document.getElementById('continue-btn').disabled = !currentName || !document.getElementById('disclaimer-cb').checked;
-    });
+    document.getElementById('disclaimer-cb').addEventListener('change', updateContinueBtn);
 
     document.getElementById('continue-btn').addEventListener('click', () => {
       if (!currentName) return;
+      currentStudent = Roster.getOrCreateByName(currentName);
+      if (!currentStudent) return;
+      const existing = Roster.getAvailability(currentStudent.id);
+      currentSlots = {
+        available: [...(existing.available || [])],
+        blocked: [...(existing.blocked || [])]
+      };
+      document.getElementById('signed-name').textContent = currentName;
       document.getElementById('step-welcome').classList.add('hidden');
       document.getElementById('step-slots').classList.remove('hidden');
       buildWeekGrid();
@@ -252,7 +359,16 @@
     document.getElementById('back-btn').addEventListener('click', reset);
 
     document.getElementById('submit-btn').addEventListener('click', () => {
+      if (!currentStudent) return;
+      Roster.setAvailability(currentStudent.id, {
+        available: currentSlots.available,
+        blocked: currentSlots.blocked,
+        reasons: {},
+        submittedAt: Date.now()
+      });
+      Roster.markSubmitted(currentStudent.id);
       Roster.addPresentSubmission({
+        studentId: currentStudent.id,
         name: currentName,
         slots: currentSlots,
         slotCount: currentSlots.available.length + currentSlots.blocked.length

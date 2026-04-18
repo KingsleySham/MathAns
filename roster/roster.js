@@ -89,6 +89,35 @@
       return student;
     },
 
+    removeStudent(studentId) {
+      const ledger = Roster.getLedger().filter(s => s.id !== studentId);
+      writeJSON(KEYS.LEDGER, ledger);
+      const all = Roster.getAvailabilityMap();
+      delete all[studentId];
+      writeJSON(KEYS.AVAILABILITY, all);
+      const checkIns = Roster.getCheckIns();
+      delete checkIns[studentId];
+      writeJSON(KEYS.CHECKINS, checkIns);
+      const leaves = Roster.getLeaves().filter(l => l.studentId !== studentId);
+      writeJSON(KEYS.LEAVES, leaves);
+      const current = readJSON(KEYS.CURRENT, null);
+      if (current === studentId) localStorage.removeItem(KEYS.CURRENT);
+    },
+
+    findByName(name) {
+      const q = (name || '').trim().toLowerCase();
+      if (!q) return null;
+      return Roster.getLedger().find(s => (s.name || '').trim().toLowerCase() === q) || null;
+    },
+
+    getOrCreateByName(name, role = '') {
+      const trimmed = (name || '').trim();
+      if (!trimmed) return null;
+      const existing = Roster.findByName(trimmed);
+      if (existing) return existing;
+      return Roster.addStudent(trimmed, role);
+    },
+
     assignScriptId(studentId, role) {
       const ledger = Roster.getLedger();
       const student = ledger.find(s => s.id === studentId);
@@ -204,21 +233,42 @@
       const end   = new Date(ey, em - 1, ed);
       const allowed  = new Set(win.daysOfWeek && win.daysOfWeek.length ? win.daysOfWeek : [0,1,2,3,4,5,6]);
       const blockouts = new Set(win.blockoutDates || []);
-      const step     = (win.halfHour !== false) ? 30 : 60;
-      const startMin = win.startHour * 60 + (win.startMinute || 0);
-      const endMin   = win.endHour   * 60 + (win.endMinute   || 0);
       const keys = [];
+
+      const useBlocks = Array.isArray(win.slotBlocks) && win.slotBlocks.length > 0;
+
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         if (!allowed.has(d.getDay())) continue;
         const y  = d.getFullYear();
         const mo = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         if (blockouts.has(`${y}-${mo}-${dd}`)) continue;
-        for (let t = startMin; t <= endMin; t += step) {
-          keys.push(Roster.buildSlotKey(d, Math.floor(t / 60), t % 60));
+
+        if (useBlocks) {
+          win.slotBlocks.forEach(block => {
+            const h = Math.floor(block.startMinute / 60);
+            const m = block.startMinute % 60;
+            keys.push(Roster.buildSlotKey(d, h, m));
+          });
+        } else {
+          const step     = (win.halfHour !== false) ? 30 : 60;
+          const startMin = win.startHour * 60 + (win.startMinute || 0);
+          const endMin   = win.endHour   * 60 + (win.endMinute   || 0);
+          for (let t = startMin; t <= endMin; t += step) {
+            keys.push(Roster.buildSlotKey(d, Math.floor(t / 60), t % 60));
+          }
         }
       }
       return keys;
+    },
+
+    /* find slot block info (label, end time) for a given slot key */
+    getSlotBlock(slotKey) {
+      const win = Roster.getPollWindow();
+      if (!win || !Array.isArray(win.slotBlocks)) return null;
+      const d = Roster.parseSlotKey(slotKey);
+      const startMin = d.getHours() * 60 + d.getMinutes();
+      return win.slotBlocks.find(b => b.startMinute === startMin) || null;
     },
 
     /* poll-slot metadata: format (video/offline) + whether a typed reason is required */
@@ -407,10 +457,39 @@
       const d = Roster.parseSlotKey(key);
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const ampm = d.getHours() >= 12 ? 'pm' : 'am';
-      const h12 = ((d.getHours() + 11) % 12) + 1;
-      const mm = String(d.getMinutes()).padStart(2, '0');
-      return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()} — ${h12}:${mm}${ampm}`;
+      const block = Roster.getSlotBlock(key);
+      const start = Roster.formatTime(d.getHours(), d.getMinutes());
+      const dateStr = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+      if (block) {
+        const eh = Math.floor(block.endMinute / 60);
+        const em = block.endMinute % 60;
+        const endStr = Roster.formatTime(eh, em);
+        const labelStr = block.label ? ` (${block.label})` : '';
+        return `${dateStr} — ${start}–${endStr}${labelStr}`;
+      }
+      return `${dateStr} — ${start}`;
+    },
+
+    formatTime(h, m) {
+      const ampm = h >= 12 ? 'pm' : 'am';
+      const h12 = ((h + 11) % 12) + 1;
+      const mm = String(m).padStart(2, '0');
+      return `${h12}:${mm}${ampm}`;
+    },
+
+    /* Sorted slot stats: most-booked first */
+    getSlotRanking() {
+      const keys = Roster.getPollSlotKeys();
+      return keys.map(k => {
+        const a = Roster.aggregateSlot(k);
+        return { slot: k, available: a.availableIds.length, blocked: a.blockedIds.length, total: a.total };
+      }).sort((x, y) => y.available - x.available);
+    },
+
+    /* Submission-completed students */
+    hasSubmitted(studentId) {
+      const a = Roster.getAvailability(studentId);
+      return !!(a && a.submittedAt);
     },
 
     /* ── notifications / email generation ─────────────────────── */
