@@ -14,7 +14,9 @@
     LEAVE_REASONS: 'roster.commonLeaveReasons',
     CHECKIN_CODES: 'roster.checkinCodes',
     ATTENDANCE: 'roster.attendance',
-    ZOOM_MEETINGS: 'roster.zoomMeetings'
+    ZOOM_MEETINGS: 'roster.zoomMeetings',
+    ZOOM_CONFIG: 'roster.zoomConfig',
+    ZOOM_SESSION: 'roster.zoomSession'
   };
 
   const DEFAULT_REASONS = ['School commitment', 'Family event', 'Health', 'Tutoring', 'Other'];
@@ -127,11 +129,48 @@
     getZoomMeetings() { return readJSON(KEYS.ZOOM_MEETINGS, []); },
     addZoomMeeting(meeting) {
       const list = Roster.getZoomMeetings();
-      list.push({ id: genId('zm'), createdAt: Date.now(), ...meeting });
+      const rec = { id: genId('zm'), createdAt: Date.now(), ...meeting };
+      list.push(rec);
       writeJSON(KEYS.ZOOM_MEETINGS, list);
+      return rec;
     },
     removeZoomMeeting(id) {
       writeJSON(KEYS.ZOOM_MEETINGS, Roster.getZoomMeetings().filter(z => z.id !== id));
+    },
+
+    /* ── zoom OAuth config + session ─────────────────────── */
+    getZoomConfig() {
+      return readJSON(KEYS.ZOOM_CONFIG, { clientId: '', backendBase: '', redirectUri: '' });
+    },
+    setZoomConfig(cfg) { writeJSON(KEYS.ZOOM_CONFIG, cfg || {}); },
+    getZoomSession() { return readJSON(KEYS.ZOOM_SESSION, null); },
+    setZoomSession(s) {
+      if (s) writeJSON(KEYS.ZOOM_SESSION, s);
+      else localStorage.removeItem(KEYS.ZOOM_SESSION);
+    },
+    zoomAuthUrl() {
+      const cfg = Roster.getZoomConfig();
+      if (!cfg.clientId || !cfg.redirectUri) return null;
+      const qs = new URLSearchParams({
+        response_type: 'code',
+        client_id: cfg.clientId,
+        redirect_uri: cfg.redirectUri
+      });
+      return `https://zoom.us/oauth/authorize?${qs.toString()}`;
+    },
+    /* calls the admin-configured backend that wraps Zoom's /users/me/meetings API */
+    async zoomCreateMeeting({ topic, startTime, durationMinutes, agenda }) {
+      const cfg = Roster.getZoomConfig();
+      const session = Roster.getZoomSession();
+      if (!cfg.backendBase) throw new Error('Zoom backend URL not configured.');
+      if (!session || !session.accessToken) throw new Error('Zoom is not connected. Click "Connect Zoom" first.');
+      const res = await fetch(`${cfg.backendBase.replace(/\/$/, '')}/zoom/meetings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.accessToken}` },
+        body: JSON.stringify({ topic, start_time: startTime, duration: durationMinutes, agenda })
+      });
+      if (!res.ok) throw new Error(`Zoom API error: ${res.status} ${await res.text()}`);
+      return res.json(); // expects { join_url, start_url, id, topic, ... }
     },
 
     resetForNewProduction() {
