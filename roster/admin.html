@@ -161,42 +161,78 @@
       <div id="appointment-view" class="space-y-6"></div>
     </div>
 
-    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 mb-6">
       <h2 class="font-headline text-2xl font-extrabold text-primary mb-6">Confirmed rehearsals</h2>
       <div id="confirmed" class="space-y-3"></div>
+    </div>
+
+    <!-- Zoom meetings panel -->
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary">videocam</span>
+          <h2 class="font-headline text-2xl font-extrabold text-primary">Zoom meetings</h2>
+        </div>
+        <button id="add-zoom-btn" class="px-4 py-2 bg-primary text-white rounded-full text-xs font-bold flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">add</span> Add link
+        </button>
+      </div>
+      <p class="text-xs text-on-surface-variant mb-4">Paste a Zoom meeting link here for online rehearsals — students see a "Join" button on their hub.</p>
+      <div id="zoom-list" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- Zoom add modal -->
+  <div id="zoom-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-[2rem] p-8 max-w-md w-full">
+      <h3 class="font-headline text-2xl font-extrabold text-primary mb-4">Add Zoom meeting</h3>
+      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Title</label>
+      <input id="zoom-title" type="text" placeholder="Act 2 read-through" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"/>
+      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Join URL</label>
+      <input id="zoom-url" type="url" placeholder="https://zoom.us/j/..." class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"/>
+      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Linked rehearsal (optional)</label>
+      <select id="zoom-rehearsal" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-fixed">
+        <option value="">— Standalone (no linked rehearsal) —</option>
+      </select>
+      <div class="flex gap-3">
+        <button id="cancel-zoom" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
+        <button id="save-zoom" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Save</button>
+      </div>
     </div>
   </div>
 
   <!-- ── POLL WINDOW ───────────────────────────────────── -->
   <div id="tab-poll" class="section-panel flex-1 px-6 sm:px-12 py-8 sm:py-16 overflow-y-auto">
     <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Poll Window</span>
-    <h1 class="font-headline text-3xl sm:text-5xl font-black tracking-tighter text-on-surface mb-4">Ask&nbsp;students<br/><span class="text-primary-container">when they're free.</span></h1>
-    <p class="text-on-surface-variant text-sm max-w-xl mb-10">Define the date range, time slots, and any blockovers you want to exclude. Format, and optional reason prompts.</p>
+    <h1 class="font-headline text-3xl sm:text-5xl font-black tracking-tighter text-on-surface mb-4">Build&nbsp;the<br/><span class="text-primary-container">availability poll.</span></h1>
+    <p class="text-on-surface-variant text-sm max-w-xl mb-8">Step through dates, times, settings and review.</p>
 
-    <div id="poll-active-banner" class="hidden bg-primary-fixed rounded-2xl p-5 flex items-center gap-4 mb-6">
+    <div id="poll-active-banner" class="hidden bg-primary-fixed rounded-2xl p-5 flex items-center gap-4 mb-6 max-w-4xl">
       <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;">check_circle</span>
       <div class="flex-1">
         <p class="font-bold text-primary text-sm">Poll is open.</p>
         <p class="text-xs text-on-surface-variant" id="poll-active-desc">—</p>
       </div>
+      <button id="edit-poll-btn" class="px-4 py-2 bg-white text-primary rounded-full text-xs font-bold">Edit</button>
       <button id="close-poll-btn" class="px-4 py-2 bg-error text-white rounded-full text-xs font-bold">Close poll</button>
     </div>
 
-    <!-- Custom Slot Blocks -->
-    <div id="slot-blocks-section" class="hidden bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl mb-8">
-      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Custom time blocks</h3>
-      <p class="text-xs text-on-surface-variant mb-4">Define named slots like "9:50am-10:10am (First Recess)" instead of 30-min increments.</p>
-      <div class="flex gap-2 mb-3 flex-wrap">
-        <input id="block-start-time" type="time" placeholder="09:50" class="flex-1 min-w-[100px] bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"/>
-        <input id="block-end-time" type="time" placeholder="10:10" class="flex-1 min-w-[100px] bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"/>
-        <input id="block-label" type="text" placeholder="e.g., First Recess" class="flex-1 min-w-[150px] bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"/>
-        <button id="add-block-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Add</button>
+    <!-- Stepper -->
+    <div class="max-w-4xl mb-6 overflow-x-auto">
+      <div class="flex gap-2 min-w-max">
+        <div class="poll-step-pill" data-step-pill="1"><span class="step-num">1</span> Dates</div>
+        <div class="poll-step-pill" data-step-pill="2"><span class="step-num">2</span> Times</div>
+        <div class="poll-step-pill" data-step-pill="3"><span class="step-num">3</span> Day-overrides</div>
+        <div class="poll-step-pill" data-step-pill="4"><span class="step-num">4</span> Settings</div>
+        <div class="poll-step-pill" data-step-pill="5"><span class="step-num">5</span> Review</div>
       </div>
-      <div id="blocks-list" class="space-y-2 max-h-48 overflow-y-auto"></div>
     </div>
 
-    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl mb-8">
-      <div class="grid grid-cols-2 gap-6 mb-6">
+    <!-- STEP 1: Dates -->
+    <div class="poll-step bg-white rounded-[2rem] p-6 sm:p-8 border border-outline-variant/10 max-w-4xl mb-6" data-step="1">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 1 · Dates</h3>
+      <p class="text-xs text-on-surface-variant mb-6">Pick the date range, weekdays, and any specific blockout dates.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div>
           <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Start date</label>
           <input id="poll-start" type="date" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"/>
@@ -206,7 +242,6 @@
           <input id="poll-end" type="date" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"/>
         </div>
       </div>
-
       <div class="mb-6">
         <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Days of week</label>
         <div class="flex gap-2 flex-wrap" id="days-of-week">
@@ -219,71 +254,186 @@
           <label class="dow-label"><input type="checkbox" value="0" class="dow-cb sr-only"/><span class="px-3 py-2 rounded-full border-2 border-outline-variant text-xs font-bold cursor-pointer select-none transition-all">Sun</span></label>
         </div>
       </div>
+      <div class="mb-6">
+        <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Blockout dates (excluded)</label>
+        <div class="flex gap-2 mb-3">
+          <input id="blockout-date" type="date" class="flex-1 bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"/>
+          <button id="add-blockout-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Add</button>
+        </div>
+        <div id="blockout-list" class="space-y-2"></div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button class="poll-preview-dates px-5 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold">Preview calendar</button>
+        <button class="poll-next px-6 py-3 bg-primary text-white rounded-full text-xs font-bold" data-next="2">Continue →</button>
+      </div>
+    </div>
 
-      <div class="grid grid-cols-2 gap-6 mb-6">
+    <!-- STEP 2: Times -->
+    <div class="poll-step bg-white rounded-[2rem] p-6 sm:p-8 border border-outline-variant/10 max-w-4xl mb-6 hidden" data-step="2">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 2 · Times</h3>
+      <p class="text-xs text-on-surface-variant mb-6">Choose the basic time band (e.g. 3:30pm – 5:30pm) which auto-splits into 30-min slots. Add any custom slots with titles below.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div>
-          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Start time (hour:minute)</label>
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Start time</label>
           <select id="poll-time-start" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"></select>
         </div>
         <div>
-          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">End time (hour:minute)</label>
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">End time</label>
           <select id="poll-time-end" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"></select>
         </div>
       </div>
+      <label class="flex items-center gap-3 cursor-pointer mb-6">
+        <input id="half-hour" type="checkbox" checked class="w-5 h-5 rounded text-primary focus:ring-primary-fixed"/>
+        <span class="text-sm font-medium">Include half-hour slots (e.g. 3:30 pm)</span>
+      </label>
+
+      <div class="border-t border-outline-variant/10 pt-6 mb-6">
+        <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Custom slot titles (optional)</label>
+        <p class="text-xs text-on-surface-variant mb-3">Give a slot a title (e.g. "Warm-up") or add a custom-period slot. These are added on top of the basic time band.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-3">
+          <input id="block-start-time" type="time" class="bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
+          <input id="block-end-time" type="time" class="bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
+          <input id="block-label" type="text" placeholder="Title (e.g. Warm-up)" class="bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
+          <button id="add-block-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Add slot</button>
+        </div>
+        <div id="blocks-list" class="space-y-2 max-h-48 overflow-y-auto"></div>
+      </div>
+      <div class="flex justify-between gap-2">
+        <button class="poll-prev px-6 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold" data-prev="1">← Back</button>
+        <button class="poll-next px-6 py-3 bg-primary text-white rounded-full text-xs font-bold" data-next="3">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Day-overrides -->
+    <div class="poll-step bg-white rounded-[2rem] p-6 sm:p-8 border border-outline-variant/10 max-w-4xl mb-6 hidden" data-step="3">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 3 · Day overrides</h3>
+      <p class="text-xs text-on-surface-variant mb-6">Sometimes a date doesn't fit all time slots (e.g. only morning that day). Skip times for specific dates here. Leave empty to apply all times to all dates.</p>
+      <div class="flex gap-2 mb-3 flex-wrap">
+        <input id="override-date" type="date" class="flex-1 min-w-[140px] bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
+        <input id="override-time" type="time" class="bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
+        <button id="add-override-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Skip this slot</button>
+      </div>
+      <div id="overrides-list" class="space-y-2 max-h-64 overflow-y-auto mb-6"></div>
+      <div class="flex justify-between gap-2">
+        <button class="poll-prev px-6 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold" data-prev="2">← Back</button>
+        <button class="poll-next px-6 py-3 bg-primary text-white rounded-full text-xs font-bold" data-next="4">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Settings -->
+    <div class="poll-step bg-white rounded-[2rem] p-6 sm:p-8 border border-outline-variant/10 max-w-4xl mb-6 hidden" data-step="4">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 4 · Settings</h3>
+      <p class="text-xs text-on-surface-variant mb-6">Format, reasons, and check-in policy.</p>
 
       <div class="mb-6">
-        <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Format</label>
-        <div class="flex gap-4">
+        <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Format (applies to all)</label>
+        <div class="flex gap-3 flex-wrap">
           <label class="flex items-center cursor-pointer">
             <input type="radio" name="format" value="video" class="format-radio sr-only"/>
-            <span class="px-4 py-2 rounded-full border-2 border-outline-variant text-xs font-bold transition-all">📹 Video Conference</span>
+            <span class="px-4 py-2 rounded-full border-2 border-outline-variant text-xs font-bold transition-all">📹 Online (Zoom)</span>
           </label>
           <label class="flex items-center cursor-pointer">
             <input type="radio" name="format" value="offline" class="format-radio sr-only" checked/>
             <span class="px-4 py-2 rounded-full border-2 border-outline-variant text-xs font-bold transition-all bg-primary text-white border-primary">📍 Offline</span>
           </label>
         </div>
+        <p id="zoom-help" class="hidden text-xs text-on-surface-variant mt-3">When online is selected, you can manage Zoom meeting links from the Zoom Meetings tab. Students see a "Join Zoom" button on their dashboard.</p>
       </div>
 
-      <label class="flex items-center gap-3 cursor-pointer mb-8">
-        <input id="half-hour" type="checkbox" checked class="w-5 h-5 rounded text-primary focus:ring-primary-fixed"/>
-        <span class="text-sm font-medium">Include half-hour slots (e.g. 3:30 pm)</span>
+      <label class="flex items-center gap-3 cursor-pointer mb-4">
+        <input id="reason-required-all" type="checkbox" class="w-5 h-5 rounded text-primary"/>
+        <span class="text-sm font-medium">Require a reason when students mark themselves unavailable</span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer mb-6">
+        <input id="checkin-required" type="checkbox" class="w-5 h-5 rounded text-primary"/>
+        <span class="text-sm font-medium">Require check-in for confirmed rehearsals</span>
       </label>
 
+      <div class="border-t border-outline-variant/10 pt-6 mb-6">
+        <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-3">Common reasons (presets)</label>
+        <p class="text-xs text-on-surface-variant mb-3">Quick-pick reasons students see when marking unavailable.</p>
+        <div class="flex gap-2 mb-3">
+          <input id="new-reason" type="text" placeholder="e.g. Music exam" class="flex-1 bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
+          <button id="add-reason-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Add</button>
+        </div>
+        <div id="reasons-list" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <div class="flex justify-between gap-2">
+        <button class="poll-prev px-6 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold" data-prev="3">← Back</button>
+        <button class="poll-next px-6 py-3 bg-primary text-white rounded-full text-xs font-bold" data-next="5">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: Review -->
+    <div class="poll-step bg-white rounded-[2rem] p-6 sm:p-8 border border-outline-variant/10 max-w-5xl mb-6 hidden" data-step="5">
+      <h3 class="font-headline text-xl font-extrabold text-primary mb-2">Step 5 · Review &amp; save</h3>
+      <p class="text-xs text-on-surface-variant mb-6">Calendar on the left shows the dates. Click a date to see the slots on the right.</p>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">Calendar</h4>
+          <div id="review-calendar" class="bg-surface-container-low rounded-2xl p-4"></div>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3" id="review-slots-title">Slots</h4>
+          <div id="review-slots" class="bg-surface-container-low rounded-2xl p-4 max-h-96 overflow-y-auto space-y-2"></div>
+        </div>
+      </div>
       <p id="poll-error" class="text-xs text-error mb-3 hidden">Please fix errors before saving.</p>
-      <button id="save-poll-btn" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
-        <span class="material-symbols-outlined">save</span> Save &amp; open poll
-      </button>
-    </div>
-
-    <!-- Poll Preview -->
-    <div id="poll-preview-section" class="hidden bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-4xl mb-8">
-      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Poll Preview</h3>
-      <p class="text-xs text-on-surface-variant mb-6">Review generated slots. Click to toggle "Require reason" for unavailable slots.</p>
-      <div id="preview-controls" class="flex gap-2 mb-6 flex-wrap">
-        <select id="preview-week-select" class="flex-1 min-w-[200px] bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"></select>
-        <button id="preview-collapse-all" class="px-4 py-3 bg-surface-container-high text-on-surface rounded-full font-bold text-xs">Collapse all</button>
-        <button id="preview-expand-all" class="px-4 py-3 bg-surface-container-high text-on-surface rounded-full font-bold text-xs">Expand all</button>
+      <div class="flex justify-between gap-2">
+        <button class="poll-prev px-6 py-3 bg-surface-container-high text-on-surface rounded-full text-xs font-bold" data-prev="4">← Back</button>
+        <button id="save-poll-btn" class="px-8 py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center gap-2 text-xs">
+          <span class="material-symbols-outlined text-sm">save</span> Save &amp; open poll
+        </button>
       </div>
-      <div id="preview-slots-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
     </div>
+  </div>
 
-    <!-- Blockout Dates -->
-    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl mb-8">
-      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Blockout dates</h3>
-      <p class="text-xs text-on-surface-variant mb-4">Exclude specific days (e.g., holidays) from the poll.</p>
-      <div class="flex gap-2 mb-4">
-        <input id="blockout-date" type="date" class="flex-1 bg-surface-container-high border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-fixed"/>
-        <button id="add-blockout-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Add</button>
+  <!-- Calendar Preview Modal -->
+  <div id="calendar-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-headline text-xl font-extrabold text-primary">Date preview</h3>
+        <button id="calendar-modal-close" class="text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
       </div>
-      <div id="blockout-list" class="space-y-2"></div>
+      <p class="text-xs text-on-surface-variant mb-4">These are the dates currently included in your poll based on your settings.</p>
+      <div id="calendar-modal-grid" class="bg-surface-container-low rounded-xl p-4"></div>
+      <button id="calendar-modal-confirm" class="mt-4 w-full py-3 bg-primary text-white rounded-full font-bold text-xs">Looks good</button>
     </div>
+  </div>
 
-    <!-- Reason-Required Slots (shown when poll is active) -->
-    <div id="reason-required-section" class="hidden bg-white rounded-[2rem] p-8 border border-outline-variant/10 max-w-2xl">
-      <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Require typed reason</h3>
-      <p class="text-xs text-on-surface-variant mb-4">Mark slots where students must provide a reason if they block their time.</p>
-      <div id="reason-slots-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
+  <!-- Cast Profile Modal -->
+  <div id="cast-profile-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-end mb-2">
+        <button id="cast-profile-close" class="text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div id="cast-profile-body"></div>
+    </div>
+  </div>
+
+  <!-- Check-in Code Modal -->
+  <div id="checkin-code-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-sm w-full text-center">
+      <div class="flex justify-end mb-2">
+        <button id="checkin-code-close" class="text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <p class="text-xs uppercase tracking-widest text-on-surface-variant mb-2">Check-in code</p>
+      <p id="checkin-code-display" class="font-mono text-5xl font-extrabold text-primary tracking-widest mb-4">------</p>
+      <p class="text-xs text-on-surface-variant mb-6" id="checkin-code-rehearsal">—</p>
+      <button id="regen-checkin-code" class="w-full py-3 bg-primary text-white rounded-full font-bold text-xs">Generate new code</button>
+    </div>
+  </div>
+
+  <!-- Attendance Sheet Modal -->
+  <div id="attendance-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-headline text-xl font-extrabold text-primary">Attendance sheet</h3>
+        <button id="attendance-close" class="text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <p id="attendance-rehearsal-label" class="text-xs text-on-surface-variant mb-4">—</p>
+      <div id="attendance-list" class="space-y-2"></div>
     </div>
   </div>
 
@@ -366,6 +516,31 @@
     aside.sidebar-open { transform: translateX(0); }
     main { padding-top: 60px; }
   }
+  .poll-step-pill {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .5rem 1rem; border-radius: 999px;
+    background: #f3f3f5; color: #464652;
+    font-size: 12px; font-weight: 700;
+    border: 2px solid transparent; cursor: pointer;
+    white-space: nowrap;
+  }
+  .poll-step-pill .step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #c7c5d4; color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800;
+  }
+  .poll-step-pill.active { background: #e1e0ff; color: #15157d; border-color: #15157d; }
+  .poll-step-pill.active .step-num { background: #15157d; }
+  .poll-step-pill.done { background: #f0fdf4; color: #15803d; }
+  .poll-step-pill.done .step-num { background: #15803d; }
+  .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 11px; cursor: pointer; }
+  .cal-day.in-poll { background: #e1e0ff; color: #15157d; font-weight: 700; }
+  .cal-day.blockout { background: #ffdad6; color: #ba1a1a; text-decoration: line-through; }
+  .cal-day.outside { color: #c7c5d4; }
+  .cal-day.selected { outline: 2px solid #15157d; }
+  .reason-chip { display: inline-flex; align-items: center; gap: .25rem; padding: .25rem .75rem; background: #e1e0ff; color: #15157d; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .reason-chip button { color: #ba1a1a; font-weight: 800; }
 </style>
 
 <script>
@@ -397,7 +572,7 @@
     if (name === 'overview') renderOverview();
     if (name === 'cast') renderCast();
     if (name === 'leaves') renderLeaves();
-    if (name === 'poll') renderPoll();
+    if (name === 'poll') { renderPoll(); setPollStep(currentPollStep || 1); }
     if (name === 'notices') renderNotices();
   }
 
@@ -483,12 +658,18 @@
       .sort((a, b) => a.slotKey.localeCompare(b.slotKey))
       .map(r => {
         const a = Roster.aggregateSlot(r.slotKey);
-        return `<div class="flex items-center justify-between p-4 rounded-xl bg-primary-fixed gap-4">
-          <div>
-            <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slotKey)}</p>
-            <p class="text-xs text-on-primary-fixed-variant mt-1">${a.availableIds.length}/${a.total} available · ${a.blockedIds.length} blocked</p>
+        return `<div class="p-4 rounded-xl bg-primary-fixed">
+          <div class="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p class="font-bold text-primary text-sm">${Roster.formatSlot(r.slotKey)}</p>
+              <p class="text-xs text-on-primary-fixed-variant mt-1">${a.availableIds.length}/${a.total} available · ${a.blockedIds.length} blocked</p>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+              <button data-checkin-code="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Check-in code</button>
+              <button data-attendance="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Attendance</button>
+              <button data-del="${r.id}" class="px-3 py-2 bg-white text-error rounded-full text-xs font-bold">Remove</button>
+            </div>
           </div>
-          <button data-del="${r.id}" class="px-3 py-2 bg-white text-error rounded-full text-xs font-bold shrink-0">Remove</button>
         </div>`;
       }).join('')
       : '<p class="text-xs text-on-surface-variant">No rehearsals scheduled yet.</p>';
@@ -496,6 +677,86 @@
     confEl.querySelectorAll('[data-del]').forEach(btn => {
       btn.addEventListener('click', () => { Roster.removeRehearsal(btn.dataset.del); renderOverview(); });
     });
+    confEl.querySelectorAll('[data-checkin-code]').forEach(btn => {
+      btn.addEventListener('click', () => showCheckinCode(btn.dataset.checkinCode));
+    });
+    confEl.querySelectorAll('[data-attendance]').forEach(btn => {
+      btn.addEventListener('click', () => showAttendanceSheet(btn.dataset.attendance));
+    });
+
+    renderZoomList();
+  }
+
+  function renderZoomList() {
+    const list = document.getElementById('zoom-list');
+    if (!list) return;
+    const meetings = Roster.getZoomMeetings ? Roster.getZoomMeetings() : [];
+    list.innerHTML = meetings.length ? meetings.map(m => `
+      <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl gap-3 flex-wrap">
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-primary text-sm truncate">${m.title || 'Online rehearsal'}</p>
+          <p class="text-xs text-on-surface-variant mt-1 truncate">${m.slotKey ? Roster.formatSlot(m.slotKey) : 'Standalone'}</p>
+          <p class="text-[10px] font-mono text-outline truncate mt-1">${m.joinUrl}</p>
+        </div>
+        <div class="flex gap-2">
+          <a href="${m.joinUrl}" target="_blank" rel="noopener" class="px-3 py-1.5 bg-primary text-white rounded-full text-xs font-bold">Open</a>
+          <button data-zoom-del="${m.id}" class="px-3 py-1.5 bg-error-container text-error rounded-full text-xs font-bold">Remove</button>
+        </div>
+      </div>
+    `).join('') : '<p class="text-xs text-on-surface-variant">No Zoom meetings yet. Add one above for online rehearsals.</p>';
+
+    list.querySelectorAll('[data-zoom-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (Roster.removeZoomMeeting) Roster.removeZoomMeeting(btn.dataset.zoomDel);
+        renderZoomList();
+      });
+    });
+  }
+
+  function showCheckinCode(rehearsalId) {
+    const r = Roster.getRehearsals().find(x => x.id === rehearsalId);
+    if (!r) return;
+    const codes = Roster.getCheckinCodes();
+    const existing = codes[rehearsalId];
+    const code = existing ? existing.code : Roster.generateCheckinCode(rehearsalId);
+    document.getElementById('checkin-code-display').textContent = code;
+    document.getElementById('checkin-code-rehearsal').textContent = Roster.formatSlot(r.slotKey);
+    const modal = document.getElementById('checkin-code-modal');
+    modal.dataset.rehearsalId = rehearsalId;
+    modal.classList.remove('hidden');
+  }
+
+  function showAttendanceSheet(rehearsalId) {
+    const r = Roster.getRehearsals().find(x => x.id === rehearsalId);
+    if (!r) return;
+    const ledger = Roster.getLedger();
+    const records = Roster.getAttendance()[rehearsalId] || {};
+    document.getElementById('attendance-rehearsal-label').textContent = Roster.formatSlot(r.slotKey);
+    const list = document.getElementById('attendance-list');
+    list.innerHTML = ledger.length ? ledger.map(s => {
+      const rec = records[s.id];
+      const status = rec ? rec.status : 'unset';
+      const colorMap = { present: 'bg-emerald-500 text-white', absent: 'bg-error text-white', late: 'bg-amber-400 text-white', unset: 'bg-surface-container-high text-on-surface' };
+      return `<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+        <div>
+          <p class="font-bold text-sm">${s.name}</p>
+          <p class="text-xs text-on-surface-variant">${s.role || ''} ${s.scriptId ? '· ' + s.scriptId : ''}</p>
+        </div>
+        <div class="flex gap-1">
+          ${['present','late','absent'].map(st =>
+            `<button data-att="${s.id}" data-att-status="${st}" class="px-2 py-1 rounded text-xs font-bold ${status === st ? colorMap[st] : 'bg-white text-on-surface-variant hover:bg-surface-container-high'}">${st}</button>`
+          ).join('')}
+        </div>
+      </div>`;
+    }).join('') : '<p class="text-xs text-on-surface-variant">No cast members.</p>';
+
+    list.querySelectorAll('[data-att]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        Roster.markAttendance(rehearsalId, btn.dataset.att, btn.dataset.attStatus);
+        showAttendanceSheet(rehearsalId);
+      });
+    });
+    document.getElementById('attendance-modal').classList.remove('hidden');
   }
 
   function renderSlotBlocks() {
@@ -529,37 +790,247 @@
     });
   }
 
+  let currentPollStep = 1;
+
+  function setPollStep(n) {
+    currentPollStep = n;
+    document.querySelectorAll('.poll-step').forEach(el => {
+      el.classList.toggle('hidden', Number(el.dataset.step) !== n);
+    });
+    document.querySelectorAll('.poll-step-pill').forEach(el => {
+      const sn = Number(el.dataset.stepPill);
+      el.classList.toggle('active', sn === n);
+      el.classList.toggle('done', sn < n);
+    });
+    if (n === 5) renderReviewCalendar();
+  }
+
   function renderPoll() {
     const win = Roster.getPollWindow();
     const banner = document.getElementById('poll-active-banner');
-    const blocksSect = document.getElementById('slot-blocks-section');
     document.getElementById('poll-time-start').innerHTML = timeOptions(win ? `${win.startHour}:${win.startMinute || 0}` : '15:30');
     document.getElementById('poll-time-end').innerHTML = timeOptions(win ? `${win.endHour}:${win.endMinute || 0}` : '18:00');
+
+    if (win) {
+      document.getElementById('poll-start').value = win.startDate || '';
+      document.getElementById('poll-end').value = win.endDate || '';
+      document.getElementById('half-hour').checked = win.halfHour !== false;
+      document.querySelectorAll('.dow-cb').forEach(cb => {
+        cb.checked = (win.daysOfWeek || [1,2,3,4,5]).includes(Number(cb.value));
+        applyChipStyle(cb);
+      });
+      const fmt = document.querySelector(`input[name="format"][value="${win.format || 'offline'}"]`);
+      if (fmt) { fmt.checked = true; applyChipStyle(fmt); }
+      document.getElementById('reason-required-all').checked = !!win.reasonRequiredAll;
+      document.getElementById('checkin-required').checked = !!win.checkinRequired;
+      document.getElementById('zoom-help').classList.toggle('hidden', win.format !== 'video');
+    }
+
     if (win && win.active) {
       banner.classList.remove('hidden');
-      blocksSect.classList.remove('hidden');
       const days = (win.daysOfWeek || []).map(d => DAY_NAMES_SHORT[d]).join(', ');
       document.getElementById('poll-active-desc').textContent =
         `${win.startDate} → ${win.endDate} · ${days || 'All days'}`;
-      document.getElementById('poll-start').value = win.startDate;
-      document.getElementById('poll-end').value = win.endDate;
-      document.getElementById('half-hour').checked = win.halfHour !== false;
-      document.querySelectorAll('.dow-cb').forEach(cb => {
-        cb.checked = (win.daysOfWeek || []).includes(Number(cb.value));
-      });
-      document.querySelector(`input[name="format"][value="${win.format || 'offline'}"]`).checked = true;
-      renderBlockouts();
-      renderReasonSlots();
-      renderSlotBlocks();
-      renderPollPreview();
-      document.getElementById('reason-required-section').classList.remove('hidden');
     } else {
       banner.classList.add('hidden');
-      blocksSect.classList.add('hidden');
-      renderBlockouts();
-      document.getElementById('reason-required-section').classList.add('hidden');
-      document.getElementById('poll-preview-section').classList.add('hidden');
     }
+    renderBlockouts();
+    renderSlotBlocks();
+    renderOverrides();
+    renderCommonReasons();
+  }
+
+  function renderCommonReasons() {
+    const reasons = Roster.getCommonReasons();
+    const list = document.getElementById('reasons-list');
+    list.innerHTML = reasons.length ? reasons.map((r, i) =>
+      `<span class="reason-chip">${r}<button data-rm-reason="${i}">×</button></span>`
+    ).join('') : '<p class="text-xs text-on-surface-variant">No reasons yet.</p>';
+    list.querySelectorAll('[data-rm-reason]').forEach(b => b.addEventListener('click', () => {
+      const arr = Roster.getCommonReasons();
+      arr.splice(Number(b.dataset.rmReason), 1);
+      Roster.setCommonReasons(arr);
+      renderCommonReasons();
+    }));
+  }
+
+  function renderOverrides() {
+    const win = Roster.getPollWindow() || {};
+    const overrides = win.dayOverrides || [];
+    const list = document.getElementById('overrides-list');
+    list.innerHTML = overrides.length ? overrides.map((o, i) =>
+      `<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low">
+        <span class="text-sm"><span class="font-bold text-primary">${o.date}</span> at <span class="font-bold">${o.time}</span> — skipped</span>
+        <button data-rm-override="${i}" class="px-2 py-1 text-error text-xs font-bold">Remove</button>
+      </div>`
+    ).join('') : '<p class="text-xs text-on-surface-variant">No overrides. All times apply to all dates.</p>';
+    list.querySelectorAll('[data-rm-override]').forEach(b => b.addEventListener('click', () => {
+      const w = Roster.getPollWindow() || {};
+      w.dayOverrides = w.dayOverrides || [];
+      w.dayOverrides.splice(Number(b.dataset.rmOverride), 1);
+      Roster.setPollWindow(w);
+      renderOverrides();
+    }));
+  }
+
+  function applyChipStyle(cb) {
+    const span = cb.nextElementSibling;
+    if (!span) return;
+    span.style.background = cb.checked ? '#15157d' : '';
+    span.style.color = cb.checked ? 'white' : '';
+    span.style.borderColor = cb.checked ? '#15157d' : '';
+  }
+
+  function buildPollDraft() {
+    const startDate = document.getElementById('poll-start').value;
+    const endDate = document.getElementById('poll-end').value;
+    if (!startDate || !endDate) return null;
+    const [startH, startM] = (document.getElementById('poll-time-start').value || '15:30').split(':').map(Number);
+    const [endH, endM] = (document.getElementById('poll-time-end').value || '18:00').split(':').map(Number);
+    const halfHour = document.getElementById('half-hour').checked;
+    const daysOfWeek = [...document.querySelectorAll('.dow-cb:checked')].map(cb => Number(cb.value));
+    const format = (document.querySelector('input[name="format"]:checked') || {}).value || 'offline';
+    const existing = Roster.getPollWindow() || {};
+    return {
+      ...existing,
+      startDate, endDate,
+      startHour: startH, startMinute: startM,
+      endHour: endH, endMinute: endM,
+      halfHour, daysOfWeek, format,
+      reasonRequiredAll: document.getElementById('reason-required-all').checked,
+      checkinRequired: document.getElementById('checkin-required').checked,
+      blockoutDates: existing.blockoutDates || [],
+      slotBlocks: existing.slotBlocks || [],
+      dayOverrides: existing.dayOverrides || [],
+      slotTitles: existing.slotTitles || {},
+      active: true
+    };
+  }
+
+  function persistPollDraft() {
+    const draft = buildPollDraft();
+    if (draft) {
+      const wasActive = (Roster.getPollWindow() || {}).active;
+      draft.active = wasActive !== false;
+      Roster.setPollWindow(draft);
+    }
+  }
+
+  function renderCalendarGrid(targetEl, opts = {}) {
+    const win = buildPollDraft() || Roster.getPollWindow() || {};
+    if (!win.startDate || !win.endDate) {
+      targetEl.innerHTML = '<p class="text-xs text-on-surface-variant text-center py-4">Pick a date range first.</p>';
+      return;
+    }
+    const [sy, sm, sd] = win.startDate.split('-').map(Number);
+    const [ey, em, ed] = win.endDate.split('-').map(Number);
+    const start = new Date(sy, sm - 1, sd);
+    const end = new Date(ey, em - 1, ed);
+    const allowed = new Set(win.daysOfWeek && win.daysOfWeek.length ? win.daysOfWeek : [0,1,2,3,4,5,6]);
+    const blockouts = new Set(win.blockoutDates || []);
+
+    const monthsToRender = [];
+    const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+    const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+    for (let m = new Date(startMonth); m <= endMonth; m.setMonth(m.getMonth() + 1)) {
+      monthsToRender.push(new Date(m));
+    }
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    let html = '';
+    monthsToRender.forEach(monthStart => {
+      const y = monthStart.getFullYear();
+      const mo = monthStart.getMonth();
+      const firstDow = new Date(y, mo, 1).getDay();
+      const daysInMonth = new Date(y, mo + 1, 0).getDate();
+      html += `<div class="mb-4"><h4 class="text-xs font-bold text-primary mb-2">${monthNames[mo]} ${y}</h4>`;
+      html += `<div class="grid grid-cols-7 gap-1 text-center text-[10px] text-on-surface-variant mb-1">`;
+      ['S','M','T','W','T','F','S'].forEach(d => html += `<div>${d}</div>`);
+      html += `</div><div class="grid grid-cols-7 gap-1">`;
+      for (let i = 0; i < firstDow; i++) html += `<div></div>`;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const d = new Date(y, mo, day);
+        const dateStr = `${y}-${String(mo+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const inRange = d >= start && d <= end;
+        const dowOk = allowed.has(d.getDay());
+        const isBlock = blockouts.has(dateStr);
+        let cls = 'cal-day';
+        if (!inRange) cls += ' outside';
+        else if (isBlock) cls += ' blockout';
+        else if (dowOk) cls += ' in-poll';
+        else cls += ' outside';
+        if (opts.selected === dateStr) cls += ' selected';
+        html += `<div class="${cls}" data-cal-date="${dateStr}">${day}</div>`;
+      }
+      html += `</div></div>`;
+    });
+    targetEl.innerHTML = html;
+    if (opts.onSelect) {
+      targetEl.querySelectorAll('[data-cal-date]').forEach(el => {
+        el.addEventListener('click', () => opts.onSelect(el.dataset.calDate));
+      });
+    }
+  }
+
+  let reviewSelectedDate = null;
+  function renderReviewCalendar() {
+    persistPollDraft();
+    renderCalendarGrid(document.getElementById('review-calendar'), {
+      selected: reviewSelectedDate,
+      onSelect: (dateStr) => { reviewSelectedDate = dateStr; renderReviewCalendar(); renderReviewSlots(); }
+    });
+    renderReviewSlots();
+  }
+
+  function renderReviewSlots() {
+    const slotsEl = document.getElementById('review-slots');
+    const titleEl = document.getElementById('review-slots-title');
+    const allKeys = Roster.getPollSlotKeys();
+    if (!allKeys.length) {
+      slotsEl.innerHTML = '<p class="text-xs text-on-surface-variant">No slots yet.</p>';
+      return;
+    }
+    if (!reviewSelectedDate) {
+      titleEl.textContent = `All slots (${allKeys.length})`;
+      const byDate = {};
+      allKeys.forEach(k => {
+        const dt = k.split('T')[0];
+        byDate[dt] = (byDate[dt] || 0) + 1;
+      });
+      slotsEl.innerHTML = Object.entries(byDate).sort().map(([d, c]) =>
+        `<div class="p-2 rounded-lg bg-white text-xs flex justify-between"><span class="font-bold">${d}</span><span>${c} slot${c>1?'s':''}</span></div>`
+      ).join('');
+      return;
+    }
+    const win = Roster.getPollWindow() || {};
+    const titles = win.slotTitles || {};
+    const dateSlots = allKeys.filter(k => k.startsWith(reviewSelectedDate)).sort();
+    titleEl.textContent = `${reviewSelectedDate} (${dateSlots.length} slots)`;
+    if (!dateSlots.length) {
+      slotsEl.innerHTML = '<p class="text-xs text-on-surface-variant">No slots on this date.</p>';
+      return;
+    }
+    slotsEl.innerHTML = dateSlots.map(k => {
+      const d = Roster.parseSlotKey(k);
+      const time = Roster.formatTime(d.getHours(), d.getMinutes());
+      const title = titles[k] || '';
+      return `<div class="p-2 rounded-lg bg-white">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-sm font-bold text-primary">${time}</span>
+        </div>
+        <input type="text" placeholder="Slot title (optional)" data-slot-title="${k}" value="${title.replace(/"/g, '&quot;')}" class="w-full bg-surface-container-low border-none rounded-lg p-2 text-xs"/>
+      </div>`;
+    }).join('');
+    slotsEl.querySelectorAll('[data-slot-title]').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const w = Roster.getPollWindow() || {};
+        w.slotTitles = w.slotTitles || {};
+        const v = inp.value.trim();
+        if (v) w.slotTitles[inp.dataset.slotTitle] = v;
+        else delete w.slotTitles[inp.dataset.slotTitle];
+        Roster.setPollWindow(w);
+      });
+    });
   }
 
   function renderBlockouts() {
@@ -582,124 +1053,6 @@
     });
   }
 
-  function renderReasonSlots() {
-    const pollKeys = Roster.getPollSlotKeys();
-    const win = Roster.getPollWindow();
-    const reasonReq = new Set(win ? (win.reasonRequiredSlots || []) : []);
-    const list = document.getElementById('reason-slots-list');
-    list.innerHTML = pollKeys.map(k => {
-      const checked = reasonReq.has(k);
-      return `<label class="flex items-center gap-3 p-3 rounded-lg bg-surface-container-low cursor-pointer">
-        <input type="checkbox" data-reason-slot="${k}" ${checked ? 'checked' : ''} class="w-4 h-4 rounded text-primary"/>
-        <span class="flex-1 text-sm">${Roster.formatSlot(k)}</span>
-      </label>`;
-    }).join('');
-    list.querySelectorAll('[data-reason-slot]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const win = Roster.getPollWindow();
-        if (!win) return;
-        win.reasonRequiredSlots = win.reasonRequiredSlots || [];
-        const k = cb.dataset.reasonSlot;
-        if (cb.checked && !win.reasonRequiredSlots.includes(k)) win.reasonRequiredSlots.push(k);
-        else if (!cb.checked) win.reasonRequiredSlots = win.reasonRequiredSlots.filter(x => x !== k);
-        Roster.setPollWindow(win);
-      });
-    });
-  }
-
-  function getPreviewWeeks() {
-    const pollKeys = Roster.getPollSlotKeys();
-    if (!pollKeys.length) return [];
-    const firstDate = Roster.parseSlotKey(pollKeys[0]);
-    const lastDate = Roster.parseSlotKey(pollKeys[pollKeys.length - 1]);
-    const weeks = [];
-    const startOfWeekDate = new Date(firstDate);
-    startOfWeekDate.setDate(startOfWeekDate.getDate() - startOfWeekDate.getDay());
-    for (let d = new Date(startOfWeekDate); d <= lastDate; d.setDate(d.getDate() + 7)) {
-      weeks.push(new Date(d));
-    }
-    return weeks;
-  }
-
-  function renderPollPreview() {
-    const pollKeys = Roster.getPollSlotKeys();
-    const win = Roster.getPollWindow();
-    const previewSection = document.getElementById('poll-preview-section');
-    if (!win || !win.active) { previewSection.classList.add('hidden'); return; }
-    previewSection.classList.remove('hidden');
-
-    const weeks = getPreviewWeeks();
-    const weekSelect = document.getElementById('preview-week-select');
-    weekSelect.innerHTML = weeks.map((w, i) => {
-      const weekEnd = new Date(w);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const weekLabel = w.getMonth() === weekEnd.getMonth()
-        ? `${monthNames[w.getMonth()]} ${w.getDate()}–${weekEnd.getDate()}`
-        : `${monthNames[w.getMonth()]} ${w.getDate()} – ${monthNames[weekEnd.getMonth()]} ${weekEnd.getDate()}`;
-      return `<option value="${i}">Week of ${weekLabel}</option>`;
-    }).join('');
-    weekSelect.addEventListener('change', renderPollPreview);
-
-    const selectedWeekIdx = parseInt(weekSelect.value || 0);
-    const selectedWeekStart = weeks[selectedWeekIdx];
-    const selectedWeekEnd = new Date(selectedWeekStart);
-    selectedWeekEnd.setDate(selectedWeekEnd.getDate() + 6);
-
-    const weekSlots = pollKeys.filter(k => {
-      const d = Roster.parseSlotKey(k);
-      return d >= selectedWeekStart && d < new Date(selectedWeekEnd.getTime() + 86400000);
-    });
-
-    const reasonReq = new Set(win ? (win.reasonRequiredSlots || []) : []);
-    const byDate = {};
-    weekSlots.forEach(k => {
-      const date = k.split('T')[0];
-      if (!byDate[date]) byDate[date] = [];
-      byDate[date].push(k);
-    });
-
-    const list = document.getElementById('preview-slots-list');
-    list.innerHTML = Object.entries(byDate).sort().map(([date, slots]) => {
-      const d = new Date(date + 'T12:00:00');
-      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      const dateLabel = `${dayNames[d.getDay()]}, ${monthNames[d.getMonth()]} ${d.getDate()}`;
-      const slotsHtml = slots.sort().map(k => {
-        const checked = reasonReq.has(k);
-        const timeStr = Roster.formatSlot(k);
-        return `<label class="flex items-center gap-3 p-2 ml-4 rounded-lg bg-surface-container-lowest cursor-pointer hover:bg-surface-container-low">
-          <input type="checkbox" data-preview-reason="${k}" ${checked ? 'checked' : ''} class="w-4 h-4 rounded text-primary"/>
-          <span class="flex-1 text-xs">${timeStr}</span>
-        </label>`;
-      }).join('');
-      return `<div class="p-3 rounded-lg bg-surface-container-low border border-outline-variant/10">
-        <p class="font-bold text-sm text-primary mb-2">${dateLabel}</p>
-        <div>${slotsHtml}</div>
-      </div>`;
-    }).join('');
-
-    list.querySelectorAll('[data-preview-reason]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const win = Roster.getPollWindow();
-        if (!win) return;
-        win.reasonRequiredSlots = win.reasonRequiredSlots || [];
-        const k = cb.dataset.previewReason;
-        if (cb.checked && !win.reasonRequiredSlots.includes(k)) win.reasonRequiredSlots.push(k);
-        else if (!cb.checked) win.reasonRequiredSlots = win.reasonRequiredSlots.filter(x => x !== k);
-        Roster.setPollWindow(win);
-        renderReasonSlots();
-      });
-    });
-
-    document.getElementById('preview-collapse-all').addEventListener('click', () => {
-      list.querySelectorAll('[data-preview-reason]').forEach(cb => cb.parentElement.parentElement.style.display = 'none');
-    });
-    document.getElementById('preview-expand-all').addEventListener('click', () => {
-      list.querySelectorAll('[data-preview-reason]').forEach(cb => cb.parentElement.parentElement.style.display = 'block');
-    });
-  }
-
   function renderCast() {
     const ledger = Roster.getLedger();
     const avMap = Roster.getAvailabilityMap();
@@ -709,22 +1062,29 @@
       const submitted = Roster.hasSubmitted(s.id);
       const statusColor = submitted ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600';
       const statusLabel = submitted ? '✓ Submitted' : 'Pending';
-      return `<div class="flex items-center justify-between py-4 gap-4 flex-wrap">
-        <div class="flex-1">
+      return `<div class="flex items-center justify-between py-4 gap-4 flex-wrap hover:bg-surface-container-low cursor-pointer rounded-lg px-2" data-view-student="${s.id}">
+        <div class="flex-1 pointer-events-none">
           <p class="font-bold text-sm text-primary">${s.name}${s.role ? ' <span class="text-on-surface-variant font-normal">— ' + s.role + '</span>' : ''}</p>
           <p class="text-xs font-mono text-on-surface-variant">${s.scriptId || '<em>not yet registered</em>'}</p>
         </div>
         <div class="flex gap-4 text-xs items-center">
-          <span class="px-2 py-1 rounded-full ${statusColor} text-xs font-bold">${statusLabel}</span>
-          <span><span class="font-bold text-primary">${a.available.length}</span> avail</span>
-          <span><span class="font-bold text-error">${a.blocked.length}</span> blocked</span>
+          <span class="px-2 py-1 rounded-full ${statusColor} text-xs font-bold pointer-events-none">${statusLabel}</span>
+          <span class="pointer-events-none"><span class="font-bold text-primary">${a.available.length}</span> avail</span>
+          <span class="pointer-events-none"><span class="font-bold text-error">${a.blocked.length}</span> blocked</span>
           <button data-delete-student="${s.id}" class="px-2 py-1 text-error text-xs font-bold hover:bg-error-container rounded">Delete</button>
         </div>
       </div>`;
     }).join('') : '<p class="text-xs text-on-surface-variant">Ledger is empty.</p>';
 
+    document.querySelectorAll('[data-view-student]').forEach(row => {
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('[data-delete-student]')) return;
+        showCastProfile(row.dataset.viewStudent);
+      });
+    });
     document.querySelectorAll('[data-delete-student]').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (confirm('Delete this cast member and all their data?')) {
           Roster.removeStudent(btn.dataset.deleteStudent);
           renderCast();
@@ -734,38 +1094,130 @@
     });
   }
 
+  function showCastProfile(studentId) {
+    const s = Roster.getLedger().find(x => x.id === studentId);
+    if (!s) return;
+    const a = Roster.getAvailability(studentId);
+    const reasons = a.reasons || {};
+    const attendance = Roster.getStudentAttendance(studentId);
+    const rehearsals = Roster.getRehearsals();
+    const leaves = Roster.getLeavesForStudent(studentId);
+
+    const blockedHtml = (a.blocked || []).length ? (a.blocked || []).map(k => {
+      const r = reasons[k];
+      return `<li class="text-xs"><span class="font-bold">${Roster.formatSlot(k)}</span>${r ? ` — <em class="text-on-surface-variant">${r}</em>` : ''}</li>`;
+    }).join('') : '<li class="text-xs text-on-surface-variant">None</li>';
+
+    const availHtml = (a.available || []).length ? (a.available || []).map(k =>
+      `<li class="text-xs">${Roster.formatSlot(k)}</li>`).join('') : '<li class="text-xs text-on-surface-variant">None</li>';
+
+    const attHtml = attendance.length ? attendance.map(rec => {
+      const r = rehearsals.find(x => x.id === rec.rehearsalId);
+      const slot = r ? Roster.formatSlot(r.slotKey) : 'Removed rehearsal';
+      const color = rec.status === 'present' ? 'text-emerald-700' : rec.status === 'absent' ? 'text-error' : 'text-on-surface-variant';
+      return `<li class="text-xs ${color}"><span class="font-bold">${rec.status}</span> · ${slot}</li>`;
+    }).join('') : '<li class="text-xs text-on-surface-variant">No attendance yet</li>';
+
+    const leaveHtml = leaves.length ? leaves.map(l => {
+      const r = rehearsals.find(x => x.id === l.rehearsalId);
+      return `<li class="text-xs"><span class="font-bold">${l.status}</span> · ${r ? Roster.formatSlot(r.slotKey) : '—'} — ${l.reason || 'No reason'}</li>`;
+    }).join('') : '<li class="text-xs text-on-surface-variant">None</li>';
+
+    document.getElementById('cast-profile-body').innerHTML = `
+      <div class="mb-4">
+        <p class="font-headline text-2xl font-extrabold text-primary">${s.name}</p>
+        <p class="text-xs text-on-surface-variant">${s.role || 'Cast member'} · <span class="font-mono">${s.scriptId || 'not registered'}</span></p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-primary mb-2">Available (${(a.available||[]).length})</h4>
+          <ul class="space-y-1">${availHtml}</ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-error mb-2">Unavailable (${(a.blocked||[]).length})</h4>
+          <ul class="space-y-1">${blockedHtml}</ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-primary mb-2">Attendance</h4>
+          <ul class="space-y-1">${attHtml}</ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-primary mb-2">Leaves</h4>
+          <ul class="space-y-1">${leaveHtml}</ul>
+        </div>
+      </div>`;
+    document.getElementById('cast-profile-modal').classList.remove('hidden');
+  }
+
   function renderLeaves() {
     const leaves = Roster.getLeaves();
     const ledger = Roster.getLedger();
     const rehearsals = Roster.getRehearsals();
     const el = document.getElementById('leaves-list');
-    if (!leaves.length) { el.innerHTML = '<p class="text-xs text-on-surface-variant">No leave requests.</p>'; return; }
-    el.innerHTML = leaves.sort((a, b) => b.createdAt - a.createdAt).map(l => {
-      const student = ledger.find(s => s.id === l.studentId);
-      const reh = rehearsals.find(r => r.id === l.rehearsalId);
-      const statusColor = l.status === 'pending' ? 'bg-error-container text-error' : 'bg-primary-fixed text-primary';
-      return `<div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/10">
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1">
-            <p class="font-bold text-sm text-primary">${student ? student.name : 'Unknown'} <span class="font-mono text-on-surface-variant text-xs">${student?.scriptId || ''}</span></p>
-            <p class="text-xs text-on-surface-variant mt-1">${reh ? Roster.formatSlot(reh.slotKey) : 'Rehearsal removed'}</p>
-            <p class="text-sm mt-3 italic text-on-surface">"${l.reason || 'No reason given'}"</p>
+    const reasons = Roster.getCommonLeaveReasons();
+    const reasonsHtml = `<div class="bg-white rounded-2xl p-6 border border-outline-variant/10 mb-6">
+      <h3 class="font-headline text-lg font-extrabold text-primary mb-3">Common leave reasons (presets)</h3>
+      <div class="flex gap-2 mb-3">
+        <input id="new-leave-reason" type="text" placeholder="e.g. Conflicting club" class="flex-1 bg-surface-container-high border-none rounded-xl p-3 text-sm"/>
+        <button id="add-leave-reason-btn" class="px-4 py-3 bg-primary text-white rounded-full font-bold text-xs">Add</button>
+      </div>
+      <div id="leave-reasons-list" class="flex flex-wrap gap-2">${reasons.length ? reasons.map((r, i) =>
+        `<span class="reason-chip">${r}<button data-rm-leave-reason="${i}">×</button></span>`).join('') : '<p class="text-xs text-on-surface-variant">No presets.</p>'}</div>
+    </div>`;
+
+    if (!leaves.length) {
+      el.innerHTML = reasonsHtml + '<p class="text-xs text-on-surface-variant">No leave requests.</p>';
+    } else {
+      el.innerHTML = reasonsHtml + leaves.sort((a, b) => b.createdAt - a.createdAt).map(l => {
+        const student = ledger.find(s => s.id === l.studentId);
+        const reh = rehearsals.find(r => r.id === l.rehearsalId);
+        const statusColor = l.status === 'pending' ? 'bg-error-container text-error' : l.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-primary-fixed text-primary';
+        return `<div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/10">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex-1 min-w-[200px]">
+              <p class="font-bold text-sm text-primary">${student ? student.name : 'Unknown'} <span class="font-mono text-on-surface-variant text-xs">${student?.scriptId || ''}</span></p>
+              <p class="text-xs text-on-surface-variant mt-1">${reh ? Roster.formatSlot(reh.slotKey) : 'Rehearsal removed'}</p>
+              <p class="text-sm mt-3 italic text-on-surface">"${l.reason || 'No reason given'}"</p>
+            </div>
+            <div class="flex flex-col items-end gap-2 shrink-0">
+              <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${statusColor}">${l.status}</span>
+              ${l.status === 'pending' ? `<button data-approve="${l.id}" class="px-3 py-1 bg-primary text-white rounded-full text-xs font-bold">Approve</button>` : ''}
+              <button data-delete-leave="${l.id}" class="px-3 py-1 text-error rounded-full text-xs font-bold hover:bg-error-container">Delete</button>
+            </div>
           </div>
-          <div class="flex flex-col items-end gap-2 shrink-0">
-            <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${statusColor}">${l.status}</span>
-            ${l.status === 'pending' ? `<button data-approve="${l.id}" class="px-3 py-1 bg-primary text-white rounded-full text-xs font-bold">Approve</button>` : ''}
-          </div>
-        </div>
-      </div>`;
-    }).join('');
+        </div>`;
+      }).join('');
+    }
+
     el.querySelectorAll('[data-approve]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const leaves = Roster.getLeaves();
-        const l = leaves.find(x => x.id === btn.dataset.approve);
-        if (l) { l.status = 'approved'; localStorage.setItem('roster.leaves', JSON.stringify(leaves)); }
+        Roster.updateLeaveStatus(btn.dataset.approve, 'approved');
         renderLeaves();
       });
     });
+    el.querySelectorAll('[data-delete-leave]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!confirm('Delete this leave request?')) return;
+        Roster.deleteLeave(btn.dataset.deleteLeave);
+        renderLeaves();
+      });
+    });
+    const addLR = document.getElementById('add-leave-reason-btn');
+    if (addLR) addLR.addEventListener('click', () => {
+      const input = document.getElementById('new-leave-reason');
+      const val = input.value.trim();
+      if (!val) return;
+      const arr = Roster.getCommonLeaveReasons();
+      if (!arr.includes(val)) { arr.push(val); Roster.setCommonLeaveReasons(arr); }
+      input.value = '';
+      renderLeaves();
+    });
+    el.querySelectorAll('[data-rm-leave-reason]').forEach(b => b.addEventListener('click', () => {
+      const arr = Roster.getCommonLeaveReasons();
+      arr.splice(Number(b.dataset.rmLeaveReason), 1);
+      Roster.setCommonLeaveReasons(arr);
+      renderLeaves();
+    }));
   }
 
   function renderNotices() {
@@ -807,7 +1259,7 @@
 
     const gate = document.getElementById('gate');
     const app = document.getElementById('admin-app');
-    function showApp() { gate.classList.add('hidden'); app.classList.remove('hidden'); renderOverview(); renderPoll(); }
+    function showApp() { gate.classList.add('hidden'); app.classList.remove('hidden'); renderOverview(); renderPoll(); setPollStep(1); }
     if (Roster.isAdminAuthed()) showApp();
 
     document.getElementById('gate-btn').addEventListener('click', () => {
@@ -833,24 +1285,74 @@
 
     document.getElementById('refresh-overview').addEventListener('click', renderOverview);
 
-    /* poll save */
+    /* zoom add modal */
+    document.getElementById('add-zoom-btn').addEventListener('click', () => {
+      const sel = document.getElementById('zoom-rehearsal');
+      const rehearsals = Roster.getRehearsals();
+      sel.innerHTML = '<option value="">— Standalone (no linked rehearsal) —</option>' +
+        rehearsals.map(r => `<option value="${r.slotKey}">${Roster.formatSlot(r.slotKey)}</option>`).join('');
+      document.getElementById('zoom-title').value = '';
+      document.getElementById('zoom-url').value = '';
+      document.getElementById('zoom-modal').classList.replace('hidden', 'flex');
+    });
+    document.getElementById('cancel-zoom').addEventListener('click', () => {
+      document.getElementById('zoom-modal').classList.replace('flex', 'hidden');
+    });
+    document.getElementById('save-zoom').addEventListener('click', () => {
+      const title = document.getElementById('zoom-title').value.trim();
+      const joinUrl = document.getElementById('zoom-url').value.trim();
+      const slotKey = document.getElementById('zoom-rehearsal').value;
+      if (!joinUrl) { alert('Join URL is required.'); return; }
+      Roster.addZoomMeeting({ title, joinUrl, slotKey });
+      document.getElementById('zoom-modal').classList.replace('flex', 'hidden');
+      renderZoomList();
+    });
+
+    /* poll wizard navigation */
+    document.querySelectorAll('.poll-next').forEach(b => b.addEventListener('click', () => {
+      persistPollDraft();
+      setPollStep(Number(b.dataset.next));
+    }));
+    document.querySelectorAll('.poll-prev').forEach(b => b.addEventListener('click', () => {
+      setPollStep(Number(b.dataset.prev));
+    }));
+    document.querySelectorAll('.poll-step-pill').forEach(p => p.addEventListener('click', () => {
+      persistPollDraft();
+      setPollStep(Number(p.dataset.stepPill));
+    }));
+
+    /* preview calendar modal */
+    document.querySelectorAll('.poll-preview-dates').forEach(b => b.addEventListener('click', () => {
+      persistPollDraft();
+      renderCalendarGrid(document.getElementById('calendar-modal-grid'));
+      document.getElementById('calendar-modal').classList.remove('hidden');
+    }));
+    document.getElementById('calendar-modal-close').addEventListener('click', () =>
+      document.getElementById('calendar-modal').classList.add('hidden'));
+    document.getElementById('calendar-modal-confirm').addEventListener('click', () =>
+      document.getElementById('calendar-modal').classList.add('hidden'));
+
+    /* poll save (final) */
     document.getElementById('save-poll-btn').addEventListener('click', () => {
-      const startDate = document.getElementById('poll-start').value;
-      const endDate = document.getElementById('poll-end').value;
-      const [startH, startM] = document.getElementById('poll-time-start').value.split(':').map(Number);
-      const [endH, endM] = document.getElementById('poll-time-end').value.split(':').map(Number);
-      const halfHour = document.getElementById('half-hour').checked;
-      const daysOfWeek = [...document.querySelectorAll('.dow-cb:checked')].map(cb => Number(cb.value));
-      const format = document.querySelector('input[name="format"]:checked').value;
+      const draft = buildPollDraft();
       const err = document.getElementById('poll-error');
-      if (!startDate || !endDate || startDate > endDate || (startDate === endDate && (startH * 60 + startM) >= (endH * 60 + endM))) {
+      if (!draft) { err.textContent = 'Pick a date range first.'; err.classList.remove('hidden'); return; }
+      if (draft.startDate > draft.endDate) {
+        err.textContent = 'Start date must be before end date.';
+        err.classList.remove('hidden');
+        return;
+      }
+      if (draft.startDate === draft.endDate && (draft.startHour * 60 + draft.startMinute) >= (draft.endHour * 60 + draft.endMinute)) {
         err.textContent = 'Start time must be before end time.';
         err.classList.remove('hidden');
         return;
       }
       err.classList.add('hidden');
-      Roster.setPollWindow({ startDate, endDate, startHour: startH, startMinute: startM, endHour: endH, endMinute: endM, halfHour, daysOfWeek, format, active: true, createdAt: Date.now() });
+      draft.active = true;
+      draft.createdAt = (Roster.getPollWindow() || {}).createdAt || Date.now();
+      Roster.setPollWindow(draft);
       renderPoll();
+      alert('Poll saved and opened.');
     });
 
     document.getElementById('close-poll-btn').addEventListener('click', () => {
@@ -859,19 +1361,49 @@
       renderPoll();
     });
 
+    document.getElementById('edit-poll-btn').addEventListener('click', () => setPollStep(1));
+
     /* blockout dates */
     document.getElementById('add-blockout-btn').addEventListener('click', () => {
       const date = document.getElementById('blockout-date').value;
       if (!date) return;
-      const win = Roster.getPollWindow();
-      if (!win) { alert('Save poll first'); return; }
+      persistPollDraft();
+      const win = Roster.getPollWindow() || {};
       win.blockoutDates = win.blockoutDates || [];
       if (!win.blockoutDates.includes(date)) {
         win.blockoutDates.push(date);
         Roster.setPollWindow(win);
       }
       document.getElementById('blockout-date').value = '';
-      renderPoll();
+      renderBlockouts();
+    });
+
+    /* day overrides */
+    document.getElementById('add-override-btn').addEventListener('click', () => {
+      const date = document.getElementById('override-date').value;
+      const time = document.getElementById('override-time').value;
+      if (!date || !time) { alert('Pick a date and a time'); return; }
+      persistPollDraft();
+      const win = Roster.getPollWindow() || {};
+      win.dayOverrides = win.dayOverrides || [];
+      if (!win.dayOverrides.find(o => o.date === date && o.time === time)) {
+        win.dayOverrides.push({ date, time });
+        Roster.setPollWindow(win);
+      }
+      document.getElementById('override-date').value = '';
+      document.getElementById('override-time').value = '';
+      renderOverrides();
+    });
+
+    /* common reasons */
+    document.getElementById('add-reason-btn').addEventListener('click', () => {
+      const input = document.getElementById('new-reason');
+      const val = input.value.trim();
+      if (!val) return;
+      const arr = Roster.getCommonReasons();
+      if (!arr.includes(val)) { arr.push(val); Roster.setCommonReasons(arr); }
+      input.value = '';
+      renderCommonReasons();
     });
 
     /* custom slot blocks */
@@ -885,8 +1417,8 @@
       const startMin = startH * 60 + startM;
       const endMin = endH * 60 + endM;
       if (startMin >= endMin) { alert('Start must be before end'); return; }
-      const win = Roster.getPollWindow();
-      if (!win) { alert('Save poll first'); return; }
+      persistPollDraft();
+      const win = Roster.getPollWindow() || {};
       win.slotBlocks = Array.isArray(win.slotBlocks) ? win.slotBlocks : [];
       win.slotBlocks.push({ startMinute: startMin, endMinute: endMin, label });
       win.slotBlocks.sort((a, b) => a.startMinute - b.startMinute);
@@ -895,6 +1427,32 @@
       document.getElementById('block-end-time').value = '';
       document.getElementById('block-label').value = '';
       renderSlotBlocks();
+    });
+
+    /* cast profile modal */
+    document.getElementById('cast-profile-close').addEventListener('click', () =>
+      document.getElementById('cast-profile-modal').classList.add('hidden'));
+
+    /* check-in code modal */
+    document.getElementById('checkin-code-close').addEventListener('click', () =>
+      document.getElementById('checkin-code-modal').classList.add('hidden'));
+    document.getElementById('regen-checkin-code').addEventListener('click', () => {
+      const rId = document.getElementById('checkin-code-modal').dataset.rehearsalId;
+      if (!rId) return;
+      const code = Roster.generateCheckinCode(rId);
+      document.getElementById('checkin-code-display').textContent = code;
+    });
+
+    /* attendance modal */
+    document.getElementById('attendance-close').addEventListener('click', () =>
+      document.getElementById('attendance-modal').classList.add('hidden'));
+
+    /* zoom format radio change to show help */
+    document.querySelectorAll('input[name="format"]').forEach(rb => {
+      rb.addEventListener('change', () => {
+        document.getElementById('zoom-help').classList.toggle('hidden', rb.value !== 'video' || !rb.checked);
+        persistPollDraft();
+      });
     });
 
     /* notices */

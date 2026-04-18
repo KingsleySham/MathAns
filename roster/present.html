@@ -112,13 +112,30 @@
         <div><span class="px-3 py-1 rounded-full bg-error-container text-error text-xs font-bold"><span id="stat-block">0</span> unavailable</span></div>
       </div>
     </div>
-    <div class="flex gap-2 w-full sm:w-auto">
-      <button id="clear-all-btn" class="flex-1 sm:flex-none px-6 py-4 bg-surface-container-high text-on-surface rounded-full font-bold text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
-        <span class="material-symbols-outlined text-sm">clear_all</span> Clear all
+    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+      <button id="select-all-btn" class="flex-1 sm:flex-none px-4 py-4 bg-primary-fixed text-primary rounded-full font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-sm">done_all</span> All available
+      </button>
+      <button id="clear-all-btn" class="flex-1 sm:flex-none px-4 py-4 bg-surface-container-high text-on-surface rounded-full font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-sm">clear_all</span> Reset
       </button>
       <button id="submit-btn" class="flex-1 sm:flex-none px-8 py-4 bg-primary text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
         <span class="material-symbols-outlined">check</span> Submit
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reason input modal -->
+<div id="reason-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl">
+    <h3 class="font-headline text-2xl font-extrabold text-primary mb-2">Why unavailable?</h3>
+    <p id="reason-modal-slot" class="text-xs text-on-surface-variant mb-4">—</p>
+    <div id="reason-presets" class="flex flex-wrap gap-2 mb-3"></div>
+    <textarea id="reason-input" rows="2" placeholder="Brief reason..." class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-fixed text-sm"></textarea>
+    <div class="flex gap-3">
+      <button id="cancel-reason" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
+      <button id="confirm-reason" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Mark unavailable</button>
     </div>
   </div>
 </div>
@@ -140,10 +157,11 @@
 
   let currentName = '';
   let currentStudent = null;
-  let currentSlots = { available: [], blocked: [] };
+  let currentSlots = { available: [], blocked: [], reasons: {} };
   let pollSlotKeys = [];
   let weekStart = null;
   let currentWeekIndex = 0;
+  let pendingReasonKey = null;
 
   function startOfWeek(d) {
     const c = new Date(d); c.setHours(0,0,0,0);
@@ -304,14 +322,39 @@
         const key = btn.dataset.key;
         const isAvail = currentSlots.available.includes(key);
         const isBlocked = currentSlots.blocked.includes(key);
-        currentSlots.available = currentSlots.available.filter(k => k !== key);
-        currentSlots.blocked = currentSlots.blocked.filter(k => k !== key);
-        if (!isAvail && !isBlocked) currentSlots.available.push(key);
-        else if (isAvail) currentSlots.blocked.push(key);
-        buildWeekGrid();
+        if (!isAvail && !isBlocked) {
+          currentSlots.available.push(key);
+          buildWeekGrid();
+        } else if (isAvail) {
+          currentSlots.available = currentSlots.available.filter(k => k !== key);
+          openReasonModal(key);
+        } else {
+          currentSlots.blocked = currentSlots.blocked.filter(k => k !== key);
+          delete currentSlots.reasons[key];
+          buildWeekGrid();
+        }
       });
     });
     updateStats();
+  }
+
+  function openReasonModal(key) {
+    pendingReasonKey = key;
+    const modal = document.getElementById('reason-modal');
+    const input = document.getElementById('reason-input');
+    document.getElementById('reason-modal-slot').textContent = Roster.formatSlot(key);
+    input.value = '';
+
+    const presetsEl = document.getElementById('reason-presets');
+    const presets = (Roster.getCommonReasons && Roster.getCommonReasons()) || [];
+    presetsEl.innerHTML = presets.map(r =>
+      `<button type="button" data-preset="${r.replace(/"/g,'&quot;')}" class="px-3 py-1.5 bg-primary-fixed text-primary rounded-full text-xs font-bold">${r}</button>`
+    ).join('');
+    presetsEl.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => { input.value = btn.dataset.preset; });
+    });
+
+    modal.classList.remove('hidden');
   }
 
   function updateStats() {
@@ -329,7 +372,7 @@
   function reset() {
     currentName = '';
     currentStudent = null;
-    currentSlots = { available: [], blocked: [] };
+    currentSlots = { available: [], blocked: [], reasons: {} };
     document.getElementById('name-input').value = '';
     document.getElementById('disclaimer-cb').checked = false;
     document.getElementById('match-info').classList.add('hidden');
@@ -392,7 +435,8 @@
       const existing = Roster.getAvailability(currentStudent.id);
       currentSlots = {
         available: [...(existing.available || [])],
-        blocked: [...(existing.blocked || [])]
+        blocked: [...(existing.blocked || [])],
+        reasons: { ...(existing.reasons || {}) }
       };
       document.getElementById('signed-name').textContent = currentName;
       document.getElementById('step-welcome').classList.add('hidden');
@@ -416,8 +460,33 @@
     document.getElementById('clear-all-btn').addEventListener('click', () => {
       currentSlots.available = [];
       currentSlots.blocked = [];
+      currentSlots.reasons = {};
       buildWeekGrid();
       updateStats();
+    });
+
+    document.getElementById('select-all-btn').addEventListener('click', () => {
+      currentSlots.available = [...pollSlotKeys];
+      currentSlots.blocked = [];
+      currentSlots.reasons = {};
+      buildWeekGrid();
+      updateStats();
+    });
+
+    document.getElementById('cancel-reason').addEventListener('click', () => {
+      document.getElementById('reason-modal').classList.add('hidden');
+      pendingReasonKey = null;
+      buildWeekGrid();
+    });
+
+    document.getElementById('confirm-reason').addEventListener('click', () => {
+      if (!pendingReasonKey) return;
+      const reason = document.getElementById('reason-input').value.trim();
+      currentSlots.blocked.push(pendingReasonKey);
+      if (reason) currentSlots.reasons[pendingReasonKey] = reason;
+      document.getElementById('reason-modal').classList.add('hidden');
+      pendingReasonKey = null;
+      buildWeekGrid();
     });
 
     document.getElementById('submit-btn').addEventListener('click', () => {
@@ -425,7 +494,7 @@
       Roster.setAvailability(currentStudent.id, {
         available: currentSlots.available,
         blocked: currentSlots.blocked,
-        reasons: {},
+        reasons: currentSlots.reasons || {},
         submittedAt: Date.now()
       });
       Roster.markSubmitted(currentStudent.id);
