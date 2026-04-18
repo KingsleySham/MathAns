@@ -39,7 +39,19 @@
 </head>
 <body class="bg-surface font-body text-on-surface antialiased">
 
-<aside class="h-screen w-64 fixed left-0 flex flex-col border-r border-slate-200/20 bg-slate-50 font-['Manrope'] font-medium text-sm tracking-wide z-40">
+<!-- Mobile top bar -->
+<header class="md:hidden sticky top-0 z-50 bg-slate-50 border-b border-slate-200/30 px-4 py-3 flex items-center justify-between">
+  <div>
+    <h2 class="text-indigo-900 font-bold text-sm tracking-tighter">Main Stage</h2>
+    <p class="text-slate-500 text-[8px] uppercase tracking-[0.2em]">My Availability</p>
+  </div>
+  <div class="flex items-center gap-1">
+    <a href="profile.html" class="p-2 text-slate-500 hover:text-primary" aria-label="Hub"><span class="material-symbols-outlined">account_circle</span></a>
+    <button id="signout-mobile" class="p-2 text-slate-500 hover:text-error" aria-label="Sign out"><span class="material-symbols-outlined">logout</span></button>
+  </div>
+</header>
+
+<aside class="h-screen w-64 fixed left-0 hidden md:flex flex-col border-r border-slate-200/20 bg-slate-50 font-['Manrope'] font-medium text-sm tracking-wide z-40">
   <div class="p-8">
     <h2 class="text-indigo-900 font-bold text-xl tracking-tighter">Main Stage</h2>
     <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em] mt-1">Production HQ</p>
@@ -59,18 +71,18 @@
   </div>
 </aside>
 
-<main class="ml-64 min-h-screen flex flex-col">
-  <header class="pt-20 px-24">
-    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">My Availability</span>
-    <h1 class="font-headline text-6xl font-extrabold tracking-tighter text-on-surface max-w-3xl leading-none">
+<main class="md:ml-64 min-h-screen flex flex-col">
+  <header class="pt-8 md:pt-20 px-4 sm:px-8 md:px-16 lg:px-24">
+    <span class="font-label text-[10px] sm:text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">My Availability</span>
+    <h1 class="font-headline text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tighter text-on-surface max-w-3xl leading-none">
       Mark your<br/><span class="text-primary-container">availability.</span>
     </h1>
     <p class="mt-4 max-w-xl text-on-surface-variant text-sm">Tap a slot once to mark yourself <span class="font-bold text-primary">available</span>, tap again to mark it <span class="font-bold text-error">blocked</span>, tap once more to clear.</p>
   </header>
 
   <!-- No poll window yet -->
-  <section id="no-poll" class="hidden flex-1 px-24 py-16">
-    <div class="max-w-xl bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10 text-center">
+  <section id="no-poll" class="hidden flex-1 px-4 sm:px-8 md:px-16 lg:px-24 py-8 md:py-16">
+    <div class="max-w-xl bg-surface-container-lowest p-6 sm:p-10 rounded-[2rem] shadow-sm border border-outline-variant/10 text-center">
       <span class="material-symbols-outlined text-5xl text-outline mb-4">schedule</span>
       <h2 class="font-headline text-2xl font-extrabold text-primary mb-2">Poll not open yet</h2>
       <p class="text-sm text-on-surface-variant">The production admin hasn't opened an availability poll yet. Check back soon — you'll see dates and times to respond to here.</p>
@@ -78,7 +90,7 @@
   </section>
 
   <!-- Calendar -->
-  <section id="hub" class="hidden flex-1 px-24 py-16">
+  <section id="hub" class="hidden flex-1 px-4 sm:px-8 md:px-16 lg:px-24 py-8 md:py-16">
     <div class="max-w-6xl mx-auto">
 
       <!-- identity chip -->
@@ -96,7 +108,7 @@
       <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div class="flex items-center gap-3">
           <button id="prev-week" class="w-10 h-10 rounded-full bg-surface-container-high hover:bg-primary-fixed transition-colors flex items-center justify-center"><span class="material-symbols-outlined">chevron_left</span></button>
-          <span id="week-label" class="font-bold font-headline text-lg text-primary min-w-[16rem] text-center">—</span>
+          <span id="week-label" class="font-bold font-headline text-sm sm:text-lg text-primary min-w-[10rem] sm:min-w-[16rem] text-center">—</span>
           <button id="next-week" class="w-10 h-10 rounded-full bg-surface-container-high hover:bg-primary-fixed transition-colors flex items-center justify-center"><span class="material-symbols-outlined">chevron_right</span></button>
         </div>
         <div class="flex gap-3 text-xs font-bold">
@@ -395,7 +407,10 @@
     student = boot.student;
     document.getElementById('student-name').textContent = student.name;
     document.getElementById('student-id').textContent   = student.scriptId || '';
-    document.getElementById('signout').addEventListener('click', () => { Roster.signOut(); location.href = 'index.html'; });
+    const signOut = () => { Roster.signOut(); location.href = 'index.html'; };
+    document.getElementById('signout').addEventListener('click', signOut);
+    const soMobile = document.getElementById('signout-mobile');
+    if (soMobile) soMobile.addEventListener('click', signOut);
 
     pollSlotKeys = Roster.getPollSlotKeys();
 
