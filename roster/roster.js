@@ -12,7 +12,7 @@
     PRESENT: 'roster.presentSubmissions'
   };
 
-  const ADMIN_PASSCODE = 'admin2026';
+  const ADMIN_PASSCODE = '20260508';
   const ADMIN_SESSION_KEY = 'roster.adminAuthed';
 
   function readJSON(key, fallback) {
