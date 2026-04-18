@@ -100,6 +100,15 @@
         </div>
       </div>
 
+      <!-- Zoom meetings -->
+      <div id="zoom-section" class="hidden bg-surface-container-lowest p-8 rounded-[2rem] shadow-sm border border-outline-variant/10">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="material-symbols-outlined text-primary">videocam</span>
+          <h3 class="font-headline text-xl font-extrabold text-primary">Online rehearsal links</h3>
+        </div>
+        <div id="zoom-list" class="space-y-2"></div>
+      </div>
+
       <div class="bg-surface-container-lowest p-10 rounded-[2rem] shadow-sm border border-outline-variant/10">
         <div class="flex items-center justify-between mb-6">
           <h2 class="font-headline text-2xl font-extrabold text-primary">Scheduled rehearsals</h2>
@@ -152,12 +161,32 @@
   <div class="bg-white rounded-[2rem] p-8 max-w-md w-full">
     <h3 class="font-headline text-2xl font-extrabold text-primary mb-2">Request leave</h3>
     <p id="leave-modal-slot" class="text-xs text-on-surface-variant mb-6">—</p>
+    <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Quick reasons</label>
+    <div id="leave-presets" class="flex flex-wrap gap-2 mb-3"></div>
     <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Reason</label>
-    <textarea id="leave-reason" rows="4" placeholder="Please share why you can't attend this rehearsal..." class="w-full bg-surface-container-high border-none rounded-lg p-4 mb-4 focus:ring-2 focus:ring-primary-fixed"></textarea>
+    <textarea id="leave-reason" rows="3" placeholder="Please share why you can't attend this rehearsal..." class="w-full bg-surface-container-high border-none rounded-lg p-4 mb-4 focus:ring-2 focus:ring-primary-fixed"></textarea>
     <p class="text-[10px] text-on-surface-variant mb-4">Your reason will only be visible to the production team for scheduling purposes.</p>
     <div class="flex gap-3">
       <button id="cancel-leave" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
       <button id="confirm-leave" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Check-in code entry modal -->
+<div id="checkin-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-[2rem] p-8 max-w-md w-full">
+    <div class="w-16 h-16 rounded-2xl bg-primary-fixed flex items-center justify-center mb-4">
+      <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings:'FILL' 1;">login</span>
+    </div>
+    <h3 class="font-headline text-2xl font-extrabold text-primary mb-2">Enter check-in code</h3>
+    <p id="checkin-modal-slot" class="text-xs text-on-surface-variant mb-4">—</p>
+    <p class="text-xs text-on-surface-variant mb-4">Ask the production admin for the 6-digit code shown on their screen.</p>
+    <input id="checkin-code-input" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" class="w-full bg-surface-container-high border-none rounded-lg p-4 mb-2 focus:ring-2 focus:ring-primary-fixed text-center font-mono text-3xl tracking-[0.5em]"/>
+    <p id="checkin-error" class="text-xs text-error mb-4 hidden">Wrong code. Double-check with the admin.</p>
+    <div class="flex gap-3">
+      <button id="cancel-checkin" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
+      <button id="confirm-checkin" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Check in</button>
     </div>
   </div>
 </div>
@@ -205,21 +234,72 @@
       ? '<span class="material-symbols-outlined text-sm">task_alt</span>Checked in'
       : '<span class="material-symbols-outlined text-sm">login</span>Check in';
     leave.disabled = diff < 0;
-    checkin.onclick = () => { Roster.checkIn(currentStudent.id, next.id); renderAll(); };
+    checkin.onclick = () => openCheckinModal(next);
     leave.onclick = () => openLeaveModal(next);
+  }
+
+  function openCheckinModal(rehearsal) {
+    const modal = document.getElementById('checkin-modal');
+    document.getElementById('checkin-modal-slot').textContent = Roster.formatSlot(rehearsal.slotKey);
+    const input = document.getElementById('checkin-code-input');
+    input.value = '';
+    document.getElementById('checkin-error').classList.add('hidden');
+    modal.classList.replace('hidden', 'flex');
+    document.getElementById('confirm-checkin').onclick = () => {
+      const code = input.value.trim();
+      const ok = Roster.verifyCheckinCode ? Roster.verifyCheckinCode(rehearsal.id, code) : false;
+      if (!ok) {
+        document.getElementById('checkin-error').classList.remove('hidden');
+        return;
+      }
+      Roster.checkIn(currentStudent.id, rehearsal.id);
+      if (Roster.markAttendance) Roster.markAttendance(rehearsal.id, currentStudent.id, 'present');
+      modal.classList.replace('flex', 'hidden');
+      renderAll();
+    };
   }
 
   function openLeaveModal(rehearsal) {
     const modal = document.getElementById('leave-modal');
+    const reasonEl = document.getElementById('leave-reason');
     document.getElementById('leave-modal-slot').textContent = Roster.formatSlot(rehearsal.slotKey);
-    document.getElementById('leave-reason').value = '';
+    reasonEl.value = '';
+
+    const presetsEl = document.getElementById('leave-presets');
+    const presets = (Roster.getCommonLeaveReasons && Roster.getCommonLeaveReasons()) || [];
+    presetsEl.innerHTML = presets.map(r =>
+      `<button type="button" data-preset="${r.replace(/"/g,'&quot;')}" class="px-3 py-1.5 bg-primary-fixed text-primary rounded-full text-xs font-bold">${r}</button>`
+    ).join('');
+    presetsEl.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => { reasonEl.value = btn.dataset.preset; });
+    });
+
     modal.classList.replace('hidden', 'flex');
     document.getElementById('confirm-leave').onclick = () => {
-      const reason = document.getElementById('leave-reason').value.trim();
+      const reason = reasonEl.value.trim();
       Roster.requestLeave(currentStudent.id, rehearsal.id, reason);
       modal.classList.replace('flex', 'hidden');
       renderAll();
     };
+  }
+
+  function renderZoom() {
+    const meetings = (Roster.getZoomMeetings && Roster.getZoomMeetings()) || [];
+    const section = document.getElementById('zoom-section');
+    const list = document.getElementById('zoom-list');
+    if (!meetings.length) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    list.innerHTML = meetings.map(m => `
+      <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
+        <div>
+          <p class="font-bold text-primary text-sm">${m.title || 'Online rehearsal'}</p>
+          <p class="text-xs text-on-surface-variant mt-1">${m.slotKey ? Roster.formatSlot(m.slotKey) : (m.note || '')}</p>
+        </div>
+        <a href="${m.joinUrl}" target="_blank" rel="noopener" class="px-4 py-2 bg-primary text-white rounded-full text-xs font-bold flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">videocam</span> Join
+        </a>
+      </div>
+    `).join('');
   }
 
   function renderRehearsalList() {
@@ -300,6 +380,7 @@
     renderCheckinHistory();
     renderLeaves();
     renderNotices();
+    renderZoom();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -324,6 +405,10 @@
     countdownTimer = setInterval(renderCountdown, 30 * 1000);
     document.getElementById('cancel-leave').addEventListener('click', () => {
       document.getElementById('leave-modal').classList.replace('flex', 'hidden');
+    });
+
+    document.getElementById('cancel-checkin').addEventListener('click', () => {
+      document.getElementById('checkin-modal').classList.replace('flex', 'hidden');
     });
 
     document.getElementById('print-rehearsal-btn').addEventListener('click', () => {

@@ -9,8 +9,16 @@
     PROJECT: 'roster.project',
     POLL_WINDOW: 'roster.pollWindow',
     NOTICES: 'roster.notices',
-    PRESENT: 'roster.presentSubmissions'
+    PRESENT: 'roster.presentSubmissions',
+    REASONS: 'roster.commonReasons',
+    LEAVE_REASONS: 'roster.commonLeaveReasons',
+    CHECKIN_CODES: 'roster.checkinCodes',
+    ATTENDANCE: 'roster.attendance',
+    ZOOM_MEETINGS: 'roster.zoomMeetings'
   };
+
+  const DEFAULT_REASONS = ['School commitment', 'Family event', 'Health', 'Tutoring', 'Other'];
+  const DEFAULT_LEAVE_REASONS = ['Sick', 'Family emergency', 'Academic conflict', 'Personal'];
 
   const ADMIN_PASSCODE = '20260508';
   const ADMIN_SESSION_KEY = 'roster.adminAuthed';
@@ -58,6 +66,61 @@
       if (!readJSON(KEYS.REHEARSALS, null)) writeJSON(KEYS.REHEARSALS, []);
       if (!readJSON(KEYS.NOTICES, null)) writeJSON(KEYS.NOTICES, []);
       if (!readJSON(KEYS.PRESENT, null)) writeJSON(KEYS.PRESENT, []);
+      if (!readJSON(KEYS.REASONS, null)) writeJSON(KEYS.REASONS, DEFAULT_REASONS);
+      if (!readJSON(KEYS.LEAVE_REASONS, null)) writeJSON(KEYS.LEAVE_REASONS, DEFAULT_LEAVE_REASONS);
+      if (!readJSON(KEYS.CHECKIN_CODES, null)) writeJSON(KEYS.CHECKIN_CODES, {});
+      if (!readJSON(KEYS.ATTENDANCE, null)) writeJSON(KEYS.ATTENDANCE, {});
+      if (!readJSON(KEYS.ZOOM_MEETINGS, null)) writeJSON(KEYS.ZOOM_MEETINGS, []);
+    },
+
+    /* ── common reasons for unavailability ──────────────── */
+    getCommonReasons() { return readJSON(KEYS.REASONS, DEFAULT_REASONS); },
+    setCommonReasons(arr) { writeJSON(KEYS.REASONS, Array.isArray(arr) ? arr : DEFAULT_REASONS); },
+    getCommonLeaveReasons() { return readJSON(KEYS.LEAVE_REASONS, DEFAULT_LEAVE_REASONS); },
+    setCommonLeaveReasons(arr) { writeJSON(KEYS.LEAVE_REASONS, Array.isArray(arr) ? arr : DEFAULT_LEAVE_REASONS); },
+
+    /* ── check-in codes (per rehearsal) ──────────────────── */
+    getCheckinCodes() { return readJSON(KEYS.CHECKIN_CODES, {}); },
+    generateCheckinCode(rehearsalId) {
+      const codes = Roster.getCheckinCodes();
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      codes[rehearsalId] = { code, createdAt: Date.now() };
+      writeJSON(KEYS.CHECKIN_CODES, codes);
+      return code;
+    },
+    verifyCheckinCode(rehearsalId, code) {
+      const codes = Roster.getCheckinCodes();
+      return codes[rehearsalId] && codes[rehearsalId].code === String(code).trim();
+    },
+
+    /* ── attendance records ──────────────────────────────── */
+    getAttendance() { return readJSON(KEYS.ATTENDANCE, {}); },
+    markAttendance(rehearsalId, studentId, status) {
+      const records = Roster.getAttendance();
+      records[rehearsalId] = records[rehearsalId] || {};
+      records[rehearsalId][studentId] = { status, at: Date.now() };
+      writeJSON(KEYS.ATTENDANCE, records);
+    },
+    getStudentAttendance(studentId) {
+      const records = Roster.getAttendance();
+      const out = [];
+      Object.keys(records).forEach(rId => {
+        if (records[rId] && records[rId][studentId]) {
+          out.push({ rehearsalId: rId, ...records[rId][studentId] });
+        }
+      });
+      return out;
+    },
+
+    /* ── zoom meetings (admin-created links, users join) ─── */
+    getZoomMeetings() { return readJSON(KEYS.ZOOM_MEETINGS, []); },
+    addZoomMeeting(meeting) {
+      const list = Roster.getZoomMeetings();
+      list.push({ id: genId('zm'), createdAt: Date.now(), ...meeting });
+      writeJSON(KEYS.ZOOM_MEETINGS, list);
+    },
+    removeZoomMeeting(id) {
+      writeJSON(KEYS.ZOOM_MEETINGS, Roster.getZoomMeetings().filter(z => z.id !== id));
     },
 
     resetForNewProduction() {
@@ -417,6 +480,9 @@
       const list = Roster.getLeaves();
       const l = list.find(x => x.id === leaveId);
       if (l) { l.status = status; writeJSON(KEYS.LEAVES, list); }
+    },
+    deleteLeave(leaveId) {
+      writeJSON(KEYS.LEAVES, Roster.getLeaves().filter(l => l.id !== leaveId));
     },
 
     /* ── notices ─────────────────────────────────────────────── */

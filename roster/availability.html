@@ -135,19 +135,24 @@
         </div>
       </div>
 
+      <!-- bulk actions -->
+      <div class="flex flex-wrap gap-2 mb-6">
+        <button id="select-all-btn" class="px-4 py-2 bg-primary-fixed text-primary rounded-full text-xs font-bold flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">done_all</span> Mark all available
+        </button>
+        <button id="reset-all-btn" class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full text-xs font-bold flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">refresh</span> Reset all
+        </button>
+      </div>
+
       <!-- actions -->
-      <div class="mt-8 flex justify-between items-center gap-4">
+      <div class="mt-8 flex flex-wrap justify-between items-center gap-4">
         <button id="print-btn" class="inline-flex items-center gap-2 px-6 py-4 bg-surface-container-high text-on-surface rounded-full font-bold hover:bg-outline-variant/20 transition-all">
           <span class="material-symbols-outlined">print</span> Print / PDF
         </button>
-        <div class="flex gap-3">
-          <button id="submit-btn" class="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all">
-            <span class="material-symbols-outlined">check</span> Submit availability
-          </button>
-          <a href="profile.html" class="inline-flex items-center gap-2 px-6 py-4 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all">
-            Continue <span class="material-symbols-outlined">arrow_forward</span>
-          </a>
-        </div>
+        <button id="submit-btn" class="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all">
+          <span class="material-symbols-outlined">check</span> Submit availability
+        </button>
       </div>
     </div>
   </section>
@@ -179,10 +184,26 @@
   <div class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl">
     <h3 class="font-headline text-2xl font-extrabold text-primary mb-4">Why are you blocking this?</h3>
     <p id="reason-modal-slot" class="text-xs text-on-surface-variant mb-4">—</p>
+    <div id="reason-presets" class="flex flex-wrap gap-2 mb-4"></div>
     <textarea id="reason-input" rows="3" placeholder="Brief reason..." class="w-full bg-surface-container-high border-none rounded-lg p-4 mb-4 focus:ring-2 focus:ring-primary-fixed text-sm"></textarea>
     <div class="flex gap-3">
       <button id="cancel-reason" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
       <button id="confirm-reason" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Block with reason</button>
+    </div>
+  </div>
+</div>
+
+<!-- Download prompt modal -->
+<div id="download-prompt" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl">
+    <div class="w-16 h-16 rounded-2xl bg-primary-fixed flex items-center justify-center mb-4">
+      <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings:'FILL' 1;">download</span>
+    </div>
+    <h3 class="font-headline text-2xl font-extrabold text-primary mb-2">Save a copy?</h3>
+    <p class="text-sm text-on-surface-variant mb-6">Download a printable summary of the availability you just submitted.</p>
+    <div class="flex gap-3">
+      <button id="skip-download" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">No thanks</button>
+      <button id="confirm-download" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Download</button>
     </div>
   </div>
 </div>
@@ -309,11 +330,22 @@
 
   function openReasonModal(key) {
     const modal = document.getElementById('reason-modal');
+    const input = document.getElementById('reason-input');
     document.getElementById('reason-modal-slot').textContent = Roster.formatSlot(key);
-    document.getElementById('reason-input').value = '';
+    input.value = '';
+
+    const presetsEl = document.getElementById('reason-presets');
+    const presets = (Roster.getCommonReasons && Roster.getCommonReasons()) || [];
+    presetsEl.innerHTML = presets.map(r =>
+      `<button type="button" data-preset="${r.replace(/"/g,'&quot;')}" class="px-3 py-1.5 bg-primary-fixed text-primary rounded-full text-xs font-bold hover:bg-primary-fixed-dim">${r}</button>`
+    ).join('');
+    presetsEl.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => { input.value = btn.dataset.preset; });
+    });
+
     modal.classList.remove('hidden');
     document.getElementById('confirm-reason').onclick = () => {
-      const reason = document.getElementById('reason-input').value.trim();
+      const reason = input.value.trim();
       Roster.toggleSlot(student.id, key, 'blocked', reason);
       modal.classList.add('hidden');
       buildWeekGrid();
@@ -387,12 +419,31 @@
       document.getElementById('reason-modal').classList.add('hidden');
     });
 
+    /* select all / reset all */
+    document.getElementById('select-all-btn').addEventListener('click', () => {
+      pollSlotKeys.forEach(k => Roster.toggleSlot(student.id, k, 'available'));
+      buildWeekGrid();
+    });
+    document.getElementById('reset-all-btn').addEventListener('click', () => {
+      pollSlotKeys.forEach(k => Roster.toggleSlot(student.id, k, 'clear'));
+      buildWeekGrid();
+    });
+
     /* submit button */
     document.getElementById('submit-btn').addEventListener('click', () => {
       Roster.markSubmitted(student.id);
       const overlay = document.getElementById('success-overlay');
       overlay.classList.remove('hidden');
-      setTimeout(() => { overlay.classList.add('hidden'); }, 2500);
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        const dl = document.getElementById('download-prompt');
+        dl.classList.remove('hidden');
+        document.getElementById('skip-download').onclick = () => { location.href = 'profile.html'; };
+        document.getElementById('confirm-download').onclick = () => {
+          document.getElementById('print-btn').click();
+          setTimeout(() => { location.href = 'profile.html'; }, 800);
+        };
+      }, 1800);
     });
 
     /* print button */
