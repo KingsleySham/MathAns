@@ -222,11 +222,20 @@
           <span class="material-symbols-outlined text-primary">videocam</span>
           <h2 class="font-headline text-2xl font-extrabold text-primary">Zoom meetings</h2>
         </div>
-        <button id="add-zoom-btn" class="px-4 py-2 bg-primary text-white rounded-full text-xs font-bold flex items-center gap-2">
-          <span class="material-symbols-outlined text-sm">add</span> Add link
-        </button>
+        <div class="flex gap-2 flex-wrap">
+          <button id="zoom-settings-btn" class="px-4 py-2 bg-surface-container-high text-primary rounded-full text-xs font-bold flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">settings</span> OAuth setup
+          </button>
+          <button id="zoom-connect-btn" class="px-4 py-2 bg-primary text-white rounded-full text-xs font-bold flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">link</span> Connect Zoom
+          </button>
+          <button id="add-zoom-btn" class="px-4 py-2 bg-primary text-white rounded-full text-xs font-bold flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">add</span> Add meeting
+          </button>
+        </div>
       </div>
-      <p class="text-xs text-on-surface-variant mb-4">Paste a Zoom meeting link here for online rehearsals — students see a "Join" button on their hub.</p>
+      <div id="zoom-status" class="mb-4 p-3 rounded-xl bg-surface-container-low text-xs"></div>
+      <p class="text-xs text-on-surface-variant mb-4">Create meetings directly once Zoom is connected, or paste a manual join URL. Students see a "Join" button on their hub.</p>
       <div id="zoom-list" class="space-y-2"></div>
     </div>
   </div>
@@ -235,10 +244,33 @@
   <div id="zoom-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-[2rem] p-8 max-w-md w-full">
       <h3 class="font-headline text-2xl font-extrabold text-primary mb-4">Add Zoom meeting</h3>
-      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Title</label>
-      <input id="zoom-title" type="text" placeholder="Act 2 read-through" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"/>
-      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Join URL</label>
-      <input id="zoom-url" type="url" placeholder="https://zoom.us/j/..." class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"/>
+      <div class="flex bg-surface-container-low rounded-full p-1 mb-4 text-xs font-bold">
+        <button data-zoom-mode="manual" class="zoom-mode-tab flex-1 py-2 rounded-full bg-white text-primary shadow">Manual link</button>
+        <button data-zoom-mode="create" class="zoom-mode-tab flex-1 py-2 rounded-full text-on-surface-variant">Create via OAuth</button>
+      </div>
+      <div id="zoom-manual-pane">
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Title</label>
+        <input id="zoom-title" type="text" placeholder="Act 2 read-through" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"/>
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Join URL</label>
+        <input id="zoom-url" type="url" placeholder="https://zoom.us/j/..." class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"/>
+      </div>
+      <div id="zoom-create-pane" class="hidden">
+        <p id="zoom-create-warning" class="hidden text-[11px] text-error mb-3 p-2 rounded-lg bg-error-container">Connect Zoom first — click "Connect Zoom" on the Zoom panel.</p>
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Topic</label>
+        <input id="zoom-ct-topic" type="text" placeholder="Act 2 read-through" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"/>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Start (local)</label>
+            <input id="zoom-ct-start" type="datetime-local" class="w-full bg-surface-container-high border-none rounded-lg p-3 focus:ring-2 focus:ring-primary-fixed"/>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Duration (min)</label>
+            <input id="zoom-ct-duration" type="number" min="10" max="480" value="60" class="w-full bg-surface-container-high border-none rounded-lg p-3 focus:ring-2 focus:ring-primary-fixed"/>
+          </div>
+        </div>
+        <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Agenda (optional)</label>
+        <textarea id="zoom-ct-agenda" rows="2" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"></textarea>
+      </div>
       <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Linked rehearsal (optional)</label>
       <select id="zoom-rehearsal" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-fixed">
         <option value="">— Standalone (no linked rehearsal) —</option>
@@ -246,6 +278,29 @@
       <div class="flex gap-3">
         <button id="cancel-zoom" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
         <button id="save-zoom" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zoom OAuth setup modal -->
+  <div id="zoom-config-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-[2rem] p-8 max-w-lg w-full">
+      <h3 class="font-headline text-2xl font-extrabold text-primary mb-2">Zoom OAuth setup</h3>
+      <p class="text-xs text-on-surface-variant mb-4">
+        One-time config. Create an OAuth app at
+        <a href="https://marketplace.zoom.us/develop/create" target="_blank" class="text-primary underline font-bold">marketplace.zoom.us</a>,
+        then a small backend that exchanges the OAuth code for an access token and proxies
+        <code class="bg-surface-container-low px-1 rounded">POST /users/me/meetings</code>.
+      </p>
+      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Zoom Client ID</label>
+      <input id="zcfg-client-id" type="text" placeholder="abc123..." class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"/>
+      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Backend base URL</label>
+      <input id="zcfg-backend" type="url" placeholder="https://your-backend.example.com" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-3 focus:ring-2 focus:ring-primary-fixed"/>
+      <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">OAuth redirect URI</label>
+      <input id="zcfg-redirect" type="url" placeholder="https://your-backend.example.com/zoom/callback" class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-fixed"/>
+      <div class="flex gap-3">
+        <button id="cancel-zcfg" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
+        <button id="save-zcfg" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Save</button>
       </div>
     </div>
   </div>
@@ -786,6 +841,33 @@
     });
 
     renderZoomList();
+    renderZoomStatus();
+  }
+
+  function renderZoomStatus() {
+    const el = document.getElementById('zoom-status');
+    if (!el) return;
+    const cfg = Roster.getZoomConfig ? Roster.getZoomConfig() : {};
+    const session = Roster.getZoomSession ? Roster.getZoomSession() : null;
+    const connectBtn = document.getElementById('zoom-connect-btn');
+    if (!cfg.clientId || !cfg.backendBase || !cfg.redirectUri) {
+      el.innerHTML = `<span class="text-on-surface-variant">OAuth not configured. Click <strong>OAuth setup</strong> to enter your Zoom Client ID, backend URL and redirect URI.</span>`;
+      if (connectBtn) { connectBtn.disabled = true; connectBtn.classList.add('opacity-50'); }
+      return;
+    }
+    if (session && session.accessToken) {
+      const who = session.userEmail || session.userId || 'Zoom account';
+      el.innerHTML = `<span class="text-primary font-bold">✓ Connected as ${who}</span>
+        <button id="zoom-disconnect-btn" class="ml-3 px-2 py-1 bg-error-container text-error rounded-full text-[10px] font-bold">Disconnect</button>`;
+      if (connectBtn) { connectBtn.textContent = 'Reconnect'; connectBtn.disabled = false; connectBtn.classList.remove('opacity-50'); }
+      document.getElementById('zoom-disconnect-btn').addEventListener('click', () => {
+        Roster.setZoomSession(null);
+        renderZoomStatus();
+      });
+    } else {
+      el.innerHTML = `<span class="text-on-surface-variant">Configured, but not connected. Click <strong>Connect Zoom</strong> to sign in.</span>`;
+      if (connectBtn) { connectBtn.disabled = false; connectBtn.classList.remove('opacity-50'); }
+    }
   }
 
   function renderZoomList() {
@@ -1077,7 +1159,7 @@
     const activeCount = allFixed.filter(s => enabledGlobal.has(s.id) && !exclForDate.has(s.id)).length;
     titleEl.textContent = `${reviewSelectedDate} (${activeCount} slot${activeCount === 1 ? '' : 's'})`;
 
-    slotsEl.innerHTML = '<p class="text-xs text-on-surface-variant mb-3">Toggle a slot off to skip it only for this date.</p>' +
+    slotsEl.innerHTML = '<p class="text-xs text-on-surface-variant mb-3">Rename or delete individual slots for this date. Changes persist when you save the poll.</p>' +
       allFixed.map(s => {
         const [y, mo, dd] = reviewSelectedDate.split('-').map(Number);
         const d = new Date(y, mo - 1, dd);
@@ -1088,14 +1170,20 @@
         const dateOff = exclForDate.has(s.id);
         const off = globalOff || dateOff;
         const title = titles[key] || '';
+        let actionBtn;
+        if (globalOff) {
+          actionBtn = `<span class="px-3 py-1.5 rounded-full text-[10px] font-bold bg-surface-container-highest text-on-surface-variant">Globally off</span>`;
+        } else if (dateOff) {
+          actionBtn = `<button data-toggle-date-slot="${s.id}" class="px-3 py-1.5 rounded-full text-[10px] font-bold bg-primary text-white">Restore</button>`;
+        } else {
+          actionBtn = `<button data-toggle-date-slot="${s.id}" class="px-3 py-1.5 rounded-full text-[10px] font-bold bg-error-container text-error hover:bg-error hover:text-white">Delete slot</button>`;
+        }
         return `<div class="p-3 rounded-lg ${off ? 'bg-surface-container-high opacity-60' : 'bg-white'}">
           <div class="flex items-center gap-2 mb-2">
-            <button data-toggle-date-slot="${s.id}" ${globalOff ? 'disabled' : ''} class="px-3 py-1.5 rounded-full text-[10px] font-bold ${off ? 'bg-error-container text-error' : 'bg-primary text-white'}">
-              ${off ? (globalOff ? 'Globally off' : 'Skipped') : 'Active'}
-            </button>
-            <span class="text-sm font-bold text-primary">${s.label}</span>
+            ${actionBtn}
+            <span class="text-sm font-bold text-primary ${dateOff ? 'line-through' : ''}">${s.label}</span>
           </div>
-          <input type="text" placeholder="Slot title (optional)" data-slot-title="${key}" value="${title.replace(/"/g, '&quot;')}" ${off ? 'disabled' : ''} class="w-full bg-surface-container-low border-none rounded-lg p-2 text-xs"/>
+          <input type="text" placeholder="Custom title for this slot (optional)" data-slot-title="${key}" value="${title.replace(/"/g, '&quot;')}" ${off ? 'disabled' : ''} class="w-full bg-surface-container-low border-none rounded-lg p-2 text-xs"/>
         </div>`;
       }).join('');
 
@@ -1432,6 +1520,25 @@
     });
 
     /* zoom add modal */
+    let zoomMode = 'manual';
+    function setZoomMode(mode) {
+      zoomMode = mode;
+      document.querySelectorAll('.zoom-mode-tab').forEach(t => {
+        const active = t.dataset.zoomMode === mode;
+        t.classList.toggle('bg-white', active);
+        t.classList.toggle('text-primary', active);
+        t.classList.toggle('shadow', active);
+        t.classList.toggle('text-on-surface-variant', !active);
+      });
+      document.getElementById('zoom-manual-pane').classList.toggle('hidden', mode !== 'manual');
+      document.getElementById('zoom-create-pane').classList.toggle('hidden', mode !== 'create');
+      const session = Roster.getZoomSession();
+      document.getElementById('zoom-create-warning').classList.toggle('hidden', mode !== 'create' || !!(session && session.accessToken));
+    }
+    document.querySelectorAll('.zoom-mode-tab').forEach(t => {
+      t.addEventListener('click', () => setZoomMode(t.dataset.zoomMode));
+    });
+
     document.getElementById('add-zoom-btn').addEventListener('click', () => {
       const sel = document.getElementById('zoom-rehearsal');
       const rehearsals = Roster.getRehearsals();
@@ -1439,20 +1546,98 @@
         rehearsals.map(r => `<option value="${r.slotKey}">${Roster.formatSlot(r.slotKey)}</option>`).join('');
       document.getElementById('zoom-title').value = '';
       document.getElementById('zoom-url').value = '';
+      document.getElementById('zoom-ct-topic').value = '';
+      document.getElementById('zoom-ct-start').value = '';
+      document.getElementById('zoom-ct-duration').value = 60;
+      document.getElementById('zoom-ct-agenda').value = '';
+      setZoomMode('manual');
       document.getElementById('zoom-modal').classList.replace('hidden', 'flex');
     });
     document.getElementById('cancel-zoom').addEventListener('click', () => {
       document.getElementById('zoom-modal').classList.replace('flex', 'hidden');
     });
-    document.getElementById('save-zoom').addEventListener('click', () => {
-      const title = document.getElementById('zoom-title').value.trim();
-      const joinUrl = document.getElementById('zoom-url').value.trim();
+    document.getElementById('save-zoom').addEventListener('click', async () => {
       const slotKey = document.getElementById('zoom-rehearsal').value;
-      if (!joinUrl) { alert('Join URL is required.'); return; }
-      Roster.addZoomMeeting({ title, joinUrl, slotKey });
+      const saveBtn = document.getElementById('save-zoom');
+      if (zoomMode === 'create') {
+        const topic = document.getElementById('zoom-ct-topic').value.trim();
+        const startLocal = document.getElementById('zoom-ct-start').value;
+        const duration = Number(document.getElementById('zoom-ct-duration').value) || 60;
+        const agenda = document.getElementById('zoom-ct-agenda').value.trim();
+        if (!topic || !startLocal) { alert('Topic and start time are required.'); return; }
+        const startISO = new Date(startLocal).toISOString();
+        saveBtn.disabled = true; saveBtn.textContent = 'Creating…';
+        try {
+          const meeting = await Roster.zoomCreateMeeting({
+            topic, startTime: startISO, durationMinutes: duration, agenda
+          });
+          Roster.addZoomMeeting({
+            title: meeting.topic || topic,
+            joinUrl: meeting.join_url,
+            startUrl: meeting.start_url,
+            zoomMeetingId: meeting.id,
+            slotKey
+          });
+        } catch (e) {
+          alert('Could not create Zoom meeting: ' + e.message);
+          saveBtn.disabled = false; saveBtn.textContent = 'Save';
+          return;
+        }
+        saveBtn.disabled = false; saveBtn.textContent = 'Save';
+      } else {
+        const title = document.getElementById('zoom-title').value.trim();
+        const joinUrl = document.getElementById('zoom-url').value.trim();
+        if (!joinUrl) { alert('Join URL is required.'); return; }
+        Roster.addZoomMeeting({ title, joinUrl, slotKey });
+      }
       document.getElementById('zoom-modal').classList.replace('flex', 'hidden');
       renderZoomList();
     });
+
+    /* zoom OAuth: config + connect */
+    const zcfgModal = document.getElementById('zoom-config-modal');
+    document.getElementById('zoom-settings-btn').addEventListener('click', () => {
+      const cfg = Roster.getZoomConfig();
+      document.getElementById('zcfg-client-id').value = cfg.clientId || '';
+      document.getElementById('zcfg-backend').value = cfg.backendBase || '';
+      document.getElementById('zcfg-redirect').value = cfg.redirectUri || '';
+      zcfgModal.classList.replace('hidden', 'flex');
+    });
+    document.getElementById('cancel-zcfg').addEventListener('click', () => {
+      zcfgModal.classList.replace('flex', 'hidden');
+    });
+    document.getElementById('save-zcfg').addEventListener('click', () => {
+      Roster.setZoomConfig({
+        clientId: document.getElementById('zcfg-client-id').value.trim(),
+        backendBase: document.getElementById('zcfg-backend').value.trim(),
+        redirectUri: document.getElementById('zcfg-redirect').value.trim()
+      });
+      zcfgModal.classList.replace('flex', 'hidden');
+      renderZoomStatus();
+    });
+    document.getElementById('zoom-connect-btn').addEventListener('click', () => {
+      const url = Roster.zoomAuthUrl();
+      if (!url) { alert('Configure Zoom OAuth first (click "OAuth setup").'); return; }
+      window.location.href = url;
+    });
+
+    /* read ?zoom_access_token=... from the backend's redirect once OAuth completes */
+    (function readZoomRedirect() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('zoom_access_token');
+      if (!token) return;
+      Roster.setZoomSession({
+        accessToken: token,
+        refreshToken: params.get('zoom_refresh_token') || null,
+        userEmail: params.get('zoom_user_email') || null,
+        userId: params.get('zoom_user_id') || null,
+        expiresAt: params.get('zoom_expires_at') ? Number(params.get('zoom_expires_at')) : null
+      });
+      params.delete('zoom_access_token'); params.delete('zoom_refresh_token');
+      params.delete('zoom_user_email'); params.delete('zoom_user_id'); params.delete('zoom_expires_at');
+      const newSearch = params.toString();
+      window.history.replaceState({}, '', window.location.pathname + (newSearch ? '?' + newSearch : ''));
+    })();
 
     /* poll wizard navigation */
     document.querySelectorAll('.poll-next').forEach(b => b.addEventListener('click', () => {

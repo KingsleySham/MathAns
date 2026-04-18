@@ -276,11 +276,20 @@
     sortedMinutes.forEach(totalMin => {
       const h = Math.floor(totalMin / 60);
       const m = totalMin % 60;
-      const ampm = h >= 12 ? 'pm' : 'am';
-      const h12 = ((h + 11) % 12) + 1;
-      const timeLabel = m === 0 ? `${h12}:00${ampm}` : `${h12}:30${ampm}`;
+      const startStr = Roster.formatTime(h, m);
+      const probeKey = Roster.buildSlotKey(days[activeDayIndices[0]], h, m);
+      const block = Roster.getSlotBlock(probeKey);
+      let rowLabel = startStr;
+      let cellLabel = startStr;
+      if (block) {
+        const eh = Math.floor(block.endMinute / 60);
+        const em = block.endMinute % 60;
+        const endStr = Roster.formatTime(eh, em);
+        rowLabel = `${startStr}<br><span class="text-[9px] font-normal opacity-70">${endStr}</span>`;
+        cellLabel = `${startStr}–${endStr}`;
+      }
       html += `<tr>`;
-      html += `<td class="p-3 text-right text-on-surface-variant border-r border-b border-outline-variant/10 font-medium">${m === 0 ? timeLabel : ''}</td>`;
+      html += `<td class="p-3 text-right text-on-surface-variant border-r border-b border-outline-variant/10 font-medium text-[11px] leading-tight">${rowLabel}</td>`;
       activeDayIndices.forEach(di => {
         const dayDate = days[di];
         const key = Roster.buildSlotKey(dayDate, h, m);
@@ -293,7 +302,7 @@
         const isBlocked = blockSet.has(key);
         const cls = isAvail ? 'available' : isBlocked ? 'blocked' : '';
         html += `<td class="p-1 border-r border-b border-outline-variant/10">
-          <button class="slot w-full h-12 rounded-lg text-xs font-bold border border-outline-variant/20 ${cls}" data-key="${key}">${timeLabel}</button>
+          <button class="slot w-full h-12 rounded-lg text-[10px] leading-tight font-bold border border-outline-variant/20 ${cls}" data-key="${key}">${cellLabel}</button>
         </td>`;
       });
       html += '</tr>';
