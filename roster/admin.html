@@ -1441,6 +1441,16 @@
     function showApp() { gate.classList.add('hidden'); app.classList.remove('hidden'); renderOverview(); renderPoll(); setPollStep(1); }
     if (Roster.isAdminAuthed()) showApp();
 
+    // Re-render on Firebase sync so Zoom config/session and rehearsals
+    // appear immediately when another device pushes updates.
+    window.addEventListener('roster-state-sync', () => {
+      if (!Roster.isAdminAuthed()) return;
+      if (!document.getElementById('admin-app').classList.contains('hidden')) {
+        renderOverview();
+        renderPoll();
+      }
+    });
+
     document.getElementById('gate-btn').addEventListener('click', () => {
       const code = document.getElementById('passcode-input').value;
       if (Roster.authenticateAdmin(code)) showApp();
