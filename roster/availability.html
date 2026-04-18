@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="roster.js" defer></script>
+<script type="module" src="firebase-init.js"></script>
 <script>
   tailwind.config = { darkMode: "class", theme: { extend: {
     colors: {
@@ -30,6 +31,10 @@
   .slot.available { background: #15157d; color: white; border-color: #15157d; }
   .slot.blocked  { background: #ffdad6; color: #ba1a1a; border-color: #ba1a1a; text-decoration: line-through; }
   .slot:not(.available):not(.blocked):hover { background: #e1e0ff; }
+  @keyframes tick-pop { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes tick-bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.95); } }
+  .green-tick { animation: tick-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  .tick-box { animation: tick-bounce 2s infinite; }
 </style>
 </head>
 <body class="bg-surface font-body text-on-surface antialiased">
@@ -102,12 +107,22 @@
       </div>
 
       <!-- grid -->
-      <div class="bg-surface-container-lowest rounded-[2rem] shadow-[0_20px_40px_rgba(26,28,29,0.06)] overflow-auto">
+      <div class="bg-surface-container-lowest rounded-[2rem] shadow-[0_20px_40px_rgba(26,28,29,0.06)] overflow-auto mb-8">
         <div id="calendar-grid"></div>
       </div>
 
+      <!-- empty slots suggestion -->
+      <div id="empty-suggestion" class="hidden bg-secondary-fixed rounded-2xl p-6 flex items-start gap-4 mb-8">
+        <span class="material-symbols-outlined text-secondary text-3xl mt-1">lightbulb</span>
+        <div>
+          <p class="font-bold text-secondary">These slots need responses</p>
+          <p class="text-sm text-on-surface-variant mt-1">No one has indicated availability yet. Consider marking these slots so the team can schedule smoothly.</p>
+          <div id="empty-slots-list" class="mt-3 flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+
       <!-- my stats -->
-      <div class="grid grid-cols-2 gap-6 mt-8">
+      <div class="grid grid-cols-2 gap-6 mb-8">
         <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10">
           <span class="material-symbols-outlined text-primary mb-2">check_circle</span>
           <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">My available</h4>
@@ -120,10 +135,19 @@
         </div>
       </div>
 
-      <div class="mt-8 flex justify-end">
-        <a href="profile.html" class="inline-flex items-center gap-2 px-6 py-4 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all">
-          Continue to my hub <span class="material-symbols-outlined">arrow_forward</span>
-        </a>
+      <!-- actions -->
+      <div class="mt-8 flex justify-between items-center gap-4">
+        <button id="print-btn" class="inline-flex items-center gap-2 px-6 py-4 bg-surface-container-high text-on-surface rounded-full font-bold hover:bg-outline-variant/20 transition-all">
+          <span class="material-symbols-outlined">print</span> Print / PDF
+        </button>
+        <div class="flex gap-3">
+          <button id="submit-btn" class="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all">
+            <span class="material-symbols-outlined">check</span> Submit availability
+          </button>
+          <a href="profile.html" class="inline-flex items-center gap-2 px-6 py-4 bg-primary text-white rounded-full font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all">
+            Continue <span class="material-symbols-outlined">arrow_forward</span>
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -136,11 +160,49 @@
   </footer>
 </main>
 
+<!-- Poll popup modal -->
+<div id="poll-popup" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl">
+    <div class="w-16 h-16 rounded-2xl bg-primary-fixed flex items-center justify-center mb-4">
+      <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings:'FILL' 1;">poll</span>
+    </div>
+    <h2 class="font-headline text-2xl font-extrabold text-primary mb-2">New availability poll</h2>
+    <p id="poll-popup-desc" class="text-sm text-on-surface-variant mb-6">—</p>
+    <button id="poll-popup-btn" class="w-full py-3 bg-primary text-white rounded-full font-bold flex items-center justify-center gap-2">
+      <span class="material-symbols-outlined">arrow_forward</span> Let's go
+    </button>
+  </div>
+</div>
+
+<!-- Reason input modal -->
+<div id="reason-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl">
+    <h3 class="font-headline text-2xl font-extrabold text-primary mb-4">Why are you blocking this?</h3>
+    <p id="reason-modal-slot" class="text-xs text-on-surface-variant mb-4">—</p>
+    <textarea id="reason-input" rows="3" placeholder="Brief reason..." class="w-full bg-surface-container-high border-none rounded-lg p-4 mb-4 focus:ring-2 focus:ring-primary-fixed text-sm"></textarea>
+    <div class="flex gap-3">
+      <button id="cancel-reason" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
+      <button id="confirm-reason" class="flex-1 py-3 bg-primary text-white rounded-full font-bold">Block with reason</button>
+    </div>
+  </div>
+</div>
+
+<!-- Green tick success modal -->
+<div id="success-overlay" class="fixed inset-0 hidden flex items-center justify-center z-50 bg-black/30 backdrop-blur-sm">
+  <div class="text-center">
+    <div class="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-4 green-tick">
+      <span class="material-symbols-outlined text-5xl text-white" style="font-variation-settings:'FILL' 1;">check_circle</span>
+    </div>
+    <h2 class="font-headline text-3xl font-extrabold text-white mb-2">Submitted!</h2>
+    <p class="text-white/80 max-w-xs">Your availability has been saved. The team can now use this to schedule rehearsals.</p>
+  </div>
+</div>
+
 <script>
   const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  let student, pollSlotKeys, weekStart;
+  let student, pollSlotKeys, weekStart, pendingReasonKey = null;
 
   function startOfWeek(d) {
     const c = new Date(d); c.setHours(0,0,0,0);
@@ -158,11 +220,9 @@
     const availSet = new Set(avail.available);
     const blockSet = new Set(avail.blocked);
 
-    /* collect hours and days visible this week that are in the poll */
     const days = [];
     for (let i = 0; i < 7; i++) days.push(addDays(weekStart, i));
 
-    /* all poll slots this week */
     const weekPollSlots = pollSlotKeys.filter(k => {
       const d = Roster.parseSlotKey(k);
       return d >= weekStart && d < addDays(weekStart, 7);
@@ -177,16 +237,11 @@
       return;
     }
 
-    /* build hours set from this week's poll slots */
     const hoursSet = new Set(weekPollSlots.map(k => { const d = Roster.parseSlotKey(k); return d.getHours() * 60 + d.getMinutes(); }));
     const sortedMinutes = [...hoursSet].sort((a,b) => a-b);
-
-    /* which days have any poll slot this week? */
     const activeDayIndices = [...new Set(weekPollSlots.map(k => Roster.parseSlotKey(k).getDay()))].sort((a,b)=>a-b);
-    const colCount = activeDayIndices.length;
 
     let html = `<table class="w-full border-collapse text-xs">`;
-    /* header */
     html += '<thead><tr><th class="w-20 p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-on-surface-variant font-bold text-right">Time</th>';
     activeDayIndices.forEach(di => {
       const dayDate = days[di];
@@ -230,6 +285,7 @@
     });
 
     updateStats();
+    showEmptySuggestions();
   }
 
   function toggle(key) {
@@ -239,8 +295,29 @@
     let next = 'available';
     if (isAvail) next = 'blocked';
     else if (isBlocked) next = 'clear';
+
+    const meta = Roster.getSlotMeta(key);
+    if (next === 'blocked' && meta.reasonRequired) {
+      pendingReasonKey = key;
+      openReasonModal(key);
+      return;
+    }
+
     Roster.toggleSlot(student.id, key, next);
     buildWeekGrid();
+  }
+
+  function openReasonModal(key) {
+    const modal = document.getElementById('reason-modal');
+    document.getElementById('reason-modal-slot').textContent = Roster.formatSlot(key);
+    document.getElementById('reason-input').value = '';
+    modal.classList.remove('hidden');
+    document.getElementById('confirm-reason').onclick = () => {
+      const reason = document.getElementById('reason-input').value.trim();
+      Roster.toggleSlot(student.id, key, 'blocked', reason);
+      modal.classList.add('hidden');
+      buildWeekGrid();
+    };
   }
 
   function updateStats() {
@@ -248,6 +325,27 @@
     const pollSet = new Set(pollSlotKeys);
     document.getElementById('stat-available').textContent = avail.available.filter(k => pollSet.has(k)).length;
     document.getElementById('stat-blocked').textContent   = avail.blocked.filter(k => pollSet.has(k)).length;
+  }
+
+  function showEmptySuggestions() {
+    const empty = Roster.emptySlots();
+    const suggestionDiv = document.getElementById('empty-suggestion');
+    if (empty.length > 0) {
+      suggestionDiv.classList.remove('hidden');
+      const listEl = document.getElementById('empty-slots-list');
+      listEl.innerHTML = empty.slice(0, 5).map(k => {
+        const [, timePart] = k.split('T');
+        const [hh, mm] = timePart.split(':').map(Number);
+        const ampm = hh >= 12 ? 'pm' : 'am';
+        const h12 = ((hh + 11) % 12) + 1;
+        return `<button data-empty-slot="${k}" class="px-3 py-1.5 bg-secondary text-white rounded-full text-xs font-bold">${h12}:${String(mm).padStart(2,'0')}${ampm}</button>`;
+      }).join('');
+      listEl.querySelectorAll('[data-empty-slot]').forEach(btn => {
+        btn.addEventListener('click', () => { toggle(btn.dataset.emptySlot); });
+      });
+    } else {
+      suggestionDiv.classList.add('hidden');
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -267,12 +365,55 @@
 
     document.getElementById('hub').classList.remove('hidden');
 
-    /* find first week with poll slots */
+    /* check for new poll */
+    const win = Roster.getPollWindow();
+    if (win && !Roster.hasSeenPoll(student.id, win.id)) {
+      const popup = document.getElementById('poll-popup');
+      document.getElementById('poll-popup-desc').textContent = `${win.startDate} → ${win.endDate} · Mark your availability for these ${pollSlotKeys.length} slots.`;
+      popup.classList.remove('hidden');
+      document.getElementById('poll-popup-btn').addEventListener('click', () => {
+        Roster.markPollSeen(student.id, win.id);
+        popup.classList.add('hidden');
+      });
+    }
+
     const firstPollDate = Roster.parseSlotKey(pollSlotKeys[0]);
     weekStart = startOfWeek(firstPollDate);
 
     document.getElementById('prev-week').addEventListener('click', () => { weekStart = addDays(weekStart, -7); buildWeekGrid(); });
     document.getElementById('next-week').addEventListener('click', () => { weekStart = addDays(weekStart,  7); buildWeekGrid(); });
+
+    document.getElementById('cancel-reason').addEventListener('click', () => {
+      document.getElementById('reason-modal').classList.add('hidden');
+    });
+
+    /* submit button */
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      Roster.markSubmitted(student.id);
+      const overlay = document.getElementById('success-overlay');
+      overlay.classList.remove('hidden');
+      setTimeout(() => { overlay.classList.add('hidden'); }, 2500);
+    });
+
+    /* print button */
+    document.getElementById('print-btn').addEventListener('click', () => {
+      const win = document.querySelector('main > section#hub');
+      const printWin = window.open('', '', 'width=900,height=700');
+      printWin.document.write(`<html><head><title>My Availability - Print</title>
+        <style>
+          body { font-family: sans-serif; padding: 20px; }
+          h2 { color: #15157d; }
+          table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+          th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+          th { background: #e1e0ff; color: #15157d; font-weight: bold; }
+        </style>
+      </head><body>`);
+      printWin.document.write('<h2>' + student.name + ' (' + student.scriptId + ')</h2>');
+      printWin.document.write(document.getElementById('calendar-grid').innerHTML);
+      printWin.document.write('</body></html>');
+      printWin.document.close();
+      setTimeout(() => printWin.print(), 500);
+    });
 
     buildWeekGrid();
   });

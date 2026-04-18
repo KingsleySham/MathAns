@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// The Orchestral Frame — cast roster
+//
+// All cast data lives in a single document at /state/main so that every page
+// can subscribe to the same snapshot (ledger, availability, rehearsals,
+// check-ins, leaves, notices, poll, present-mode submissions).
+//
+// Write access is intentionally open: the production tool is a shared, trusted
+// environment (the admin passcode is the gate) and the Firestore layer just
+// mirrors localStorage state. If you need stricter access, put Firebase Auth
+// in front and replace the `allow write` rule with a custom claim check.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /state/{docId} {
+      allow read: if true;
+      allow write: if
+        request.resource.data.keys().size() < 64 &&
+        request.resource.data.size() < 900 * 1024;  // < ~900 KB per doc
+    }
+
+    match /presentSubmissions/{subId} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasAll(['name', 'slots', 'createdAt']) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() < 120 &&
+        request.resource.data.slots is list &&
+        request.resource.data.slots.size() < 200;
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

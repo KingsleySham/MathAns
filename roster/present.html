@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sign Up | The Orchestral Frame</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="roster.js" defer></script>
+<script type="module" src="firebase-init.js"></script>
+<script>
+  tailwind.config = { darkMode: "class", theme: { extend: {
+    colors: {
+      "primary": "#15157d", "primary-container": "#2e3192", "primary-fixed": "#e1e0ff", "primary-fixed-dim": "#c0c1ff",
+      "on-primary": "#ffffff", "on-primary-fixed-variant": "#373a9b",
+      "secondary": "#7c44a8", "secondary-fixed": "#f2daff",
+      "error": "#ba1a1a", "error-container": "#ffdad6",
+      "surface": "#f9f9fb", "surface-container-low": "#f3f3f5", "surface-container-lowest": "#ffffff",
+      "surface-container-high": "#e8e8ea", "on-surface": "#1a1c1d", "on-surface-variant": "#464652",
+      "outline": "#777683", "outline-variant": "#c7c5d4",
+      "inverse-surface": "#2f3132", "inverse-on-surface": "#f0f0f2"
+    },
+    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+    fontFamily: { "headline": ["Epilogue"], "body": ["Manrope"], "label": ["Manrope"] }
+  }}}
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; }
+  .slot { transition: background .15s, color .15s; cursor: pointer; user-select: none; }
+  .slot.available { background: #15157d; color: white; border-color: #15157d; }
+  .slot.blocked  { background: #ffdad6; color: #ba1a1a; border-color: #ba1a1a; text-decoration: line-through; }
+  .slot:not(.available):not(.blocked):hover { background: #e1e0ff; }
+  @keyframes tick-pop { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+  .green-tick { animation: tick-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen flex items-center justify-center p-8">
+
+<!-- STEP 1: Welcome + Name + Disclaimer -->
+<div id="step-welcome" class="max-w-md w-full bg-white rounded-[2rem] p-8 shadow-lg">
+  <div class="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-6">
+    <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1;">event_available</span>
+  </div>
+  <h1 class="font-headline text-3xl font-extrabold text-primary text-center mb-2">Availability Sign-up</h1>
+  <p class="text-sm text-on-surface-variant text-center mb-8">Mark your availability for upcoming rehearsals.</p>
+
+  <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Your name</label>
+  <input id="name-input" type="text" placeholder="Full name" class="w-full bg-surface-container-high border-none rounded-xl p-4 mb-4 focus:ring-2 focus:ring-primary-fixed"/>
+
+  <label class="flex items-start gap-3 cursor-pointer mb-6">
+    <input id="disclaimer-cb" type="checkbox" class="w-5 h-5 rounded text-primary focus:ring-primary-fixed mt-1"/>
+    <span class="text-xs text-on-surface-variant">I understand my availability will be used by the production team to schedule rehearsals.</span>
+  </label>
+
+  <button id="continue-btn" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+    <span class="material-symbols-outlined">arrow_forward</span> Continue
+  </button>
+  <p class="text-xs text-on-surface-variant text-center mt-4">No account needed. One-time sign-up.</p>
+</div>
+
+<!-- STEP 2: Slot picker -->
+<div id="step-slots" class="hidden max-w-4xl w-full bg-white rounded-[2rem] p-8 shadow-lg">
+  <div class="mb-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="font-headline text-3xl font-extrabold text-primary">Pick your slots</h1>
+        <p class="text-sm text-on-surface-variant mt-1" id="poll-dates">—</p>
+      </div>
+      <button id="back-btn" class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full text-xs font-bold">← Back</button>
+    </div>
+
+    <div class="text-sm text-on-surface-variant mb-6">
+      Tap slots to mark yourself <span class="font-bold text-primary">available</span> (blue) or <span class="font-bold text-error">unavailable</span> (red).
+    </div>
+  </div>
+
+  <div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-auto mb-8">
+    <div id="calendar-grid"></div>
+  </div>
+
+  <div class="flex justify-between items-center gap-4">
+    <div class="flex-1">
+      <p class="text-xs text-on-surface-variant mb-2">Marked so far:</p>
+      <div class="flex gap-4">
+        <div><span class="px-3 py-1 rounded-full bg-primary text-white text-xs font-bold"><span id="stat-avail">0</span> available</span></div>
+        <div><span class="px-3 py-1 rounded-full bg-error-container text-error text-xs font-bold"><span id="stat-block">0</span> unavailable</span></div>
+      </div>
+    </div>
+    <button id="submit-btn" class="px-8 py-4 bg-primary text-white rounded-full font-bold flex items-center gap-2 shadow-lg active:scale-95 transition-all">
+      <span class="material-symbols-outlined">check</span> Submit
+    </button>
+  </div>
+</div>
+
+<!-- STEP 3: Success -->
+<div id="step-success" class="hidden max-w-md w-full text-center">
+  <div class="w-24 h-24 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-6 green-tick">
+    <span class="material-symbols-outlined text-5xl text-white" style="font-variation-settings:'FILL' 1;">check_circle</span>
+  </div>
+  <h2 class="font-headline text-3xl font-extrabold text-on-surface mb-2">Submitted!</h2>
+  <p class="text-sm text-on-surface-variant mb-8">Your availability has been recorded. Thank you!</p>
+  <button id="next-person-btn" class="w-full py-4 bg-primary text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg">
+    <span class="material-symbols-outlined">group_add</span> Next person
+  </button>
+</div>
+
+<script>
+  const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  let currentName = '';
+  let currentSlots = { available: [], blocked: [] };
+  let pollSlotKeys = [];
+  let weekStart = null;
+
+  function startOfWeek(d) {
+    const c = new Date(d); c.setHours(0,0,0,0);
+    c.setDate(c.getDate() - c.getDay()); return c;
+  }
+  function addDays(d, n) { const c = new Date(d); c.setDate(c.getDate() + n); return c; }
+
+  function buildWeekGrid() {
+    if (!pollSlotKeys.length) return;
+    const pollSet = new Set(pollSlotKeys);
+    const days = [];
+    for (let i = 0; i < 7; i++) days.push(addDays(weekStart, i));
+
+    const weekPollSlots = pollSlotKeys.filter(k => {
+      const d = Roster.parseSlotKey(k);
+      return d >= weekStart && d < addDays(weekStart, 7);
+    });
+
+    const grid = document.getElementById('calendar-grid');
+    if (!weekPollSlots.length) {
+      grid.innerHTML = '<div class="p-10 text-center text-on-surface-variant">No slots this week</div>';
+      return;
+    }
+
+    const hoursSet = new Set(weekPollSlots.map(k => { const d = Roster.parseSlotKey(k); return d.getHours() * 60 + d.getMinutes(); }));
+    const sortedMinutes = [...hoursSet].sort((a,b) => a-b);
+    const activeDayIndices = [...new Set(weekPollSlots.map(k => Roster.parseSlotKey(k).getDay()))].sort((a,b)=>a-b);
+
+    let html = `<table class="w-full border-collapse text-xs">`;
+    html += '<thead><tr><th class="w-20 p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-right">Time</th>';
+    activeDayIndices.forEach(di => {
+      const dayDate = days[di];
+      html += `<th class="p-3 bg-surface-container-low border-b border-r border-outline-variant/10 text-center">
+        <div class="text-[10px] uppercase tracking-widest">${DAY_NAMES[di]}</div>
+        <div class="text-2xl font-headline font-extrabold text-primary">${dayDate.getDate()}</div>
+      </th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    sortedMinutes.forEach(totalMin => {
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      const ampm = h >= 12 ? 'pm' : 'am';
+      const h12 = ((h + 11) % 12) + 1;
+      const timeLabel = m === 0 ? `${h12}:00${ampm}` : `${h12}:30${ampm}`;
+      html += `<tr>`;
+      html += `<td class="p-3 text-right text-on-surface-variant border-r border-b border-outline-variant/10 font-medium">${m === 0 ? timeLabel : ''}</td>`;
+      activeDayIndices.forEach(di => {
+        const dayDate = days[di];
+        const key = Roster.buildSlotKey(dayDate, h, m);
+        if (!pollSet.has(key)) {
+          html += `<td class="p-2 border-r border-b border-outline-variant/10 bg-surface-container-highest/30"></td>`;
+          return;
+        }
+        const isAvail = currentSlots.available.includes(key);
+        const isBlocked = currentSlots.blocked.includes(key);
+        const cls = isAvail ? 'available' : isBlocked ? 'blocked' : '';
+        html += `<td class="p-1 border-r border-b border-outline-variant/10">
+          <button class="slot w-full h-12 rounded-lg text-xs font-bold border border-outline-variant/20 ${cls}" data-key="${key}">${timeLabel}</button>
+        </td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('.slot[data-key]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        const isAvail = currentSlots.available.includes(key);
+        const isBlocked = currentSlots.blocked.includes(key);
+        currentSlots.available = currentSlots.available.filter(k => k !== key);
+        currentSlots.blocked = currentSlots.blocked.filter(k => k !== key);
+        if (!isAvail && !isBlocked) currentSlots.available.push(key);
+        else if (isAvail) currentSlots.blocked.push(key);
+        buildWeekGrid();
+        updateStats();
+      });
+    });
+    updateStats();
+  }
+
+  function updateStats() {
+    document.getElementById('stat-avail').textContent = currentSlots.available.length;
+    document.getElementById('stat-block').textContent = currentSlots.blocked.length;
+  }
+
+  function showSuccess() {
+    document.getElementById('step-welcome').classList.add('hidden');
+    document.getElementById('step-slots').classList.add('hidden');
+    document.getElementById('step-success').classList.remove('hidden');
+  }
+
+  function reset() {
+    currentName = '';
+    currentSlots = { available: [], blocked: [] };
+    document.getElementById('name-input').value = '';
+    document.getElementById('disclaimer-cb').checked = false;
+    document.getElementById('step-welcome').classList.remove('hidden');
+    document.getElementById('step-slots').classList.add('hidden');
+    document.getElementById('step-success').classList.add('hidden');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    Roster.ensureSeed();
+    pollSlotKeys = Roster.getPollSlotKeys();
+    const win = Roster.getPollWindow();
+
+    if (!pollSlotKeys.length) {
+      document.body.innerHTML = '<div class="text-center p-10"><p class="text-xl text-on-surface-variant">No active poll. Admin hasn\'t opened sign-ups yet.</p></div>';
+      return;
+    }
+
+    if (win) {
+      document.getElementById('poll-dates').textContent = `${win.startDate} → ${win.endDate}`;
+    }
+
+    const firstPollDate = Roster.parseSlotKey(pollSlotKeys[0]);
+    weekStart = startOfWeek(firstPollDate);
+
+    document.getElementById('name-input').addEventListener('input', (e) => {
+      currentName = e.target.value.trim();
+      document.getElementById('continue-btn').disabled = !currentName || !document.getElementById('disclaimer-cb').checked;
+    });
+
+    document.getElementById('disclaimer-cb').addEventListener('change', () => {
+      document.getElementById('continue-btn').disabled = !currentName || !document.getElementById('disclaimer-cb').checked;
+    });
+
+    document.getElementById('continue-btn').addEventListener('click', () => {
+      if (!currentName) return;
+      document.getElementById('step-welcome').classList.add('hidden');
+      document.getElementById('step-slots').classList.remove('hidden');
+      buildWeekGrid();
+    });
+
+    document.getElementById('back-btn').addEventListener('click', reset);
+
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      Roster.addPresentSubmission({
+        name: currentName,
+        slots: currentSlots,
+        slotCount: currentSlots.available.length + currentSlots.blocked.length
+      });
+      showSuccess();
+    });
+
+    document.getElementById('next-person-btn').addEventListener('click', reset);
+  });
+</script>
+</body>
+</html>
