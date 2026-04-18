@@ -36,7 +36,19 @@
 </head>
 <body class="bg-surface font-body text-on-surface antialiased">
 
-<aside class="h-screen w-64 fixed left-0 flex flex-col border-r border-slate-200/20 bg-slate-50 font-['Manrope'] font-medium text-sm tracking-wide z-40">
+<!-- Mobile top bar -->
+<header class="md:hidden sticky top-0 z-50 bg-slate-50 border-b border-slate-200/30 px-4 py-3 flex items-center justify-between">
+  <div>
+    <h2 class="text-indigo-900 font-bold text-sm tracking-tighter">Main Stage</h2>
+    <p class="text-slate-500 text-[8px] uppercase tracking-[0.2em]">Support & Tutorial</p>
+  </div>
+  <div class="flex items-center gap-1">
+    <a href="profile.html" class="p-2 text-slate-500 hover:text-primary" aria-label="Hub"><span class="material-symbols-outlined">account_circle</span></a>
+    <button id="signout-mobile" class="p-2 text-slate-500 hover:text-error" aria-label="Sign out"><span class="material-symbols-outlined">logout</span></button>
+  </div>
+</header>
+
+<aside class="h-screen w-64 fixed left-0 hidden md:flex flex-col border-r border-slate-200/20 bg-slate-50 font-['Manrope'] font-medium text-sm tracking-wide z-40">
   <div class="p-8">
     <h2 class="text-indigo-900 font-bold text-xl tracking-tighter">Main Stage</h2>
     <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em] mt-1">Production HQ</p>
@@ -52,36 +64,36 @@
   </div>
 </aside>
 
-<main class="ml-64 min-h-screen flex flex-col">
-  <header class="pt-20 px-8 md:px-24">
-    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Support</span>
-    <h1 class="font-headline text-5xl md:text-7xl font-black tracking-tighter text-on-surface leading-[0.95] max-w-3xl">
+<main class="md:ml-64 min-h-screen flex flex-col">
+  <header class="pt-8 md:pt-20 px-4 sm:px-8 md:px-16 lg:px-24">
+    <span class="font-label text-[10px] sm:text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Support</span>
+    <h1 class="font-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-on-surface leading-[0.95] max-w-3xl">
       Getting <br/><span class="text-primary-container">started.</span>
     </h1>
-    <p class="mt-6 max-w-xl text-on-surface-variant text-base leading-relaxed">A five-step walkthrough of the roster, from your first Script ID to check-in day.</p>
-    <div id="first-time-banner" class="hidden mt-8 p-4 rounded-2xl bg-primary-fixed border border-primary/20 flex items-center gap-3 max-w-2xl">
-      <span class="material-symbols-outlined text-primary">celebration</span>
-      <p class="text-sm text-primary"><span class="font-bold">Welcome aboard.</span> Take a minute to learn the ropes — your rehearsal hub is waiting at the end.</p>
+    <p class="mt-4 sm:mt-6 max-w-xl text-on-surface-variant text-sm sm:text-base leading-relaxed">A five-step walkthrough of the roster, from your first Script ID to check-in day.</p>
+    <div id="first-time-banner" class="hidden mt-4 sm:mt-8 p-4 rounded-xl sm:rounded-2xl bg-primary-fixed border border-primary/20 flex items-start sm:items-center gap-3 max-w-2xl">
+      <span class="material-symbols-outlined text-primary shrink-0">celebration</span>
+      <p class="text-xs sm:text-sm text-primary"><span class="font-bold">Welcome aboard.</span> Take a minute to learn the ropes — your rehearsal hub is waiting at the end.</p>
     </div>
   </header>
 
-  <section class="flex-1 px-8 md:px-24 py-16">
+  <section class="flex-1 px-4 sm:px-8 md:px-16 lg:px-24 py-8 md:py-16">
     <div class="max-w-5xl mx-auto space-y-6">
 
-      <div class="reveal step-card bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex gap-6 items-start">
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-2xl font-extrabold shrink-0">01</div>
+      <div class="reveal step-card bg-surface-container-lowest p-4 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+        <div class="w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-lg sm:text-xl md:text-2xl font-extrabold shrink-0">01</div>
         <div class="flex-1">
-          <div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-primary">fingerprint</span><h3 class="font-headline text-2xl font-extrabold text-primary">Your Script ID is your key</h3></div>
-          <p class="text-on-surface-variant leading-relaxed">After onboarding we assign you a Script ID like <span class="font-mono text-primary">/student01</span>. Use it on the landing page to sign back in from any device. No password, no email — just your ID.</p>
+          <div class="flex items-start sm:items-center gap-2 mb-2 flex-col sm:flex-row"><span class="material-symbols-outlined text-primary">fingerprint</span><h3 class="font-headline text-lg sm:text-xl md:text-2xl font-extrabold text-primary">Your Script ID is your key</h3></div>
+          <p class="text-on-surface-variant leading-relaxed text-sm">After onboarding we assign you a Script ID like <span class="font-mono text-primary">/student01</span>. Use it on the landing page to sign back in from any device. No password, no email — just your ID.</p>
         </div>
       </div>
 
-      <div class="reveal step-card bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex gap-6 items-start">
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-2xl font-extrabold shrink-0">02</div>
+      <div class="reveal step-card bg-surface-container-lowest p-4 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+        <div class="w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-lg sm:text-xl md:text-2xl font-extrabold shrink-0">02</div>
         <div class="flex-1">
-          <div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-primary">event_available</span><h3 class="font-headline text-2xl font-extrabold text-primary">Mark your availability</h3></div>
-          <p class="text-on-surface-variant leading-relaxed mb-4">On the Availability page you'll see a week view. <span class="font-bold">Tap a slot once</span> to mark yourself available, <span class="font-bold">tap again</span> to mark it blocked, and <span class="font-bold">tap a third time</span> to clear.</p>
-          <div class="flex gap-2 text-xs">
+          <div class="flex items-start sm:items-center gap-2 mb-2 flex-col sm:flex-row"><span class="material-symbols-outlined text-primary">event_available</span><h3 class="font-headline text-lg sm:text-xl md:text-2xl font-extrabold text-primary">Mark your availability</h3></div>
+          <p class="text-on-surface-variant leading-relaxed mb-4 text-sm">On the Availability page you'll see a week view. <span class="font-bold">Tap a slot once</span> to mark yourself available, <span class="font-bold">tap again</span> to mark it blocked, and <span class="font-bold">tap a third time</span> to clear.</p>
+          <div class="flex gap-2 flex-wrap text-[10px] sm:text-xs">
             <span class="px-3 py-1 rounded-full bg-primary text-white font-bold">available</span>
             <span class="px-3 py-1 rounded-full bg-error-container text-error font-bold line-through">blocked</span>
             <span class="px-3 py-1 rounded-full bg-white border border-outline-variant/20 text-on-surface-variant font-bold">empty</span>
@@ -90,32 +102,32 @@
         </div>
       </div>
 
-      <div class="reveal step-card bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex gap-6 items-start">
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-2xl font-extrabold shrink-0">03</div>
+      <div class="reveal step-card bg-surface-container-lowest p-4 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+        <div class="w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-lg sm:text-xl md:text-2xl font-extrabold shrink-0">03</div>
         <div class="flex-1">
-          <div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-primary">auto_awesome</span><h3 class="font-headline text-2xl font-extrabold text-primary">Let the system recommend</h3></div>
-          <p class="text-on-surface-variant leading-relaxed">Slots highlighted in purple are the ones most of the cast can attend. Tap a recommendation to instantly mark yourself available. Admins use the same ranking on the Dashboard to lock in a rehearsal.</p>
+          <div class="flex items-start sm:items-center gap-2 mb-2 flex-col sm:flex-row"><span class="material-symbols-outlined text-primary">auto_awesome</span><h3 class="font-headline text-lg sm:text-xl md:text-2xl font-extrabold text-primary">Let the system recommend</h3></div>
+          <p class="text-on-surface-variant leading-relaxed text-sm">Slots highlighted in purple are the ones most of the cast can attend. Tap a recommendation to instantly mark yourself available. Admins use the same ranking on the Dashboard to lock in a rehearsal.</p>
         </div>
       </div>
 
-      <div class="reveal step-card bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex gap-6 items-start">
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-2xl font-extrabold shrink-0">04</div>
+      <div class="reveal step-card bg-surface-container-lowest p-4 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+        <div class="w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-lg sm:text-xl md:text-2xl font-extrabold shrink-0">04</div>
         <div class="flex-1">
-          <div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-primary">login</span><h3 class="font-headline text-2xl font-extrabold text-primary">Check in at rehearsal</h3></div>
-          <p class="text-on-surface-variant leading-relaxed">On your Rehearsal Hub you'll see a live countdown to the next session. From 30 minutes before the call time, the <span class="font-bold">Check in</span> button activates — one tap to log your arrival.</p>
+          <div class="flex items-start sm:items-center gap-2 mb-2 flex-col sm:flex-row"><span class="material-symbols-outlined text-primary">login</span><h3 class="font-headline text-lg sm:text-xl md:text-2xl font-extrabold text-primary">Check in at rehearsal</h3></div>
+          <p class="text-on-surface-variant leading-relaxed text-sm">On your Rehearsal Hub you'll see a live countdown to the next session. From 30 minutes before the call time, the <span class="font-bold">Check in</span> button activates — one tap to log your arrival.</p>
         </div>
       </div>
 
-      <div class="reveal step-card bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex gap-6 items-start">
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-2xl font-extrabold shrink-0">05</div>
+      <div class="reveal step-card bg-surface-container-lowest p-4 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_10px_30px_rgba(26,28,29,0.05)] border border-outline-variant/10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+        <div class="w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-headline text-lg sm:text-xl md:text-2xl font-extrabold shrink-0">05</div>
         <div class="flex-1">
-          <div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-primary">event_busy</span><h3 class="font-headline text-2xl font-extrabold text-primary">Requesting leave</h3></div>
-          <p class="text-on-surface-variant leading-relaxed">Can't make it? Tap <span class="font-bold">Request leave</span>, give a short reason, and the production team will see it on the Dashboard. Reasons are only visible to admins.</p>
+          <div class="flex items-start sm:items-center gap-2 mb-2 flex-col sm:flex-row"><span class="material-symbols-outlined text-primary">event_busy</span><h3 class="font-headline text-lg sm:text-xl md:text-2xl font-extrabold text-primary">Requesting leave</h3></div>
+          <p class="text-on-surface-variant leading-relaxed text-sm">Can't make it? Tap <span class="font-bold">Request leave</span>, give a short reason, and the production team will see it on the Dashboard. Reasons are only visible to admins.</p>
         </div>
       </div>
 
-      <div class="reveal p-8 rounded-[2rem] bg-gradient-to-br from-primary-fixed to-secondary-fixed border border-outline-variant/10">
-        <h3 class="font-headline text-2xl font-extrabold text-primary mb-3">Frequently asked</h3>
+      <div class="reveal p-4 sm:p-6 md:p-8 rounded-[1.5rem] sm:rounded-[2rem] bg-gradient-to-br from-primary-fixed to-secondary-fixed border border-outline-variant/10">
+        <h3 class="font-headline text-lg sm:text-xl md:text-2xl font-extrabold text-primary mb-3">Frequently asked</h3>
         <details class="py-3 border-b border-outline-variant/20 group" open>
           <summary class="flex justify-between items-center cursor-pointer font-bold text-on-surface text-sm">Will my name be visible to other cast members? <span class="material-symbols-outlined text-primary group-open:rotate-180 transition">expand_more</span></summary>
           <p class="text-sm text-on-surface-variant mt-2 leading-relaxed">No — only the production admin sees the full cast ledger. On shared views, your availability is aggregated anonymously.</p>
@@ -167,7 +179,10 @@
       Roster.markTutorialSeen(student.id);
       location.href = 'profile.html';
     });
-    document.getElementById('signout').addEventListener('click', () => { Roster.signOut(); location.href = 'index.html'; });
+    const signOut = () => { Roster.signOut(); location.href = 'index.html'; };
+    document.getElementById('signout').addEventListener('click', signOut);
+    const soMobile = document.getElementById('signout-mobile');
+    if (soMobile) soMobile.addEventListener('click', signOut);
 
     if (!isFirst) Roster.markTutorialSeen(student.id);
   });
