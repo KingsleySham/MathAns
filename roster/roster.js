@@ -113,6 +113,19 @@
       records[rehearsalId] = records[rehearsalId] || {};
       records[rehearsalId][studentId] = { status, at: Date.now() };
       writeJSON(KEYS.ATTENDANCE, records);
+      /* keep checkins and attendance in sync — admin marking present
+         also records a check-in; removing present clears it */
+      const checkIns = Roster.getCheckIns();
+      if (status === 'present') {
+        checkIns[studentId] = checkIns[studentId] || {};
+        if (!checkIns[studentId][rehearsalId]) {
+          checkIns[studentId][rehearsalId] = Date.now();
+          writeJSON(KEYS.CHECKINS, checkIns);
+        }
+      } else if (checkIns[studentId] && checkIns[studentId][rehearsalId]) {
+        delete checkIns[studentId][rehearsalId];
+        writeJSON(KEYS.CHECKINS, checkIns);
+      }
     },
     getStudentAttendance(studentId) {
       const records = Roster.getAttendance();
@@ -506,7 +519,9 @@
     },
     hasCheckedIn(studentId, rehearsalId) {
       const all = Roster.getCheckIns();
-      return !!(all[studentId] && all[studentId][rehearsalId]);
+      if (all[studentId] && all[studentId][rehearsalId]) return true;
+      const att = Roster.getAttendance()[rehearsalId];
+      return !!(att && att[studentId] && att[studentId].status === 'present');
     },
 
     getLeaves() { return readJSON(KEYS.LEAVES, []); },
