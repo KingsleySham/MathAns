@@ -218,8 +218,10 @@
     check.addEventListener('change', updateBtn);
     btn.addEventListener('click', () => {
       if (btn.disabled) return;
+      btn.disabled = true;
       Roster.markLegalAccepted(student.id);
-      location.href = Roster.hasSeenTutorial(student.id) ? 'profile.html' : 'support.html?first=1';
+      const nextUrl = Roster.hasSeenTutorial(student.id) ? 'profile.html' : 'support.html?first=1';
+      setTimeout(() => { location.href = nextUrl; }, 100);
     });
 
     document.getElementById('signout').addEventListener('click', () => { Roster.signOut(); location.href = 'index.html'; });

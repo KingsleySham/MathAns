@@ -44,8 +44,11 @@ try {
   db = getFirestore(app);
   stateRef = doc(db, 'state', 'main');
 
+  let initialSyncDone = false;
+
   onSnapshot(stateRef, (snap) => {
     if (!snap.exists()) return;
+    if (!initialSyncDone) return;
     suspendWrites = true;
     try { applySnapshot(snap.data()); } finally { suspendWrites = false; }
   }, (err) => {
@@ -53,10 +56,23 @@ try {
   });
 
   getDoc(stateRef).then((snap) => {
-    if (!snap.exists()) setDoc(stateRef, snapshotLocal(), { merge: true });
+    const localData = snapshotLocal();
+    const remoteData = snap.exists() ? snap.data() : {};
+
+    // Merge: prefer local if it's newer or more complete
+    let merged = { ...remoteData };
+    STATE_KEYS.forEach(k => {
+      if (localData[k]) {
+        merged[k] = localData[k];
+      }
+    });
+
+    applySnapshot(merged);
+    initialSyncDone = true;
     ready = true;
     window.dispatchEvent(new CustomEvent('firebase-ready'));
   }).catch(() => {
+    initialSyncDone = true;
     ready = true;
     window.dispatchEvent(new CustomEvent('firebase-ready'));
   });
