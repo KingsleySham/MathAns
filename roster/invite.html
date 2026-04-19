@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>You're invited | The Redemption of the White Queen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="roster.js" defer></script>
+<script type="module" src="firebase-init.js"></script>
+<script>
+  tailwind.config = { darkMode:"class", theme:{ extend:{
+    colors:{
+      "primary":"#15157d","primary-container":"#2e3192","primary-fixed":"#e1e0ff","primary-fixed-dim":"#c0c1ff",
+      "on-primary":"#ffffff","secondary":"#7c44a8","secondary-fixed":"#f2daff",
+      "error":"#ba1a1a","error-container":"#ffdad6",
+      "surface":"#f9f9fb","surface-container-low":"#f3f3f5","surface-container-lowest":"#ffffff",
+      "surface-container-high":"#e8e8ea","on-surface":"#1a1c1d","on-surface-variant":"#464652",
+      "outline":"#777683","outline-variant":"#c7c5d4",
+      "inverse-surface":"#2f3132","inverse-on-surface":"#f0f0f2"
+    },
+    borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},
+    fontFamily:{"headline":["Epilogue"],"body":["Manrope"],"label":["Manrope"]}
+  }}}
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400; }
+  .step { display:none; }
+  .step.active { display:flex; }
+  @keyframes pop-in {
+    0%   { transform:scale(0.6) translateY(30px); opacity:0; }
+    70%  { transform:scale(1.04) translateY(-4px); opacity:1; }
+    100% { transform:scale(1) translateY(0); opacity:1; }
+  }
+  @keyframes fade-up { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes tick-draw {
+    0%   { stroke-dashoffset:100; }
+    100% { stroke-dashoffset:0; }
+  }
+  @keyframes circle-grow {
+    0%   { transform:scale(0); opacity:0; }
+    60%  { transform:scale(1.1); opacity:1; }
+    100% { transform:scale(1); opacity:1; }
+  }
+  @keyframes confetti-fall {
+    0%   { transform:translateY(-80px) rotate(0deg); opacity:1; }
+    100% { transform:translateY(100vh) rotate(720deg); opacity:0; }
+  }
+  .pop-in   { animation:pop-in .7s cubic-bezier(.34,1.56,.64,1) forwards; }
+  .fade-up  { opacity:0; animation:fade-up .5s ease forwards; }
+  .confetti { position:fixed; pointer-events:none; width:10px; height:14px; animation:confetti-fall 3s linear forwards; }
+  .tick-svg circle { animation:circle-grow .5s cubic-bezier(.34,1.56,.64,1) .1s both; }
+  .tick-svg path   { stroke-dasharray:100; stroke-dashoffset:100; animation:tick-draw .4s ease .6s both; }
+  .slot { transition:background .12s,color .12s; cursor:pointer; user-select:none; }
+  .slot.available { background:#15157d; color:white; border-color:#15157d; }
+  .slot.blocked   { background:#ffdad6; color:#ba1a1a; border-color:#ba1a1a; text-decoration:line-through; }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen">
+
+<!-- STEP 1: Welcome -->
+<div id="step-welcome" class="step active min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-br from-primary to-primary-container relative overflow-hidden">
+  <div id="confetti-host" class="fixed inset-0 pointer-events-none z-0"></div>
+  <div class="relative z-10 text-center max-w-md w-full">
+    <div class="pop-in inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-white/20 mb-6">
+      <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings:'FILL' 1;">theater_comedy</span>
+    </div>
+    <p class="fade-up text-white/70 text-xs font-bold uppercase tracking-[0.3em] mb-3" style="animation-delay:.3s">The Redemption of the White Queen</p>
+    <h1 id="welcome-name" class="fade-up font-headline text-5xl sm:text-6xl font-black text-white tracking-tighter leading-none mb-3" style="animation-delay:.5s">—</h1>
+    <p id="welcome-role" class="fade-up text-white/80 text-lg font-medium mb-10" style="animation-delay:.7s">—</p>
+    <button id="welcome-continue" class="fade-up px-10 py-4 bg-white text-primary rounded-full font-bold text-base shadow-2xl active:scale-95 transition-all" style="animation-delay:1s">
+      Get started <span class="material-symbols-outlined align-middle text-sm">arrow_forward</span>
+    </button>
+  </div>
+</div>
+
+<!-- STEP 2: Tour + Legal -->
+<div id="step-tour" class="step min-h-screen flex-col items-center justify-center p-6">
+  <div class="max-w-lg w-full">
+    <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-primary mb-2">Quick tour</p>
+    <h2 class="font-headline text-3xl sm:text-4xl font-extrabold text-on-surface tracking-tighter mb-6">How it works.</h2>
+    <div class="space-y-3 mb-8">
+      <div class="flex gap-4 items-start p-5 bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm">
+        <span class="material-symbols-outlined text-primary text-2xl shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">fingerprint</span>
+        <div><p class="font-bold text-sm text-on-surface">Your Script ID is your key</p><p class="text-xs text-on-surface-variant mt-1">We'll give you a unique ID at the end. Use it to sign back in on any device — no password needed.</p></div>
+      </div>
+      <div class="flex gap-4 items-start p-5 bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm">
+        <span class="material-symbols-outlined text-primary text-2xl shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">event_available</span>
+        <div><p class="font-bold text-sm text-on-surface">Tap slots to mark availability</p><p class="text-xs text-on-surface-variant mt-1">Tap once = available, tap again = blocked, third tap = clear. You can change it anytime.</p></div>
+      </div>
+      <div class="flex gap-4 items-start p-5 bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm">
+        <span class="material-symbols-outlined text-primary text-2xl shrink-0 mt-0.5" style="font-variation-settings:'FILL' 1;">groups</span>
+        <div><p class="font-bold text-sm text-on-surface">Admin confirms your rehearsals</p><p class="text-xs text-on-surface-variant mt-1">Your director picks the best times from everyone's responses and schedules rehearsals accordingly.</p></div>
+      </div>
+    </div>
+    <label class="flex items-start gap-3 cursor-pointer mb-6 p-4 bg-primary-fixed rounded-2xl border border-primary/20">
+      <input id="legal-cb" type="checkbox" class="w-5 h-5 rounded text-primary focus:ring-primary-fixed mt-0.5 shrink-0"/>
+      <span class="text-sm text-primary leading-relaxed"><span class="font-bold">Privacy notice:</span> I understand my name, role, and availability will be used solely for scheduling <em>The Redemption of the White Queen</em>. Data is stored locally and never shared with third parties.</span>
+    </label>
+    <button id="tour-continue" disabled class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all">
+      I agree &amp; continue <span class="material-symbols-outlined align-middle text-sm">arrow_forward</span>
+    </button>
+  </div>
+</div>
+
+<!-- STEP 3: Availability -->
+<div id="step-avail" class="step min-h-screen flex-col">
+  <div class="sticky top-0 z-10 bg-surface border-b border-outline-variant/10 px-4 py-3 flex items-center justify-between">
+    <div>
+      <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Step 3 of 3</p>
+      <p class="font-headline font-extrabold text-lg text-on-surface tracking-tight">Your availability</p>
+    </div>
+    <div class="flex gap-2 text-xs font-bold">
+      <span class="px-2 py-1 rounded-full bg-primary text-white"><span id="stat-avail">0</span> avail</span>
+      <span class="px-2 py-1 rounded-full bg-error-container text-error"><span id="stat-block">0</span> blocked</span>
+    </div>
+  </div>
+  <div class="flex-1 p-4 max-w-4xl mx-auto w-full">
+    <p class="text-sm text-on-surface-variant mb-4">Tap each slot to mark it <span class="font-bold text-primary">available</span> or <span class="font-bold text-error">blocked</span>. Leave blank if unsure.</p>
+    <div class="flex items-center justify-between mb-4">
+      <button id="prev-week" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined">chevron_left</span></button>
+      <span id="week-label" class="font-bold font-headline text-sm text-primary text-center min-w-[12rem]">—</span>
+      <button id="next-week" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined">chevron_right</span></button>
+    </div>
+    <div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-x-auto mb-6">
+      <div id="calendar-grid"></div>
+    </div>
+    <button id="submit-avail" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+      <span class="material-symbols-outlined">check_circle</span> Confirm my availability
+    </button>
+  </div>
+</div>
+
+<!-- STEP 4: Success -->
+<div id="step-success" class="step min-h-screen flex-col items-center justify-center p-6 text-center">
+  <div class="max-w-sm w-full">
+    <div class="flex justify-center mb-6">
+      <svg class="tick-svg w-24 h-24" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" fill="#22c55e" stroke="none"/>
+        <path d="M28 52 L44 68 L72 36" fill="none" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h2 id="success-name" class="font-headline text-4xl font-extrabold text-on-surface tracking-tighter mb-2">You're all set!</h2>
+    <p class="text-on-surface-variant text-sm mb-8">Your availability has been submitted to the production team.</p>
+    <div class="bg-gradient-to-br from-primary to-primary-container rounded-[2rem] p-8 text-white shadow-xl mb-6">
+      <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-primary-fixed-dim mb-2">Your Script ID</p>
+      <p id="success-id" class="font-headline text-5xl font-extrabold tracking-tighter mb-3">—</p>
+      <p class="text-xs text-primary-fixed-dim">Save this — use it to sign in again from any device.</p>
+    </div>
+    <button id="go-hub" class="w-full py-4 bg-on-surface text-surface rounded-full font-bold active:scale-95 transition-all flex items-center justify-center gap-2">
+      <span class="material-symbols-outlined">account_circle</span> Go to my rehearsal hub
+    </button>
+  </div>
+</div>
+
+<!-- Reason modal -->
+<div id="reason-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-[2rem] p-6 max-w-sm w-full shadow-2xl">
+    <h3 class="font-headline text-xl font-extrabold text-primary mb-1">Why blocked?</h3>
+    <p id="reason-slot-label" class="text-xs text-on-surface-variant mb-3">—</p>
+    <div id="reason-presets" class="flex flex-wrap gap-2 mb-3"></div>
+    <textarea id="reason-input" rows="2" placeholder="Brief reason..." class="w-full bg-surface-container-high border-none rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-fixed text-sm"></textarea>
+    <div class="flex gap-3">
+      <button id="reason-cancel" class="flex-1 py-3 bg-surface-container-high rounded-full font-bold text-sm">Cancel</button>
+      <button id="reason-confirm" class="flex-1 py-3 bg-primary text-white rounded-full font-bold text-sm">Mark blocked</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+let student = null;
+let pollSlotKeys = [];
+let weekOffset = 0;
+let pendingKey = null;
+
+function show(id) {
+  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function addDays(d, n) { const c = new Date(d); c.setDate(c.getDate() + n); return c; }
+function startOfWeek(d) { const c = new Date(d); c.setHours(0,0,0,0); c.setDate(c.getDate() - c.getDay()); return c; }
+function fmtWeek(ws) {
+  const we = addDays(ws, 6);
+  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${mo[ws.getMonth()]} ${ws.getDate()} – ${mo[we.getMonth()]} ${we.getDate()}`;
+}
+
+function launchConfetti() {
+  const host = document.getElementById('confetti-host');
+  const colors = ['#15157d','#7c44a8','#f2daff','#c0c1ff','#ffffff','#ffdad6'];
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.left = Math.random() * 100 + '%';
+    el.style.top = '-20px';
+    el.style.background = colors[i % colors.length];
+    el.style.animationDelay = Math.random() * 1.5 + 's';
+    el.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+    host.appendChild(el);
+  }
+}
+
+function buildWeekGrid() {
+  const pollSet = new Set(pollSlotKeys);
+  const avail = Roster.getAvailability(student.id);
+  const availSet = new Set(avail.available);
+  const blockSet = new Set(avail.blocked);
+
+  const weeks = [...new Set(pollSlotKeys.map(k => {
+    const d = Roster.parseSlotKey(k);
+    return startOfWeek(d).getTime();
+  }))].sort();
+
+  if (!weeks.length) {
+    document.getElementById('calendar-grid').innerHTML = '<div class="p-8 text-center text-xs text-on-surface-variant">No availability poll is open yet.</div>';
+    document.getElementById('week-label').textContent = '—';
+    return;
+  }
+
+  const idx = Math.max(0, Math.min(weekOffset, weeks.length - 1));
+  weekOffset = idx;
+  const ws = new Date(weeks[idx]);
+  const days = Array.from({length:7}, (_, i) => addDays(ws, i));
+
+  document.getElementById('week-label').textContent = `${fmtWeek(ws)} (${idx+1}/${weeks.length})`;
+  document.getElementById('prev-week').disabled = idx === 0;
+  document.getElementById('next-week').disabled = idx === weeks.length - 1;
+
+  const weekSlots = pollSlotKeys.filter(k => {
+    const d = Roster.parseSlotKey(k);
+    return d >= ws && d < addDays(ws, 7);
+  });
+
+  if (!weekSlots.length) {
+    document.getElementById('calendar-grid').innerHTML = '<div class="p-8 text-center text-xs text-on-surface-variant">No slots this week.</div>';
+    return;
+  }
+
+  const minsSet = new Set(weekSlots.map(k => { const d = Roster.parseSlotKey(k); return d.getHours()*60+d.getMinutes(); }));
+  const sortedMins = [...minsSet].sort((a,b)=>a-b);
+  const activeDays = [...new Set(weekSlots.map(k => Roster.parseSlotKey(k).getDay()))].sort((a,b)=>a-b);
+
+  let html = '<table class="w-full border-collapse text-xs"><thead><tr>';
+  html += '<th class="w-16 p-2 bg-surface-container-low border-b border-r border-outline-variant/10 text-on-surface-variant font-bold text-right text-[10px]">Time</th>';
+  activeDays.forEach(di => {
+    html += `<th class="p-2 bg-surface-container-low border-b border-r border-outline-variant/10 text-center">
+      <div class="text-[9px] uppercase tracking-widest font-bold text-on-surface-variant">${DAY_NAMES[di]}</div>
+      <div class="text-xl font-headline font-extrabold text-primary">${days[di].getDate()}</div>
+    </th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  sortedMins.forEach(totalMin => {
+    const h = Math.floor(totalMin/60), m = totalMin%60;
+    const start = Roster.formatTime(h, m);
+    const probeKey = Roster.buildSlotKey(days[activeDays[0]], h, m);
+    const block = Roster.getSlotBlock(probeKey);
+    let rowLbl = start;
+    if (block) {
+      const eh = Math.floor(block.endMinute/60), em = block.endMinute%60;
+      rowLbl = `${start}<br><span class="text-[9px] opacity-60">${Roster.formatTime(eh,em)}</span>`;
+    }
+    html += `<tr><td class="p-2 text-right border-r border-b border-outline-variant/10 font-medium text-[10px] leading-tight">${rowLbl}</td>`;
+    activeDays.forEach(di => {
+      const key = Roster.buildSlotKey(days[di], h, m);
+      if (!pollSet.has(key)) { html += '<td class="p-1 border-r border-b border-outline-variant/10 bg-surface-container-high/30"></td>'; return; }
+      const cls = availSet.has(key) ? 'available' : blockSet.has(key) ? 'blocked' : '';
+      const lbl = block ? `${start}` : start;
+      html += `<td class="p-1 border-r border-b border-outline-variant/10">
+        <button class="slot w-full h-10 rounded-lg text-[10px] font-bold border border-outline-variant/20 ${cls}" data-key="${key}">${lbl}</button>
+      </td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('calendar-grid').innerHTML = html;
+
+  document.querySelectorAll('.slot[data-key]').forEach(btn => {
+    btn.addEventListener('click', () => toggleSlot(btn.dataset.key));
+  });
+  updateStats();
+}
+
+function toggleSlot(key) {
+  const d = Roster.getAvailability(student.id);
+  const isAvail = d.available.includes(key);
+  const isBlocked = d.blocked.includes(key);
+  let next = 'available';
+  if (isAvail) next = 'blocked';
+  else if (isBlocked) next = 'clear';
+
+  const meta = Roster.getSlotMeta ? Roster.getSlotMeta(key) : { reasonRequired: false };
+  if (next === 'blocked' && meta.reasonRequired) {
+    pendingKey = key;
+    openReasonModal(key);
+    return;
+  }
+  Roster.toggleSlot(student.id, key, next);
+  buildWeekGrid();
+}
+
+function openReasonModal(key) {
+  document.getElementById('reason-slot-label').textContent = Roster.formatSlot(key);
+  document.getElementById('reason-input').value = '';
+  const presetsEl = document.getElementById('reason-presets');
+  const presets = (Roster.getCommonReasons && Roster.getCommonReasons()) || [];
+  presetsEl.innerHTML = presets.map(r =>
+    `<button type="button" data-preset="${r}" class="px-3 py-1 bg-primary-fixed text-primary rounded-full text-xs font-bold">${r}</button>`
+  ).join('');
+  presetsEl.querySelectorAll('[data-preset]').forEach(b => {
+    b.addEventListener('click', () => { document.getElementById('reason-input').value = b.dataset.preset; });
+  });
+  const modal = document.getElementById('reason-modal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function updateStats() {
+  const a = Roster.getAvailability(student.id);
+  const ps = new Set(pollSlotKeys);
+  document.getElementById('stat-avail').textContent = a.available.filter(k => ps.has(k)).length;
+  document.getElementById('stat-block').textContent = a.blocked.filter(k => ps.has(k)).length;
+}
+
+function initInvite() {
+  Roster.ensureSeed();
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if (!id) { showError('No invite ID in URL.'); return; }
+
+  function proceed() {
+    student = Roster.getLedger().find(s => s.id === id);
+    if (!student) { showError('Invite link is invalid or has expired.'); return; }
+
+    document.getElementById('welcome-name').textContent = 'Welcome, ' + student.name + '!';
+    document.getElementById('welcome-role').textContent = student.role || 'Cast member';
+
+    pollSlotKeys = Roster.getPollSlotKeys();
+    launchConfetti();
+    setTimeout(() => { if (document.getElementById('step-welcome').classList.contains('active')) goTour(); }, 3000);
+  }
+
+  if (window.rosterFirebase && !window.rosterFirebase.isReady()) {
+    window.addEventListener('firebase-ready', proceed, { once: true });
+  } else {
+    proceed();
+  }
+}
+
+function showError(msg) {
+  document.getElementById('step-welcome').innerHTML = `
+    <div class="text-center p-10">
+      <span class="material-symbols-outlined text-5xl text-error mb-4">error</span>
+      <h2 class="font-headline text-2xl font-extrabold text-error">${msg}</h2>
+      <a href="index.html" class="mt-6 inline-block px-6 py-3 bg-primary text-white rounded-full font-bold">Go to home</a>
+    </div>`;
+  document.getElementById('step-welcome').classList.add('active');
+}
+
+function goTour() { show('step-tour'); }
+function goAvail() { show('step-avail'); buildWeekGrid(); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  initInvite();
+
+  document.getElementById('welcome-continue').addEventListener('click', goTour);
+
+  document.getElementById('legal-cb').addEventListener('change', e => {
+    document.getElementById('tour-continue').disabled = !e.target.checked;
+  });
+
+  document.getElementById('tour-continue').addEventListener('click', () => {
+    Roster.markLegalAccepted(student.id);
+    Roster.markTutorialSeen(student.id);
+    goAvail();
+  });
+
+  document.getElementById('prev-week').addEventListener('click', () => { weekOffset--; buildWeekGrid(); });
+  document.getElementById('next-week').addEventListener('click', () => { weekOffset++; buildWeekGrid(); });
+
+  document.getElementById('submit-avail').addEventListener('click', () => {
+    Roster.markSubmitted(student.id);
+    Roster.setCurrentStudent(student.id);
+    const s = Roster.assignScriptId(student.id);
+    student = s || student;
+    if (Roster.pushAdminInbox) {
+      Roster.pushAdminInbox({ type: 'invite_submitted', studentId: student.id, studentName: student.name, role: student.role || '' });
+    }
+    document.getElementById('success-name').textContent = 'Done, ' + student.name + '!';
+    document.getElementById('success-id').textContent = student.scriptId || '—';
+    show('step-success');
+  });
+
+  document.getElementById('go-hub').addEventListener('click', () => { location.href = 'profile.html'; });
+
+  document.getElementById('reason-cancel').addEventListener('click', () => {
+    document.getElementById('reason-modal').classList.add('hidden');
+    document.getElementById('reason-modal').classList.remove('flex');
+  });
+  document.getElementById('reason-confirm').addEventListener('click', () => {
+    const reason = document.getElementById('reason-input').value.trim();
+    Roster.toggleSlot(student.id, pendingKey, 'blocked', reason);
+    document.getElementById('reason-modal').classList.add('hidden');
+    document.getElementById('reason-modal').classList.remove('flex');
+    buildWeekGrid();
+  });
+});
+</script>
+</body>
+</html>
