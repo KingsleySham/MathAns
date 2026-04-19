@@ -104,21 +104,27 @@
     readJSON(KEYS.LEDGER, []).forEach(s => { if (s && s.id) studentsCache.set(s.id, s); });
 
     if (!global.rosterFirebase || !global.rosterFirebase.subscribeCollection) return;
+    let firstSnapshot = true;
     global.rosterFirebase.subscribeCollection('students', (docs) => {
       studentsCache.clear();
       docs.forEach(d => { if (d && d.id) studentsCache.set(d.id, d); });
       studentsCacheReady = true;
       mirrorStudentsToLocal();
       window.dispatchEvent(new CustomEvent('roster-state-sync'));
-    });
 
-    /* One-time migration: if state/main carries a legacy ledger that the
-       students collection hasn't picked up yet, push each entry up. setDoc
-       with merge:true is idempotent so re-running is harmless. */
-    const legacy = readJSON(KEYS.LEDGER, []);
-    legacy.forEach(s => {
-      if (s && s.id && global.rosterFirebase.writeCollectionDoc) {
-        global.rosterFirebase.writeCollectionDoc('students', s.id, s);
+      /* First-run seeding only: if Firestore has no students yet, push the
+         local ledger up. Once Firestore has any row, this branch never fires
+         again on this device — so a stale localStorage from a forgotten tab
+         can't overwrite authoritative data or resurrect deleted people. */
+      if (firstSnapshot) {
+        firstSnapshot = false;
+        if (docs.length === 0) {
+          readJSON(KEYS.LEDGER, []).forEach(s => {
+            if (s && s.id && global.rosterFirebase.writeCollectionDoc) {
+              global.rosterFirebase.writeCollectionDoc('students', s.id, s);
+            }
+          });
+        }
       }
     });
   }
@@ -172,6 +178,7 @@
       init() {
         readJSON(localKey, []).forEach(it => { if (it && it.id) cache.set(it.id, it); });
         if (!global.rosterFirebase || !global.rosterFirebase.subscribeCollection) return;
+        let firstSnapshot = true;
         global.rosterFirebase.subscribeCollection(collectionName, docs => {
           cache.clear();
           docs.forEach(d => {
@@ -183,11 +190,17 @@
           ready = true;
           mirror();
           window.dispatchEvent(new CustomEvent('roster-state-sync'));
-        });
-        /* one-time migration of any legacy local rows */
-        readJSON(localKey, []).forEach(it => {
-          if (it && it.id && global.rosterFirebase.writeCollectionDoc) {
-            global.rosterFirebase.writeCollectionDoc(collectionName, it.id, it);
+
+          /* First-run seeding only — see initStudentsSync for rationale. */
+          if (firstSnapshot) {
+            firstSnapshot = false;
+            if (docs.length === 0) {
+              readJSON(localKey, []).forEach(it => {
+                if (it && it.id && global.rosterFirebase.writeCollectionDoc) {
+                  global.rosterFirebase.writeCollectionDoc(collectionName, it.id, it);
+                }
+              });
+            }
           }
         });
       }
@@ -234,6 +247,7 @@
         const local = readJSON(localKey, {});
         Object.keys(local).forEach(k => cache.set(k, local[k]));
         if (!global.rosterFirebase || !global.rosterFirebase.subscribeCollection) return;
+        let firstSnapshot = true;
         global.rosterFirebase.subscribeCollection(collectionName, docs => {
           cache.clear();
           docs.forEach(d => {
@@ -244,10 +258,18 @@
           ready = true;
           mirror();
           window.dispatchEvent(new CustomEvent('roster-state-sync'));
-        });
-        Object.keys(local).forEach(id => {
-          if (global.rosterFirebase.writeCollectionDoc) {
-            global.rosterFirebase.writeCollectionDoc(collectionName, id, { value: local[id] });
+
+          /* First-run seeding only — see initStudentsSync for rationale. */
+          if (firstSnapshot) {
+            firstSnapshot = false;
+            if (docs.length === 0) {
+              const snap = readJSON(localKey, {});
+              Object.keys(snap).forEach(id => {
+                if (global.rosterFirebase.writeCollectionDoc) {
+                  global.rosterFirebase.writeCollectionDoc(collectionName, id, { value: snap[id] });
+                }
+              });
+            }
           }
         });
       }
