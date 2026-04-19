@@ -64,6 +64,218 @@
   function uid() { return 'stu_' + Math.random().toString(36).slice(2, 9); }
   function genId(prefix) { return prefix + '_' + Math.random().toString(36).slice(2, 9); }
 
+  /* ── Students collection cache ────────────────────────────────────────
+     Each student is a doc in the Firestore `students` collection. We hold
+     them in a Map for synchronous reads, mirror to localStorage for the
+     first paint after a cold open, and dispatch roster-state-sync when the
+     remote sends an update. */
+  const studentsCache = new Map();
+  let studentsCacheReady = false;
+
+  function mirrorStudentsToLocal() {
+    const arr = [...studentsCache.values()];
+    localStorage.setItem(KEYS.LEDGER, JSON.stringify(arr));
+  }
+
+  function writeStudent(student) {
+    studentsCache.set(student.id, student);
+    mirrorStudentsToLocal();
+    if (global.rosterFirebase && global.rosterFirebase.writeCollectionDoc) {
+      global.rosterFirebase.writeCollectionDoc('students', student.id, student);
+    }
+  }
+
+  function patchStudent(id, patch) {
+    const existing = studentsCache.get(id) || (readJSON(KEYS.LEDGER, []).find(s => s.id === id));
+    if (!existing) return null;
+    const merged = { ...existing, ...patch };
+    writeStudent(merged);
+    return merged;
+  }
+
+  function initStudentsSync() {
+    /* Seed the cache from localStorage so the first synchronous getLedger()
+       (before Firestore replies) still returns whatever this device knows. */
+    readJSON(KEYS.LEDGER, []).forEach(s => { if (s && s.id) studentsCache.set(s.id, s); });
+
+    if (!global.rosterFirebase || !global.rosterFirebase.subscribeCollection) return;
+    global.rosterFirebase.subscribeCollection('students', (docs) => {
+      studentsCache.clear();
+      docs.forEach(d => { if (d && d.id) studentsCache.set(d.id, d); });
+      studentsCacheReady = true;
+      mirrorStudentsToLocal();
+      window.dispatchEvent(new CustomEvent('roster-state-sync'));
+    });
+
+    /* One-time migration: if state/main carries a legacy ledger that the
+       students collection hasn't picked up yet, push each entry up. setDoc
+       with merge:true is idempotent so re-running is harmless. */
+    const legacy = readJSON(KEYS.LEDGER, []);
+    legacy.forEach(s => {
+      if (s && s.id && global.rosterFirebase.writeCollectionDoc) {
+        global.rosterFirebase.writeCollectionDoc('students', s.id, s);
+      }
+    });
+  }
+
+  /* ── Generic collection caches ────────────────────────────────────────
+     Two patterns:
+     - listCache:   array of {id, ...}     → one Firestore doc per item
+     - keyedCache:  { id: value, ... }     → one Firestore doc per key,
+                                            value wrapped as { value: … } so
+                                            arbitrary nested shapes work. */
+
+  function makeListCache(collectionName, localKey) {
+    const cache = new Map();
+    let ready = false;
+    function mirror() {
+      const arr = [];
+      cache.forEach(v => arr.push(v));
+      localStorage.setItem(localKey, JSON.stringify(arr));
+    }
+    return {
+      list() { return ready ? [...cache.values()] : readJSON(localKey, []); },
+      write(item) {
+        if (!item || !item.id) return;
+        cache.set(item.id, item);
+        mirror();
+        if (global.rosterFirebase && global.rosterFirebase.writeCollectionDoc) {
+          global.rosterFirebase.writeCollectionDoc(collectionName, item.id, item);
+        }
+      },
+      delete(id) {
+        cache.delete(id);
+        mirror();
+        if (global.rosterFirebase && global.rosterFirebase.deleteCollectionDoc) {
+          global.rosterFirebase.deleteCollectionDoc(collectionName, id);
+        }
+      },
+      replaceAll(items) {
+        const next = new Map();
+        items.forEach(it => { if (it && it.id) next.set(it.id, it); });
+        const removed = [...cache.keys()].filter(k => !next.has(k));
+        cache.clear();
+        next.forEach((v, k) => cache.set(k, v));
+        mirror();
+        if (global.rosterFirebase && global.rosterFirebase.writeCollectionDoc) {
+          next.forEach((v, k) => global.rosterFirebase.writeCollectionDoc(collectionName, k, v));
+          removed.forEach(k => global.rosterFirebase.deleteCollectionDoc(collectionName, k));
+        }
+      },
+      init() {
+        readJSON(localKey, []).forEach(it => { if (it && it.id) cache.set(it.id, it); });
+        if (!global.rosterFirebase || !global.rosterFirebase.subscribeCollection) return;
+        global.rosterFirebase.subscribeCollection(collectionName, docs => {
+          cache.clear();
+          docs.forEach(d => {
+            const id = d.id || d.__id;
+            if (!id) return;
+            const { __id, ...rest } = d;
+            cache.set(id, { id, ...rest });
+          });
+          ready = true;
+          mirror();
+          window.dispatchEvent(new CustomEvent('roster-state-sync'));
+        });
+        /* one-time migration of any legacy local rows */
+        readJSON(localKey, []).forEach(it => {
+          if (it && it.id && global.rosterFirebase.writeCollectionDoc) {
+            global.rosterFirebase.writeCollectionDoc(collectionName, it.id, it);
+          }
+        });
+      }
+    };
+  }
+
+  function makeKeyedCache(collectionName, localKey) {
+    const cache = new Map();
+    let ready = false;
+    function mirror() {
+      const obj = {};
+      cache.forEach((v, k) => { obj[k] = v; });
+      localStorage.setItem(localKey, JSON.stringify(obj));
+    }
+    return {
+      asObj() {
+        if (ready) {
+          const o = {};
+          cache.forEach((v, k) => { o[k] = v; });
+          return o;
+        }
+        return readJSON(localKey, {});
+      },
+      get(id) {
+        if (ready) return cache.get(id);
+        const local = readJSON(localKey, {});
+        return local[id];
+      },
+      write(id, value) {
+        cache.set(id, value);
+        mirror();
+        if (global.rosterFirebase && global.rosterFirebase.writeCollectionDoc) {
+          global.rosterFirebase.writeCollectionDoc(collectionName, id, { value });
+        }
+      },
+      delete(id) {
+        cache.delete(id);
+        mirror();
+        if (global.rosterFirebase && global.rosterFirebase.deleteCollectionDoc) {
+          global.rosterFirebase.deleteCollectionDoc(collectionName, id);
+        }
+      },
+      init() {
+        const local = readJSON(localKey, {});
+        Object.keys(local).forEach(k => cache.set(k, local[k]));
+        if (!global.rosterFirebase || !global.rosterFirebase.subscribeCollection) return;
+        global.rosterFirebase.subscribeCollection(collectionName, docs => {
+          cache.clear();
+          docs.forEach(d => {
+            const id = d.__id;
+            if (!id) return;
+            cache.set(id, d.value !== undefined ? d.value : d);
+          });
+          ready = true;
+          mirror();
+          window.dispatchEvent(new CustomEvent('roster-state-sync'));
+        });
+        Object.keys(local).forEach(id => {
+          if (global.rosterFirebase.writeCollectionDoc) {
+            global.rosterFirebase.writeCollectionDoc(collectionName, id, { value: local[id] });
+          }
+        });
+      }
+    };
+  }
+
+  const _rehearsals  = makeListCache('rehearsals',  KEYS.REHEARSALS);
+  const _leaves      = makeListCache('leaves',      KEYS.LEAVES);
+  const _notices     = makeListCache('notices',     KEYS.NOTICES);
+  const _inbox       = makeListCache('inbox',       KEYS.ADMIN_INBOX);
+  const _availability= makeKeyedCache('availability', KEYS.AVAILABILITY);
+  const _attendance  = makeKeyedCache('attendance',   KEYS.ATTENDANCE);
+  const _checkins    = makeKeyedCache('checkins',     KEYS.CHECKINS);
+  const _checkinCodes= makeKeyedCache('checkinCodes', KEYS.CHECKIN_CODES);
+
+  function initAllCollections() {
+    initStudentsSync();
+    _rehearsals.init();
+    _leaves.init();
+    _notices.init();
+    _inbox.init();
+    _availability.init();
+    _attendance.init();
+    _checkins.init();
+    _checkinCodes.init();
+  }
+
+  if (typeof window !== 'undefined') {
+    if (window.rosterFirebase && window.rosterFirebase.isReady && window.rosterFirebase.isReady()) {
+      initAllCollections();
+    } else {
+      window.addEventListener('firebase-ready', initAllCollections, { once: true });
+    }
+  }
+
   function nextScriptId(ledger) {
     const used = new Set(ledger.map(s => s.scriptId).filter(Boolean));
     let n = 1;
@@ -125,38 +337,36 @@
        so an invite link is effectively permanent even after local data is cleared. */
     ensureInvitedStudent(input) {
       if (!input || !input.id) return null;
-      const ledger = Roster.getLedger();
-      const existing = ledger.find(x => x.id === input.id);
+      const existing = Roster.getLedger().find(x => x.id === input.id);
       if (existing) {
-        let dirty = false;
-        if (input.name && !existing.name) { existing.name = input.name; dirty = true; }
-        if (input.role && !existing.role) { existing.role = input.role; dirty = true; }
-        if (dirty) writeJSON(KEYS.LEDGER, ledger);
-        return existing;
+        const patch = {};
+        if (input.name && !existing.name) patch.name = input.name;
+        if (input.role && !existing.role) patch.role = input.role;
+        return Object.keys(patch).length ? patchStudent(input.id, patch) : existing;
       }
       if (!input.name) return null;
       const s = { id: input.id, name: input.name, role: input.role || '', scriptId: null, createdAt: Date.now() };
-      ledger.push(s);
-      writeJSON(KEYS.LEDGER, ledger);
+      writeStudent(s);
       return s;
     },
-    getAdminInbox() { return readJSON(KEYS.ADMIN_INBOX, []); },
+    getAdminInbox() {
+      return _inbox.list().slice().sort((a, b) => (b.at || 0) - (a.at || 0));
+    },
     pushAdminInbox(entry) {
-      const list = Roster.getAdminInbox();
-      list.unshift({ id: genId('inb'), at: Date.now(), read: false, ...entry });
-      if (list.length > 100) list.length = 100;
-      writeJSON(KEYS.ADMIN_INBOX, list);
+      const item = { id: genId('inb'), at: Date.now(), read: false, ...entry };
+      _inbox.write(item);
+      /* Keep only the 100 most-recent items in storage to bound growth. */
+      const all = Roster.getAdminInbox();
+      if (all.length > 100) all.slice(100).forEach(x => _inbox.delete(x.id));
     },
     markAdminInboxRead(id) {
-      const list = Roster.getAdminInbox();
-      const item = list.find(x => x.id === id);
-      if (item) { item.read = true; writeJSON(KEYS.ADMIN_INBOX, list); }
+      const item = _inbox.list().find(x => x.id === id);
+      if (item) _inbox.write({ ...item, read: true });
     },
     markAllAdminInboxRead() {
-      const list = Roster.getAdminInbox().map(x => ({ ...x, read: true }));
-      writeJSON(KEYS.ADMIN_INBOX, list);
+      _inbox.list().forEach(x => { if (!x.read) _inbox.write({ ...x, read: true }); });
     },
-    unreadInboxCount() { return Roster.getAdminInbox().filter(x => !x.read).length; },
+    unreadInboxCount() { return _inbox.list().filter(x => !x.read).length; },
 
     /* ── common reasons for unavailability ──────────────── */
     getCommonReasons() { return readJSON(KEYS.REASONS, DEFAULT_REASONS); },
@@ -165,46 +375,42 @@
     setCommonLeaveReasons(arr) { writeJSON(KEYS.LEAVE_REASONS, Array.isArray(arr) ? arr : DEFAULT_LEAVE_REASONS); },
 
     /* ── check-in codes (per rehearsal) ──────────────────── */
-    getCheckinCodes() { return readJSON(KEYS.CHECKIN_CODES, {}); },
+    getCheckinCodes() { return _checkinCodes.asObj(); },
     generateCheckinCode(rehearsalId) {
-      const codes = Roster.getCheckinCodes();
       const code = String(Math.floor(100000 + Math.random() * 900000));
-      codes[rehearsalId] = { code, createdAt: Date.now() };
-      writeJSON(KEYS.CHECKIN_CODES, codes);
+      _checkinCodes.write(rehearsalId, { code, createdAt: Date.now() });
       return code;
     },
     verifyCheckinCode(rehearsalId, code) {
-      const codes = Roster.getCheckinCodes();
-      return codes[rehearsalId] && codes[rehearsalId].code === String(code).trim();
+      const entry = _checkinCodes.get(rehearsalId);
+      return !!(entry && entry.code === String(code).trim());
     },
 
     /* ── attendance records ──────────────────────────────── */
-    getAttendance() { return readJSON(KEYS.ATTENDANCE, {}); },
+    getAttendance() { return _attendance.asObj(); },
     markAttendance(rehearsalId, studentId, status) {
-      const records = Roster.getAttendance();
-      records[rehearsalId] = records[rehearsalId] || {};
-      records[rehearsalId][studentId] = { status, at: Date.now() };
-      writeJSON(KEYS.ATTENDANCE, records);
-      /* keep checkins and attendance in sync — admin marking present
-         also records a check-in; removing present clears it */
-      const checkIns = Roster.getCheckIns();
+      const recForRehearsal = { ...(_attendance.get(rehearsalId) || {}) };
+      recForRehearsal[studentId] = { status, at: Date.now() };
+      _attendance.write(rehearsalId, recForRehearsal);
+      /* keep checkins and attendance in sync — marking present also records
+         a check-in; flipping away from present clears it. */
+      const studentCheckins = { ...(_checkins.get(studentId) || {}) };
       if (status === 'present') {
-        checkIns[studentId] = checkIns[studentId] || {};
-        if (!checkIns[studentId][rehearsalId]) {
-          checkIns[studentId][rehearsalId] = Date.now();
-          writeJSON(KEYS.CHECKINS, checkIns);
+        if (!studentCheckins[rehearsalId]) {
+          studentCheckins[rehearsalId] = Date.now();
+          _checkins.write(studentId, studentCheckins);
         }
-      } else if (checkIns[studentId] && checkIns[studentId][rehearsalId]) {
-        delete checkIns[studentId][rehearsalId];
-        writeJSON(KEYS.CHECKINS, checkIns);
+      } else if (studentCheckins[rehearsalId]) {
+        delete studentCheckins[rehearsalId];
+        _checkins.write(studentId, studentCheckins);
       }
     },
     getStudentAttendance(studentId) {
-      const records = Roster.getAttendance();
+      const all = _attendance.asObj();
       const out = [];
-      Object.keys(records).forEach(rId => {
-        if (records[rId] && records[rId][studentId]) {
-          out.push({ rehearsalId: rId, ...records[rId][studentId] });
+      Object.keys(all).forEach(rId => {
+        if (all[rId] && all[rId][studentId]) {
+          out.push({ rehearsalId: rId, ...all[rId][studentId] });
         }
       });
       return out;
@@ -259,12 +465,16 @@
     },
 
     resetForNewProduction() {
-      writeJSON(KEYS.LEDGER, []);
-      writeJSON(KEYS.AVAILABILITY, {});
-      writeJSON(KEYS.CHECKINS, {});
-      writeJSON(KEYS.LEAVES, []);
+      /* Wipe all collection-backed entities by deleting each Firestore doc
+         (one round-trip per row). The safety-net backups in Firestore mean
+         this is recoverable even when invoked accidentally. */
+      Roster.getLedger().forEach(s => Roster.removeStudent(s.id));
+      _rehearsals.list().forEach(r => _rehearsals.delete(r.id));
+      _notices.list().forEach(n => _notices.delete(n.id));
+      _inbox.list().forEach(i => _inbox.delete(i.id));
+      Object.keys(_attendance.asObj()).forEach(k => _attendance.delete(k));
+      Object.keys(_checkinCodes.asObj()).forEach(k => _checkinCodes.delete(k));
       writeJSON(KEYS.PRESENT, []);
-      writeJSON(KEYS.CURRENT, null);
       localStorage.removeItem(KEYS.POLL_WINDOW);
       localStorage.removeItem(KEYS.CURRENT);
     },
@@ -277,27 +487,32 @@
       });
     },
 
-    getLedger() { return readJSON(KEYS.LEDGER, []); },
+    /* Ledger lives in the `students` Firestore collection (one doc per
+       student). The in-memory cache below is the synchronous source of
+       truth; localStorage is only an offline fallback for the very first
+       paint before Firestore answers. */
+    getLedger() {
+      if (studentsCacheReady) return [...studentsCache.values()].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      return readJSON(KEYS.LEDGER, []);
+    },
 
     addStudent(name, role = '') {
-      const ledger = Roster.getLedger();
       const student = { id: uid(), name, role, scriptId: null, createdAt: Date.now() };
-      ledger.push(student);
-      writeJSON(KEYS.LEDGER, ledger);
+      writeStudent(student);
       return student;
     },
 
     removeStudent(studentId) {
-      const ledger = Roster.getLedger().filter(s => s.id !== studentId);
-      writeJSON(KEYS.LEDGER, ledger);
-      const all = Roster.getAvailabilityMap();
-      delete all[studentId];
-      writeJSON(KEYS.AVAILABILITY, all);
-      const checkIns = Roster.getCheckIns();
-      delete checkIns[studentId];
-      writeJSON(KEYS.CHECKINS, checkIns);
-      const leaves = Roster.getLeaves().filter(l => l.studentId !== studentId);
-      writeJSON(KEYS.LEAVES, leaves);
+      studentsCache.delete(studentId);
+      mirrorStudentsToLocal();
+      if (global.rosterFirebase && global.rosterFirebase.deleteCollectionDoc) {
+        global.rosterFirebase.deleteCollectionDoc('students', studentId);
+      }
+      _availability.delete(studentId);
+      _checkins.delete(studentId);
+      Roster.getLeaves()
+        .filter(l => l.studentId === studentId)
+        .forEach(l => _leaves.delete(l.id));
       const current = readJSON(KEYS.CURRENT, null);
       if (current === studentId) localStorage.removeItem(KEYS.CURRENT);
     },
@@ -320,10 +535,10 @@
       const ledger = Roster.getLedger();
       const student = ledger.find(s => s.id === studentId);
       if (!student) return null;
-      if (!student.scriptId) student.scriptId = nextScriptId(ledger);
-      if (role) student.role = role;
-      writeJSON(KEYS.LEDGER, ledger);
-      return student;
+      const patch = {};
+      if (!student.scriptId) patch.scriptId = nextScriptId(ledger);
+      if (role) patch.role = role;
+      return patchStudent(studentId, patch) || student;
     },
 
     findByScriptId(raw) {
@@ -339,37 +554,19 @@
       return Roster.assignScriptId(student.id);
     },
 
-    markLegalAccepted(studentId) {
-      const ledger = Roster.getLedger();
-      const s = ledger.find(x => x.id === studentId);
-      if (!s) return;
-      s.legalAcceptedAt = Date.now();
-      writeJSON(KEYS.LEDGER, ledger);
-    },
+    markLegalAccepted(studentId) { patchStudent(studentId, { legalAcceptedAt: Date.now() }); },
     hasAcceptedLegal(studentId) {
       const s = Roster.getLedger().find(x => x.id === studentId);
       return !!(s && s.legalAcceptedAt);
     },
-    markTutorialSeen(studentId) {
-      const ledger = Roster.getLedger();
-      const s = ledger.find(x => x.id === studentId);
-      if (!s) return;
-      s.tutorialSeenAt = Date.now();
-      writeJSON(KEYS.LEDGER, ledger);
-    },
+    markTutorialSeen(studentId) { patchStudent(studentId, { tutorialSeenAt: Date.now() }); },
     hasSeenTutorial(studentId) {
       const s = Roster.getLedger().find(x => x.id === studentId);
       return !!(s && s.tutorialSeenAt);
     },
 
     /* remember that a student has dismissed the "new poll" popup */
-    markPollSeen(studentId, pollId) {
-      const ledger = Roster.getLedger();
-      const s = ledger.find(x => x.id === studentId);
-      if (!s) return;
-      s.seenPollId = pollId;
-      writeJSON(KEYS.LEDGER, ledger);
-    },
+    markPollSeen(studentId, pollId) { patchStudent(studentId, { seenPollId: pollId }); },
     hasSeenPoll(studentId, pollId) {
       const s = Roster.getLedger().find(x => x.id === studentId);
       return !!(s && s.seenPollId === pollId);
@@ -486,16 +683,11 @@
     },
     clearCurrent() { localStorage.removeItem(KEYS.CURRENT); },
 
-    getAvailabilityMap() { return readJSON(KEYS.AVAILABILITY, {}); },
+    getAvailabilityMap() { return _availability.asObj(); },
     getAvailability(studentId) {
-      const all = Roster.getAvailabilityMap();
-      return all[studentId] || { available: [], blocked: [], reasons: {}, submittedAt: null };
+      return _availability.get(studentId) || { available: [], blocked: [], reasons: {}, submittedAt: null };
     },
-    setAvailability(studentId, data) {
-      const all = Roster.getAvailabilityMap();
-      all[studentId] = data;
-      writeJSON(KEYS.AVAILABILITY, all);
-    },
+    setAvailability(studentId, data) { _availability.write(studentId, data); },
     toggleSlot(studentId, slotKey, mode, reason) {
       const data = Roster.getAvailability(studentId);
       data.available = (data.available || []).filter(k => k !== slotKey);
@@ -550,7 +742,7 @@
       });
     },
 
-    getRehearsals() { return readJSON(KEYS.REHEARSALS, []); },
+    getRehearsals() { return _rehearsals.list().slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); },
     /* true if the student is called for this rehearsal (empty list = everyone) */
     isParticipant(rehearsal, studentId) {
       if (!rehearsal) return false;
@@ -562,82 +754,62 @@
       return Roster.getRehearsals().filter(r => Roster.isParticipant(r, studentId));
     },
     addRehearsal(slotKey, label = 'Rehearsal', type = 'rehearsal', venue = 'Main Stage') {
-      const list = Roster.getRehearsals();
-      if (list.some(r => r.slotKey === slotKey)) return null;
+      if (Roster.getRehearsals().some(r => r.slotKey === slotKey)) return null;
       const meta = Roster.getSlotMeta(slotKey);
       const r = {
         id: genId('reh'),
-        slotKey,
-        label,
-        type,
-        venue,
+        slotKey, label, type, venue,
         format: meta.format,
         createdAt: Date.now()
       };
-      list.push(r);
-      writeJSON(KEYS.REHEARSALS, list);
+      _rehearsals.write(r);
       return r;
     },
     updateRehearsal(id, updates) {
-      const list = Roster.getRehearsals();
-      const r = list.find(x => x.id === id);
-      if (r) {
-        Object.assign(r, updates);
-        writeJSON(KEYS.REHEARSALS, list);
-      }
-      return r;
+      const r = Roster.getRehearsals().find(x => x.id === id);
+      if (!r) return null;
+      const merged = { ...r, ...updates };
+      _rehearsals.write(merged);
+      return merged;
     },
-    removeRehearsal(id) {
-      const list = Roster.getRehearsals().filter(r => r.id !== id);
-      writeJSON(KEYS.REHEARSALS, list);
-    },
+    removeRehearsal(id) { _rehearsals.delete(id); },
 
-    getCheckIns() { return readJSON(KEYS.CHECKINS, {}); },
+    getCheckIns() { return _checkins.asObj(); },
     checkIn(studentId, rehearsalId) {
-      const all = Roster.getCheckIns();
-      all[studentId] = all[studentId] || {};
-      all[studentId][rehearsalId] = Date.now();
-      writeJSON(KEYS.CHECKINS, all);
+      const own = { ...(_checkins.get(studentId) || {}) };
+      own[rehearsalId] = Date.now();
+      _checkins.write(studentId, own);
     },
     hasCheckedIn(studentId, rehearsalId) {
-      const all = Roster.getCheckIns();
-      if (all[studentId] && all[studentId][rehearsalId]) return true;
-      const att = Roster.getAttendance()[rehearsalId];
+      const own = _checkins.get(studentId);
+      if (own && own[rehearsalId]) return true;
+      const att = _attendance.get(rehearsalId);
       return !!(att && att[studentId] && att[studentId].status === 'present');
     },
 
-    getLeaves() { return readJSON(KEYS.LEAVES, []); },
+    getLeaves() { return _leaves.list().slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)); },
     requestLeave(studentId, rehearsalId, reason) {
-      const list = Roster.getLeaves();
-      list.push({
+      _leaves.write({
         id: genId('lve'),
         studentId, rehearsalId, reason: reason || '',
         createdAt: Date.now(), status: 'pending'
       });
-      writeJSON(KEYS.LEAVES, list);
     },
     getLeavesForStudent(studentId) {
       return Roster.getLeaves().filter(l => l.studentId === studentId);
     },
     updateLeaveStatus(leaveId, status) {
-      const list = Roster.getLeaves();
-      const l = list.find(x => x.id === leaveId);
-      if (l) { l.status = status; writeJSON(KEYS.LEAVES, list); }
+      const l = Roster.getLeaves().find(x => x.id === leaveId);
+      if (l) _leaves.write({ ...l, status });
     },
-    deleteLeave(leaveId) {
-      writeJSON(KEYS.LEAVES, Roster.getLeaves().filter(l => l.id !== leaveId));
-    },
+    deleteLeave(leaveId) { _leaves.delete(leaveId); },
 
     /* ── notices ─────────────────────────────────────────────── */
-    getNotices() { return readJSON(KEYS.NOTICES, []); },
+    getNotices() { return _notices.list().slice().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); },
     addNotice(title, body, severity = 'info') {
-      const list = Roster.getNotices();
-      list.push({ id: genId('not'), title, body, severity, createdAt: Date.now() });
-      writeJSON(KEYS.NOTICES, list);
+      _notices.write({ id: genId('not'), title, body, severity, createdAt: Date.now() });
     },
-    removeNotice(id) {
-      writeJSON(KEYS.NOTICES, Roster.getNotices().filter(n => n.id !== id));
-    },
+    removeNotice(id) { _notices.delete(id); },
 
     /* ── present-mode submissions (walk-up, no login) ────────── */
     getPresentSubmissions() { return readJSON(KEYS.PRESENT, []); },

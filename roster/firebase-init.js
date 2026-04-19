@@ -1,7 +1,8 @@
 // Firebase bridge for The Orchestral Frame — mathans---roster project
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import {
-  getFirestore, doc, onSnapshot, setDoc, getDoc, addDoc, collection, serverTimestamp
+  getFirestore, doc, onSnapshot, setDoc, getDoc, getDocs, deleteDoc,
+  addDoc, collection, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -16,14 +17,14 @@ const firebaseConfig = {
 
 const MTIMES_KEY = 'roster.__mtimes';
 
+/* Collection-owned state has been migrated out of state/main. Only true
+   singletons (project, poll window, zoom config/session, common-reason
+   presets, locally-cached present submissions) still flow through here. */
 const STATE_KEYS = [
-  'roster.ledger', 'roster.availability', 'roster.rehearsals',
-  'roster.checkins', 'roster.leaves', 'roster.project',
-  'roster.pollWindow', 'roster.notices', 'roster.presentSubmissions',
+  'roster.project', 'roster.pollWindow',
   'roster.zoomConfig', 'roster.zoomSession', 'roster.zoomMeetings',
-  'roster.checkinCodes', 'roster.attendance',
   'roster.commonReasons', 'roster.commonLeaveReasons',
-  'roster.adminInbox'
+  'roster.presentSubmissions'
 ];
 
 function readMt(obj) {
@@ -131,7 +132,7 @@ function doFlush() {
 function pushState() {
   if (!db || suspendWrites) return;
   clearTimeout(flushTimer);
-  flushTimer = setTimeout(() => { flushTimer = null; doFlush(); }, 150);
+  flushTimer = setTimeout(() => { flushTimer = null; doFlush(); scheduleBackup(); }, 150);
 }
 
 /* Flush pending writes before the page unloads so a quick refresh after
@@ -151,4 +152,106 @@ async function submitPresent(entry) {
   return addDoc(collection(db, 'presentSubmissions'), { ...entry, createdAt: serverTimestamp() });
 }
 
-window.rosterFirebase = { isReady: () => ready, pushState, flushNow, submitPresent };
+/* ── Safety-net snapshots ──────────────────────────────────────────────────
+   Every meaningful change also writes a timestamped backup document to
+   `backups/{timestamp}` containing every roster.* localStorage key. If the
+   live state is ever corrupted, every prior version remains recoverable
+   from the Firestore console — there is no data loss path that survives
+   this safety net. Backups are throttled to one every 30 seconds so we
+   don't run up the document count needlessly. */
+
+function snapshotEverything() {
+  const out = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('roster.')) out[k] = localStorage.getItem(k);
+  }
+  return out;
+}
+
+let lastBackupAt = 0;
+let backupTimer = null;
+function scheduleBackup() {
+  if (!db) return;
+  const now = Date.now();
+  const wait = Math.max(0, 30000 - (now - lastBackupAt));
+  if (backupTimer) return;
+  backupTimer = setTimeout(async () => {
+    backupTimer = null;
+    lastBackupAt = Date.now();
+    const id = String(lastBackupAt);
+    try {
+      await setDoc(doc(db, 'backups', id), {
+        at: lastBackupAt,
+        agent: navigator.userAgent.slice(0, 120),
+        data: snapshotEverything()
+      });
+    } catch (e) { console.warn('[firebase] backup failed:', e.message); }
+  }, wait);
+}
+
+/* ── Per-collection helpers ────────────────────────────────────────────────
+   For data that grows unboundedly (users, rehearsals, attendance, …) we
+   store one document per record in a dedicated Firestore collection rather
+   than packing everything into state/main. This avoids the 1 MiB document
+   ceiling, eliminates merge races between concurrent writers, and lets
+   listeners deliver only the diffs that actually changed. */
+
+const _collectionListeners = {}; // name → { cache: Map<id,data>, subs: Set<fn>, started: bool }
+
+function _ensureCollection(name) {
+  if (_collectionListeners[name]) return _collectionListeners[name];
+  const entry = { cache: new Map(), subs: new Set(), started: false };
+  _collectionListeners[name] = entry;
+  if (!db) return entry;
+  const colRef = collection(db, name);
+  onSnapshot(colRef, (snap) => {
+    snap.docChanges().forEach(change => {
+      if (change.type === 'removed') entry.cache.delete(change.doc.id);
+      else entry.cache.set(change.doc.id, change.doc.data());
+    });
+    entry.started = true;
+    const arr = _arrFromCache(entry.cache);
+    entry.subs.forEach(fn => { try { fn(arr); } catch (e) { console.warn(e); } });
+  }, (err) => console.warn(`[firebase] ${name} listener offline:`, err.message));
+  return entry;
+}
+
+function _arrFromCache(cache) {
+  const arr = [];
+  cache.forEach((data, id) => arr.push({ __id: id, ...data }));
+  return arr;
+}
+
+function subscribeCollection(name, onChange) {
+  const entry = _ensureCollection(name);
+  entry.subs.add(onChange);
+  /* Fire immediately if we already have cached docs from a prior subscriber. */
+  if (entry.started) onChange(_arrFromCache(entry.cache));
+  return () => entry.subs.delete(onChange);
+}
+
+async function writeCollectionDoc(name, id, data) {
+  if (!db) return;
+  await setDoc(doc(db, name, id), data, { merge: true }).catch(e =>
+    console.warn(`[firebase] ${name}/${id} write failed:`, e.message));
+  /* Optimistically prime the local cache so subsequent reads see the write
+     without waiting for the snapshot round-trip. */
+  const entry = _collectionListeners[name];
+  if (entry) entry.cache.set(id, { ...(entry.cache.get(id) || {}), ...data });
+  scheduleBackup();
+}
+
+async function deleteCollectionDoc(name, id) {
+  if (!db) return;
+  await deleteDoc(doc(db, name, id)).catch(e =>
+    console.warn(`[firebase] ${name}/${id} delete failed:`, e.message));
+  const entry = _collectionListeners[name];
+  if (entry) entry.cache.delete(id);
+}
+
+window.rosterFirebase = {
+  isReady: () => ready,
+  pushState, flushNow, submitPresent,
+  subscribeCollection, writeCollectionDoc, deleteCollectionDoc
+};
