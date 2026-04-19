@@ -14,6 +14,8 @@ const firebaseConfig = {
   measurementId: "G-5QJTH1NN0P"
 };
 
+const MTIMES_KEY = 'roster.__mtimes';
+
 const STATE_KEYS = [
   'roster.ledger', 'roster.availability', 'roster.rehearsals',
   'roster.checkins', 'roster.leaves', 'roster.project',
@@ -24,12 +26,22 @@ const STATE_KEYS = [
   'roster.adminInbox'
 ];
 
+function readMt(obj) {
+  try {
+    const raw = obj && obj[MTIMES_KEY];
+    if (!raw) return {};
+    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+  } catch (e) { return {}; }
+}
+
 function snapshotLocal() {
   const out = {};
   STATE_KEYS.forEach(k => {
     const v = localStorage.getItem(k);
     if (v != null) out[k] = v;
   });
+  const mt = localStorage.getItem(MTIMES_KEY);
+  if (mt != null) out[MTIMES_KEY] = mt;
   return out;
 }
 
@@ -38,7 +50,37 @@ function applySnapshot(data) {
   STATE_KEYS.forEach(k => {
     if (typeof data[k] === 'string') localStorage.setItem(k, data[k]);
   });
+  if (typeof data[MTIMES_KEY] === 'string') {
+    localStorage.setItem(MTIMES_KEY, data[MTIMES_KEY]);
+  }
   window.dispatchEvent(new CustomEvent('roster-state-sync'));
+}
+
+/* Per-key timestamped merge: keep whichever side has the newer mtime. Keys
+   only on one side are preserved. This prevents a fresh ensureSeed()'s empty
+   writes from clobbering real remote data, and prevents stale local data
+   from overwriting newer edits made on another device. */
+function mergeWithTimestamps(localData, remoteData) {
+  const localMt = readMt(localData);
+  const remoteMt = readMt(remoteData);
+  const merged = {};
+  const mergedMt = {};
+  STATE_KEYS.forEach(k => {
+    const lv = localMt[k] || 0;
+    const rv = remoteMt[k] || 0;
+    const lHas = typeof localData[k] === 'string';
+    const rHas = typeof remoteData[k] === 'string';
+    if (lHas && rHas) {
+      merged[k] = lv >= rv ? localData[k] : remoteData[k];
+    } else if (lHas) {
+      merged[k] = localData[k];
+    } else if (rHas) {
+      merged[k] = remoteData[k];
+    }
+    mergedMt[k] = Math.max(lv, rv);
+  });
+  merged[MTIMES_KEY] = JSON.stringify(mergedMt);
+  return merged;
 }
 
 let db, stateRef, ready = false, suspendWrites = false;
@@ -53,8 +95,10 @@ try {
   onSnapshot(stateRef, (snap) => {
     if (!snap.exists()) return;
     if (!initialSyncDone) return;
+    const remote = snap.data() || {};
+    const local = snapshotLocal();
     suspendWrites = true;
-    try { applySnapshot(snap.data()); } finally { suspendWrites = false; }
+    try { applySnapshot(mergeWithTimestamps(local, remote)); } finally { suspendWrites = false; }
   }, (err) => {
     console.warn('[firebase] listener offline:', err.message);
   });
@@ -62,19 +106,11 @@ try {
   getDoc(stateRef).then((snap) => {
     const localData = snapshotLocal();
     const remoteData = snap.exists() ? snap.data() : {};
-
-    // Merge: prefer local if it's newer or more complete
-    let merged = { ...remoteData };
-    STATE_KEYS.forEach(k => {
-      if (localData[k]) {
-        merged[k] = localData[k];
-      }
-    });
-
-    applySnapshot(merged);
+    applySnapshot(mergeWithTimestamps(localData, remoteData));
     initialSyncDone = true;
     ready = true;
     window.dispatchEvent(new CustomEvent('firebase-ready'));
+    pushState();
   }).catch(() => {
     initialSyncDone = true;
     ready = true;
@@ -87,18 +123,32 @@ try {
 }
 
 let flushTimer = null;
+function doFlush() {
+  if (!db || suspendWrites) return;
+  return setDoc(stateRef, snapshotLocal(), { merge: true })
+    .catch(e => console.warn('[firebase] push failed:', e.message));
+}
 function pushState() {
   if (!db || suspendWrites) return;
   clearTimeout(flushTimer);
-  flushTimer = setTimeout(async () => {
-    try { await setDoc(stateRef, snapshotLocal(), { merge: true }); }
-    catch (e) { console.warn('[firebase] push failed:', e.message); }
-  }, 300);
+  flushTimer = setTimeout(() => { flushTimer = null; doFlush(); }, 150);
 }
+
+/* Flush pending writes before the page unloads so a quick refresh after
+   adding a student never loses data. */
+function flushNow() {
+  if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+  doFlush();
+}
+window.addEventListener('pagehide', flushNow);
+window.addEventListener('beforeunload', flushNow);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushNow();
+});
 
 async function submitPresent(entry) {
   if (!db) throw new Error('Firebase not initialised');
   return addDoc(collection(db, 'presentSubmissions'), { ...entry, createdAt: serverTimestamp() });
 }
 
-window.rosterFirebase = { isReady: () => ready, pushState, submitPresent };
+window.rosterFirebase = { isReady: () => ready, pushState, flushNow, submitPresent };
