@@ -44,15 +44,20 @@
       return raw ? JSON.parse(raw) : fallback;
     } catch (e) { return fallback; }
   }
-  function writeJSON(key, value) {
+  /* opts.seed = true → this is a default from ensureSeed(), so don't bump
+     mtime and don't push to Firestore. Seed values must always lose the merge
+     against any real remote data. */
+  function writeJSON(key, value, opts) {
     localStorage.setItem(key, JSON.stringify(value));
-    try {
-      const mt = JSON.parse(localStorage.getItem(KEYS.MTIMES) || '{}');
-      mt[key] = Date.now();
-      localStorage.setItem(KEYS.MTIMES, JSON.stringify(mt));
-    } catch (e) { /* ignore */ }
-    if (global.rosterFirebase && typeof global.rosterFirebase.pushState === 'function') {
-      global.rosterFirebase.pushState();
+    if (!opts || !opts.seed) {
+      try {
+        const mt = JSON.parse(localStorage.getItem(KEYS.MTIMES) || '{}');
+        mt[key] = Date.now();
+        localStorage.setItem(KEYS.MTIMES, JSON.stringify(mt));
+      } catch (e) { /* ignore */ }
+      if (global.rosterFirebase && typeof global.rosterFirebase.pushState === 'function') {
+        global.rosterFirebase.pushState();
+      }
     }
   }
 
@@ -70,10 +75,8 @@
     KEYS,
 
     ensureSeed() {
-      const ledger = readJSON(KEYS.LEDGER, null);
-      if (!ledger) {
-        writeJSON(KEYS.LEDGER, []);
-      }
+      const seed = { seed: true };
+      if (!readJSON(KEYS.LEDGER, null)) writeJSON(KEYS.LEDGER, [], seed);
       if (!readJSON(KEYS.PROJECT, null)) {
         writeJSON(KEYS.PROJECT, {
           title: 'The Redemption of the White Queen',
@@ -81,17 +84,28 @@
           competitionDate: '2026-05-08',
           competitionLocation: 'Hong Kong',
           subtitle: 'S.3G4 English Drama'
-        });
+        }, seed);
       }
-      if (!readJSON(KEYS.REHEARSALS, null)) writeJSON(KEYS.REHEARSALS, []);
-      if (!readJSON(KEYS.NOTICES, null)) writeJSON(KEYS.NOTICES, []);
-      if (!readJSON(KEYS.PRESENT, null)) writeJSON(KEYS.PRESENT, []);
-      if (!readJSON(KEYS.REASONS, null)) writeJSON(KEYS.REASONS, DEFAULT_REASONS);
-      if (!readJSON(KEYS.LEAVE_REASONS, null)) writeJSON(KEYS.LEAVE_REASONS, DEFAULT_LEAVE_REASONS);
-      if (!readJSON(KEYS.CHECKIN_CODES, null)) writeJSON(KEYS.CHECKIN_CODES, {});
-      if (!readJSON(KEYS.ATTENDANCE, null)) writeJSON(KEYS.ATTENDANCE, {});
-      if (!readJSON(KEYS.ZOOM_MEETINGS, null)) writeJSON(KEYS.ZOOM_MEETINGS, []);
-      if (!readJSON(KEYS.ADMIN_INBOX, null)) writeJSON(KEYS.ADMIN_INBOX, []);
+      if (!readJSON(KEYS.REHEARSALS, null)) writeJSON(KEYS.REHEARSALS, [], seed);
+      if (!readJSON(KEYS.NOTICES, null)) writeJSON(KEYS.NOTICES, [], seed);
+      if (!readJSON(KEYS.PRESENT, null)) writeJSON(KEYS.PRESENT, [], seed);
+      if (!readJSON(KEYS.REASONS, null)) writeJSON(KEYS.REASONS, DEFAULT_REASONS, seed);
+      if (!readJSON(KEYS.LEAVE_REASONS, null)) writeJSON(KEYS.LEAVE_REASONS, DEFAULT_LEAVE_REASONS, seed);
+      if (!readJSON(KEYS.CHECKIN_CODES, null)) writeJSON(KEYS.CHECKIN_CODES, {}, seed);
+      if (!readJSON(KEYS.ATTENDANCE, null)) writeJSON(KEYS.ATTENDANCE, {}, seed);
+      if (!readJSON(KEYS.ZOOM_MEETINGS, null)) writeJSON(KEYS.ZOOM_MEETINGS, [], seed);
+      if (!readJSON(KEYS.ADMIN_INBOX, null)) writeJSON(KEYS.ADMIN_INBOX, [], seed);
+    },
+
+    /* Wait for Firestore's initial sync to land before rendering, so pages
+       never flash empty cast lists or miss rehearsals. Returns a promise that
+       resolves once rosterFirebase has completed (or failed) its first read. */
+    whenReady() {
+      return new Promise(resolve => {
+        if (!global.rosterFirebase) return resolve();
+        if (global.rosterFirebase.isReady && global.rosterFirebase.isReady()) return resolve();
+        window.addEventListener('firebase-ready', () => resolve(), { once: true });
+      });
     },
 
     /* ── invite links + admin inbox ──────────────────────── */

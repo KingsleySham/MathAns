@@ -1487,16 +1487,21 @@
 
     const gate = document.getElementById('gate');
     const app = document.getElementById('admin-app');
-    function showApp() { gate.classList.add('hidden'); app.classList.remove('hidden'); renderOverview(); renderPoll(); setPollStep(1); }
+    function renderAll() { renderOverview(); renderCast(); renderLeaves(); renderPoll(); renderNotices(); renderInbox(); }
+    function showApp() {
+      gate.classList.add('hidden');
+      app.classList.remove('hidden');
+      /* Wait for Firestore's first read before painting, so the cast list
+         never flashes empty while the remote state is still loading. */
+      Roster.whenReady().then(() => { renderAll(); setPollStep(1); });
+    }
     if (Roster.isAdminAuthed()) showApp();
 
-    // Re-render on Firebase sync so Zoom config/session and rehearsals
-    // appear immediately when another device pushes updates.
+    // Re-render on Firebase sync so data from other devices appears live.
     window.addEventListener('roster-state-sync', () => {
       if (!Roster.isAdminAuthed()) return;
       if (!document.getElementById('admin-app').classList.contains('hidden')) {
-        renderOverview();
-        renderPoll();
+        renderAll();
       }
     });
 
@@ -1874,6 +1879,9 @@
       const name = document.getElementById('new-name').value.trim();
       if (!name) return;
       Roster.addStudent(name, document.getElementById('new-role').value.trim());
+      /* Push to Firestore immediately instead of waiting for the debounce,
+         so a quick refresh can't lose the new entry. */
+      if (window.rosterFirebase && window.rosterFirebase.flushNow) window.rosterFirebase.flushNow();
       document.getElementById('new-name').value = '';
       document.getElementById('new-role').value = '';
       selectedRoles.clear();
