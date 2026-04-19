@@ -20,7 +20,8 @@ const STATE_KEYS = [
   'roster.pollWindow', 'roster.notices', 'roster.presentSubmissions',
   'roster.zoomConfig', 'roster.zoomSession', 'roster.zoomMeetings',
   'roster.checkinCodes', 'roster.attendance',
-  'roster.commonReasons', 'roster.commonLeaveReasons'
+  'roster.commonReasons', 'roster.commonLeaveReasons',
+  'roster.adminInbox'
 ];
 
 function snapshotLocal() {

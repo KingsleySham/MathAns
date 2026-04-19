@@ -91,6 +91,10 @@
     <button data-tab="notices" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-slate-300 hover:bg-white/10">
       <span class="material-symbols-outlined">notifications</span><span>Notices</span>
     </button>
+    <button data-tab="inbox" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-slate-300 hover:bg-white/10">
+      <span class="material-symbols-outlined">inbox</span><span>Inbox</span>
+      <span id="inbox-badge" class="ml-auto hidden text-[10px] font-bold bg-secondary text-white px-2 py-0.5 rounded-full"></span>
+    </button>
   </nav>
   <div class="px-4 pb-8 space-y-2">
     <a href="present.html" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white rounded-xl w-full text-left">
@@ -511,9 +515,13 @@
           <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Name</label>
           <input id="new-name" type="text" placeholder="Full name" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"/>
         </div>
-        <div class="flex-1 min-w-[160px]">
-          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Role (optional)</label>
-          <input id="new-role" type="text" placeholder="e.g. Tom, Ensemble" class="w-full bg-surface-container-high border-none rounded-xl p-4 focus:ring-2 focus:ring-primary-fixed"/>
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-2">Role</label>
+          <input id="new-role" type="hidden" value=""/>
+          <div class="flex gap-2">
+            <button type="button" data-role-toggle="Cast Member" class="role-toggle flex-1 px-3 py-3 rounded-xl border-2 border-outline-variant/30 bg-surface-container-high text-sm font-bold text-on-surface-variant hover:border-primary/40 transition-all">Cast Member</button>
+            <button type="button" data-role-toggle="Technical Crew" class="role-toggle flex-1 px-3 py-3 rounded-xl border-2 border-outline-variant/30 bg-surface-container-high text-sm font-bold text-on-surface-variant hover:border-primary/40 transition-all">Technical Crew</button>
+          </div>
         </div>
         <button id="add-student-btn" class="px-6 py-4 bg-primary text-white rounded-full font-bold flex items-center gap-2 active:scale-95 transition-all">
           <span class="material-symbols-outlined">person_add</span> Add
@@ -564,6 +572,20 @@
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
       <h3 class="font-headline text-xl font-extrabold text-primary mb-4">Current notices</h3>
       <div id="notices-list" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- ── INBOX ──────────────────────────────────────────── -->
+  <div id="tab-inbox" class="section-panel flex-1 px-6 sm:px-12 py-8 sm:py-16">
+    <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Inbox</span>
+    <h1 class="font-headline text-3xl sm:text-5xl font-black tracking-tighter text-on-surface mb-4">Invite<br/><span class="text-primary-container">Notifications.</span></h1>
+    <p class="text-sm text-on-surface-variant mb-8 max-w-xl">Notifications arrive here when a cast member submits availability via their invite link.</p>
+    <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="font-headline text-xl font-extrabold text-primary">Recent activity</h3>
+        <button id="mark-all-read-btn" class="text-xs font-bold text-primary hover:underline">Mark all read</button>
+      </div>
+      <div id="inbox-list" class="space-y-3"></div>
     </div>
   </div>
 
@@ -733,6 +755,7 @@
     if (name === 'leaves') renderLeaves();
     if (name === 'poll') { renderPoll(); setPollStep(currentPollStep || 1); }
     if (name === 'notices') renderNotices();
+    if (name === 'inbox') { renderInbox(); if (Roster.markAllAdminInboxRead) { Roster.markAllAdminInboxRead(); updateInboxBadge(); } }
   }
 
   function renderOverview() {
@@ -1250,6 +1273,7 @@
           <span class="px-2 py-1 rounded-full ${statusColor} text-xs font-bold pointer-events-none">${statusLabel}</span>
           <span class="pointer-events-none"><span class="font-bold text-primary">${a.available.length}</span> avail</span>
           <span class="pointer-events-none"><span class="font-bold text-error">${a.blocked.length}</span> blocked</span>
+          <button data-copy-invite="${s.id}" class="px-2 py-1 text-primary text-xs font-bold hover:bg-primary-fixed rounded flex items-center gap-1 pointer-events-auto"><span class="material-symbols-outlined text-sm">link</span>Invite</button>
           <button data-delete-student="${s.id}" class="px-2 py-1 text-error text-xs font-bold hover:bg-error-container rounded">Delete</button>
         </div>
       </div>`;
@@ -1257,8 +1281,20 @@
 
     document.querySelectorAll('[data-view-student]').forEach(row => {
       row.addEventListener('click', (e) => {
-        if (e.target.closest('[data-delete-student]')) return;
+        if (e.target.closest('[data-delete-student]') || e.target.closest('[data-copy-invite]')) return;
         showCastProfile(row.dataset.viewStudent);
+      });
+    });
+    document.querySelectorAll('[data-copy-invite]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const url = Roster.buildInviteUrl(btn.dataset.copyInvite);
+        navigator.clipboard.writeText(url).then(() => {
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<span class="material-symbols-outlined text-sm">check</span>Copied!';
+          btn.classList.add('bg-primary-fixed');
+          setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('bg-primary-fixed'); }, 2000);
+        }).catch(() => { prompt('Copy this invite link:', url); });
       });
     });
     document.querySelectorAll('[data-delete-student]').forEach(btn => {
@@ -1775,6 +1811,24 @@
       renderNotices();
     });
 
+    /* role toggles (Cast Member / Technical Crew) */
+    const selectedRoles = new Set();
+    document.querySelectorAll('[data-role-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const r = btn.dataset.roleToggle;
+        if (selectedRoles.has(r)) {
+          selectedRoles.delete(r);
+          btn.classList.remove('border-primary','bg-primary','text-white');
+          btn.classList.add('border-outline-variant/30','bg-surface-container-high','text-on-surface-variant');
+        } else {
+          selectedRoles.add(r);
+          btn.classList.add('border-primary','bg-primary','text-white');
+          btn.classList.remove('border-outline-variant/30','bg-surface-container-high','text-on-surface-variant');
+        }
+        document.getElementById('new-role').value = [...selectedRoles].join(', ');
+      });
+    });
+
     /* add student */
     document.getElementById('add-student-btn').addEventListener('click', () => {
       const name = document.getElementById('new-name').value.trim();
@@ -1782,9 +1836,59 @@
       Roster.addStudent(name, document.getElementById('new-role').value.trim());
       document.getElementById('new-name').value = '';
       document.getElementById('new-role').value = '';
+      selectedRoles.clear();
+      document.querySelectorAll('[data-role-toggle]').forEach(btn => {
+        btn.classList.remove('border-primary','bg-primary','text-white');
+        btn.classList.add('border-outline-variant/30','bg-surface-container-high','text-on-surface-variant');
+      });
       renderCast();
       renderOverview();
     });
+
+    /* inbox */
+    function renderInbox() {
+      const items = Roster.getAdminInbox ? Roster.getAdminInbox() : [];
+      const unread = items.filter(x => !x.read).length;
+      const badge = document.getElementById('inbox-badge');
+      if (unread > 0) { badge.textContent = unread; badge.classList.remove('hidden'); }
+      else badge.classList.add('hidden');
+      const list = document.getElementById('inbox-list');
+      if (!list) return;
+      list.innerHTML = items.length ? items.map(item => {
+        const ago = (() => {
+          const s = Math.floor((Date.now() - item.at) / 1000);
+          if (s < 60) return 'just now';
+          if (s < 3600) return Math.floor(s/60) + 'm ago';
+          if (s < 86400) return Math.floor(s/3600) + 'h ago';
+          return Math.floor(s/86400) + 'd ago';
+        })();
+        return `<div class="flex items-start gap-4 p-4 rounded-xl ${item.read ? 'bg-surface-container-low' : 'bg-primary-fixed border border-primary/20'}">
+          <div class="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1;">person_check</span>
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-sm text-on-surface">${item.studentName || 'A cast member'}</p>
+            <p class="text-xs text-on-surface-variant mt-0.5">${item.role ? item.role + ' · ' : ''}submitted availability</p>
+            <p class="text-[10px] text-outline mt-1">${ago}</p>
+          </div>
+          ${!item.read ? `<span class="w-2 h-2 rounded-full bg-primary mt-2 shrink-0"></span>` : ''}
+        </div>`;
+      }).join('') : '<p class="text-xs text-on-surface-variant">No notifications yet. Share invite links from the Cast Ledger.</p>';
+    }
+
+    document.getElementById('mark-all-read-btn').addEventListener('click', () => {
+      if (Roster.markAllAdminInboxRead) Roster.markAllAdminInboxRead();
+      renderInbox();
+    });
+
+    window.addEventListener('roster-state-sync', () => { renderInbox(); updateInboxBadge(); });
+    function updateInboxBadge() {
+      const unread = Roster.unreadInboxCount ? Roster.unreadInboxCount() : 0;
+      const badge = document.getElementById('inbox-badge');
+      if (unread > 0) { badge.textContent = unread; badge.classList.remove('hidden'); }
+      else badge.classList.add('hidden');
+    }
+    updateInboxBadge();
 
     /* day-of-week and format styling */
     document.querySelectorAll('.dow-cb, .format-radio').forEach(cb => {

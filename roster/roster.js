@@ -16,7 +16,8 @@
     ATTENDANCE: 'roster.attendance',
     ZOOM_MEETINGS: 'roster.zoomMeetings',
     ZOOM_CONFIG: 'roster.zoomConfig',
-    ZOOM_SESSION: 'roster.zoomSession'
+    ZOOM_SESSION: 'roster.zoomSession',
+    ADMIN_INBOX: 'roster.adminInbox'
   };
 
   const DEFAULT_REASONS = ['School commitment', 'Family event', 'Health', 'Tutoring', 'Other'];
@@ -84,7 +85,31 @@
       if (!readJSON(KEYS.CHECKIN_CODES, null)) writeJSON(KEYS.CHECKIN_CODES, {});
       if (!readJSON(KEYS.ATTENDANCE, null)) writeJSON(KEYS.ATTENDANCE, {});
       if (!readJSON(KEYS.ZOOM_MEETINGS, null)) writeJSON(KEYS.ZOOM_MEETINGS, []);
+      if (!readJSON(KEYS.ADMIN_INBOX, null)) writeJSON(KEYS.ADMIN_INBOX, []);
     },
+
+    /* ── invite links + admin inbox ──────────────────────── */
+    buildInviteUrl(studentId) {
+      const base = location.origin + location.pathname.replace(/[^/]+$/, '');
+      return `${base}invite.html?id=${encodeURIComponent(studentId)}`;
+    },
+    getAdminInbox() { return readJSON(KEYS.ADMIN_INBOX, []); },
+    pushAdminInbox(entry) {
+      const list = Roster.getAdminInbox();
+      list.unshift({ id: genId('inb'), at: Date.now(), read: false, ...entry });
+      if (list.length > 100) list.length = 100;
+      writeJSON(KEYS.ADMIN_INBOX, list);
+    },
+    markAdminInboxRead(id) {
+      const list = Roster.getAdminInbox();
+      const item = list.find(x => x.id === id);
+      if (item) { item.read = true; writeJSON(KEYS.ADMIN_INBOX, list); }
+    },
+    markAllAdminInboxRead() {
+      const list = Roster.getAdminInbox().map(x => ({ ...x, read: true }));
+      writeJSON(KEYS.ADMIN_INBOX, list);
+    },
+    unreadInboxCount() { return Roster.getAdminInbox().filter(x => !x.read).length; },
 
     /* ── common reasons for unavailability ──────────────── */
     getCommonReasons() { return readJSON(KEYS.REASONS, DEFAULT_REASONS); },
