@@ -190,12 +190,67 @@ function scheduleBackup() {
   }, wait);
 }
 
-/* ── Per-collection helpers ────────────────────────────────────────────────
-   For data that grows unboundedly (users, rehearsals, attendance, …) we
-   store one document per record in a dedicated Firestore collection rather
-   than packing everything into state/main. This avoids the 1 MiB document
-   ceiling, eliminates merge races between concurrent writers, and lets
-   listeners deliver only the diffs that actually changed. */
+/* ── Tombstones ───────────────────────────────────────────────────────────
+   Deletions write a permanent marker to `tombstones/{name}__{id}` so a
+   stale cache on another device — or an old invite URL — can never
+   resurrect a deleted row. The tombstone listener syncs across every
+   device; any write or cache-set that matches a tombstone is rejected.
+   Tombstones are additive: removing one (manually via the Firestore
+   console, or via Roster.restoreTombstoned) undoes the block. */
+
+const _tombstones = new Set(); // "name:id"
+let _tombstonesReady = false;
+
+function _tombstoneKey(name, id) { return `${name}:${id}`; }
+function _tombstoneDocId(name, id) { return `${name}__${id}`; }
+
+function isTombstoned(name, id) {
+  return _tombstones.has(_tombstoneKey(name, id));
+}
+
+async function tombstone(name, id) {
+  _tombstones.add(_tombstoneKey(name, id));
+  if (!db) return;
+  try {
+    await setDoc(doc(db, 'tombstones', _tombstoneDocId(name, id)), {
+      collection: name, id, at: Date.now()
+    });
+  } catch (e) { console.warn(`[firebase] tombstone ${name}/${id} failed:`, e.message); }
+}
+
+async function restoreTombstoned(name, id) {
+  _tombstones.delete(_tombstoneKey(name, id));
+  if (!db) return;
+  try { await deleteDoc(doc(db, 'tombstones', _tombstoneDocId(name, id))); }
+  catch (e) { console.warn(`[firebase] untombstone ${name}/${id} failed:`, e.message); }
+}
+
+if (db) {
+  onSnapshot(collection(db, 'tombstones'), (snap) => {
+    snap.docChanges().forEach(change => {
+      const data = change.doc.data() || {};
+      if (!data.collection || !data.id) return;
+      const key = _tombstoneKey(data.collection, data.id);
+      if (change.type === 'removed') _tombstones.delete(key);
+      else _tombstones.add(key);
+    });
+    _tombstonesReady = true;
+    /* Sweep every live collection cache so any already-loaded row that
+       matches a freshly-seen tombstone is evicted immediately, and fan
+       out to subscribers. */
+    Object.keys(_collectionListeners).forEach(name => {
+      const entry = _collectionListeners[name];
+      let changed = false;
+      [...entry.cache.keys()].forEach(id => {
+        if (isTombstoned(name, id)) { entry.cache.delete(id); changed = true; }
+      });
+      if (changed) {
+        const arr = _arrFromCache(entry.cache);
+        entry.subs.forEach(fn => { try { fn(arr); } catch (e) { console.warn(e); } });
+      }
+    });
+  }, (err) => console.warn('[firebase] tombstones listener offline:', err.message));
+}
 
 const _collectionListeners = {}; // name → { cache: Map<id,data>, subs: Set<fn>, started: bool }
 
@@ -207,8 +262,11 @@ function _ensureCollection(name) {
   const colRef = collection(db, name);
   onSnapshot(colRef, (snap) => {
     snap.docChanges().forEach(change => {
-      if (change.type === 'removed') entry.cache.delete(change.doc.id);
-      else entry.cache.set(change.doc.id, change.doc.data());
+      if (change.type === 'removed') { entry.cache.delete(change.doc.id); return; }
+      /* A tombstone always wins: silently drop any doc that's been
+         marked deleted, so it can't resurface in the cache. */
+      if (isTombstoned(name, change.doc.id)) return;
+      entry.cache.set(change.doc.id, change.doc.data());
     });
     entry.started = true;
     const arr = _arrFromCache(entry.cache);
@@ -233,6 +291,10 @@ function subscribeCollection(name, onChange) {
 
 async function writeCollectionDoc(name, id, data) {
   if (!db) return;
+  /* Refuse to resurrect a tombstoned row. This is the anti-zombie check:
+     migrations from stale devices and permanent invite URLs both funnel
+     through here, and this short-circuit stops them cold. */
+  if (isTombstoned(name, id)) return;
   await setDoc(doc(db, name, id), data, { merge: true }).catch(e =>
     console.warn(`[firebase] ${name}/${id} write failed:`, e.message));
   /* Optimistically prime the local cache so subsequent reads see the write
@@ -244,6 +306,9 @@ async function writeCollectionDoc(name, id, data) {
 
 async function deleteCollectionDoc(name, id) {
   if (!db) return;
+  /* Write the tombstone BEFORE the delete so a racing read can never
+     see the row without also seeing that it's been deleted. */
+  await tombstone(name, id);
   await deleteDoc(doc(db, name, id)).catch(e =>
     console.warn(`[firebase] ${name}/${id} delete failed:`, e.message));
   const entry = _collectionListeners[name];
@@ -253,5 +318,6 @@ async function deleteCollectionDoc(name, id) {
 window.rosterFirebase = {
   isReady: () => ready,
   pushState, flushNow, submitPresent,
-  subscribeCollection, writeCollectionDoc, deleteCollectionDoc
+  subscribeCollection, writeCollectionDoc, deleteCollectionDoc,
+  isTombstoned, tombstone, restoreTombstoned
 };
