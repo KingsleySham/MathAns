@@ -64,6 +64,68 @@
   function uid() { return 'stu_' + Math.random().toString(36).slice(2, 9); }
   function genId(prefix) { return prefix + '_' + Math.random().toString(36).slice(2, 9); }
 
+  /* ── Students collection cache ────────────────────────────────────────
+     Each student is a doc in the Firestore `students` collection. We hold
+     them in a Map for synchronous reads, mirror to localStorage for the
+     first paint after a cold open, and dispatch roster-state-sync when the
+     remote sends an update. */
+  const studentsCache = new Map();
+  let studentsCacheReady = false;
+
+  function mirrorStudentsToLocal() {
+    const arr = [...studentsCache.values()];
+    localStorage.setItem(KEYS.LEDGER, JSON.stringify(arr));
+  }
+
+  function writeStudent(student) {
+    studentsCache.set(student.id, student);
+    mirrorStudentsToLocal();
+    if (global.rosterFirebase && global.rosterFirebase.writeCollectionDoc) {
+      global.rosterFirebase.writeCollectionDoc('students', student.id, student);
+    }
+  }
+
+  function patchStudent(id, patch) {
+    const existing = studentsCache.get(id) || (readJSON(KEYS.LEDGER, []).find(s => s.id === id));
+    if (!existing) return null;
+    const merged = { ...existing, ...patch };
+    writeStudent(merged);
+    return merged;
+  }
+
+  function initStudentsSync() {
+    /* Seed the cache from localStorage so the first synchronous getLedger()
+       (before Firestore replies) still returns whatever this device knows. */
+    readJSON(KEYS.LEDGER, []).forEach(s => { if (s && s.id) studentsCache.set(s.id, s); });
+
+    if (!global.rosterFirebase || !global.rosterFirebase.subscribeCollection) return;
+    global.rosterFirebase.subscribeCollection('students', (docs) => {
+      studentsCache.clear();
+      docs.forEach(d => { if (d && d.id) studentsCache.set(d.id, d); });
+      studentsCacheReady = true;
+      mirrorStudentsToLocal();
+      window.dispatchEvent(new CustomEvent('roster-state-sync'));
+    });
+
+    /* One-time migration: if state/main carries a legacy ledger that the
+       students collection hasn't picked up yet, push each entry up. setDoc
+       with merge:true is idempotent so re-running is harmless. */
+    const legacy = readJSON(KEYS.LEDGER, []);
+    legacy.forEach(s => {
+      if (s && s.id && global.rosterFirebase.writeCollectionDoc) {
+        global.rosterFirebase.writeCollectionDoc('students', s.id, s);
+      }
+    });
+  }
+
+  if (typeof window !== 'undefined') {
+    if (window.rosterFirebase && window.rosterFirebase.isReady && window.rosterFirebase.isReady()) {
+      initStudentsSync();
+    } else {
+      window.addEventListener('firebase-ready', initStudentsSync, { once: true });
+    }
+  }
+
   function nextScriptId(ledger) {
     const used = new Set(ledger.map(s => s.scriptId).filter(Boolean));
     let n = 1;
@@ -125,19 +187,16 @@
        so an invite link is effectively permanent even after local data is cleared. */
     ensureInvitedStudent(input) {
       if (!input || !input.id) return null;
-      const ledger = Roster.getLedger();
-      const existing = ledger.find(x => x.id === input.id);
+      const existing = Roster.getLedger().find(x => x.id === input.id);
       if (existing) {
-        let dirty = false;
-        if (input.name && !existing.name) { existing.name = input.name; dirty = true; }
-        if (input.role && !existing.role) { existing.role = input.role; dirty = true; }
-        if (dirty) writeJSON(KEYS.LEDGER, ledger);
-        return existing;
+        const patch = {};
+        if (input.name && !existing.name) patch.name = input.name;
+        if (input.role && !existing.role) patch.role = input.role;
+        return Object.keys(patch).length ? patchStudent(input.id, patch) : existing;
       }
       if (!input.name) return null;
       const s = { id: input.id, name: input.name, role: input.role || '', scriptId: null, createdAt: Date.now() };
-      ledger.push(s);
-      writeJSON(KEYS.LEDGER, ledger);
+      writeStudent(s);
       return s;
     },
     getAdminInbox() { return readJSON(KEYS.ADMIN_INBOX, []); },
@@ -277,19 +336,27 @@
       });
     },
 
-    getLedger() { return readJSON(KEYS.LEDGER, []); },
+    /* Ledger lives in the `students` Firestore collection (one doc per
+       student). The in-memory cache below is the synchronous source of
+       truth; localStorage is only an offline fallback for the very first
+       paint before Firestore answers. */
+    getLedger() {
+      if (studentsCacheReady) return [...studentsCache.values()].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      return readJSON(KEYS.LEDGER, []);
+    },
 
     addStudent(name, role = '') {
-      const ledger = Roster.getLedger();
       const student = { id: uid(), name, role, scriptId: null, createdAt: Date.now() };
-      ledger.push(student);
-      writeJSON(KEYS.LEDGER, ledger);
+      writeStudent(student);
       return student;
     },
 
     removeStudent(studentId) {
-      const ledger = Roster.getLedger().filter(s => s.id !== studentId);
-      writeJSON(KEYS.LEDGER, ledger);
+      studentsCache.delete(studentId);
+      mirrorStudentsToLocal();
+      if (global.rosterFirebase && global.rosterFirebase.deleteCollectionDoc) {
+        global.rosterFirebase.deleteCollectionDoc('students', studentId);
+      }
       const all = Roster.getAvailabilityMap();
       delete all[studentId];
       writeJSON(KEYS.AVAILABILITY, all);
@@ -320,10 +387,10 @@
       const ledger = Roster.getLedger();
       const student = ledger.find(s => s.id === studentId);
       if (!student) return null;
-      if (!student.scriptId) student.scriptId = nextScriptId(ledger);
-      if (role) student.role = role;
-      writeJSON(KEYS.LEDGER, ledger);
-      return student;
+      const patch = {};
+      if (!student.scriptId) patch.scriptId = nextScriptId(ledger);
+      if (role) patch.role = role;
+      return patchStudent(studentId, patch) || student;
     },
 
     findByScriptId(raw) {
@@ -339,37 +406,19 @@
       return Roster.assignScriptId(student.id);
     },
 
-    markLegalAccepted(studentId) {
-      const ledger = Roster.getLedger();
-      const s = ledger.find(x => x.id === studentId);
-      if (!s) return;
-      s.legalAcceptedAt = Date.now();
-      writeJSON(KEYS.LEDGER, ledger);
-    },
+    markLegalAccepted(studentId) { patchStudent(studentId, { legalAcceptedAt: Date.now() }); },
     hasAcceptedLegal(studentId) {
       const s = Roster.getLedger().find(x => x.id === studentId);
       return !!(s && s.legalAcceptedAt);
     },
-    markTutorialSeen(studentId) {
-      const ledger = Roster.getLedger();
-      const s = ledger.find(x => x.id === studentId);
-      if (!s) return;
-      s.tutorialSeenAt = Date.now();
-      writeJSON(KEYS.LEDGER, ledger);
-    },
+    markTutorialSeen(studentId) { patchStudent(studentId, { tutorialSeenAt: Date.now() }); },
     hasSeenTutorial(studentId) {
       const s = Roster.getLedger().find(x => x.id === studentId);
       return !!(s && s.tutorialSeenAt);
     },
 
     /* remember that a student has dismissed the "new poll" popup */
-    markPollSeen(studentId, pollId) {
-      const ledger = Roster.getLedger();
-      const s = ledger.find(x => x.id === studentId);
-      if (!s) return;
-      s.seenPollId = pollId;
-      writeJSON(KEYS.LEDGER, ledger);
-    },
+    markPollSeen(studentId, pollId) { patchStudent(studentId, { seenPollId: pollId }); },
     hasSeenPoll(studentId, pollId) {
       const s = Roster.getLedger().find(x => x.id === studentId);
       return !!(s && s.seenPollId === pollId);

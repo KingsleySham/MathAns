@@ -1,7 +1,8 @@
 // Firebase bridge for The Orchestral Frame — mathans---roster project
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import {
-  getFirestore, doc, onSnapshot, setDoc, getDoc, addDoc, collection, serverTimestamp
+  getFirestore, doc, onSnapshot, setDoc, getDoc, getDocs, deleteDoc,
+  addDoc, collection, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -16,8 +17,9 @@ const firebaseConfig = {
 
 const MTIMES_KEY = 'roster.__mtimes';
 
+/* `roster.ledger` lives in the `students` collection now, not state/main. */
 const STATE_KEYS = [
-  'roster.ledger', 'roster.availability', 'roster.rehearsals',
+  'roster.availability', 'roster.rehearsals',
   'roster.checkins', 'roster.leaves', 'roster.project',
   'roster.pollWindow', 'roster.notices', 'roster.presentSubmissions',
   'roster.zoomConfig', 'roster.zoomSession', 'roster.zoomMeetings',
@@ -151,4 +153,61 @@ async function submitPresent(entry) {
   return addDoc(collection(db, 'presentSubmissions'), { ...entry, createdAt: serverTimestamp() });
 }
 
-window.rosterFirebase = { isReady: () => ready, pushState, flushNow, submitPresent };
+/* ── Per-collection helpers ────────────────────────────────────────────────
+   For data that grows unboundedly (users, rehearsals, attendance, …) we
+   store one document per record in a dedicated Firestore collection rather
+   than packing everything into state/main. This avoids the 1 MiB document
+   ceiling, eliminates merge races between concurrent writers, and lets
+   listeners deliver only the diffs that actually changed. */
+
+const _collectionListeners = {}; // name → { cache: Map<id,data>, subs: Set<fn>, started: bool }
+
+function _ensureCollection(name) {
+  if (_collectionListeners[name]) return _collectionListeners[name];
+  const entry = { cache: new Map(), subs: new Set(), started: false };
+  _collectionListeners[name] = entry;
+  if (!db) return entry;
+  const colRef = collection(db, name);
+  onSnapshot(colRef, (snap) => {
+    snap.docChanges().forEach(change => {
+      if (change.type === 'removed') entry.cache.delete(change.doc.id);
+      else entry.cache.set(change.doc.id, change.doc.data());
+    });
+    entry.started = true;
+    const arr = [...entry.cache.values()];
+    entry.subs.forEach(fn => { try { fn(arr); } catch (e) { console.warn(e); } });
+  }, (err) => console.warn(`[firebase] ${name} listener offline:`, err.message));
+  return entry;
+}
+
+function subscribeCollection(name, onChange) {
+  const entry = _ensureCollection(name);
+  entry.subs.add(onChange);
+  /* Fire immediately if we already have cached docs from a prior subscriber. */
+  if (entry.started) onChange([...entry.cache.values()]);
+  return () => entry.subs.delete(onChange);
+}
+
+async function writeCollectionDoc(name, id, data) {
+  if (!db) return;
+  await setDoc(doc(db, name, id), data, { merge: true }).catch(e =>
+    console.warn(`[firebase] ${name}/${id} write failed:`, e.message));
+  /* Optimistically prime the local cache so subsequent reads see the write
+     without waiting for the snapshot round-trip. */
+  const entry = _collectionListeners[name];
+  if (entry) entry.cache.set(id, { ...(entry.cache.get(id) || {}), ...data });
+}
+
+async function deleteCollectionDoc(name, id) {
+  if (!db) return;
+  await deleteDoc(doc(db, name, id)).catch(e =>
+    console.warn(`[firebase] ${name}/${id} delete failed:`, e.message));
+  const entry = _collectionListeners[name];
+  if (entry) entry.cache.delete(id);
+}
+
+window.rosterFirebase = {
+  isReady: () => ready,
+  pushState, flushNow, submitPresent,
+  subscribeCollection, writeCollectionDoc, deleteCollectionDoc
+};
