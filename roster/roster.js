@@ -17,7 +17,8 @@
     ZOOM_MEETINGS: 'roster.zoomMeetings',
     ZOOM_CONFIG: 'roster.zoomConfig',
     ZOOM_SESSION: 'roster.zoomSession',
-    ADMIN_INBOX: 'roster.adminInbox'
+    ADMIN_INBOX: 'roster.adminInbox',
+    MTIMES: 'roster.__mtimes'
   };
 
   const DEFAULT_REASONS = ['School commitment', 'Family event', 'Health', 'Tutoring', 'Other'];
@@ -45,6 +46,11 @@
   }
   function writeJSON(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
+    try {
+      const mt = JSON.parse(localStorage.getItem(KEYS.MTIMES) || '{}');
+      mt[key] = Date.now();
+      localStorage.setItem(KEYS.MTIMES, JSON.stringify(mt));
+    } catch (e) { /* ignore */ }
     if (global.rosterFirebase && typeof global.rosterFirebase.pushState === 'function') {
       global.rosterFirebase.pushState();
     }
@@ -89,9 +95,36 @@
     },
 
     /* ── invite links + admin inbox ──────────────────────── */
+    /* Permanent invite URLs: include the name/role as URL hints so the link
+       resolves even if a device has stale local data or Firestore is slow. */
     buildInviteUrl(studentId) {
       const base = location.origin + location.pathname.replace(/[^/]+$/, '');
-      return `${base}invite.html?id=${encodeURIComponent(studentId)}`;
+      const params = new URLSearchParams({ id: studentId });
+      const s = Roster.getLedger().find(x => x.id === studentId);
+      if (s) {
+        if (s.name) params.set('n', s.name);
+        if (s.role) params.set('r', s.role);
+      }
+      return `${base}invite.html?${params.toString()}`;
+    },
+    /* Recreate or update a ledger entry from an invite URL's embedded name/role,
+       so an invite link is effectively permanent even after local data is cleared. */
+    ensureInvitedStudent(input) {
+      if (!input || !input.id) return null;
+      const ledger = Roster.getLedger();
+      const existing = ledger.find(x => x.id === input.id);
+      if (existing) {
+        let dirty = false;
+        if (input.name && !existing.name) { existing.name = input.name; dirty = true; }
+        if (input.role && !existing.role) { existing.role = input.role; dirty = true; }
+        if (dirty) writeJSON(KEYS.LEDGER, ledger);
+        return existing;
+      }
+      if (!input.name) return null;
+      const s = { id: input.id, name: input.name, role: input.role || '', scriptId: null, createdAt: Date.now() };
+      ledger.push(s);
+      writeJSON(KEYS.LEDGER, ledger);
+      return s;
     },
     getAdminInbox() { return readJSON(KEYS.ADMIN_INBOX, []); },
     pushAdminInbox(entry) {
@@ -504,6 +537,16 @@
     },
 
     getRehearsals() { return readJSON(KEYS.REHEARSALS, []); },
+    /* true if the student is called for this rehearsal (empty list = everyone) */
+    isParticipant(rehearsal, studentId) {
+      if (!rehearsal) return false;
+      const ids = rehearsal.participantIds;
+      if (!Array.isArray(ids) || ids.length === 0) return true;
+      return ids.includes(studentId);
+    },
+    getRehearsalsForStudent(studentId) {
+      return Roster.getRehearsals().filter(r => Roster.isParticipant(r, studentId));
+    },
     addRehearsal(slotKey, label = 'Rehearsal', type = 'rehearsal', venue = 'Main Stage') {
       const list = Roster.getRehearsals();
       if (list.some(r => r.slotKey === slotKey)) return null;

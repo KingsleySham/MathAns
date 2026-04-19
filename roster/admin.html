@@ -211,6 +211,17 @@
             <input id="mr-location" type="text" placeholder="Hall A" class="w-full bg-surface-container-high border-none rounded-lg p-3 focus:ring-2 focus:ring-primary-fixed"/>
           </div>
         </div>
+        <div class="mb-4">
+          <label class="block text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Who's called</label>
+          <div class="flex gap-2 mb-2 flex-wrap">
+            <button type="button" id="mr-select-all" class="px-3 py-1.5 bg-primary-fixed text-primary rounded-full text-xs font-bold">Everyone</button>
+            <button type="button" data-mr-group="Cast Member" class="mr-group px-3 py-1.5 bg-surface-container-high text-on-surface rounded-full text-xs font-bold">Cast only</button>
+            <button type="button" data-mr-group="Technical Crew" class="mr-group px-3 py-1.5 bg-surface-container-high text-on-surface rounded-full text-xs font-bold">Crew only</button>
+            <button type="button" id="mr-clear" class="px-3 py-1.5 bg-surface-container-high text-on-surface rounded-full text-xs font-bold">Clear</button>
+          </div>
+          <div id="mr-participants" class="max-h-44 overflow-y-auto border border-outline-variant/20 rounded-lg p-2 space-y-1 bg-surface-container-low"></div>
+          <p class="text-[10px] text-on-surface-variant mt-1">Leave all unchecked = visible to everyone.</p>
+        </div>
         <p id="mr-error" class="text-xs text-error mb-3 hidden">Please fill in a title, date and start time.</p>
         <div class="flex gap-3">
           <button id="cancel-manual-rehearsal" class="flex-1 py-3 bg-surface-container-high text-on-surface rounded-full font-bold">Cancel</button>
@@ -797,11 +808,13 @@
         const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         const dateLabel = `${DAY_NAMES_SHORT[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()}`;
         const title = r.customTitle || r.label || 'Rehearsal';
+        const partCount = Array.isArray(r.participantIds) ? r.participantIds.length : 0;
+        const calledLabel = partCount > 0 ? `${partCount} called` : 'Everyone called';
         return `<div class="p-4 rounded-xl bg-primary-fixed">
           <div class="flex items-center justify-between gap-4 flex-wrap">
             <div class="min-w-0">
-              <p class="font-bold text-primary text-sm">${title}${r.manual ? ' <span class="text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full ml-1">Manual</span>' : ''}</p>
-              <p class="text-xs text-on-primary-fixed-variant mt-1">${dateLabel} · ${startStr}${endStr ? ' – ' + endStr : ''}${r.location ? ' · ' + r.location : ''}</p>
+              <p class="font-bold text-primary text-sm">${title}${r.manual ? ' <span class="text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full ml-1">Manual</span>' : ''}${partCount > 0 ? ' <span class="text-[10px] font-bold bg-secondary text-white px-2 py-0.5 rounded-full ml-1">Restricted</span>' : ''}</p>
+              <p class="text-xs text-on-primary-fixed-variant mt-1">${dateLabel} · ${startStr}${endStr ? ' – ' + endStr : ''}${r.location ? ' · ' + r.location : ''} · ${calledLabel}</p>
               <p class="text-xs text-on-primary-fixed-variant mt-0.5">${a.availableIds.length}/${a.total} available · ${a.blockedIds.length} blocked</p>
             </div>
             <div class="flex gap-2 flex-wrap">
@@ -1523,6 +1536,17 @@
 
     /* manual rehearsal modal */
     const mrModal = document.getElementById('manual-rehearsal-modal');
+    function renderMrParticipants() {
+      const ledger = Roster.getLedger();
+      const host = document.getElementById('mr-participants');
+      host.innerHTML = ledger.length ? ledger.map(s => `
+        <label class="flex items-center gap-2 py-1 px-2 hover:bg-primary-fixed/50 rounded cursor-pointer">
+          <input type="checkbox" class="mr-part-cb w-4 h-4 rounded text-primary" data-sid="${s.id}" data-role="${s.role || ''}"/>
+          <span class="text-xs font-medium text-on-surface flex-1">${s.name}</span>
+          <span class="text-[10px] text-on-surface-variant">${s.role || ''}</span>
+        </label>
+      `).join('') : '<p class="text-xs text-on-surface-variant p-2">No cast members yet.</p>';
+    }
     document.getElementById('add-manual-rehearsal-btn').addEventListener('click', () => {
       document.getElementById('mr-title').value = '';
       document.getElementById('mr-date').value = '';
@@ -1530,7 +1554,22 @@
       document.getElementById('mr-end').value = '';
       document.getElementById('mr-location').value = '';
       document.getElementById('mr-error').classList.add('hidden');
+      renderMrParticipants();
       mrModal.classList.replace('hidden', 'flex');
+    });
+    document.getElementById('mr-select-all').addEventListener('click', () => {
+      document.querySelectorAll('.mr-part-cb').forEach(cb => { cb.checked = true; });
+    });
+    document.getElementById('mr-clear').addEventListener('click', () => {
+      document.querySelectorAll('.mr-part-cb').forEach(cb => { cb.checked = false; });
+    });
+    document.querySelectorAll('[data-mr-group]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const group = btn.dataset.mrGroup;
+        document.querySelectorAll('.mr-part-cb').forEach(cb => {
+          cb.checked = (cb.dataset.role || '').includes(group);
+        });
+      });
     });
     document.getElementById('cancel-manual-rehearsal').addEventListener('click', () => {
       mrModal.classList.replace('flex', 'hidden');
@@ -1554,9 +1593,10 @@
         const [eh, em] = end.split(':').map(Number);
         endMinute = eh * 60 + em;
       }
+      const participantIds = [...document.querySelectorAll('.mr-part-cb:checked')].map(cb => cb.dataset.sid);
       const rec = Roster.addRehearsal(slotKey, title, 'rehearsal', location || 'Main Stage');
       if (rec) {
-        Roster.updateRehearsal(rec.id, { endMinute, location, customTitle: title, manual: true });
+        Roster.updateRehearsal(rec.id, { endMinute, location, customTitle: title, manual: true, participantIds });
       } else {
         alert('A rehearsal already exists at that date/time.');
         return;

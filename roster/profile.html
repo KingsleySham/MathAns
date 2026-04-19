@@ -209,7 +209,7 @@
   let countdownTimer = null;
 
   function nextRehearsalFor(student) {
-    const rehearsals = Roster.getRehearsals()
+    const rehearsals = Roster.getRehearsalsForStudent(student.id)
       .map(r => ({ ...r, date: Roster.parseSlotKey(r.slotKey) }))
       .filter(r => r.date.getTime() >= Date.now())
       .sort((a, b) => a.date - b.date);
@@ -317,7 +317,7 @@
 
   function renderRehearsalList() {
     const list = document.getElementById('rehearsal-list');
-    const rehearsals = Roster.getRehearsals().sort((a, b) => a.slotKey.localeCompare(b.slotKey));
+    const rehearsals = Roster.getRehearsalsForStudent(currentStudent.id).sort((a, b) => a.slotKey.localeCompare(b.slotKey));
     const avail = Roster.getAvailability(currentStudent.id);
     const availSet = new Set(avail.available);
     const blockSet = new Set(avail.blocked);
@@ -442,7 +442,7 @@
         </style>
       </head><body>`);
       printWin.document.write('<h2>' + currentStudent.name + ' - Scheduled Rehearsals</h2>');
-      const rehearsals = Roster.getRehearsals().sort((a, b) => a.slotKey.localeCompare(b.slotKey));
+      const rehearsals = Roster.getRehearsalsForStudent(currentStudent.id).sort((a, b) => a.slotKey.localeCompare(b.slotKey));
       rehearsals.forEach(r => {
         printWin.document.write(`<div class="item"><p><b>${Roster.formatSlot(r.slotKey)}</b></p></div>`);
       });

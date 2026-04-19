@@ -118,14 +118,36 @@
   </div>
   <div class="flex-1 p-4 max-w-4xl mx-auto w-full">
     <p class="text-sm text-on-surface-variant mb-4">Tap each slot to mark it <span class="font-bold text-primary">available</span> or <span class="font-bold text-error">blocked</span>. Leave blank if unsure.</p>
+
+    <!-- Bulk actions -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button id="mark-all-avail" type="button" class="px-4 py-2 bg-primary-fixed text-primary rounded-full text-xs font-bold flex items-center gap-1 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-sm">done_all</span> Mark all available
+      </button>
+      <button id="clear-all" type="button" class="px-4 py-2 bg-surface-container-high text-on-surface rounded-full text-xs font-bold flex items-center gap-1 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-sm">refresh</span> Clear all
+      </button>
+    </div>
+
     <div class="flex items-center justify-between mb-4">
       <button id="prev-week" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined">chevron_left</span></button>
       <span id="week-label" class="font-bold font-headline text-sm text-primary text-center min-w-[12rem]">—</span>
       <button id="next-week" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined">chevron_right</span></button>
     </div>
-    <div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-x-auto mb-6">
+    <div class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-x-auto mb-4">
       <div id="calendar-grid"></div>
     </div>
+
+    <!-- Slots-need-responses reminder -->
+    <div id="needs-response" class="hidden bg-secondary-fixed rounded-2xl p-5 flex items-start gap-4 mb-6">
+      <span class="material-symbols-outlined text-secondary text-2xl mt-0.5">lightbulb</span>
+      <div class="flex-1 min-w-0">
+        <p class="font-bold text-secondary text-sm">These slots need responses</p>
+        <p class="text-xs text-on-surface-variant mt-1">You haven't marked these yet. Please mark each one as available or blocked.</p>
+        <div id="needs-response-list" class="mt-3 flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+
     <button id="submit-avail" class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
       <span class="material-symbols-outlined">check_circle</span> Confirm my availability
     </button>
@@ -322,23 +344,64 @@ function openReasonModal(key) {
 function updateStats() {
   const a = Roster.getAvailability(student.id);
   const ps = new Set(pollSlotKeys);
-  document.getElementById('stat-avail').textContent = a.available.filter(k => ps.has(k)).length;
-  document.getElementById('stat-block').textContent = a.blocked.filter(k => ps.has(k)).length;
+  const availSet = new Set(a.available.filter(k => ps.has(k)));
+  const blockSet = new Set(a.blocked.filter(k => ps.has(k)));
+  document.getElementById('stat-avail').textContent = availSet.size;
+  document.getElementById('stat-block').textContent = blockSet.size;
+
+  /* Which slots has the user not yet answered? */
+  const pending = pollSlotKeys.filter(k => !availSet.has(k) && !blockSet.has(k));
+  const box = document.getElementById('needs-response');
+  const list = document.getElementById('needs-response-list');
+  if (pending.length && pollSlotKeys.length) {
+    box.classList.remove('hidden');
+    list.innerHTML = pending.slice(0, 12).map(k =>
+      `<span class="px-3 py-1 bg-white/60 text-secondary rounded-full text-[11px] font-bold">${Roster.formatSlot(k)}</span>`
+    ).join('') + (pending.length > 12 ? `<span class="px-3 py-1 text-secondary/70 text-[11px] font-bold">+${pending.length - 12} more</span>` : '');
+  } else {
+    box.classList.add('hidden');
+    list.innerHTML = '';
+  }
 }
 
 function initInvite() {
   Roster.ensureSeed();
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
+  const nameHint = params.get('n');
+  const roleHint = params.get('r');
   if (!id) { showError('No invite ID in URL.'); return; }
 
-  function proceed() {
-    student = Roster.getLedger().find(s => s.id === id);
-    if (!student) { showError('Invite link is invalid or has expired.'); return; }
+  function resolveStudent() {
+    let s = Roster.getLedger().find(x => x.id === id);
+    if (!s && nameHint && Roster.ensureInvitedStudent) {
+      s = Roster.ensureInvitedStudent({ id, name: nameHint, role: roleHint });
+    }
+    return s;
+  }
 
+  function proceed() {
+    student = resolveStudent();
+    /* If the ledger is still syncing, give Firebase another beat before failing. */
+    if (!student) {
+      let attempts = 0;
+      const retry = setInterval(() => {
+        attempts++;
+        student = resolveStudent();
+        if (student || attempts >= 6) {
+          clearInterval(retry);
+          if (!student) { showError('Invite link is invalid.'); return; }
+          start();
+        }
+      }, 500);
+      return;
+    }
+    start();
+  }
+
+  function start() {
     document.getElementById('welcome-name').textContent = 'Welcome, ' + student.name + '!';
     document.getElementById('welcome-role').textContent = student.role || 'Cast member';
-
     pollSlotKeys = Roster.getPollSlotKeys();
     launchConfetti();
     setTimeout(() => { if (document.getElementById('step-welcome').classList.contains('active')) goTour(); }, 3000);
@@ -381,6 +444,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('prev-week').addEventListener('click', () => { weekOffset--; buildWeekGrid(); });
   document.getElementById('next-week').addEventListener('click', () => { weekOffset++; buildWeekGrid(); });
+
+  document.getElementById('mark-all-avail').addEventListener('click', () => {
+    pollSlotKeys.forEach(k => Roster.toggleSlot(student.id, k, 'available'));
+    buildWeekGrid();
+  });
+  document.getElementById('clear-all').addEventListener('click', () => {
+    pollSlotKeys.forEach(k => Roster.toggleSlot(student.id, k, 'clear'));
+    buildWeekGrid();
+  });
 
   document.getElementById('submit-avail').addEventListener('click', () => {
     Roster.markSubmitted(student.id);
