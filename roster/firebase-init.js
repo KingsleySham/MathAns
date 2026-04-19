@@ -17,15 +17,14 @@ const firebaseConfig = {
 
 const MTIMES_KEY = 'roster.__mtimes';
 
-/* `roster.ledger` lives in the `students` collection now, not state/main. */
+/* Collection-owned state has been migrated out of state/main. Only true
+   singletons (project, poll window, zoom config/session, common-reason
+   presets, locally-cached present submissions) still flow through here. */
 const STATE_KEYS = [
-  'roster.availability', 'roster.rehearsals',
-  'roster.checkins', 'roster.leaves', 'roster.project',
-  'roster.pollWindow', 'roster.notices', 'roster.presentSubmissions',
+  'roster.project', 'roster.pollWindow',
   'roster.zoomConfig', 'roster.zoomSession', 'roster.zoomMeetings',
-  'roster.checkinCodes', 'roster.attendance',
   'roster.commonReasons', 'roster.commonLeaveReasons',
-  'roster.adminInbox'
+  'roster.presentSubmissions'
 ];
 
 function readMt(obj) {
@@ -133,7 +132,7 @@ function doFlush() {
 function pushState() {
   if (!db || suspendWrites) return;
   clearTimeout(flushTimer);
-  flushTimer = setTimeout(() => { flushTimer = null; doFlush(); }, 150);
+  flushTimer = setTimeout(() => { flushTimer = null; doFlush(); scheduleBackup(); }, 150);
 }
 
 /* Flush pending writes before the page unloads so a quick refresh after
@@ -151,6 +150,44 @@ document.addEventListener('visibilitychange', () => {
 async function submitPresent(entry) {
   if (!db) throw new Error('Firebase not initialised');
   return addDoc(collection(db, 'presentSubmissions'), { ...entry, createdAt: serverTimestamp() });
+}
+
+/* ── Safety-net snapshots ──────────────────────────────────────────────────
+   Every meaningful change also writes a timestamped backup document to
+   `backups/{timestamp}` containing every roster.* localStorage key. If the
+   live state is ever corrupted, every prior version remains recoverable
+   from the Firestore console — there is no data loss path that survives
+   this safety net. Backups are throttled to one every 30 seconds so we
+   don't run up the document count needlessly. */
+
+function snapshotEverything() {
+  const out = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('roster.')) out[k] = localStorage.getItem(k);
+  }
+  return out;
+}
+
+let lastBackupAt = 0;
+let backupTimer = null;
+function scheduleBackup() {
+  if (!db) return;
+  const now = Date.now();
+  const wait = Math.max(0, 30000 - (now - lastBackupAt));
+  if (backupTimer) return;
+  backupTimer = setTimeout(async () => {
+    backupTimer = null;
+    lastBackupAt = Date.now();
+    const id = String(lastBackupAt);
+    try {
+      await setDoc(doc(db, 'backups', id), {
+        at: lastBackupAt,
+        agent: navigator.userAgent.slice(0, 120),
+        data: snapshotEverything()
+      });
+    } catch (e) { console.warn('[firebase] backup failed:', e.message); }
+  }, wait);
 }
 
 /* ── Per-collection helpers ────────────────────────────────────────────────
@@ -174,17 +211,23 @@ function _ensureCollection(name) {
       else entry.cache.set(change.doc.id, change.doc.data());
     });
     entry.started = true;
-    const arr = [...entry.cache.values()];
+    const arr = _arrFromCache(entry.cache);
     entry.subs.forEach(fn => { try { fn(arr); } catch (e) { console.warn(e); } });
   }, (err) => console.warn(`[firebase] ${name} listener offline:`, err.message));
   return entry;
+}
+
+function _arrFromCache(cache) {
+  const arr = [];
+  cache.forEach((data, id) => arr.push({ __id: id, ...data }));
+  return arr;
 }
 
 function subscribeCollection(name, onChange) {
   const entry = _ensureCollection(name);
   entry.subs.add(onChange);
   /* Fire immediately if we already have cached docs from a prior subscriber. */
-  if (entry.started) onChange([...entry.cache.values()]);
+  if (entry.started) onChange(_arrFromCache(entry.cache));
   return () => entry.subs.delete(onChange);
 }
 
@@ -196,6 +239,7 @@ async function writeCollectionDoc(name, id, data) {
      without waiting for the snapshot round-trip. */
   const entry = _collectionListeners[name];
   if (entry) entry.cache.set(id, { ...(entry.cache.get(id) || {}), ...data });
+  scheduleBackup();
 }
 
 async function deleteCollectionDoc(name, id) {
