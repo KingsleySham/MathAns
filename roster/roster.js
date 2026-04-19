@@ -78,6 +78,11 @@
   }
 
   function writeStudent(student) {
+    /* A tombstoned id is permanently gone — no cache write, no mirror,
+       no Firestore push. Stops migration loops and stale invite URLs
+       from briefly flashing the deleted student in the UI. */
+    if (global.rosterFirebase && global.rosterFirebase.isTombstoned
+        && global.rosterFirebase.isTombstoned('students', student.id)) return;
     studentsCache.set(student.id, student);
     mirrorStudentsToLocal();
     if (global.rosterFirebase && global.rosterFirebase.writeCollectionDoc) {
@@ -137,6 +142,8 @@
       list() { return ready ? [...cache.values()] : readJSON(localKey, []); },
       write(item) {
         if (!item || !item.id) return;
+        if (global.rosterFirebase && global.rosterFirebase.isTombstoned
+            && global.rosterFirebase.isTombstoned(collectionName, item.id)) return;
         cache.set(item.id, item);
         mirror();
         if (global.rosterFirebase && global.rosterFirebase.writeCollectionDoc) {
@@ -337,6 +344,10 @@
        so an invite link is effectively permanent even after local data is cleared. */
     ensureInvitedStudent(input) {
       if (!input || !input.id) return null;
+      /* Refuse to recreate someone the admin has explicitly deleted —
+         tombstones beat permanent-invite-URL resurrection. */
+      if (global.rosterFirebase && global.rosterFirebase.isTombstoned
+          && global.rosterFirebase.isTombstoned('students', input.id)) return null;
       const existing = Roster.getLedger().find(x => x.id === input.id);
       if (existing) {
         const patch = {};
