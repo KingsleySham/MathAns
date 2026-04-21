@@ -9,6 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="roster.js" defer></script>
 <script type="module" src="firebase-init.js"></script>
+<!-- PDF export dependencies (jsPDF + QR-code generator) -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
 <script>
   tailwind.config = { darkMode: "class", theme: { extend: {
     colors: {
@@ -514,6 +517,19 @@
     </div>
   </div>
 
+  <!-- Availability Viewer Modal -->
+  <div id="availability-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-headline text-xl font-extrabold text-primary">Called participants · availability</h3>
+        <button id="availability-close" class="text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <p id="availability-rehearsal-label" class="text-xs text-on-surface-variant mb-1">—</p>
+      <p id="availability-summary" class="text-xs text-on-surface-variant mb-4">—</p>
+      <div id="availability-list" class="space-y-2"></div>
+    </div>
+  </div>
+
   <!-- ── CAST LEDGER ───────────────────────────────────── -->
   <div id="tab-cast" class="section-panel flex-1 px-6 sm:px-12 py-8 sm:py-16">
     <span class="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold mb-4 block">Admin · Cast Ledger</span>
@@ -541,9 +557,14 @@
     </div>
 
     <div class="bg-white rounded-[2rem] p-8 border border-outline-variant/10">
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <h3 class="font-headline text-xl font-extrabold text-primary">All students</h3>
-        <span id="cast-count-label" class="text-xs text-on-surface-variant">— members</span>
+        <div class="flex items-center gap-3 flex-wrap">
+          <span id="cast-count-label" class="text-xs text-on-surface-variant">— members</span>
+          <button id="export-all-pdfs-btn" class="px-3 py-1.5 bg-primary text-white rounded-full text-xs font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">picture_as_pdf</span>Export all PDFs
+          </button>
+        </div>
       </div>
       <div id="cast-table" class="divide-y divide-outline-variant/10"></div>
     </div>
@@ -818,6 +839,7 @@
               <p class="text-xs text-on-primary-fixed-variant mt-0.5">${a.availableIds.length}/${a.total} available · ${a.blockedIds.length} blocked</p>
             </div>
             <div class="flex gap-2 flex-wrap">
+              <button data-view-avail="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Availability</button>
               <button data-checkin-code="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Check-in code</button>
               <button data-attendance="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Attendance</button>
               <button data-edit-manual="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Edit</button>
@@ -845,6 +867,7 @@
           : '';
         document.getElementById('mr-location').value = r.location || '';
         document.getElementById('mr-error').classList.add('hidden');
+        renderMrParticipants(r.participantIds || []);
         const save = document.getElementById('save-manual-rehearsal');
         const orig = save.onclick;
         save.onclick = () => {
@@ -857,7 +880,10 @@
             const [eh, em2] = end.split(':').map(Number);
             endMinute = eh * 60 + em2;
           }
-          Roster.updateRehearsal(id, { customTitle: title, label: title, endMinute, location: loc });
+          const participantIds = [...document.querySelectorAll('.mr-part-cb:checked')].map(cb => cb.dataset.sid);
+          Roster.updateRehearsal(id, {
+            customTitle: title, label: title, endMinute, location: loc, participantIds
+          });
           document.getElementById('manual-rehearsal-modal').classList.replace('flex', 'hidden');
           save.onclick = orig;
           renderOverview();
@@ -874,6 +900,9 @@
     });
     confEl.querySelectorAll('[data-attendance]').forEach(btn => {
       btn.addEventListener('click', () => showAttendanceSheet(btn.dataset.attendance));
+    });
+    confEl.querySelectorAll('[data-view-avail]').forEach(btn => {
+      btn.addEventListener('click', () => showSlotAvailability(btn.dataset.viewAvail));
     });
 
     renderZoomList();
@@ -976,6 +1005,242 @@
       });
     });
     document.getElementById('attendance-modal').classList.remove('hidden');
+  }
+
+  /* Shows the availability of every called participant for a rehearsal's slot.
+     Restricted rehearsals list only their called people; open rehearsals list
+     the full ledger so the admin still sees the full picture. */
+  function showSlotAvailability(rehearsalId) {
+    const r = Roster.getRehearsals().find(x => x.id === rehearsalId);
+    if (!r) return;
+    const ledger = Roster.getLedger();
+    const called = (Array.isArray(r.participantIds) && r.participantIds.length)
+      ? ledger.filter(s => r.participantIds.includes(s.id))
+      : ledger.slice();
+    const title = r.customTitle || r.label || 'Rehearsal';
+    document.getElementById('availability-rehearsal-label').textContent =
+      `${title} · ${Roster.formatSlot(r.slotKey)}`;
+
+    let okCt = 0, blockCt = 0, pendCt = 0;
+    const rows = called.map(s => {
+      const a = Roster.getAvailability(s.id) || { available: [], blocked: [], reasons: {} };
+      const isAvail = (a.available || []).includes(r.slotKey);
+      const isBlocked = (a.blocked || []).includes(r.slotKey);
+      let status, color, icon;
+      if (isAvail)      { status = 'available';  color = 'bg-emerald-100 text-emerald-800'; icon = 'check_circle'; okCt++; }
+      else if (isBlocked){ status = 'blocked';   color = 'bg-red-100 text-red-800';         icon = 'block';        blockCt++; }
+      else              { status = 'no response';color = 'bg-slate-100 text-slate-700';     icon = 'hourglass_empty';pendCt++; }
+      const reason = isBlocked && a.reasons && a.reasons[r.slotKey] ? a.reasons[r.slotKey] : '';
+      return `<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low gap-3">
+        <div class="min-w-0">
+          <p class="font-bold text-sm truncate">${s.name}</p>
+          <p class="text-xs text-on-surface-variant truncate">${s.role || ''}${s.scriptId ? ' · ' + s.scriptId : ''}${reason ? ' · ' + reason : ''}</p>
+        </div>
+        <span class="px-2 py-1 rounded-full text-[11px] font-bold flex items-center gap-1 ${color}">
+          <span class="material-symbols-outlined text-sm">${icon}</span>${status}
+        </span>
+      </div>`;
+    }).join('');
+
+    document.getElementById('availability-summary').textContent =
+      `${called.length} called · ${okCt} available · ${blockCt} blocked · ${pendCt} no response`;
+    document.getElementById('availability-list').innerHTML = rows
+      || '<p class="text-xs text-on-surface-variant">No one is called for this rehearsal yet.</p>';
+    document.getElementById('availability-modal').classList.remove('hidden');
+  }
+
+  /* ─── PDF export ───────────────────────────────────────────────────
+     Renders one A4 page per student with a branded header, QR code back
+     to the roster hub, their upcoming rehearsals, and availability
+     breakdown (available / blocked / not-yet-filled). */
+  const PDF_QR_URL = 'https://www.math-ans.vercel.app/roster/index.html';
+
+  function ensurePdfLibs() {
+    return new Promise((resolve, reject) => {
+      let tries = 0;
+      (function check() {
+        if (window.jspdf && window.jspdf.jsPDF && window.QRCode) return resolve();
+        if (tries++ > 60) return reject(new Error('PDF libraries failed to load'));
+        setTimeout(check, 100);
+      })();
+    });
+  }
+
+  async function drawCastPage(doc, student) {
+    const project = Roster.getProject() || {};
+    const availability = Roster.getAvailability(student.id) || { available: [], blocked: [], reasons: {} };
+    const pollKeys = Roster.getPollSlotKeys();
+    const touched = new Set([...(availability.available || []), ...(availability.blocked || [])]);
+    const unfilled = pollKeys.filter(k => !touched.has(k));
+    const rehearsals = Roster.getRehearsalsForStudent(student.id)
+      .sort((a, b) => a.slotKey.localeCompare(b.slotKey));
+
+    const W = 210, H = 297;
+
+    /* header band + decorative circles */
+    doc.setFillColor(21, 21, 125);  doc.rect(0, 0, W, 48, 'F');
+    doc.setFillColor(124, 68, 168); doc.rect(0, 48, W, 3, 'F');
+    doc.setFillColor(46, 49, 146);  doc.circle(W - 22, 12, 10, 'F');
+    doc.setFillColor(124, 68, 168); doc.circle(W - 8, 38, 6, 'F');
+    doc.setFillColor(192, 193, 255);doc.circle(18, 44, 4, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('CAST INFORMATION SHEET', 15, 16);
+    doc.setFontSize(26);
+    doc.text('S.3G4 English Drama', 15, 32);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(project.title || '', 15, 40);
+
+    /* QR code card */
+    const qrSize = 34, qrX = W - qrSize - 15, qrY = 60;
+    const qrDataUrl = await QRCode.toDataURL(PDF_QR_URL, {
+      margin: 1, scale: 8, color: { dark: '#15157d', light: '#ffffff' }
+    });
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(199, 197, 212);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(qrX - 3, qrY - 3, qrSize + 6, qrSize + 12, 3, 3, 'FD');
+    doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+    doc.setFontSize(7);
+    doc.setTextColor(70, 70, 82);
+    doc.text('Scan → open the roster hub', qrX - 3 + (qrSize + 6) / 2, qrY + qrSize + 5, { align: 'center' });
+
+    /* student identity */
+    doc.setTextColor(21, 21, 125);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    doc.text(student.name || '—', 15, 72);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(70, 70, 82);
+    const roleLine = [student.role || 'Cast Member', student.scriptId || 'Script ID not assigned'].join('   ·   ');
+    doc.text(roleLine, 15, 79);
+
+    doc.setDrawColor(199, 197, 212);
+    doc.setLineWidth(0.2);
+    doc.line(15, 85, W - 15, 85);
+
+    /* left column: upcoming rehearsals */
+    let y = 95;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(21, 21, 125);
+    doc.text('Upcoming rehearsals', 15, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(26, 28, 29);
+    if (rehearsals.length === 0) {
+      doc.setTextColor(119, 118, 131);
+      doc.text('No rehearsals scheduled yet.', 15, y);
+    } else {
+      rehearsals.forEach(r => {
+        if (y > 268) return;
+        const title = r.customTitle || r.label || 'Rehearsal';
+        const slot = Roster.formatSlot(r.slotKey);
+        const location = r.location ? ' · ' + r.location : '';
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(21, 21, 125);
+        const titleWrap = doc.splitTextToSize(title, 90);
+        doc.text('• ' + titleWrap[0], 15, y);
+        y += 4.5;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(70, 70, 82);
+        const lineWrap = doc.splitTextToSize(slot + location, 88);
+        doc.text(lineWrap, 19, y);
+        y += lineWrap.length * 4 + 2;
+      });
+    }
+
+    /* right column: availability */
+    const rightX = 115;
+    let ry = 95;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(21, 21, 125);
+    doc.text('Current availability', rightX, ry);
+    ry += 6;
+
+    function section(title, color, entries, emptyText) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor.apply(doc, color);
+      doc.text(`${title} (${entries.length})`, rightX, ry);
+      ry += 4;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      if (entries.length === 0) {
+        doc.setTextColor(119, 118, 131);
+        doc.text('  ' + emptyText, rightX, ry);
+        ry += 5;
+      } else {
+        doc.setTextColor(26, 28, 29);
+        entries.forEach(line => {
+          if (ry > 272) return;
+          const wrap = doc.splitTextToSize('• ' + line, 82);
+          doc.text(wrap, rightX, ry);
+          ry += wrap.length * 3.6;
+        });
+        ry += 2;
+      }
+    }
+
+    section('AVAILABLE', [5, 102, 70],
+      (availability.available || []).map(k => Roster.formatSlot(k)),
+      'None marked');
+    section('UNAVAILABLE', [186, 26, 26],
+      (availability.blocked || []).map(k => {
+        const r = availability.reasons && availability.reasons[k];
+        return Roster.formatSlot(k) + (r ? ' — ' + r : '');
+      }),
+      'None marked');
+    section('NOT YET FILLED', [124, 68, 168],
+      unfilled.slice(0, 14).map(k => Roster.formatSlot(k)),
+      unfilled.length === 0 ? 'All slots answered!' : '');
+    if (unfilled.length > 14) {
+      doc.setTextColor(119, 118, 131);
+      doc.setFontSize(7);
+      doc.text(`  …and ${unfilled.length - 14} more`, rightX, ry);
+    }
+
+    /* footer */
+    doc.setDrawColor(199, 197, 212);
+    doc.setLineWidth(0.2);
+    doc.line(15, H - 18, W - 15, H - 18);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(119, 118, 131);
+    doc.text(project.subtitle || 'S.3G4 English Drama', 15, H - 12);
+    doc.text('math-ans.vercel.app/roster', 15, H - 8);
+    const dateStr = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+    doc.text('Issued ' + dateStr, W - 15, H - 12, { align: 'right' });
+  }
+
+  async function exportCastPdf(studentId) {
+    await ensurePdfLibs();
+    const student = Roster.getLedger().find(s => s.id === studentId);
+    if (!student) throw new Error('Student not found');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    await drawCastPage(doc, student);
+    const safe = (student.name || 'cast').replace(/[^a-z0-9]+/gi, '_').toLowerCase();
+    doc.save(`${safe}_s3g4_drama.pdf`);
+  }
+
+  async function exportAllCastPdfs() {
+    await ensurePdfLibs();
+    const ledger = Roster.getLedger();
+    if (ledger.length === 0) { alert('No cast members yet.'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    for (let i = 0; i < ledger.length; i++) {
+      if (i > 0) doc.addPage();
+      await drawCastPage(doc, ledger[i]);
+    }
+    doc.save('s3g4_drama_cast_sheets.pdf');
   }
 
 
@@ -1287,6 +1552,7 @@
           <span class="pointer-events-none"><span class="font-bold text-primary">${a.available.length}</span> avail</span>
           <span class="pointer-events-none"><span class="font-bold text-error">${a.blocked.length}</span> blocked</span>
           <button data-copy-invite="${s.id}" class="px-2 py-1 text-primary text-xs font-bold hover:bg-primary-fixed rounded flex items-center gap-1 pointer-events-auto"><span class="material-symbols-outlined text-sm">link</span>Invite</button>
+          <button data-export-pdf="${s.id}" class="px-2 py-1 text-primary text-xs font-bold hover:bg-primary-fixed rounded flex items-center gap-1 pointer-events-auto"><span class="material-symbols-outlined text-sm">picture_as_pdf</span>PDF</button>
           <button data-delete-student="${s.id}" class="px-2 py-1 text-error text-xs font-bold hover:bg-error-container rounded">Delete</button>
         </div>
       </div>`;
@@ -1318,6 +1584,15 @@
           renderCast();
           renderOverview();
         }
+      });
+    });
+    document.querySelectorAll('[data-export-pdf]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportCastPdf(btn.dataset.exportPdf).catch(err => {
+          console.error(err);
+          alert('Could not build PDF: ' + (err && err.message ? err.message : err));
+        });
       });
     });
   }
@@ -1541,12 +1816,13 @@
 
     /* manual rehearsal modal */
     const mrModal = document.getElementById('manual-rehearsal-modal');
-    function renderMrParticipants() {
+    function renderMrParticipants(selectedIds) {
       const ledger = Roster.getLedger();
+      const sel = new Set(Array.isArray(selectedIds) ? selectedIds : []);
       const host = document.getElementById('mr-participants');
       host.innerHTML = ledger.length ? ledger.map(s => `
         <label class="flex items-center gap-2 py-1 px-2 hover:bg-primary-fixed/50 rounded cursor-pointer">
-          <input type="checkbox" class="mr-part-cb w-4 h-4 rounded text-primary" data-sid="${s.id}" data-role="${s.role || ''}"/>
+          <input type="checkbox" class="mr-part-cb w-4 h-4 rounded text-primary" data-sid="${s.id}" data-role="${s.role || ''}"${sel.has(s.id) ? ' checked' : ''}/>
           <span class="text-xs font-medium text-on-surface flex-1">${s.name}</span>
           <span class="text-[10px] text-on-surface-variant">${s.role || ''}</span>
         </label>
@@ -1836,6 +2112,10 @@
     document.getElementById('attendance-close').addEventListener('click', () =>
       document.getElementById('attendance-modal').classList.add('hidden'));
 
+    /* availability viewer modal */
+    document.getElementById('availability-close').addEventListener('click', () =>
+      document.getElementById('availability-modal').classList.add('hidden'));
+
     /* zoom format radio change to show help */
     document.querySelectorAll('input[name="format"]').forEach(rb => {
       rb.addEventListener('change', () => {
@@ -1871,6 +2151,14 @@
           btn.classList.remove('border-outline-variant/30','bg-surface-container-high','text-on-surface-variant');
         }
         document.getElementById('new-role').value = [...selectedRoles].join(', ');
+      });
+    });
+
+    /* export all cast PDFs as a single file, one student per page */
+    document.getElementById('export-all-pdfs-btn').addEventListener('click', () => {
+      exportAllCastPdfs().catch(err => {
+        console.error(err);
+        alert('Could not build PDFs: ' + (err && err.message ? err.message : err));
       });
     });
 
