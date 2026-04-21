@@ -9,9 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="roster.js" defer></script>
 <script type="module" src="firebase-init.js"></script>
-<!-- PDF export dependencies (jsPDF + QR-code generator) -->
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
+<!-- PDF export dependencies (jsPDF + QR-code generator) are loaded on
+     demand with multi-CDN fallback so one blocked origin doesn't kill
+     the feature — see ensurePdfLibs() below. -->
 <script>
   tailwind.config = { darkMode: "class", theme: { extend: {
     colors: {
@@ -1055,15 +1055,54 @@
      breakdown (available / blocked / not-yet-filled). */
   const PDF_QR_URL = 'https://www.math-ans.vercel.app/roster/index.html';
 
-  function ensurePdfLibs() {
+  /* Dynamic loader with multi-CDN fallback. School networks in HK often
+     block one CDN but not others, so we try jsdelivr → unpkg → cdnjs in
+     sequence and resolve as soon as the global is present. */
+  function _loadScriptOnce(url) {
     return new Promise((resolve, reject) => {
-      let tries = 0;
-      (function check() {
-        if (window.jspdf && window.jspdf.jsPDF && window.QRCode) return resolve();
-        if (tries++ > 60) return reject(new Error('PDF libraries failed to load'));
-        setTimeout(check, 100);
-      })();
+      const existing = document.querySelector(`script[data-pdf-src="${url}"]`);
+      if (existing) {
+        if (existing.dataset.loaded === '1') return resolve();
+        existing.addEventListener('load',  () => resolve());
+        existing.addEventListener('error', () => reject(new Error('load failed: ' + url)));
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = url;
+      s.async = true;
+      s.dataset.pdfSrc = url;
+      s.onload  = () => { s.dataset.loaded = '1'; resolve(); };
+      s.onerror = () => reject(new Error('load failed: ' + url));
+      document.head.appendChild(s);
     });
+  }
+
+  async function _loadFirstAvailable(urls, check, label) {
+    if (check()) return;
+    const errors = [];
+    for (const u of urls) {
+      try {
+        await _loadScriptOnce(u);
+        if (check()) return;
+        errors.push(u + ' (loaded but global missing)');
+      } catch (e) {
+        errors.push(u + ' (' + e.message + ')');
+      }
+    }
+    throw new Error(`${label} failed to load from any CDN. Tried:\n  ` + errors.join('\n  '));
+  }
+
+  async function ensurePdfLibs() {
+    await _loadFirstAvailable([
+      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+      'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+    ], () => !!(window.jspdf && window.jspdf.jsPDF), 'jsPDF');
+    await _loadFirstAvailable([
+      'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+      'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js'
+    ], () => !!(window.QRCode && typeof window.QRCode.toDataURL === 'function'), 'qrcode');
   }
 
   async function drawCastPage(doc, student) {
