@@ -209,9 +209,17 @@
   let countdownTimer = null;
 
   function nextRehearsalFor(student) {
+    const now = Date.now();
     const rehearsals = Roster.getRehearsalsForStudent(student.id)
       .map(r => ({ ...r, date: Roster.parseSlotKey(r.slotKey) }))
-      .filter(r => r.date.getTime() >= Date.now())
+      .filter(r => {
+        const startMs = r.date.getTime();
+        const endRefMs = (r.endMinute != null)
+          ? new Date(r.date.getFullYear(), r.date.getMonth(), r.date.getDate(),
+                     Math.floor(r.endMinute / 60), r.endMinute % 60).getTime()
+          : startMs;
+        return now <= endRefMs + 30 * 60 * 1000;
+      })
       .sort((a, b) => a.date - b.date);
     return rehearsals[0] || null;
   }
@@ -240,9 +248,16 @@
     }
     el.textContent = formatCountdown(next.date - Date.now());
     label.textContent = Roster.formatSlot(next.slotKey);
-    const diff = next.date - Date.now();
+    const now = Date.now();
+    const startMs = next.date.getTime();
+    const endRefMs = (next.endMinute != null)
+      ? new Date(next.date.getFullYear(), next.date.getMonth(), next.date.getDate(),
+                 Math.floor(next.endMinute / 60), next.endMinute % 60).getTime()
+      : startMs;
+    const cutoffMs = endRefMs + 30 * 60 * 1000;
     const checkedIn = Roster.hasCheckedIn(currentStudent.id, next.id);
-    checkin.disabled = diff > 30 * 60 * 1000 || diff < -3 * 60 * 60 * 1000 || checkedIn;
+    checkin.disabled = (startMs - now) > 30 * 60 * 1000 || now > cutoffMs || checkedIn;
+    const diff = startMs - now;
     checkin.innerHTML = checkedIn
       ? '<span class="material-symbols-outlined text-sm">task_alt</span>Checked in'
       : '<span class="material-symbols-outlined text-sm">login</span>Check in';

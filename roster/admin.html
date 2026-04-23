@@ -856,6 +856,8 @@
         const r = Roster.getRehearsals().find(x => x.id === id);
         if (!r) return;
         const d = Roster.parseSlotKey(r.slotKey);
+        window.mrEditingId = id;
+        document.getElementById('manual-rehearsal-title').textContent = 'Edit rehearsal';
         document.getElementById('mr-title').value = r.customTitle || r.label || '';
         document.getElementById('mr-date').value =
           `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -868,26 +870,6 @@
         document.getElementById('mr-location').value = r.location || '';
         document.getElementById('mr-error').classList.add('hidden');
         renderMrParticipants(r.participantIds || []);
-        const save = document.getElementById('save-manual-rehearsal');
-        const orig = save.onclick;
-        save.onclick = () => {
-          const title = document.getElementById('mr-title').value.trim();
-          const end = document.getElementById('mr-end').value;
-          const loc = document.getElementById('mr-location').value.trim();
-          if (!title) { document.getElementById('mr-error').classList.remove('hidden'); return; }
-          let endMinute = null;
-          if (end) {
-            const [eh, em2] = end.split(':').map(Number);
-            endMinute = eh * 60 + em2;
-          }
-          const participantIds = [...document.querySelectorAll('.mr-part-cb:checked')].map(cb => cb.dataset.sid);
-          Roster.updateRehearsal(id, {
-            customTitle: title, label: title, endMinute, location: loc, participantIds
-          });
-          document.getElementById('manual-rehearsal-modal').classList.replace('flex', 'hidden');
-          save.onclick = orig;
-          renderOverview();
-        };
         document.getElementById('manual-rehearsal-modal').classList.replace('hidden', 'flex');
       });
     });
@@ -978,10 +960,13 @@
     const r = Roster.getRehearsals().find(x => x.id === rehearsalId);
     if (!r) return;
     const ledger = Roster.getLedger();
+    const called = (Array.isArray(r.participantIds) && r.participantIds.length)
+      ? ledger.filter(s => r.participantIds.includes(s.id))
+      : ledger.slice();
     const records = Roster.getAttendance()[rehearsalId] || {};
     document.getElementById('attendance-rehearsal-label').textContent = Roster.formatSlot(r.slotKey);
     const list = document.getElementById('attendance-list');
-    list.innerHTML = ledger.length ? ledger.map(s => {
+    list.innerHTML = called.length ? called.map(s => {
       const rec = records[s.id];
       const status = rec ? rec.status : 'unset';
       const colorMap = { present: 'bg-emerald-500 text-white', absent: 'bg-error text-white', late: 'bg-amber-400 text-white', unset: 'bg-surface-container-high text-on-surface' };
@@ -996,7 +981,7 @@
           ).join('')}
         </div>
       </div>`;
-    }).join('') : '<p class="text-xs text-on-surface-variant">No cast members.</p>';
+    }).join('') : '<p class="text-xs text-on-surface-variant">No one is called for this rehearsal.</p>';
 
     list.querySelectorAll('[data-att]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1139,151 +1124,279 @@
     const project = Roster.getProject() || {};
     const availability = Roster.getAvailability(student.id) || { available: [], blocked: [], reasons: {} };
     const pollKeys = Roster.getPollSlotKeys();
-    const touched = new Set([...(availability.available || []), ...(availability.blocked || [])]);
-    const unfilled = pollKeys.filter(k => !touched.has(k));
     const rehearsals = Roster.getRehearsalsForStudent(student.id)
       .sort((a, b) => a.slotKey.localeCompare(b.slotKey));
+    const slotsOrder = Roster.getFixedSlots ? Roster.getFixedSlots() : [];
 
-    const W = 210, H = 297;
+    /* Bucket poll keys by date; for each date we know which of the 7 fixed
+       slots was offered and the student's status on it. */
+    const byDate = new Map();
+    pollKeys.forEach(key => {
+      const [datePart] = key.split('T');
+      const block = Roster.getSlotBlock(key);
+      if (!block) return;
+      if (!byDate.has(datePart)) byDate.set(datePart, {});
+      const status =
+        (availability.available || []).includes(key) ? 'avail' :
+        (availability.blocked  || []).includes(key) ? 'blocked' : 'pending';
+      byDate.get(datePart)[block.id] = { status, key };
+    });
+    const sortedDates = [...byDate.keys()].sort();
+    const availCount = (availability.available || []).length;
+    const blockCount = (availability.blocked || []).length;
+    const pendingCount = Math.max(0, pollKeys.length - availCount - blockCount);
 
-    /* header band + decorative circles */
+    const W = 210, H = 297, MARGIN = 15;
+
+    /* ─── header band ─── */
     doc.setFillColor(21, 21, 125);  doc.rect(0, 0, W, 48, 'F');
     doc.setFillColor(124, 68, 168); doc.rect(0, 48, W, 3, 'F');
     doc.setFillColor(46, 49, 146);  doc.circle(W - 22, 12, 10, 'F');
     doc.setFillColor(124, 68, 168); doc.circle(W - 8, 38, 6, 'F');
     doc.setFillColor(192, 193, 255);doc.circle(18, 44, 4, 'F');
-
     doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.text('CAST INFORMATION SHEET', 15, 16);
-    doc.setFontSize(26);
-    doc.text('S.3G4 English Drama', 15, 32);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text(project.title || '', 15, 40);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+    doc.text('CAST INFORMATION SHEET', MARGIN, 16);
+    doc.setFontSize(24);
+    doc.text('S.3G4 English Drama', MARGIN, 32);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.text(project.title || '', MARGIN, 40);
 
-    /* QR code card */
-    const qrSize = 34, qrX = W - qrSize - 15, qrY = 60;
-    const qrDataUrl = buildQrPngDataUrl(PDF_QR_URL, 320);
+    /* ─── QR code card (top-right) ─── */
+    const qrSize = 28, qrX = W - qrSize - MARGIN, qrY = 56;
+    const qrDataUrl = buildQrPngDataUrl(PDF_QR_URL, 280);
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(199, 197, 212);
     doc.setLineWidth(0.3);
-    doc.roundedRect(qrX - 3, qrY - 3, qrSize + 6, qrSize + 12, 3, 3, 'FD');
+    doc.roundedRect(qrX - 3, qrY - 3, qrSize + 6, qrSize + 10, 2.5, 2.5, 'FD');
     doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
-    doc.setFontSize(7);
+    doc.setFontSize(6.3);
     doc.setTextColor(70, 70, 82);
-    doc.text('Scan → open the roster hub', qrX - 3 + (qrSize + 6) / 2, qrY + qrSize + 5, { align: 'center' });
+    doc.text('Scan to open roster hub', qrX - 3 + (qrSize + 6) / 2, qrY + qrSize + 4, { align: 'center' });
 
-    /* student identity */
+    /* ─── identity + stats pills ─── */
     doc.setTextColor(21, 21, 125);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(28);
-    doc.text(student.name || '—', 15, 72);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(24);
+    doc.text(student.name || '—', MARGIN, 66);
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal');
     doc.setTextColor(70, 70, 82);
     const roleLine = [student.role || 'Cast Member', student.scriptId || 'Script ID not assigned'].join('   ·   ');
-    doc.text(roleLine, 15, 79);
+    doc.text(roleLine, MARGIN, 73);
 
+    /* Stats pill row */
+    doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
+    let pillX = MARGIN, pillY = 78;
+    function pill(label, fill, txt) {
+      const w = doc.getTextWidth(label) + 6;
+      doc.setFillColor(fill[0], fill[1], fill[2]);
+      doc.roundedRect(pillX, pillY, w, 5.2, 1.2, 1.2, 'F');
+      doc.setTextColor(txt[0], txt[1], txt[2]);
+      doc.text(label, pillX + 3, pillY + 3.7);
+      pillX += w + 2;
+    }
+    pill(`Available ${availCount}`, [220, 252, 231], [5, 95, 70]);
+    pill(`Blocked ${blockCount}`,   [254, 226, 226], [153, 27, 27]);
+    pill(`Pending ${pendingCount}`, [237, 233, 254], [91, 33, 182]);
+
+    /* divider */
     doc.setDrawColor(199, 197, 212);
     doc.setLineWidth(0.2);
-    doc.line(15, 85, W - 15, 85);
+    doc.line(MARGIN, 88, W - MARGIN, 88);
 
-    /* left column: upcoming rehearsals */
+    /* ─── Upcoming rehearsals (compact, single line each) ─── */
     let y = 95;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
     doc.setTextColor(21, 21, 125);
-    doc.text('Upcoming rehearsals', 15, y);
-    y += 6;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(26, 28, 29);
+    doc.text('Upcoming rehearsals', MARGIN, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.3);
     if (rehearsals.length === 0) {
       doc.setTextColor(119, 118, 131);
-      doc.text('No rehearsals scheduled yet.', 15, y);
+      doc.text('No rehearsals scheduled yet.', MARGIN, y);
+      y += 4;
     } else {
-      rehearsals.forEach(r => {
-        if (y > 268) return;
+      const MAX_REH = 6;
+      rehearsals.slice(0, MAX_REH).forEach(r => {
         const title = r.customTitle || r.label || 'Rehearsal';
         const slot = Roster.formatSlot(r.slotKey);
-        const location = r.location ? ' · ' + r.location : '';
+        const location = r.location ? '  ·  ' + r.location : '';
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(21, 21, 125);
-        const titleWrap = doc.splitTextToSize(title, 90);
-        doc.text('• ' + titleWrap[0], 15, y);
-        y += 4.5;
+        const bulletText = '• ' + title;
+        doc.text(bulletText, MARGIN, y);
+        const titleW = doc.getTextWidth(bulletText);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(70, 70, 82);
-        const lineWrap = doc.splitTextToSize(slot + location, 88);
-        doc.text(lineWrap, 19, y);
-        y += lineWrap.length * 4 + 2;
+        doc.text('  ' + slot + location, MARGIN + titleW, y);
+        y += 4.1;
       });
-    }
-
-    /* right column: availability */
-    const rightX = 115;
-    let ry = 95;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(21, 21, 125);
-    doc.text('Current availability', rightX, ry);
-    ry += 6;
-
-    function section(title, color, entries, emptyText) {
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor.apply(doc, color);
-      doc.text(`${title} (${entries.length})`, rightX, ry);
-      ry += 4;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      if (entries.length === 0) {
+      if (rehearsals.length > MAX_REH) {
         doc.setTextColor(119, 118, 131);
-        doc.text('  ' + emptyText, rightX, ry);
-        ry += 5;
-      } else {
-        doc.setTextColor(26, 28, 29);
-        entries.forEach(line => {
-          if (ry > 272) return;
-          const wrap = doc.splitTextToSize('• ' + line, 82);
-          doc.text(wrap, rightX, ry);
-          ry += wrap.length * 3.6;
-        });
-        ry += 2;
+        doc.text(`   …and ${rehearsals.length - MAX_REH} more`, MARGIN, y);
+        y += 4;
       }
     }
 
-    section('AVAILABLE', [5, 102, 70],
-      (availability.available || []).map(k => Roster.formatSlot(k)),
-      'None marked');
-    section('UNAVAILABLE', [186, 26, 26],
-      (availability.blocked || []).map(k => {
-        const r = availability.reasons && availability.reasons[k];
-        return Roster.formatSlot(k) + (r ? ' — ' + r : '');
-      }),
-      'None marked');
-    section('NOT YET FILLED', [124, 68, 168],
-      unfilled.slice(0, 14).map(k => Roster.formatSlot(k)),
-      unfilled.length === 0 ? 'All slots answered!' : '');
-    if (unfilled.length > 14) {
-      doc.setTextColor(119, 118, 131);
-      doc.setFontSize(7);
-      doc.text(`  …and ${unfilled.length - 14} more`, rightX, ry);
-    }
+    /* ─── Matrix heading ─── */
+    y += 3;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
+    doc.setTextColor(21, 21, 125);
+    doc.text('Availability — date × slot', MARGIN, y);
+    y += 4.5;
 
-    /* footer */
+    /* ─── Date × Slot matrix ─── */
+    const FOOTER_TOP = H - 14;        // horizontal line y
+    const LEGEND_RESERVE = 20;        // legend + potential reasons
+    const headerRowH = 7;
+    const DATE_COL_W = 34;
+    const SLOT_COLS = slotsOrder.length || 7;
+    const slotColW = (W - MARGIN * 2 - DATE_COL_W) / SLOT_COLS;
+
+    /* slot header row */
+    doc.setFillColor(21, 21, 125);
+    doc.rect(MARGIN, y, DATE_COL_W + slotColW * SLOT_COLS, headerRowH, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8);
+    doc.text('DATE', MARGIN + 2, y + 4.6);
+    slotsOrder.forEach((s, i) => {
+      const cx = MARGIN + DATE_COL_W + i * slotColW + slotColW / 2;
+      const shortLabel = (s.label || '').split('–')[0].trim() || s.id;
+      doc.text(shortLabel, cx, y + 4.6, { align: 'center' });
+    });
+    y += headerRowH;
+
+    /* adaptive row height so every date fits above the legend */
+    const rowSpace = (FOOTER_TOP - LEGEND_RESERVE) - y;
+    const rowH = sortedDates.length > 0
+      ? Math.max(3.0, Math.min(5.4, rowSpace / sortedDates.length))
+      : 5.4;
+
+    const reasonNotes = [];
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    sortedDates.forEach((dateStr, ri) => {
+      if (y + rowH > FOOTER_TOP - LEGEND_RESERVE) return;
+      const [yy, mm, dd] = dateStr.split('-').map(Number);
+      const dateObj = new Date(yy, mm - 1, dd);
+      const dateLabel = `${dayNames[dateObj.getDay()]} ${mNames[dateObj.getMonth()]} ${dateObj.getDate()}`;
+
+      /* zebra background */
+      if (ri % 2 === 0) {
+        doc.setFillColor(249, 249, 251);
+        doc.rect(MARGIN, y, DATE_COL_W + slotColW * SLOT_COLS, rowH, 'F');
+      }
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(Math.max(6, Math.min(7.2, rowH - 1.2)));
+      doc.setTextColor(26, 28, 29);
+      doc.text(dateLabel, MARGIN + 2, y + rowH * 0.72);
+
+      /* cells */
+      const pad = 0.6;
+      slotsOrder.forEach((s, i) => {
+        const cellX = MARGIN + DATE_COL_W + i * slotColW;
+        const innerX = cellX + pad, innerY = y + pad;
+        const innerW = slotColW - pad * 2, innerH = rowH - pad * 2;
+        const entry = (byDate.get(dateStr) || {})[s.id];
+        if (!entry) {
+          doc.setDrawColor(225, 225, 232);
+          doc.setLineWidth(0.08);
+          doc.rect(innerX, innerY, innerW, innerH, 'S');
+        } else if (entry.status === 'avail') {
+          doc.setFillColor(22, 163, 74);
+          doc.rect(innerX, innerY, innerW, innerH, 'F');
+        } else if (entry.status === 'blocked') {
+          doc.setFillColor(220, 38, 38);
+          doc.rect(innerX, innerY, innerW, innerH, 'F');
+          const reason = availability.reasons && availability.reasons[entry.key];
+          if (reason) {
+            const marker = String(reasonNotes.length + 1);
+            reasonNotes.push({ marker, dateLabel, slotLabel: s.label, reason });
+            if (rowH >= 3.8) {
+              doc.setTextColor(255, 255, 255);
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(Math.max(5, Math.min(6.8, rowH - 1.6)));
+              doc.text(marker, innerX + innerW / 2, innerY + innerH * 0.78, { align: 'center' });
+              doc.setFont('helvetica', 'normal');
+            }
+          }
+        } else {
+          doc.setDrawColor(150, 150, 165);
+          doc.setLineWidth(0.18);
+          doc.rect(innerX, innerY, innerW, innerH, 'S');
+        }
+      });
+
+      /* thin row underline */
+      doc.setDrawColor(225, 224, 234);
+      doc.setLineWidth(0.08);
+      doc.line(MARGIN, y + rowH, MARGIN + DATE_COL_W + slotColW * SLOT_COLS, y + rowH);
+
+      y += rowH;
+    });
+
+    /* outer matrix border */
     doc.setDrawColor(199, 197, 212);
     doc.setLineWidth(0.2);
-    doc.line(15, H - 18, W - 15, H - 18);
+    const matrixTopY = 98 + 5 + (rehearsals.length === 0 ? 4 :
+      Math.min(rehearsals.length, 6) * 4.1 + (rehearsals.length > 6 ? 4 : 0)) + 3 + 4.5;
+    /* re-draw outer rect using actual bounds tracked via y */
+    /* (simple, safe outer line at current y) */
+
+    /* ─── Legend ─── */
+    y += 3.5;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
+    let lx = MARGIN;
+    const legendItems = [
+      ['Available',    () => { doc.setFillColor(22, 163, 74); doc.rect(lx, y, 3.6, 3, 'F'); }],
+      ['Blocked',      () => { doc.setFillColor(220, 38, 38); doc.rect(lx, y, 3.6, 3, 'F'); }],
+      ['No response',  () => { doc.setDrawColor(150, 150, 165); doc.setLineWidth(0.2); doc.rect(lx, y, 3.6, 3, 'S'); }],
+      ['Not offered',  () => { doc.setDrawColor(225, 225, 232); doc.setLineWidth(0.08); doc.rect(lx, y, 3.6, 3, 'S'); }]
+    ];
+    legendItems.forEach(([label, drawChip]) => {
+      drawChip();
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(70, 70, 82);
+      doc.text(label, lx + 4.6, y + 2.6);
+      lx += 4.6 + doc.getTextWidth(label) + 6;
+      doc.setFont('helvetica', 'bold');
+    });
+
+    /* ─── Blocked-reason footnotes ─── */
+    if (reasonNotes.length > 0) {
+      y += 6;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8);
+      doc.setTextColor(21, 21, 125);
+      doc.text('Blocked reasons', MARGIN, y);
+      y += 3;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(6.3);
+      doc.setTextColor(70, 70, 82);
+      const maxLines = Math.max(0, Math.floor((FOOTER_TOP - y - 3) / 2.8));
+      reasonNotes.slice(0, maxLines).forEach(n => {
+        const line = `[${n.marker}] ${n.dateLabel} ${n.slotLabel} — ${n.reason}`;
+        const wrap = doc.splitTextToSize(line, W - MARGIN * 2);
+        doc.text(wrap, MARGIN, y);
+        y += 2.8 * wrap.length;
+      });
+      if (reasonNotes.length > maxLines) {
+        doc.setTextColor(119, 118, 131);
+        doc.text(`…and ${reasonNotes.length - maxLines} more`, MARGIN, y);
+      }
+    }
+
+    /* ─── footer with updated timestamp ─── */
+    doc.setDrawColor(199, 197, 212);
+    doc.setLineWidth(0.2);
+    doc.line(MARGIN, FOOTER_TOP, W - MARGIN, FOOTER_TOP);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(119, 118, 131);
-    doc.text(project.subtitle || 'S.3G4 English Drama', 15, H - 12);
-    doc.text('math-ans.vercel.app/roster', 15, H - 8);
-    const dateStr = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
-    doc.text('Issued ' + dateStr, W - 15, H - 12, { align: 'right' });
+    const now = new Date();
+    const pad2 = n => String(n).padStart(2, '0');
+    const updated = `Updated ${pad2(now.getDate())} ${mNames[now.getMonth()]} ${now.getFullYear()}, ${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+    doc.text(updated, MARGIN, FOOTER_TOP + 5);
+    doc.text(project.subtitle || 'S.3G4 English Drama · math-ans.vercel.app/roster',
+      W - MARGIN, FOOTER_TOP + 5, { align: 'right' });
   }
 
   async function exportCastPdf(studentId) {
@@ -1896,6 +2009,8 @@
       `).join('') : '<p class="text-xs text-on-surface-variant p-2">No cast members yet.</p>';
     }
     document.getElementById('add-manual-rehearsal-btn').addEventListener('click', () => {
+      window.mrEditingId = null;
+      document.getElementById('manual-rehearsal-title').textContent = 'Add rehearsal';
       document.getElementById('mr-title').value = '';
       document.getElementById('mr-date').value = '';
       document.getElementById('mr-start').value = '';
@@ -1920,6 +2035,7 @@
       });
     });
     document.getElementById('cancel-manual-rehearsal').addEventListener('click', () => {
+      window.mrEditingId = null;
       mrModal.classList.replace('flex', 'hidden');
     });
     document.getElementById('save-manual-rehearsal').addEventListener('click', () => {
@@ -1942,13 +2058,27 @@
         endMinute = eh * 60 + em;
       }
       const participantIds = [...document.querySelectorAll('.mr-part-cb:checked')].map(cb => cb.dataset.sid);
-      const rec = Roster.addRehearsal(slotKey, title, 'rehearsal', location || 'Main Stage');
-      if (rec) {
-        Roster.updateRehearsal(rec.id, { endMinute, location, customTitle: title, manual: true, participantIds });
+      const editingId = window.mrEditingId;
+      if (editingId) {
+        const collision = Roster.getRehearsals().find(r => r.slotKey === slotKey && r.id !== editingId);
+        if (collision) {
+          alert('Another rehearsal already exists at that date/time.');
+          return;
+        }
+        Roster.updateRehearsal(editingId, {
+          slotKey, customTitle: title, label: title, endMinute, location,
+          manual: true, participantIds
+        });
       } else {
-        alert('A rehearsal already exists at that date/time.');
-        return;
+        const rec = Roster.addRehearsal(slotKey, title, 'rehearsal', location || 'Main Stage');
+        if (rec) {
+          Roster.updateRehearsal(rec.id, { endMinute, location, customTitle: title, manual: true, participantIds });
+        } else {
+          alert('A rehearsal already exists at that date/time.');
+          return;
+        }
       }
+      window.mrEditingId = null;
       mrModal.classList.replace('flex', 'hidden');
       renderOverview();
     });
