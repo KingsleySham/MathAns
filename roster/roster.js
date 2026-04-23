@@ -784,7 +784,20 @@
       return ids.includes(studentId);
     },
     getRehearsalsForStudent(studentId) {
-      return Roster.getRehearsals().filter(r => Roster.isParticipant(r, studentId));
+      return Roster.getRehearsals().filter(r => !r.archived && Roster.isParticipant(r, studentId));
+    },
+    /* A rehearsal becomes archivable 12 hours after its end time
+       (or start time if no end time is set). */
+    isArchivable(rehearsal, now) {
+      if (!rehearsal) return false;
+      const ref = now != null ? now : Date.now();
+      const d = Roster.parseSlotKey(rehearsal.slotKey);
+      const startMs = d.getTime();
+      const endRefMs = (rehearsal.endMinute != null)
+        ? new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+                   Math.floor(rehearsal.endMinute / 60), rehearsal.endMinute % 60).getTime()
+        : startMs;
+      return ref - endRefMs >= 12 * 60 * 60 * 1000;
     },
     addRehearsal(slotKey, label = 'Rehearsal', type = 'rehearsal', venue = 'Main Stage') {
       if (Roster.getRehearsals().some(r => r.slotKey === slotKey)) return null;

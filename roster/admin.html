@@ -790,6 +790,19 @@
     if (name === 'inbox') { renderInbox(); if (Roster.markAllAdminInboxRead) { Roster.markAllAdminInboxRead(); updateInboxBadge(); } }
   }
 
+  function renderMrParticipants(selectedIds) {
+    const ledger = Roster.getLedger();
+    const sel = new Set(Array.isArray(selectedIds) ? selectedIds : []);
+    const host = document.getElementById('mr-participants');
+    host.innerHTML = ledger.length ? ledger.map(s => `
+      <label class="flex items-center gap-2 py-1 px-2 hover:bg-primary-fixed/50 rounded cursor-pointer">
+        <input type="checkbox" class="mr-part-cb w-4 h-4 rounded text-primary" data-sid="${s.id}" data-role="${s.role || ''}"${sel.has(s.id) ? ' checked' : ''}/>
+        <span class="text-xs font-medium text-on-surface flex-1">${s.name}</span>
+        <span class="text-[10px] text-on-surface-variant">${s.role || ''}</span>
+      </label>
+    `).join('') : '<p class="text-xs text-on-surface-variant p-2">No cast members yet.</p>';
+  }
+
   function renderOverview() {
     const ledger = Roster.getLedger();
     const rehearsals = Roster.getRehearsals();
@@ -817,38 +830,59 @@
 
     /* confirmed */
     const confEl = document.getElementById('confirmed');
-    confEl.innerHTML = rehearsals.length ? rehearsals
-      .sort((a, b) => a.slotKey.localeCompare(b.slotKey))
-      .map(r => {
-        const a = Roster.aggregateSlot(r.slotKey);
-        const d = Roster.parseSlotKey(r.slotKey);
-        const startStr = Roster.formatTime(d.getHours(), d.getMinutes());
-        const block = Roster.getSlotBlock(r.slotKey);
-        const endMin = (r.endMinute != null) ? r.endMinute : (block ? block.endMinute : null);
-        const endStr = endMin != null ? Roster.formatTime(Math.floor(endMin / 60), endMin % 60) : '';
-        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const dateLabel = `${DAY_NAMES_SHORT[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()}`;
-        const title = r.customTitle || r.label || 'Rehearsal';
-        const partCount = Array.isArray(r.participantIds) ? r.participantIds.length : 0;
-        const calledLabel = partCount > 0 ? `${partCount} called` : 'Everyone called';
-        return `<div class="p-4 rounded-xl bg-primary-fixed">
-          <div class="flex items-center justify-between gap-4 flex-wrap">
-            <div class="min-w-0">
-              <p class="font-bold text-primary text-sm">${title}${r.manual ? ' <span class="text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full ml-1">Manual</span>' : ''}${partCount > 0 ? ' <span class="text-[10px] font-bold bg-secondary text-white px-2 py-0.5 rounded-full ml-1">Restricted</span>' : ''}</p>
-              <p class="text-xs text-on-primary-fixed-variant mt-1">${dateLabel} · ${startStr}${endStr ? ' – ' + endStr : ''}${r.location ? ' · ' + r.location : ''} · ${calledLabel}</p>
-              <p class="text-xs text-on-primary-fixed-variant mt-0.5">${a.availableIds.length}/${a.total} available · ${a.blockedIds.length} blocked</p>
-            </div>
-            <div class="flex gap-2 flex-wrap">
-              <button data-view-avail="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Availability</button>
-              <button data-checkin-code="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Check-in code</button>
-              <button data-attendance="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Attendance</button>
-              <button data-edit-manual="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Edit</button>
-              <button data-del="${r.id}" class="px-3 py-2 bg-white text-error rounded-full text-xs font-bold">Remove</button>
-            </div>
+    const sortedRehearsals = rehearsals.slice().sort((a, b) => a.slotKey.localeCompare(b.slotKey));
+    const activeRehearsals = sortedRehearsals.filter(r => !r.archived);
+    const archivedRehearsals = sortedRehearsals.filter(r => r.archived);
+    const renderCard = (r) => {
+      const a = Roster.aggregateSlot(r.slotKey);
+      const d = Roster.parseSlotKey(r.slotKey);
+      const startStr = Roster.formatTime(d.getHours(), d.getMinutes());
+      const block = Roster.getSlotBlock(r.slotKey);
+      const endMin = (r.endMinute != null) ? r.endMinute : (block ? block.endMinute : null);
+      const endStr = endMin != null ? Roster.formatTime(Math.floor(endMin / 60), endMin % 60) : '';
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const dateLabel = `${DAY_NAMES_SHORT[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()}`;
+      const title = r.customTitle || r.label || 'Rehearsal';
+      const partCount = Array.isArray(r.participantIds) ? r.participantIds.length : 0;
+      const calledLabel = partCount > 0 ? `${partCount} called` : 'Everyone called';
+      const cardBg = r.archived ? 'bg-surface-container-high' : 'bg-primary-fixed';
+      const archivable = Roster.isArchivable ? Roster.isArchivable(r) : false;
+      const archiveBtn = r.archived
+        ? `<button data-unarchive="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Unarchive</button>`
+        : (archivable
+            ? `<button data-archive="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Archive</button>`
+            : '');
+      return `<div class="p-4 rounded-xl ${cardBg}">
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <div class="min-w-0">
+            <p class="font-bold text-primary text-sm">${title}${r.manual ? ' <span class="text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full ml-1">Manual</span>' : ''}${partCount > 0 ? ' <span class="text-[10px] font-bold bg-secondary text-white px-2 py-0.5 rounded-full ml-1">Restricted</span>' : ''}${r.archived ? ' <span class="text-[10px] font-bold bg-slate-500 text-white px-2 py-0.5 rounded-full ml-1">Archived</span>' : ''}</p>
+            <p class="text-xs text-on-primary-fixed-variant mt-1">${dateLabel} · ${startStr}${endStr ? ' – ' + endStr : ''}${r.location ? ' · ' + r.location : ''} · ${calledLabel}</p>
+            <p class="text-xs text-on-primary-fixed-variant mt-0.5">${a.availableIds.length}/${a.total} available · ${a.blockedIds.length} blocked</p>
           </div>
-        </div>`;
-      }).join('')
-      : '<p class="text-xs text-on-surface-variant">No rehearsals scheduled yet.</p>';
+          <div class="flex gap-2 flex-wrap">
+            <button data-view-avail="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Availability</button>
+            <button data-checkin-code="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Check-in code</button>
+            <button data-attendance="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Attendance</button>
+            <button data-edit-manual="${r.id}" class="px-3 py-2 bg-white text-primary rounded-full text-xs font-bold">Edit</button>
+            ${archiveBtn}
+            <button data-del="${r.id}" class="px-3 py-2 bg-white text-error rounded-full text-xs font-bold">Remove</button>
+          </div>
+        </div>
+      </div>`;
+    };
+    let html = '';
+    if (activeRehearsals.length) {
+      html += activeRehearsals.map(renderCard).join('');
+    } else {
+      html += '<p class="text-xs text-on-surface-variant">No rehearsals scheduled yet.</p>';
+    }
+    if (archivedRehearsals.length) {
+      html += `<details class="mt-4 pt-4 border-t border-outline-variant/20">
+        <summary class="cursor-pointer text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">Archived (${archivedRehearsals.length})</summary>
+        <div class="space-y-3 mt-3">${archivedRehearsals.map(renderCard).join('')}</div>
+      </details>`;
+    }
+    confEl.innerHTML = html;
 
     confEl.querySelectorAll('[data-edit-manual]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -876,6 +910,18 @@
 
     confEl.querySelectorAll('[data-del]').forEach(btn => {
       btn.addEventListener('click', () => { Roster.removeRehearsal(btn.dataset.del); renderOverview(); });
+    });
+    confEl.querySelectorAll('[data-archive]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        Roster.updateRehearsal(btn.dataset.archive, { archived: true });
+        renderOverview();
+      });
+    });
+    confEl.querySelectorAll('[data-unarchive]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        Roster.updateRehearsal(btn.dataset.unarchive, { archived: false });
+        renderOverview();
+      });
     });
     confEl.querySelectorAll('[data-checkin-code]').forEach(btn => {
       btn.addEventListener('click', () => showCheckinCode(btn.dataset.checkinCode));
@@ -1996,18 +2042,6 @@
 
     /* manual rehearsal modal */
     const mrModal = document.getElementById('manual-rehearsal-modal');
-    function renderMrParticipants(selectedIds) {
-      const ledger = Roster.getLedger();
-      const sel = new Set(Array.isArray(selectedIds) ? selectedIds : []);
-      const host = document.getElementById('mr-participants');
-      host.innerHTML = ledger.length ? ledger.map(s => `
-        <label class="flex items-center gap-2 py-1 px-2 hover:bg-primary-fixed/50 rounded cursor-pointer">
-          <input type="checkbox" class="mr-part-cb w-4 h-4 rounded text-primary" data-sid="${s.id}" data-role="${s.role || ''}"${sel.has(s.id) ? ' checked' : ''}/>
-          <span class="text-xs font-medium text-on-surface flex-1">${s.name}</span>
-          <span class="text-[10px] text-on-surface-variant">${s.role || ''}</span>
-        </label>
-      `).join('') : '<p class="text-xs text-on-surface-variant p-2">No cast members yet.</p>';
-    }
     document.getElementById('add-manual-rehearsal-btn').addEventListener('click', () => {
       window.mrEditingId = null;
       document.getElementById('manual-rehearsal-title').textContent = 'Add rehearsal';
