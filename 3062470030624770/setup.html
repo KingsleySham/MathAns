@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Setup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:      #0E0B08;
+      --card:    #1A1510;
+      --card2:   #221A12;
+      --border:  #2E2218;
+      --amber:   #F59E0B;
+      --sage:    #6EE7B7;
+      --sky:     #7DD3FC;
+      --rose:    #FCA5A5;
+      --danger:  #F87171;
+      --dim:     #503D2C;
+      --sub:     #A08A72;
+      --text:    #FEF3C7;
+      --mono:    'DM Mono', monospace;
+      --body:    'Outfit', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: var(--bg); color: var(--text); font-family: var(--body); -webkit-font-smoothing: antialiased; }
+    body { max-width: 780px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* ── Header ── */
+    .hdr { margin-bottom: 48px; }
+    .hdr h1 { font-size: 32px; font-weight: 600; color: var(--amber); letter-spacing: -.5px; }
+    .hdr p  { font-size: 16px; color: var(--sub); margin-top: 8px; }
+    .dash-link {
+      display: inline-block; margin-top: 16px;
+      padding: 8px 20px; border-radius: 8px;
+      background: var(--amber); color: #1A0D00;
+      font-size: 14px; font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* ── Step cards ── */
+    .step { margin-bottom: 32px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .step-header {
+      display: flex; align-items: center; gap: 16px;
+      padding: 20px 24px;
+      background: var(--card); cursor: pointer;
+      user-select: none;
+    }
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 14px; font-weight: 500;
+      flex-shrink: 0;
+    }
+    .step-num.todo   { background: var(--border); color: var(--sub); }
+    .step-num.ok     { background: rgba(110,231,183,.15); color: var(--sage); border: 1px solid rgba(110,231,183,.3); }
+    .step-title { font-size: 18px; font-weight: 600; flex: 1; }
+    .step-status { font-size: 13px; color: var(--sub); }
+    .step-status.ok  { color: var(--sage); }
+    .step-chevron { color: var(--dim); font-size: 18px; transition: transform .2s; }
+    .step-chevron.open { transform: rotate(90deg); }
+
+    .step-body { display: none; padding: 0 24px 24px; background: var(--card); }
+    .step-body.open { display: block; }
+
+    /* ── Content blocks ── */
+    .guide { font-size: 15px; color: var(--sub); line-height: 1.7; margin-bottom: 20px; }
+    .guide strong { color: var(--text); font-weight: 600; }
+    .guide a { color: var(--sky); }
+
+    ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 16px 0; }
+    ol.steps li { counter-increment: s; display: flex; gap: 12px; margin-bottom: 14px; font-size: 15px; color: var(--sub); line-height: 1.6; }
+    ol.steps li::before {
+      content: counter(s);
+      font-family: var(--mono); font-size: 12px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--border); color: var(--sub);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    ol.steps li strong { color: var(--text); }
+
+    .env-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    .env-table th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase;
+                    letter-spacing: .1em; color: var(--dim); padding: 8px 12px; }
+    .env-table td { padding: 10px 12px; border-top: 1px solid var(--border); vertical-align: top; }
+    .env-table tr:hover td { background: var(--card2); }
+    .env-key   { font-family: var(--mono); font-size: 13px; color: var(--amber); white-space: nowrap; }
+    .env-desc  { color: var(--sub); font-size: 13px; line-height: 1.5; }
+
+    .code-block {
+      background: #0A0804; border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 16px;
+      font-family: var(--mono); font-size: 13px; color: var(--text);
+      white-space: pre; overflow-x: auto;
+      line-height: 1.6; margin: 12px 0;
+      position: relative;
+    }
+    .copy-btn {
+      position: absolute; top: 8px; right: 10px;
+      background: var(--border); border: none; border-radius: 4px;
+      color: var(--sub); font: 600 11px var(--body);
+      padding: 3px 10px; cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .copy-btn:hover, .copy-btn:active { background: var(--amber); color: #1A0D00; }
+
+    /* ── Test button & result ── */
+    .test-row { display: flex; gap: 12px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+    .test-btn {
+      padding: 9px 20px; border-radius: 8px;
+      background: var(--card2); border: 1px solid var(--border);
+      color: var(--text); font: 600 14px var(--body);
+      cursor: pointer; transition: border-color .15s;
+    }
+    .test-btn:hover { border-color: var(--amber); color: var(--amber); }
+    .test-result {
+      font-size: 14px; font-weight: 500;
+      display: none;
+    }
+    .test-result.ok  { color: var(--sage); display: block; }
+    .test-result.err { color: var(--danger); display: block; }
+
+    /* ── Bus finder ── */
+    .finder-row { display: flex; gap: 10px; margin: 16px 0; flex-wrap: wrap; }
+    .finder-row input, .finder-row select {
+      background: #0A0804; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font: 400 14px var(--body);
+      padding: 9px 14px; outline: none;
+      transition: border-color .15s;
+    }
+    .finder-row input:focus, .finder-row select:focus { border-color: var(--amber); }
+    .finder-row input { width: 120px; }
+    .finder-row select { min-width: 140px; background-color: #0A0804; }
+    .search-btn {
+      padding: 9px 20px; border-radius: 8px;
+      background: var(--amber); color: #1A0D00;
+      font: 600 14px var(--body); border: none; cursor: pointer;
+    }
+    .search-btn:disabled { opacity: .4; cursor: default; }
+
+    .stop-list { margin-top: 16px; }
+    .stop-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 8px; margin-bottom: 6px;
+      background: var(--card2); border: 1px solid transparent;
+      cursor: pointer; transition: border-color .15s;
+    }
+    .stop-item:hover { border-color: var(--border); }
+    .stop-seq {
+      font-family: var(--mono); font-size: 12px;
+      color: var(--dim); width: 28px; flex-shrink: 0; text-align: right;
+    }
+    .stop-name  { flex: 1; font-size: 14px; color: var(--text); }
+    .stop-id    { font-family: var(--mono); font-size: 12px; color: var(--amber); }
+    .stop-copy  {
+      padding: 3px 10px; border-radius: 4px;
+      background: var(--border); border: none;
+      color: var(--sub); font: 600 11px var(--body);
+      cursor: pointer;
+    }
+    .stop-copy:active { background: var(--amber); color: #1A0D00; }
+    .stop-loading { color: var(--sub); font-size: 14px; padding: 16px 0; }
+
+    /* ── Config generator ── */
+    #gen-bus-stops, #gen-journeys { display: none; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.25);
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 13px; color: var(--amber); margin: 4px;
+      cursor: default;
+    }
+    .chip button {
+      background: none; border: none; color: var(--amber);
+      font-size: 14px; cursor: pointer; padding: 0; line-height: 1;
+    }
+
+    .sep { height: 1px; background: var(--border); margin: 20px 0; }
+
+    @media (max-width: 600px) {
+      body { padding: 24px 16px 60px; }
+      .hdr h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>🌅 Dashboard Setup</h1>
+  <p>Get your morning dashboard running in a few steps. Come back here any time to update your configuration.</p>
+  <a class="dash-link" href="/3062470030624770">→ Open Dashboard</a>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- STEP 1 — TODOIST                                                   -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="step" id="step-todoist">
+  <div class="step-header" onclick="toggleStep('todoist')">
+    <div class="step-num todo" id="num-todoist">1</div>
+    <div class="step-title">Todoist — task list</div>
+    <div class="step-status" id="status-todoist">not tested</div>
+    <div class="step-chevron open" id="chev-todoist">›</div>
+  </div>
+  <div class="step-body open" id="body-todoist">
+    <div class="guide">
+      Your tasks are pulled live from Todoist every 60 seconds. You need to give the dashboard your API token via a Vercel environment variable.
+    </div>
+
+    <ol class="steps">
+      <li>Go to <a href="https://app.todoist.com/app/settings/integrations/developer" target="_blank"><strong>Todoist → Settings → Integrations → Developer</strong></a></li>
+      <li>Copy your <strong>API token</strong> (a long string of letters and numbers)</li>
+      <li>Open the <a href="https://vercel.com/dashboard" target="_blank"><strong>Vercel dashboard</strong></a> → find the <strong>MathAns</strong> project → <strong>Settings → Environment Variables</strong></li>
+      <li>Add a new variable:</li>
+    </ol>
+
+    <table class="env-table">
+      <tr><th>Key</th><th>Value</th></tr>
+      <tr>
+        <td class="env-key">TODOIST_TOKEN</td>
+        <td class="env-desc">Paste the API token you copied from Todoist</td>
+      </tr>
+    </table>
+
+    <div class="guide" style="margin-top:8px">Make sure you set the environment for <strong>Production</strong> (and Preview if you want). Then trigger a new deployment (or just wait for the next deploy).</div>
+
+    <div class="sep"></div>
+    <div class="guide" style="margin-bottom:8px">Once deployed, test the connection:</div>
+    <div class="test-row">
+      <button class="test-btn" onclick="testTodoist()">Test Todoist connection</button>
+      <span class="test-result" id="res-todoist"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- STEP 2 — GOOGLE CALENDAR                                           -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="step" id="step-calendar">
+  <div class="step-header" onclick="toggleStep('calendar')">
+    <div class="step-num todo" id="num-calendar">2</div>
+    <div class="step-title">Google Calendar</div>
+    <div class="step-status" id="status-calendar">not tested</div>
+    <div class="step-chevron" id="chev-calendar">›</div>
+  </div>
+  <div class="step-body" id="body-calendar">
+    <div class="guide">
+      The dashboard reads your calendar via a private iCal URL. This is a secret link Google gives you — no OAuth needed.
+    </div>
+
+    <ol class="steps">
+      <li>Open <a href="https://calendar.google.com" target="_blank"><strong>Google Calendar</strong></a> on desktop</li>
+      <li>In the left sidebar, hover over the calendar you want to show → click the <strong>⋮</strong> menu → <strong>Settings and sharing</strong></li>
+      <li>Scroll down to <strong>"Secret address in iCal format"</strong> and copy the URL (starts with <code>https://calendar.google.com/calendar/ical/…</code>)</li>
+      <li>In Vercel → MathAns → Settings → Environment Variables, add:</li>
+    </ol>
+
+    <table class="env-table">
+      <tr><th>Key</th><th>Value</th></tr>
+      <tr>
+        <td class="env-key">GCAL_ICAL_URL</td>
+        <td class="env-desc">The full iCal secret URL from Google Calendar</td>
+      </tr>
+    </table>
+
+    <div class="guide" style="margin-top:8px">
+      <strong>Tip:</strong> You can add multiple calendars by combining them. Just configure the primary one first and test it.
+    </div>
+
+    <div class="sep"></div>
+    <div class="test-row">
+      <button class="test-btn" onclick="testCalendar()">Test Calendar connection</button>
+      <span class="test-result" id="res-calendar"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- STEP 3 — BUS STOPS (ETA mode)                                      -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="step" id="step-bus">
+  <div class="step-header" onclick="toggleStep('bus')">
+    <div class="step-num todo" id="num-bus">3</div>
+    <div class="step-title">Bus stops — live ETAs</div>
+    <div class="step-status" id="status-bus">optional</div>
+    <div class="step-chevron" id="chev-bus">›</div>
+  </div>
+  <div class="step-body" id="body-bus">
+    <div class="guide">
+      The ETA panel shows the next 3 buses arriving at up to 2 stops. Use the route finder below to look up stop IDs, then paste the generated config into <strong>index.html</strong>.
+    </div>
+
+    <div class="sep"></div>
+    <div style="font:600 13px var(--body);color:var(--sub);margin-bottom:12px">ROUTE STOP FINDER</div>
+
+    <div class="finder-row">
+      <input id="route-input" type="text" placeholder="Route (e.g. 72A)" />
+      <select id="dir-select">
+        <option value="outbound">Outbound</option>
+        <option value="inbound">Inbound</option>
+      </select>
+      <button class="search-btn" id="search-btn" onclick="searchRoute()">Look up stops</button>
+    </div>
+    <div id="stop-list-wrap"></div>
+
+    <div class="sep"></div>
+    <div style="font:600 13px var(--body);color:var(--sub);margin-bottom:8px">CONFIGURE YOUR STOPS</div>
+    <div class="guide" style="margin-bottom:12px">
+      Add up to 2 stop groups. Each group can have multiple route+stop combinations that will be merged into one panel.
+    </div>
+
+    <!-- Stop group builder -->
+    <div id="stop-builder">
+      <div id="stop-groups-ui"></div>
+      <button class="test-btn" onclick="addStopGroup()" style="margin-top:8px">+ Add stop group</button>
+    </div>
+
+    <div class="sep"></div>
+    <div style="font:600 13px var(--body);color:var(--sub);margin-bottom:8px">GENERATED CONFIG</div>
+    <div class="guide" style="margin-bottom:8px">Copy this into the <strong>BUS_STOPS</strong> constant near the top of <strong>3062470030624770/index.html</strong>:</div>
+    <div id="gen-bus-stops" class="code-block"><button class="copy-btn" onclick="copyBlock('gen-bus-stops-code')">Copy</button><span id="gen-bus-stops-code"></span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- STEP 4 — JOURNEY CALCULATOR                                        -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="step" id="step-journey">
+  <div class="step-header" onclick="toggleStep('journey')">
+    <div class="step-num todo" id="num-journey">4</div>
+    <div class="step-title">Journey calculator</div>
+    <div class="step-status" id="status-journey">optional</div>
+    <div class="step-chevron" id="chev-journey">›</div>
+  </div>
+  <div class="step-body" id="body-journey">
+    <div class="guide">
+      The Journey tab shows a full stop-by-stop timeline for a bus route, projecting arrival at your destination based on live ETAs. Use the stop finder in Step 3 to look up departure and arrival stop IDs.
+    </div>
+
+    <div id="journey-builder">
+      <div id="journey-list-ui"></div>
+      <button class="test-btn" onclick="addJourney()" style="margin-top:8px">+ Add journey</button>
+    </div>
+
+    <div class="sep"></div>
+    <div style="font:600 13px var(--body);color:var(--sub);margin-bottom:8px">GENERATED CONFIG</div>
+    <div class="guide" style="margin-bottom:8px">Copy this into the <strong>JOURNEYS</strong> constant in <strong>3062470030624770/index.html</strong>:</div>
+    <div id="gen-journeys" class="code-block"><button class="copy-btn" onclick="copyBlock('gen-journeys-code')">Copy</button><span id="gen-journeys-code"></span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- STEP 5 — DEPLOY & VERIFY                                          -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="step" id="step-deploy">
+  <div class="step-header" onclick="toggleStep('deploy')">
+    <div class="step-num todo" id="num-deploy">5</div>
+    <div class="step-title">Deploy &amp; verify</div>
+    <div class="step-status" id="status-deploy"></div>
+    <div class="step-chevron" id="chev-deploy">›</div>
+  </div>
+  <div class="step-body" id="body-deploy">
+    <div class="guide">After editing <strong>index.html</strong> with your config and committing + pushing to GitHub, Vercel auto-deploys. Here's how to verify everything is working.</div>
+
+    <ol class="steps">
+      <li>Push your <strong>index.html</strong> changes (with BUS_STOPS and JOURNEYS filled in) to the <strong>main</strong> branch on GitHub</li>
+      <li>Wait ~30 seconds for Vercel to deploy (you'll see a green tick in your GitHub commit)</li>
+      <li>Open <a href="/3062470030624770"><strong>mathans.app/3062470030624770</strong></a> in the Silk browser on your Echo Show 8</li>
+      <li>Check each panel loads — Tasks (left), Calendar (centre), Bus ETAs (right)</li>
+      <li>Tap the <strong>Journey</strong> tab to verify the stop timeline loads</li>
+    </ol>
+
+    <div class="guide">
+      <strong>Troubleshooting:</strong><br>
+      · Tasks empty or error → check <code>TODOIST_TOKEN</code> is set in Vercel env vars<br>
+      · Calendar empty → check <code>GCAL_ICAL_URL</code> and that it's the iCal (not HTML) URL<br>
+      · Bus shows nothing → confirm your stop IDs are valid (use the finder in Step 3)<br>
+      · Journey shows "No service" → the bus isn't running right now, try again later
+    </div>
+
+    <div class="sep"></div>
+    <a class="dash-link" href="/3062470030624770">→ Open Dashboard</a>
+  </div>
+</div>
+
+<script>
+// ── Accordion ────────────────────────────────────────────────────────────────
+function toggleStep(id) {
+  const body = document.getElementById('body-' + id);
+  const chev = document.getElementById('chev-' + id);
+  const open = body.classList.toggle('open');
+  chev.classList.toggle('open', open);
+}
+
+// ── Copy helper ──────────────────────────────────────────────────────────────
+function copyBlock(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).catch(() => {});
+  const btn = document.querySelector(`#${id}`).closest('.code-block').querySelector('.copy-btn');
+  const orig = btn.textContent;
+  btn.textContent = 'Copied!';
+  setTimeout(() => { btn.textContent = orig; }, 1500);
+}
+
+// ── API tests ────────────────────────────────────────────────────────────────
+async function testTodoist() {
+  const el = document.getElementById('res-todoist');
+  const num = document.getElementById('num-todoist');
+  const st  = document.getElementById('status-todoist');
+  el.className = 'test-result'; el.textContent = 'Testing…'; el.style.display = 'block';
+  try {
+    const r = await fetch('/api/todoist');
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || r.status);
+    const n = Array.isArray(j) ? j.length : '?';
+    el.className = 'test-result ok';
+    el.textContent = `✓ Connected — ${n} active task${n!==1?'s':''}`;
+    num.className = 'step-num ok'; num.textContent = '✓';
+    st.className = 'step-status ok'; st.textContent = 'connected';
+  } catch (e) {
+    el.className = 'test-result err';
+    el.textContent = '✗ ' + (e.message || 'Connection failed — is TODOIST_TOKEN set in Vercel?');
+  }
+}
+
+async function testCalendar() {
+  const el = document.getElementById('res-calendar');
+  const num = document.getElementById('num-calendar');
+  const st  = document.getElementById('status-calendar');
+  el.className = 'test-result'; el.textContent = 'Testing…'; el.style.display = 'block';
+  try {
+    const r = await fetch('/api/calendar');
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || r.status);
+    const n = Array.isArray(j) ? j.length : '?';
+    el.className = 'test-result ok';
+    el.textContent = `✓ Connected — ${n} event${n!==1?'s':''} today`;
+    num.className = 'step-num ok'; num.textContent = '✓';
+    st.className = 'step-status ok'; st.textContent = 'connected';
+  } catch (e) {
+    el.className = 'test-result err';
+    el.textContent = '✗ ' + (e.message || 'Connection failed — is GCAL_ICAL_URL set in Vercel?');
+  }
+}
+
+// ── Route / stop finder ──────────────────────────────────────────────────────
+async function searchRoute() {
+  const route = document.getElementById('route-input').value.trim().toUpperCase();
+  const dir   = document.getElementById('dir-select').value;
+  const wrap  = document.getElementById('stop-list-wrap');
+  const btn   = document.getElementById('search-btn');
+  if (!route) return;
+  btn.disabled = true;
+  wrap.innerHTML = '<div class="stop-loading">Loading stops…</div>';
+  try {
+    const r = await fetch(
+      `https://data.etabus.gov.hk/v1/transport/kmb/route-stop/${route}/${dir}/1`
+    );
+    const j = await r.json();
+    const stops = j.data || [];
+    if (!stops.length) { wrap.innerHTML = '<div class="stop-loading">No stops found. Check the route number and direction.</div>'; return; }
+
+    // Fetch names in parallel (batch to avoid too many requests)
+    const names = await Promise.all(stops.map(s =>
+      fetch(`https://data.etabus.gov.hk/v1/transport/kmb/stop/${s.stop}`)
+        .then(r => r.json())
+        .then(j => j.data?.name_en || s.stop)
+        .catch(() => s.stop)
+    ));
+
+    wrap.innerHTML = `<div style="font:600 11px var(--body);color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin:16px 0 8px">
+        ${stops.length} stops on ${route} (${dir})
+      </div>
+      <div class="stop-list">
+        ${stops.map((s, i) => `
+          <div class="stop-item">
+            <div class="stop-seq">${s.seq}</div>
+            <div class="stop-name">${esc(names[i])}</div>
+            <div class="stop-id">${s.stop}</div>
+            <button class="stop-copy" onclick="copyText('${s.stop}', this)"
+                    data-id="${s.stop}" data-name="${esc(names[i])}"
+                    data-route="${route}" data-dir="${dir}">Copy ID</button>
+          </div>`).join('')}
+      </div>`;
+  } catch (e) {
+    wrap.innerHTML = '<div class="stop-loading" style="color:var(--danger)">Failed to load stops. KMB API may be unreachable.</div>';
+  } finally { btn.disabled = false; }
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).catch(() => {});
+  const orig = btn.textContent;
+  btn.textContent = 'Copied!';
+  setTimeout(() => { btn.textContent = orig; }, 1200);
+}
+
+// ── Stop group builder ───────────────────────────────────────────────────────
+const stopGroups = [];
+
+function addStopGroup() {
+  stopGroups.push({ name: '', stops: [] });
+  renderStopGroupsUI();
+}
+
+function removeStopGroup(i) {
+  stopGroups.splice(i, 1);
+  renderStopGroupsUI();
+}
+
+function addStopEntry(groupIdx) {
+  stopGroups[groupIdx].stops.push({ stopId: '', route: '', serviceType: 1 });
+  renderStopGroupsUI();
+}
+
+function removeStopEntry(groupIdx, stopIdx) {
+  stopGroups[groupIdx].stops.splice(stopIdx, 1);
+  renderStopGroupsUI();
+}
+
+function renderStopGroupsUI() {
+  const el = document.getElementById('stop-groups-ui');
+  el.innerHTML = stopGroups.map((g, gi) => `
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+        <input style="flex:1;background:#0A0804;border:1px solid var(--border);border-radius:6px;color:var(--text);font:400 14px var(--body);padding:7px 12px"
+               placeholder="Stop group name (e.g. Home Bus Stop)"
+               value="${esc(g.name)}"
+               oninput="stopGroups[${gi}].name=this.value;updateBusConfig()" />
+        <button class="stop-copy" style="padding:6px 12px" onclick="removeStopGroup(${gi})">✕ Remove</button>
+      </div>
+      ${g.stops.map((s, si) => `
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+          <input style="width:130px;background:#0A0804;border:1px solid var(--border);border-radius:6px;color:var(--text);font:400 13px var(--mono);padding:7px 10px"
+                 placeholder="Stop ID"
+                 value="${esc(s.stopId)}"
+                 oninput="stopGroups[${gi}].stops[${si}].stopId=this.value;updateBusConfig()" />
+          <input style="width:90px;background:#0A0804;border:1px solid var(--border);border-radius:6px;color:var(--text);font:400 13px var(--mono);padding:7px 10px"
+                 placeholder="Route"
+                 value="${esc(s.route)}"
+                 oninput="stopGroups[${gi}].stops[${si}].route=this.value;updateBusConfig()" />
+          <button class="stop-copy" onclick="removeStopEntry(${gi},${si})">✕</button>
+        </div>`).join('')}
+      <button class="test-btn" style="font-size:12px;padding:5px 12px;margin-top:4px" onclick="addStopEntry(${gi})">+ Add route/stop</button>
+    </div>`).join('');
+  updateBusConfig();
+}
+
+function updateBusConfig() {
+  const genEl = document.getElementById('gen-bus-stops');
+  const codeEl = document.getElementById('gen-bus-stops-code');
+  const valid = stopGroups.filter(g => g.name && g.stops.some(s => s.stopId && s.route));
+  if (!valid.length) { genEl.style.display = 'none'; return; }
+  genEl.style.display = 'block';
+  const json = JSON.stringify(valid.map(g => ({
+    name: g.name,
+    stops: g.stops.filter(s => s.stopId && s.route).map(s => ({
+      stopId: s.stopId, route: s.route, serviceType: s.serviceType || 1
+    }))
+  })), null, 2);
+  codeEl.textContent = `const BUS_STOPS = ${json};`;
+}
+
+// ── Journey builder ──────────────────────────────────────────────────────────
+const journeyList = [];
+
+function addJourney() {
+  journeyList.push({ label: '', route: '', direction: 'outbound', serviceType: 1, departureStopId: '', arrivalStopId: '' });
+  renderJourneysUI();
+}
+
+function removeJourney(i) {
+  journeyList.splice(i, 1);
+  renderJourneysUI();
+}
+
+function renderJourneysUI() {
+  const el = document.getElementById('journey-list-ui');
+  el.innerHTML = journeyList.map((j, i) => `
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font:600 13px var(--body);color:var(--sub)">Journey ${i+1}</span>
+        <button class="stop-copy" style="padding:6px 12px" onclick="removeJourney(${i})">✕ Remove</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font:600 11px var(--body);color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Label</div>
+          <input style="width:100%;background:#0A0804;border:1px solid var(--border);border-radius:6px;color:var(--text);font:400 14px var(--body);padding:7px 12px"
+                 placeholder="e.g. To School"
+                 value="${esc(j.label)}"
+                 oninput="journeyList[${i}].label=this.value;updateJourneyConfig()" />
+        </div>
+        <div>
+          <div style="font:600 11px var(--body);color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Route</div>
+          <input style="width:100%;background:#0A0804;border:1px solid var(--border);border-radius:6px;color:var(--text);font:400 13px var(--mono);padding:7px 12px"
+                 placeholder="e.g. 12A"
+                 value="${esc(j.route)}"
+                 oninput="journeyList[${i}].route=this.value;updateJourneyConfig()" />
+        </div>
+        <div>
+          <div style="font:600 11px var(--body);color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Direction</div>
+          <select style="width:100%;background:#0A0804;border:1px solid var(--border);border-radius:6px;color:var(--text);font:400 14px var(--body);padding:7px 12px"
+                  onchange="journeyList[${i}].direction=this.value;updateJourneyConfig()">
+            <option value="outbound" ${j.direction==='outbound'?'selected':''}>Outbound</option>
+            <option value="inbound"  ${j.direction==='inbound' ?'selected':''}>Inbound</option>
+          </select>
+        </div>
+        <div>
+          <div style="font:600 11px var(--body);color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Service type</div>
+          <input style="width:100%;background:#0A0804;border:1px solid var(--border);border-radius:6px;color:var(--text);font:400 13px var(--mono);padding:7px 12px"
+                 type="number" min="1" value="${j.serviceType}"
+                 oninput="journeyList[${i}].serviceType=+this.value||1;updateJourneyConfig()" />
+        </div>
+        <div>
+          <div style="font:600 11px var(--body);color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Departure stop ID</div>
+          <input style="width:100%;background:#0A0804;border:1px solid var(--border);border-radius:6px;color:var(--text);font:400 13px var(--mono);padding:7px 12px"
+                 placeholder="Stop ID from finder"
+                 value="${esc(j.departureStopId)}"
+                 oninput="journeyList[${i}].departureStopId=this.value;updateJourneyConfig()" />
+        </div>
+        <div>
+          <div style="font:600 11px var(--body);color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Arrival stop ID</div>
+          <input style="width:100%;background:#0A0804;border:1px solid var(--border);border-radius:6px;color:var(--text);font:400 13px var(--mono);padding:7px 12px"
+                 placeholder="Stop ID from finder"
+                 value="${esc(j.arrivalStopId)}"
+                 oninput="journeyList[${i}].arrivalStopId=this.value;updateJourneyConfig()" />
+        </div>
+      </div>
+    </div>`).join('');
+  updateJourneyConfig();
+}
+
+function updateJourneyConfig() {
+  const genEl  = document.getElementById('gen-journeys');
+  const codeEl = document.getElementById('gen-journeys-code');
+  const valid  = journeyList.filter(j => j.label && j.route && j.departureStopId && j.arrivalStopId);
+  if (!valid.length) { genEl.style.display = 'none'; return; }
+  genEl.style.display = 'block';
+  const json = JSON.stringify(valid.map(j => ({
+    label: j.label, route: j.route, direction: j.direction,
+    serviceType: j.serviceType, departureStopId: j.departureStopId, arrivalStopId: j.arrivalStopId
+  })), null, 2);
+  codeEl.textContent = `const JOURNEYS = ${json};`;
+}
+
+// ── Escape helper ─────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init: auto-run API tests on load ─────────────────────────────────────────
+window.addEventListener('load', () => {
+  testTodoist();
+  testCalendar();
+  // Start with one empty stop group and one journey for convenience
+  addStopGroup();
+  addJourney();
+});
+</script>
+</body>
+</html>

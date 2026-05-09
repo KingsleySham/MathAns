@@ -8,7 +8,8 @@
     }
   ],
   "rewrites": [
-    { "source": "/3062470030624770", "destination": "/3062470030624770/index.html" },
+    { "source": "/3062470030624770",        "destination": "/3062470030624770/index.html" },
+    { "source": "/3062470030624770/setup", "destination": "/3062470030624770/setup.html" },
     { "source": "/edit1125",  "destination": "/editor/index.html" },
     { "source": "/edit1125/", "destination": "/editor/index.html" },
     { "source": "/ces",  "destination": "/cesindex.html" },
