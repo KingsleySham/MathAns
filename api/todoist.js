@@ -1,19 +1,5 @@
-const SYNC = 'https://api.todoist.com/sync/v9/sync';
+const BASE = 'https://api.todoist.com/api/v1';
 const TZ = 'Asia/Hong_Kong';
-const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
-
-async function syncPost(token, body) {
-  const r = await fetch(SYNC, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(body)
-  });
-  if (!r.ok) {
-    const text = await r.text().catch(() => '');
-    throw Object.assign(new Error(`Todoist ${r.status}: ${text.slice(0, 200)}`), { status: r.status });
-  }
-  return r.json();
-}
 
 export default async function handler(req, res) {
   const token = process.env.TODOIST_TOKEN;
@@ -21,13 +7,21 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const data = await syncPost(token, { sync_token: '*', resource_types: '["items"]' });
-      if (!Array.isArray(data.items))
-        return res.status(502).json({ success: false, error: 'Unexpected Todoist response' });
+      const r = await fetch(`${BASE}/tasks`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!r.ok) {
+        const text = await r.text().catch(() => '');
+        return res.status(r.status).json({ success: false, error: `Todoist ${r.status}: ${text.slice(0, 200)}` });
+      }
+      const data = await r.json();
+      const items = Array.isArray(data) ? data : (data.results ?? data.items ?? []);
+      if (!items.length && !Array.isArray(data) && !data.results && !data.items) {
+        return res.status(502).json({ success: false, error: 'Unexpected Todoist response shape' });
+      }
 
       const now = new Date(new Date().toLocaleString('en-US', { timeZone: TZ }));
-      const sorted = data.items
-        .filter(t => !t.checked && !t.is_deleted)
+      const sorted = items
         .map(t => {
           const dueDate = t.due?.datetime || t.due?.date;
           const due = dueDate ? new Date(dueDate) : null;
@@ -46,16 +40,17 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const { taskId } = req.body || {};
       if (!taskId) return res.status(400).json({ success: false, error: 'taskId required' });
-      const cmdUuid = uid();
-      const data = await syncPost(token, {
-        commands: JSON.stringify([{ type: 'item_close', uuid: cmdUuid, args: { id: taskId } }])
+      const r = await fetch(`${BASE}/tasks/${taskId}/close`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
       });
-      const ok = data.sync_status?.[cmdUuid] === 'ok';
-      return res.status(ok ? 200 : 500).json(ok ? { success: true } : { success: false, error: 'Close failed' });
+      if (r.status === 204 || r.ok) return res.status(200).json({ success: true });
+      const text = await r.text().catch(() => '');
+      return res.status(500).json({ success: false, error: `Todoist ${r.status}: ${text.slice(0, 200)}` });
     }
 
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   } catch (e) {
-    return res.status(e.status || 500).json({ success: false, error: e.message });
+    return res.status(500).json({ success: false, error: e.message });
   }
 }
