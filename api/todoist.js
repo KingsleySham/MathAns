@@ -6,7 +6,9 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ success: false, error: 'Missing TODOIST_TOKEN' });
   if (req.method === 'GET') {
     const r = await fetch(`${BASE}/tasks`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) return res.status(r.status).json({ success: false, error: `Todoist error ${r.status}` });
     const data = await r.json();
+    if (!Array.isArray(data)) return res.status(502).json({ success: false, error: 'Unexpected Todoist response' });
     const now = new Date(new Date().toLocaleString('en-US', { timeZone: TZ }));
     const sorted = data.map(t => {
       const dueDate = t.due?.datetime || t.due?.date;
