@@ -1,52 +1,38 @@
-// service-worker.js
+const CACHE_NAME = 'mathans-v29';
+const ASSETS = ['/', '/index.html', '/style.css', '/app.js', '/data.js', '/manifest.json'];
+const BYPASS_PREFIXES = ['/3062470030624770', '/api/'];
 
-// IMPORTANT: Every time you update data.js, app.js, or index.html, 
-// you MUST change this version number (e.g., v18 -> v19) to trigger the update.
-const CACHE_NAME = 'mathans-v27';
-
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/app.js',
-  '/data.js',
-  '/manifest.json'
-];
-
-// 1. Install event: Cache files and force the new service worker to install instantly
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS);
-    })
-  );
-  // This forces the waiting service worker to become the active one immediately
-  self.skipWaiting(); 
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
+  self.skipWaiting();
 });
 
-// 2. Activate event: Clean up old caches and take control of the page
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            console.log('Service Worker: Clearing old cache', cache);
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
-  );
-  // This tells the new service worker to take control of the current page immediately
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => (k === CACHE_NAME ? Promise.resolve() : caches.delete(k))))));
   self.clients.claim();
 });
 
-// 3. Fetch event: Serve from cache, fallback to network
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then(response => {
-      return response || fetch(event.request);
-    })
-  );
+  const req = event.request;
+  const url = new URL(req.url);
+
+  event.respondWith((async () => {
+    if (req.method !== 'GET') {
+      try { return await fetch(req); } catch { return Response.error(); }
+    }
+
+    if (BYPASS_PREFIXES.some(prefix => url.pathname.startsWith(prefix))) {
+      try { return await fetch(req); } catch { return new Response('Offline', { status: 503 }); }
+    }
+
+    const cached = await caches.match(req, { ignoreSearch: true });
+    if (cached) return cached;
+
+    try {
+      return await fetch(req);
+    } catch {
+      const fallback = await caches.match('/index.html');
+      return fallback || new Response('Offline', { status: 503 });
+    }
+  })());
 });

@@ -1,5 +1,14 @@
 {
+  "headers": [
+    {
+      "source": "/3062470030624770",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ],
   "rewrites": [
+    { "source": "/3062470030624770", "destination": "/3062470030624770/index.html" },
     { "source": "/edit1125",  "destination": "/editor/index.html" },
     { "source": "/edit1125/", "destination": "/editor/index.html" },
     { "source": "/ces",  "destination": "/cesindex.html" },
@@ -12,4 +21,3 @@
     { "source": "/ths/", "destination": "/thsindex.html" }
   ]
 }
-

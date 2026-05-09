@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1280, initial-scale=1.0" />
+  <title>Kingsley Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#0D0F14;--border:#1F2535;--text:#F1F0EC;--sub:#8A8F9E;--dim:#3D4255;--danger:#F87171;--bus:#FBBF24}
+    *{box-sizing:border-box}html,body{margin:0;width:1280px;height:800px;overflow:hidden;background:var(--bg);color:var(--text);font-family:Outfit,sans-serif}
+    .top{height:100px;border-bottom:1px solid var(--border);padding:0 40px;display:flex;justify-content:space-between;align-items:center}.main{display:flex;height:700px}
+    .left{width:340px;border-right:1px solid var(--border);padding:24px 28px}.center{width:580px;border-right:1px solid var(--border);padding:28px}.right{width:360px;padding:20px 24px}
+    .label{font:600 11px Outfit;letter-spacing:.12em;color:var(--dim)} .line{height:1px;background:var(--border);margin-top:10px}
+    .tab{min-height:44px;padding:4px 12px;border-radius:20px;border:1px solid var(--border)} .active{background:var(--bus)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} .dot{width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block;animation:pulse 1s infinite}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div style="display:flex;align-items:center;gap:12px"><span class="dot"></span><div id="clock" style="font:300 72px 'DM Mono';line-height:1">--:--:--</div><div style="margin-left:20px"><div id="day" style="font:600 11px Outfit;color:var(--sub)"></div><div id="date"></div></div></div>
+    <div id="greeting" style="color:var(--sub)"></div>
+  </div>
+  <div class="main">
+    <section class="left"><div class="label">TASKS</div><div class="line"></div><div id="tasks" style="padding-top:20px"></div></section>
+    <section class="center"><div class="label">TODAY</div><div id="calendar"></div></section>
+    <section class="right"><div style="display:flex;justify-content:space-between"><div class="label">BUS <span id="stale" style="display:none">· stale</span></div><div style="display:flex;gap:8px"><button class="tab active">ETA</button><button class="tab">JOURNEY</button></div></div><div id="bus"></div></section>
+  </div>
+  <script>
+    const TZ='Asia/Hong_Kong';
+    const BUS_STOPS=[{name:'STOP NAME 1',stops:[{stopId:'XXXXXXXXXX',route:'XX',serviceType:1}]},{name:'STOP NAME 2',stops:[{stopId:'XXXXXXXXXX',route:'XX',serviceType:1}]}];
+    const fmt=(v)=>new Date(v).toLocaleTimeString('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false});
+    const el={clock:document.getElementById('clock'),day:document.getElementById('day'),date:document.getElementById('date'),greeting:document.getElementById('greeting'),tasks:document.getElementById('tasks'),calendar:document.getElementById('calendar'),stale:document.getElementById('stale'),bus:document.getElementById('bus')};
+    function tick(){const d=new Date();const h=+d.toLocaleString('en-US',{timeZone:TZ,hour:'numeric',hour12:false});el.clock.textContent=d.toLocaleTimeString('en-GB',{timeZone:TZ,hour12:false});el.day.textContent=d.toLocaleString('en-US',{timeZone:TZ,weekday:'short'});el.date.textContent=d.toLocaleDateString('en-GB',{timeZone:TZ,day:'numeric',month:'short',year:'numeric'});el.greeting.textContent=`${h<5?'Good night':h<12?'Good morning':h<18?'Good afternoon':'Good evening'}, Kingsley`;}
+    async function loadTasks(){try{const r=await fetch('/api/todoist');if(!r.ok)return;const t=await r.json();el.tasks.innerHTML=(t||[]).slice(0,6).map(x=>`<div style="background:#2A2510;border-left:3px solid #FBBF24;border-radius:4px;padding:10px 12px;margin-bottom:8px">${x.content||''}</div>`).join('')}catch{}}
+    async function loadCal(){try{const r=await fetch('/api/calendar');if(!r.ok)return;const ev=await r.json();if(!ev?.length){el.calendar.innerHTML='<div style="color:var(--dim);padding-top:40px">No more events today</div>';return;}el.calendar.innerHTML=ev.map(e=>`<div style="margin-top:14px"><div style="font:400 14px 'DM Mono';color:var(--sub)">${fmt(e.start)} – ${fmt(e.end)}</div><div style="font:500 18px Outfit">${e.title}</div></div>`).join('')}catch{}}
+    async function loadBus(){try{const groups=await Promise.all(BUS_STOPS.slice(0,2).map(async g=>{const rows=[];for(const s of g.stops){const r=await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${s.stopId}/${s.route}/${s.serviceType}`);const j=await r.json();(j.data||[]).slice(0,3).forEach(x=>rows.push({route:s.route,dest:x.dest_en||'',mins:Math.max(0,Math.round((new Date(x.eta)-new Date())/60000))}));}return {name:g.name,rows:rows.slice(0,3)};}));el.stale.style.display='none';el.bus.innerHTML=groups.map(g=>`<div style="margin-top:12px"><div style="font:600 12px Outfit;color:var(--sub)">${g.name}</div>${g.rows.map(r=>`<div style="display:flex;justify-content:space-between;min-height:44px;align-items:center"><span>${r.route}</span><span>${r.dest}</span><span>${r.mins}m</span></div>`).join('')}</div>`).join('')}catch{el.stale.style.display='inline'}}
+    tick();setInterval(tick,1000);loadTasks();loadCal();loadBus();setInterval(loadTasks,60000);setInterval(loadCal,300000);setInterval(loadBus,30000);
+  </script>
+</body>
+</html>
