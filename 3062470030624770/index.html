@@ -4,84 +4,745 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=1280, initial-scale=1.0" />
   <title>Kingsley Dashboard</title>
-codex/add-echo-show-8-dashboard-page-r0ubpe
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
-    :root{--bg:#0D0F14;--border:#1F2535;--text:#F1F0EC;--sub:#8A8F9E;--dim:#3D4255;--danger:#F87171;--bus:#FBBF24}
-    *{box-sizing:border-box}html,body{margin:0;width:1280px;height:800px;overflow:hidden;background:var(--bg);color:var(--text);font-family:Outfit,sans-serif}
-    .top{height:100px;border-bottom:1px solid var(--border);padding:0 40px;display:flex;justify-content:space-between;align-items:center}.main{display:flex;height:700px}
-    .left{width:340px;border-right:1px solid var(--border);padding:24px 28px}.center{width:580px;border-right:1px solid var(--border);padding:28px}.right{width:360px;padding:20px 24px}
-    .label{font:600 11px Outfit;letter-spacing:.12em;color:var(--dim)} .line{height:1px;background:var(--border);margin-top:10px}
-    .tab{min-height:44px;padding:4px 12px;border-radius:20px;border:1px solid var(--border)} .active{background:var(--bus)}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}} .dot{width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block;animation:pulse 1s infinite}
+    :root {
+      --bg-base:        #0D0F14;
+      --bg-card:        #161A23;
+      --bg-cork:        #111418;
+      --accent-todo-y:  #FBBF24;
+      --accent-todo-g:  #4ADE80;
+      --accent-todo-b:  #60A5FA;
+      --accent-todo-p:  #F472B6;
+      --accent-cal:     #60A5FA;
+      --accent-bus:     #FBBF24;
+      --accent-safe:    #4ADE80;
+      --accent-danger:  #F87171;
+      --text-primary:   #F1F0EC;
+      --text-secondary: #8A8F9E;
+      --text-dim:       #3D4255;
+      --border:         #1F2535;
+      --font-display:   'DM Mono', monospace;
+      --font-body:      'Outfit', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 1280px;
+      height: 800px;
+      overflow: hidden;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+    @keyframes danger-pulse {
+      0%, 100% { background: rgba(248, 113, 113, 0.08); }
+      50%       { background: rgba(248, 113, 113, 0.18); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes dataFade {
+      from { opacity: 0.4; }
+      to   { opacity: 1; }
+    }
+    @keyframes lineGrow {
+      from { height: 0; }
+      to   { height: 100%; }
+    }
+
+    /* ── Top bar ──────────────────────────────────────────────────────── */
+    .top {
+      height: 100px;
+      padding: 0 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .clock-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-danger);
+      flex-shrink: 0;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    #clock {
+      font-family: var(--font-display);
+      font-size: 72px;
+      font-weight: 300;
+      line-height: 1;
+    }
+    .date-block { margin-left: 20px; }
+    #day {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-secondary);
+    }
+    #date {
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text-primary);
+    }
+    #greeting {
+      font-family: var(--font-body);
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+
+    /* ── Main layout ──────────────────────────────────────────────────── */
+    .main { display: flex; height: 700px; }
+    .col  { overflow: hidden; }
+
+    /* ── Left column — Sticky notes ───────────────────────────────────── */
+    .col-left {
+      width: 340px;
+      border-right: 1px solid var(--border);
+      background-color: var(--bg-cork);
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      animation: fadeUp 0.4s ease-out both;
+    }
+    .col-left-header { padding: 24px 28px 0; }
+    .section-label {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .section-line {
+      height: 1px;
+      background: var(--border);
+      margin-top: 10px;
+    }
+    #tasks { padding: 32px 28px; }
+
+    .note {
+      width: 280px;
+      min-height: 100px;
+      max-height: 160px;
+      overflow: hidden;
+      border-radius: 4px;
+      padding: 14px 16px 16px;
+      position: relative;
+      cursor: pointer;
+    }
+    .note + .note { margin-top: -12px; }
+    .note.done { opacity: 0.3; }
+    .note.done .note-text { text-decoration: line-through; }
+
+    .tape {
+      width: 48px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 2px;
+      margin: 0 auto 12px;
+      display: block;
+    }
+    .tape.overdue  { background: rgba(248, 113, 113, 0.3); }
+    .tape.faded    { opacity: 0.15; }
+
+    .note-text {
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .note-due {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+    .note-due.overdue { color: var(--accent-danger); }
+    .note-priority {
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    /* ── Centre column — Calendar ─────────────────────────────────────── */
+    .col-center {
+      width: 580px;
+      border-right: 1px solid var(--border);
+      padding: 28px;
+      background: var(--bg-base);
+      animation: fadeUp 0.4s ease-out 0.15s both;
+    }
+    .all-day-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 20px;
+    }
+    .all-day-pill {
+      background: rgba(96, 165, 250, 0.15);
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      color: #60A5FA;
+    }
+    .event-row {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 20px;
+      transition: opacity 0.4s ease;
+    }
+    .event-row.past    { opacity: 0.35; }
+    .event-row.current {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 0 0 1px var(--border);
+    }
+    .event-bar {
+      width: 3px;
+      background: var(--accent-cal);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .event-time {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+    .event-title {
+      font-family: var(--font-body);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .event-location {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+    .no-events {
+      height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-dim);
+    }
+
+    /* ── Right column — Bus ───────────────────────────────────────────── */
+    .col-right {
+      width: 360px;
+      padding: 20px 24px;
+      animation: fadeUp 0.4s ease-out 0.3s both;
+    }
+    .right-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .tab-group { display: flex; gap: 8px; }
+    .tab {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      border: none;
+      background: transparent;
+    }
+    .tab.active   { background: var(--accent-bus); color: #0D0F14; }
+    .tab.inactive { color: var(--text-dim); border: 1px solid var(--border); }
+
+    #journey-tabs {
+      display: none;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 8px 0;
+    }
+
+    .stop-group { margin-top: 16px; }
+    .stop-name-label {
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .eta-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      min-height: 44px;
+    }
+    .bus-row-critical { animation: danger-pulse 1s ease-in-out infinite; border-radius: 4px; }
+    .route-badge {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--accent-bus);
+      min-width: 64px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .eta-dest {
+      flex: 1;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+    .eta-mins {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 300;
+      color: var(--accent-bus);
+    }
+    .eta-mins.danger { color: var(--accent-danger); }
+
+    /* ── Journey timeline ─────────────────────────────────────────────── */
+    .journey-stop-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 44px;
+      padding: 6px 0;
+    }
+    .journey-dot-wrap {
+      position: relative;
+      width: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+      align-self: stretch;
+    }
+    .journey-line {
+      position: absolute;
+      top: 14px;
+      bottom: -6px;
+      width: 2px;
+      background: var(--border);
+      animation: lineGrow 0.6s ease-out forwards;
+    }
+    .journey-dot {
+      border-radius: 50%;
+      position: relative;
+      z-index: 1;
+    }
+    .journey-dot.departure    { width: 10px; height: 10px; background: var(--accent-bus); }
+    .journey-dot.arrival      { width: 10px; height: 10px; background: var(--accent-safe); }
+    .journey-dot.intermediate { width: 8px; height: 8px; background: transparent; border: 2px solid var(--border); }
+
+    .journey-stop-name {
+      flex: 1;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-primary);
+    }
+    .journey-stop-time {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+    .journey-stop-time.departure { color: var(--accent-bus);  font-weight: 500; }
+    .journey-stop-time.arrival   { color: var(--accent-safe); font-weight: 500; }
+
+    .arrives-in-block { padding-top: 16px; }
+    .arrives-in-label {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+    }
+    .arrives-in-time {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 300;
+      color: var(--accent-safe);
+      margin-top: 4px;
+    }
+    .arrives-in-time.danger { color: var(--accent-danger); }
+
+    #stale { font-family: var(--font-body); font-size: 11px; color: var(--text-dim); }
   </style>
 </head>
 <body>
-  <div class="top">
-    <div style="display:flex;align-items:center;gap:12px"><span class="dot"></span><div id="clock" style="font:300 72px 'DM Mono';line-height:1">--:--:--</div><div style="margin-left:20px"><div id="day" style="font:600 11px Outfit;color:var(--sub)"></div><div id="date"></div></div></div>
-    <div id="greeting" style="color:var(--sub)"></div>
+
+<div class="top">
+  <div class="clock-wrap">
+    <span class="live-dot"></span>
+    <div id="clock"></div>
+    <div class="date-block">
+      <div id="day"></div>
+      <div id="date"></div>
+    </div>
   </div>
-  <div class="main">
-    <section class="left"><div class="label">TASKS</div><div class="line"></div><div id="tasks" style="padding-top:20px"></div></section>
-    <section class="center"><div class="label">TODAY</div><div id="calendar"></div></section>
-    <section class="right"><div style="display:flex;justify-content:space-between"><div class="label">BUS <span id="stale" style="display:none">· stale</span></div><div style="display:flex;gap:8px"><button class="tab active">ETA</button><button class="tab">JOURNEY</button></div></div><div id="bus"></div></section>
-  </div>
-  <script>
-    const TZ='Asia/Hong_Kong';
-    const BUS_STOPS=[{name:'STOP NAME 1',stops:[{stopId:'XXXXXXXXXX',route:'XX',serviceType:1}]},{name:'STOP NAME 2',stops:[{stopId:'XXXXXXXXXX',route:'XX',serviceType:1}]}];
-    const fmt=(v)=>new Date(v).toLocaleTimeString('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false});
-    const el={clock:document.getElementById('clock'),day:document.getElementById('day'),date:document.getElementById('date'),greeting:document.getElementById('greeting'),tasks:document.getElementById('tasks'),calendar:document.getElementById('calendar'),stale:document.getElementById('stale'),bus:document.getElementById('bus')};
-    function tick(){const d=new Date();const h=+d.toLocaleString('en-US',{timeZone:TZ,hour:'numeric',hour12:false});el.clock.textContent=d.toLocaleTimeString('en-GB',{timeZone:TZ,hour12:false});el.day.textContent=d.toLocaleString('en-US',{timeZone:TZ,weekday:'short'});el.date.textContent=d.toLocaleDateString('en-GB',{timeZone:TZ,day:'numeric',month:'short',year:'numeric'});el.greeting.textContent=`${h<5?'Good night':h<12?'Good morning':h<18?'Good afternoon':'Good evening'}, Kingsley`;}
-    async function loadTasks(){try{const r=await fetch('/api/todoist');if(!r.ok)return;const t=await r.json();el.tasks.innerHTML=(t||[]).slice(0,6).map(x=>`<div style="background:#2A2510;border-left:3px solid #FBBF24;border-radius:4px;padding:10px 12px;margin-bottom:8px">${x.content||''}</div>`).join('')}catch{}}
-    async function loadCal(){try{const r=await fetch('/api/calendar');if(!r.ok)return;const ev=await r.json();if(!ev?.length){el.calendar.innerHTML='<div style="color:var(--dim);padding-top:40px">No more events today</div>';return;}el.calendar.innerHTML=ev.map(e=>`<div style="margin-top:14px"><div style="font:400 14px 'DM Mono';color:var(--sub)">${fmt(e.start)} – ${fmt(e.end)}</div><div style="font:500 18px Outfit">${e.title}</div></div>`).join('')}catch{}}
-    async function loadBus(){try{const groups=await Promise.all(BUS_STOPS.slice(0,2).map(async g=>{const rows=[];for(const s of g.stops){const r=await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${s.stopId}/${s.route}/${s.serviceType}`);const j=await r.json();(j.data||[]).slice(0,3).forEach(x=>rows.push({route:s.route,dest:x.dest_en||'',mins:Math.max(0,Math.round((new Date(x.eta)-new Date())/60000))}));}return {name:g.name,rows:rows.slice(0,3)};}));el.stale.style.display='none';el.bus.innerHTML=groups.map(g=>`<div style="margin-top:12px"><div style="font:600 12px Outfit;color:var(--sub)">${g.name}</div>${g.rows.map(r=>`<div style="display:flex;justify-content:space-between;min-height:44px;align-items:center"><span>${r.route}</span><span>${r.dest}</span><span>${r.mins}m</span></div>`).join('')}</div>`).join('')}catch{el.stale.style.display='inline'}}
-    function tick(){const d=new Date();const h=+d.toLocaleString('en-US',{timeZone:TZ,hour:'numeric',hour12:false});clock.textContent=d.toLocaleTimeString('en-GB',{timeZone:TZ,hour12:false});day.textContent=d.toLocaleString('en-US',{timeZone:TZ,weekday:'short'});date.textContent=d.toLocaleDateString('en-GB',{timeZone:TZ,day:'numeric',month:'short',year:'numeric'});greeting.textContent=`${h<5?'Good night':h<12?'Good morning':h<18?'Good afternoon':'Good evening'}, Kingsley`;}
-    async function loadTasks(){try{const r=await fetch('/api/todoist');if(!r.ok)return;const t=await r.json();tasks.innerHTML=(t||[]).slice(0,6).map(x=>`<div style="background:#2A2510;border-left:3px solid #FBBF24;border-radius:4px;padding:10px 12px;margin-bottom:8px">${x.content||''}</div>`).join('')}catch{}}
-    async function loadCal(){try{const r=await fetch('/api/calendar');if(!r.ok)return;const ev=await r.json();if(!ev?.length){calendar.innerHTML='<div style="color:var(--dim);padding-top:40px">No more events today</div>';return;}calendar.innerHTML=ev.map(e=>`<div style="margin-top:14px"><div style="font:400 14px 'DM Mono';color:var(--sub)">${fmt(e.start)} – ${fmt(e.end)}</div><div style="font:500 18px Outfit">${e.title}</div></div>`).join('')}catch{}}
-    async function loadBus(){try{const groups=await Promise.all(BUS_STOPS.slice(0,2).map(async g=>{const rows=[];for(const s of g.stops){const r=await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${s.stopId}/${s.route}/${s.serviceType}`);const j=await r.json();(j.data||[]).slice(0,3).forEach(x=>rows.push({route:s.route,dest:x.dest_en||'',mins:Math.max(0,Math.round((new Date(x.eta)-new Date())/60000))}));}return {name:g.name,rows:rows.slice(0,3)};}));stale.style.display='none';bus.innerHTML=groups.map(g=>`<div style="margin-top:12px"><div style="font:600 12px Outfit;color:var(--sub)">${g.name}</div>${g.rows.map(r=>`<div style="display:flex;justify-content:space-between;min-height:44px;align-items:center"><span>${r.route}</span><span>${r.dest}</span><span>${r.mins}m</span></div>`).join('')}</div>`).join('')}catch{stale.style.display='inline'}}
-    tick();setInterval(tick,1000);loadTasks();loadCal();loadBus();setInterval(loadTasks,60000);setInterval(loadCal,300000);setInterval(loadBus,30000);
-  </script>
+  <div id="greeting"></div>
+</div>
+
+<div class="main">
+  <section class="col col-left">
+    <div class="col-left-header">
+      <div class="section-label">TASKS</div>
+      <div class="section-line"></div>
+    </div>
+    <div id="tasks"></div>
+  </section>
+
+  <section class="col col-center">
+    <div class="section-label">TODAY</div>
+    <div id="calendar"></div>
+  </section>
+
+  <section class="col col-right">
+    <div class="right-header">
+      <div class="section-label">BUS <span id="stale" style="display:none">· stale</span></div>
+      <div class="tab-group">
+        <button id="tab-eta"     class="tab active">ETA</button>
+        <button id="tab-journey" class="tab inactive">JOURNEY</button>
+      </div>
+    </div>
+    <div id="journey-tabs"></div>
+    <div id="bus"></div>
+  </section>
+</div>
+
+<script>
+// ── USER CONFIG ───────────────────────────────────────────────────────────────
+const BUS_STOPS = [
+  {
+    name: 'STOP NAME 1',
+    stops: [{ stopId: 'XXXXXXXXXX', route: 'XX', serviceType: 1 }]
+  },
+  {
+    name: 'STOP NAME 2',
+    stops: [{ stopId: 'XXXXXXXXXX', route: 'XX', serviceType: 1 }]
+  }
+];
+
+const JOURNEYS = [
+  {
+    label: 'To School',
+    route: '12A',
+    direction: 'outbound',
+    serviceType: 1,
+    departureStopId: 'XXXXXXXXXX',
+    arrivalStopId:   'XXXXXXXXXX'
+  }
+];
+// ── END USER CONFIG ───────────────────────────────────────────────────────────
+
+const TZ = 'Asia/Hong_Kong';
+let mode          = 'eta';
+let activeJourney = 0;
+const doneTasks   = new Set();
+
+const NOTE_COLORS = [
+  { bg: '#2A2510', accent: '#FBBF24' },
+  { bg: '#0F2318', accent: '#4ADE80' },
+  { bg: '#0D1A2A', accent: '#60A5FA' },
+  { bg: '#2A1020', accent: '#F472B6' }
+];
+const NOTE_ROTATIONS = [-1.5, 0.8, -0.5, 1.2, -1.8, 0.4];
+const PINK_COLOR     = { bg: '#2A1020', accent: '#F472B6' };
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function fmt(iso) {
+  return new Date(iso).toLocaleTimeString('en-GB', {
+    timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false
+  });
+}
+
+function fadeIn(el) {
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = 'dataFade 0.4s ease';
+}
+
+// ── CLOCK ─────────────────────────────────────────────────────────────────────
+function tickClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-GB', { timeZone: TZ, hour12: false });
+}
+
+function tickMeta() {
+  const now = new Date();
+  const h   = Number(now.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: false }));
+  const greeting = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = `${greeting}, Kingsley`;
+  document.getElementById('day').textContent =
+    now.toLocaleString('en-US', { timeZone: TZ, weekday: 'short' }).toUpperCase();
+  document.getElementById('date').textContent =
+    now.toLocaleDateString('en-GB', { timeZone: TZ, day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// ── TASKS ─────────────────────────────────────────────────────────────────────
+async function loadTasks() {
+  try {
+    const r = await fetch('/api/todoist');
+    if (!r.ok) return;
+    const tasks = await r.json();
+    const visible = (tasks || []).slice(0, 6);
+    const container = document.getElementById('tasks');
+    container.innerHTML = visible.map((t, i) => {
+      const c   = t.priority === 4 ? PINK_COLOR : NOTE_COLORS[i % 4];
+      const rot = NOTE_ROTATIONS[i] ?? 0;
+      const isDone = doneTasks.has(t.id);
+      return `<article class="note${isDone ? ' done' : ''}"
+                       data-id="${escHtml(t.id)}"
+                       style="background:${c.bg};border-left:3px solid ${c.accent};transform:rotate(${rot}deg)">
+        <span class="tape${t.isOverdue ? ' overdue' : ''}${isDone ? ' faded' : ''}"></span>
+        <div class="note-text" style="color:${c.accent}">${escHtml(t.content)}</div>
+        ${t.due ? `<div class="note-due${t.isOverdue ? ' overdue' : ''}">${escHtml(t.due.string || t.due.date || '')}</div>` : ''}
+        ${t.priority === 4 ? `<div class="note-priority" style="color:${c.accent}99">!! URGENT</div>` : ''}
+        ${t.priority === 3 ? `<div class="note-priority" style="color:${c.accent}99">! HIGH</div>`    : ''}
+      </article>`;
+    }).join('');
+    container.querySelectorAll('.note').forEach(n => { n.onclick = () => closeTask(n); });
+    fadeIn(container);
+  } catch (_) {}
+}
+
+async function closeTask(el) {
+  const id = el.dataset.id;
+  if (doneTasks.has(id)) return;
+  doneTasks.add(id);
+  el.classList.add('done');
+  try {
+    const r = await fetch('/api/todoist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taskId: id })
+    });
+    const j = await r.json();
+    if (!j.success) { doneTasks.delete(id); el.classList.remove('done'); }
+  } catch (_) { doneTasks.delete(id); el.classList.remove('done'); }
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────────────────────
+async function loadCalendar() {
+  try {
+    const r = await fetch('/api/calendar');
+    if (!r.ok) return;
+    const events = await r.json();
+    const cal = document.getElementById('calendar');
+    if (!events || !events.length) {
+      cal.innerHTML = '<div class="no-events">No more events today</div>';
+      return;
+    }
+    const allDay = events.filter(e =>  e.isAllDay);
+    const timed  = events.filter(e => !e.isAllDay);
+    const now    = new Date();
+
+    const currentIdx = timed.findIndex(e => new Date(e.start) <= now && new Date(e.end) > now);
+    const highlightIdx = currentIdx !== -1
+      ? currentIdx
+      : timed.findIndex(e => new Date(e.start) > now);
+
+    let html = '';
+    if (allDay.length) {
+      html += `<div class="all-day-row">
+        ${allDay.map(a => `<span class="all-day-pill">ALL DAY ${escHtml(a.title)}</span>`).join('')}
+      </div>`;
+    }
+    html += timed.map((e, i) => {
+      const isPast      = new Date(e.end) < now;
+      const isHighlight = i === highlightIdx;
+      return `<div class="event-row${isPast ? ' past' : ''}${isHighlight ? ' current' : ''}">
+        <div class="event-bar"></div>
+        <div>
+          <div class="event-time">${fmt(e.start)} – ${fmt(e.end)}</div>
+          <div class="event-title">${escHtml(e.title)}</div>
+          ${e.location ? `<div class="event-location">${escHtml(e.location)}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    cal.innerHTML = html;
+    fadeIn(cal);
+  } catch (_) {}
+}
+
+// ── BUS MODE A — Live ETAs ────────────────────────────────────────────────────
+async function loadETA() {
+  const staleEl = document.getElementById('stale');
+  try {
+    const groups = await Promise.all(BUS_STOPS.slice(0, 2).map(async g => {
+      const rowSets = await Promise.all(g.stops.map(async s => {
+        const r = await fetch(
+          `https://data.etabus.gov.hk/v1/transport/kmb/eta/${s.stopId}/${s.route}/${s.serviceType}`
+        );
+        const j = await r.json();
+        return (j.data || []).slice(0, 3).map(x => ({
+          route: s.route,
+          dest:  x.dest_en || '',
+          mins:  Math.max(0, Math.round((new Date(x.eta) - new Date()) / 60000))
+        }));
+      }));
+      return { name: g.name, rows: rowSets.flat().slice(0, 3) };
+    }));
+    staleEl.style.display = 'none';
+    if (mode === 'eta') renderETA(groups);
+  } catch (_) {
+    staleEl.style.display = 'inline';
+    if (mode === 'eta') renderETA([]);
+  }
+}
+
+function renderETA(groups) {
+  const bus = document.getElementById('bus');
+  bus.innerHTML = groups.map(g => `
+    <div class="stop-group">
+      <div class="stop-name-label">${escHtml(g.name)}</div>
+      <div class="section-line"></div>
+      ${g.rows.map(r => `
+        <div class="eta-row${r.mins <= 1 ? ' bus-row-critical' : ''}">
+          <div class="route-badge">${escHtml(r.route)}</div>
+          <div class="eta-dest">${escHtml(r.dest)}</div>
+          <div class="eta-mins${r.mins <= 3 ? ' danger' : ''}">${r.mins}m</div>
+        </div>`).join('')}
+    </div>`).join('');
+  fadeIn(bus);
+}
+
+// ── BUS MODE B — Journey calculator ──────────────────────────────────────────
+async function loadJourney() {
+  const j   = JOURNEYS[activeJourney];
+  const bus = document.getElementById('bus');
+  try {
+    const params = new URLSearchParams({
+      route:            j.route,
+      direction:        j.direction,
+      serviceType:      j.serviceType,
+      departureStopId:  j.departureStopId,
+      arrivalStopId:    j.arrivalStopId
+    });
+    const r = await fetch(`/api/kmb-route?${params}`);
+    if (!r.ok) throw new Error('api error');
+    const d = await r.json();
+
+    if (d.noService) {
+      bus.innerHTML = '<div style="padding:24px;color:var(--text-dim)">No service</div>';
+      return;
+    }
+
+    const now  = new Date();
+    const arrM = Math.max(0, Math.round((new Date(d.stops.at(-1).projectedTime) - now) / 60000));
+
+    bus.innerHTML = `<div style="margin-top:8px">
+      ${d.stops.map((s, i) => {
+        const isLast  = i === d.stops.length - 1;
+        const dotCls  = s.isDeparture ? 'departure' : s.isArrival ? 'arrival' : 'intermediate';
+        const timeCls = s.isDeparture ? 'departure' : s.isArrival ? 'arrival'  : '';
+        return `<div class="journey-stop-row">
+          <div class="journey-dot-wrap">
+            ${!isLast ? '<div class="journey-line"></div>' : ''}
+            <div class="journey-dot ${dotCls}"></div>
+          </div>
+          <div class="journey-stop-name">${escHtml(s.nameEn)}</div>
+          <div class="journey-stop-time ${timeCls}">${fmt(s.projectedTime)}</div>
+        </div>`;
+      }).join('')}
+      <div class="arrives-in-block">
+        <div class="arrives-in-label">ARRIVES IN</div>
+        <div class="arrives-in-time${arrM <= 5 ? ' danger' : ''}">${arrM} min</div>
+      </div>
+    </div>`;
+    fadeIn(bus);
+  } catch (_) {
+    bus.innerHTML = '<div style="padding:24px;color:var(--text-dim)">Unable to load journey</div>';
+  }
+}
+
+function renderJourneyTabs() {
+  const container = document.getElementById('journey-tabs');
+  if (JOURNEYS.length <= 1) { container.style.display = 'none'; return; }
+  container.style.display = 'flex';
+  container.innerHTML = JOURNEYS.map((j, i) =>
+    `<button class="tab ${i === activeJourney ? 'active' : 'inactive'}" data-i="${i}">${escHtml(j.label)}</button>`
+  ).join('');
+  container.querySelectorAll('button').forEach(b => {
+    b.onclick = () => { activeJourney = Number(b.dataset.i); renderJourneyTabs(); loadJourney(); };
+  });
+}
+
+// ── MODE SWITCH ───────────────────────────────────────────────────────────────
+document.getElementById('tab-eta').onclick = () => {
+  mode = 'eta';
+  document.getElementById('tab-eta').className     = 'tab active';
+  document.getElementById('tab-journey').className = 'tab inactive';
+  document.getElementById('journey-tabs').style.display = 'none';
+  loadETA();
+};
+document.getElementById('tab-journey').onclick = () => {
+  mode = 'journey';
+  document.getElementById('tab-journey').className = 'tab active';
+  document.getElementById('tab-eta').className     = 'tab inactive';
+  renderJourneyTabs();
+  loadJourney();
+};
+
+// ── INIT & INTERVALS ──────────────────────────────────────────────────────────
+tickClock();
+tickMeta();
+setInterval(tickClock, 1000);
+setInterval(tickMeta,  60000);
+
+loadTasks();
+loadCalendar();
+loadETA();
+
+setInterval(loadTasks,    60000);
+setInterval(loadCalendar, 300000);
+setInterval(() => mode === 'eta' ? loadETA() : loadJourney(), 30000);
+</script>
 </body>
 </html>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-:root{--bg-base:#0D0F14;--bg-card:#161A23;--bg-cork:#111418;--accent-todo-y:#FBBF24;--accent-todo-g:#4ADE80;--accent-todo-b:#60A5FA;--accent-todo-p:#F472B6;--accent-cal:#60A5FA;--accent-bus:#FBBF24;--accent-safe:#4ADE80;--accent-danger:#F87171;--text-primary:#F1F0EC;--text-secondary:#8A8F9E;--text-dim:#3D4255;--border:#1F2535;--note-yellow-bg:#2A2510;--note-green-bg:#0F2318;--note-blue-bg:#0D1A2A;--note-pink-bg:#2A1020}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg-base);color:var(--text-primary);font-family:'Outfit',sans-serif;width:1280px;height:800px;overflow:hidden}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}@keyframes danger-pulse{0%,100%{background:rgba(248,113,113,.08)}50%{background:rgba(248,113,113,.18)}}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes dataFade{from{opacity:.4}to{opacity:1}}@keyframes lineGrow{from{height:0}to{height:100%}}
-.top{height:100px;padding:0 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
-.clock{display:flex;align-items:center;gap:12px}.dot{width:8px;height:8px;border-radius:50%;background:var(--accent-danger);animation:pulse 1s infinite}.time{font:300 72px/1 'DM Mono',monospace}.date{margin-left:20px}.day{font:600 11px 'Outfit';text-transform:uppercase;letter-spacing:.12em;color:var(--text-secondary)}.full{font:400 16px 'Outfit'}
-.greeting{font:400 18px 'Outfit';color:var(--text-secondary)}
-.main{display:flex;height:700px}.col{overflow:hidden}.left{width:340px;border-right:1px solid var(--border);background-color:var(--bg-cork);background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");animation:fadeUp .4s}.center{width:580px;border-right:1px solid var(--border);padding:28px;animation:fadeUp .4s .15s both}.right{width:360px;padding:20px 24px;animation:fadeUp .4s .3s both}
-.label{font:600 11px 'Outfit';letter-spacing:.12em;color:var(--text-dim);text-transform:uppercase}.line{height:1px;background:var(--border);margin-top:10px}
-#tasks{padding:32px 28px}.note{width:280px;min-height:100px;max-height:160px;overflow:hidden;border-radius:4px;padding:14px 16px 16px;cursor:pointer;animation:dataFade .4s}.note+.note{margin-top:-12px}.note.done{opacity:.3}.note.done .text{text-decoration:line-through}.tape{width:48px;height:8px;background:rgba(255,255,255,.06);border-radius:2px;margin:0 auto 12px}
-.tab{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;min-height:44px;display:flex;align-items:center;cursor:pointer}.active{background:var(--accent-bus);color:#0D0F14}.inactive{color:var(--text-dim);border:1px solid var(--border)}
-  </style>
-</head><body>
-<div class="top"><div class="clock"><span class="dot"></span><div class="time" id="clock"></div><div class="date"><div class="day" id="day"></div><div class="full" id="date"></div></div></div><div class="greeting" id="greeting"></div></div>
-<div class="main">
-  <section class="col left"><div style="padding:24px 28px 0"><div class="label">TASKS</div><div class="line"></div></div><div id="tasks"></div></section>
-  <section class="col center"><div class="label">TODAY</div><div id="calendar"></div></section>
-  <section class="col right"><div style="display:flex;justify-content:space-between;align-items:center"><div class="label">BUS <span id="stale" style="display:none;color:var(--text-dim)">· stale</span></div><div style="display:flex;gap:8px"><button id="etaTab" class="tab active">ETA</button><button id="journeyTab" class="tab inactive">JOURNEY</button></div></div><div id="journeyTabs" style="display:none;gap:8px;margin:10px 0;flex-wrap:wrap"></div><div id="bus"></div></section>
-</div>
-<script>
-const TZ='Asia/Hong_Kong',BUS_STOPS=[{name:'STOP NAME 1',stops:[{stopId:'XXXXXXXXXX',route:'XX',serviceType:1}]},{name:'STOP NAME 2',stops:[{stopId:'XXXXXXXXXX',route:'XX',serviceType:1}]}],JOURNEYS=[{label:'To School',route:'12A',direction:'outbound',serviceType:1,departureStopId:'XXXXXXXXXX',arrivalStopId:'XXXXXXXXXX'}];
-let mode='eta',doneTasks=new Set(),activeJourney=0,busStale=false;
-const $=id=>document.getElementById(id);
-function timeTick(){const n=new Date();$('clock').textContent=n.toLocaleTimeString('en-GB',{timeZone:TZ,hour12:false});const h=Number(n.toLocaleString('en-US',{timeZone:TZ,hour:'numeric',hour12:false}));$('greeting').textContent=`${h<5?'Good night':h<12?'Good morning':h<18?'Good afternoon':'Good evening'}, Kingsley`;$('day').textContent=n.toLocaleString('en-US',{timeZone:TZ,weekday:'short'});$('date').textContent=n.toLocaleDateString('en-GB',{timeZone:TZ,day:'numeric',month:'short',year:'numeric'})}
-async function loadTasks(){const r=await fetch('/api/todoist');const t=await r.json();const arr=t.slice(0,6);$('tasks').innerHTML=arr.map((x,i)=>{const p=x.priority===4;const c=p?['#2A1020','#F472B6']:([['#2A2510','#FBBF24'],['#0F2318','#4ADE80'],['#0D1A2A','#60A5FA'],['#2A1020','#F472B6']][i%4]);const ro=[-1.5,.8,-.5,1.2,-1.8,.4][i];return `<article class='note ${doneTasks.has(x.id)?'done':''}' data-id='${x.id}' style='background:${c[0]};border-left:3px solid ${c[1]};transform:rotate(${ro}deg)'><span class='tape' style='background:${x.isOverdue?'rgba(248,113,113,.3)':'rgba(255,255,255,.06)'}'></span><div class='text' style='font:500 16px Outfit;color:${c[1]}'>${x.content}</div>${x.due?`<div style='font:400 12px DM Mono;color:${x.isOverdue?'var(--accent-danger)':'var(--text-secondary)'}'>${x.due.string||x.due.date}</div>`:''}${x.priority===4?`<div style='font:600 10px Outfit;color:${c[1]}99'>!! URGENT</div>`:x.priority===3?`<div style='font:600 10px Outfit;color:${c[1]}99'>! HIGH</div>`:''}</article>`}).join('');
-[...document.querySelectorAll('.note')].forEach(n=>n.onclick=async()=>{const id=n.dataset.id;doneTasks.add(id);n.classList.add('done');const rr=await fetch('/api/todoist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({taskId:id})});const j=await rr.json();if(!j.success){doneTasks.delete(id);n.classList.remove('done')}})}
-async function loadCal(){const r=await fetch('/api/calendar');const ev=await r.json();$('calendar').style.animation='dataFade .4s';if(!ev.length){$('calendar').innerHTML='<div style="height:620px;display:flex;align-items:center;color:var(--text-dim)">No more events today</div>';return}const all=ev.filter(e=>e.isAllDay),timed=ev.filter(e=>!e.isAllDay);$('calendar').innerHTML=`<div style='margin:10px 0 20px;display:flex;gap:8px;flex-wrap:wrap'>${all.map(a=>`<span style="background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.3);padding:3px 10px;border-radius:4px;font-size:11px;color:#60A5FA;font-weight:600">ALL DAY ${a.title}</span>`).join('')}</div>${timed.map((e,idx)=>`<div style='display:flex;gap:14px;margin-bottom:20px;opacity:${new Date(e.end)<new Date()?.35:1};${idx===0?'background:var(--bg-card);padding:12px;border-radius:8px;box-shadow:0 0 0 1px var(--border);':''}'><div style='width:3px;background:var(--accent-cal);border-radius:2px'></div><div><div style='font:400 14px DM Mono;color:var(--text-secondary)'>${fmt(e.start)} – ${fmt(e.end)}</div><div style='font:500 18px Outfit'>${e.title}</div><div style='font:400 13px Outfit;color:var(--text-secondary)'>${e.location||''}</div></div></div>`).join('')}`}
-const fmt=i=>new Date(i).toLocaleTimeString('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false});
-async function loadETA(){try{const groups=await Promise.all(BUS_STOPS.slice(0,2).map(async g=>{const rows=(await Promise.all(g.stops.map(async s=>{const r=await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${s.stopId}/${s.route}/${s.serviceType}`);const j=await r.json();return (j.data||[]).slice(0,3).map(x=>({route:s.route,dest:x.dest_en,mins:Math.max(0,Math.round((new Date(x.eta)-new Date())/60000))}))}))).flat();return {name:g.name,rows:rows.slice(0,3)};}));busStale=false;renderETA(groups)}catch(e){busStale=true;renderETA([])}$('stale').style.display=busStale?'inline':'none'}
-function renderETA(groups){$('bus').innerHTML=mode==='eta'?groups.map(g=>`<div><div style='font:600 12px Outfit;color:var(--text-secondary);margin-top:12px'>${g.name}</div><div class='line'></div>${g.rows.map(r=>`<div class='${r.mins<=1?'bus-row-critical':''}' style='display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 0'><div style='border:1px solid var(--border);border-radius:6px;min-width:64px;text-align:center;font:500 22px DM Mono;color:var(--accent-bus)'>${r.route}</div><div style='flex:1;font:400 13px Outfit;color:var(--text-secondary)'>${r.dest||''}</div><div style='font:300 36px DM Mono;color:${r.mins<=3?'var(--accent-danger)':'var(--accent-bus)'}'>${r.mins}m</div></div>`).join('')}</div>`).join(''):'')}
-async function loadJourney(){const j=JOURNEYS[activeJourney];const q=new URLSearchParams(j);const r=await fetch('/api/kmb-route?'+q);const d=await r.json();if(d.noService){$('bus').innerHTML='<div style="padding:24px;color:var(--text-dim)">No service</div>';return}const arrM=Math.round((new Date(d.stops.at(-1).projectedTime)-new Date())/60000);$('bus').innerHTML=`<div style='margin-top:12px'>${d.stops.map((s,i)=>`<div style='display:flex;align-items:center;gap:12px;min-height:44px;padding:6px 0'><div style='position:relative;width:16px;display:flex;justify-content:center'>${i<d.stops.length-1?"<div class='journey-line' style='position:absolute;top:14px;width:2px;background:var(--border)'></div>":''}<div style='width:${s.isDeparture||s.isArrival?10:8}px;height:${s.isDeparture||s.isArrival?10:8}px;border-radius:50%;background:${s.isDeparture?'var(--accent-bus)':s.isArrival?'var(--accent-safe)':'transparent'};border:${s.isDeparture||s.isArrival?'none':'2px solid var(--border)'}'></div></div><div style='flex:1;font:400 13px Outfit'>${s.nameEn}</div><div style='font:400 13px DM Mono;color:${s.isDeparture?'var(--accent-bus)':s.isArrival?'var(--accent-safe)':'var(--text-secondary)'}'>${fmt(s.projectedTime)}</div></div>`).join('')}<div style='padding-top:10px'><div class='label'>ARRIVES IN</div><div style='font:300 28px DM Mono;color:${arrM<=5?'var(--accent-danger)':'var(--accent-safe)'}'>${arrM} min</div></div></div>`}
-function renderJourneyTabs(){if(JOURNEYS.length<=1){$('journeyTabs').style.display='none';return}$('journeyTabs').style.display='flex';$('journeyTabs').innerHTML=JOURNEYS.map((j,i)=>`<button class='tab ${i===activeJourney?'active':'inactive'}' data-i='${i}'>${j.label}</button>`).join('');[...$('journeyTabs').querySelectorAll('button')].forEach(b=>b.onclick=()=>{activeJourney=Number(b.dataset.i);loadJourney();renderJourneyTabs()})}
-$('etaTab').onclick=()=>{mode='eta';$('etaTab').className='tab active';$('journeyTab').className='tab inactive';$('journeyTabs').style.display='none';loadETA()};$('journeyTab').onclick=()=>{mode='journey';$('journeyTab').className='tab active';$('etaTab').className='tab inactive';renderJourneyTabs();loadJourney()};
-timeTick();setInterval(timeTick,1000);loadTasks();loadCal();loadETA();setInterval(loadTasks,60000);setInterval(loadCal,300000);setInterval(()=>mode==='eta'?loadETA():loadJourney(),30000);
-</script>
-</body></html>
-main
