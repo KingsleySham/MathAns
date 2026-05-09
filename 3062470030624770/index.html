@@ -9,34 +9,30 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      /* Morning warm palette */
-      --bg-base:        #0E0B08;
-      --bg-card:        #1A1510;
-      --bg-cork:        #131009;
-      --border:         #2E2218;
+      /* Backgrounds */
+      --bg-base:   #F0F9FF;   /* sky-50 */
+      --bg-card:   #FFFFFF;
+      --bg-cork:   #FFFDE7;   /* yellow-50 */
+      --border:    #BAE6FD;   /* sky-200 */
 
-      /* Accents */
-      --amber:          #F59E0B;
-      --dawn:           #FDE68A;
-      --sage:           #6EE7B7;
-      --sky:            #7DD3FC;
-      --rose:           #FCA5A5;
-      --danger:         #F87171;
+      /* Brand accents */
+      --blue:      #0EA5E9;   /* sky-500 */
+      --blue-lt:   #E0F2FE;   /* sky-100 */
+      --yellow:    #FACC15;   /* yellow-400 */
+      --yellow-lt: #FEF9C3;   /* yellow-100 */
+      --green:     #22C55E;   /* green-500 */
+      --rose:      #F43F5E;   /* rose-500 */
 
       /* Text */
-      --text-primary:   #FEF3C7;
-      --text-secondary: #A08A72;
-      --text-dim:       #503D2C;
+      --text:      #0C4A6E;   /* sky-900 */
+      --sub:       #475569;   /* slate-600 */
+      --dim:       #94A3B8;   /* slate-400 */
 
-      /* Note card palettes */
-      --note-a-bg:      #201608;
-      --note-a-acc:     #F59E0B;
-      --note-b-bg:      #091A0E;
-      --note-b-acc:     #6EE7B7;
-      --note-c-bg:      #081520;
-      --note-c-acc:     #7DD3FC;
-      --note-d-bg:      #200B0E;
-      --note-d-acc:     #FCA5A5;
+      /* Note palettes */
+      --na-bg:  #FFFBEB; --na-acc: #D97706; --na-bdr: #FCD34D;
+      --nb-bg:  #F0FDF4; --nb-acc: #16A34A; --nb-bdr: #4ADE80;
+      --nc-bg:  #EFF6FF; --nc-acc: #2563EB; --nc-bdr: #60A5FA;
+      --nd-bg:  #FFF1F2; --nd-acc: #E11D48; --nd-bdr: #FB7185;
 
       --font-display: 'DM Mono', monospace;
       --font-body:    'Outfit', sans-serif;
@@ -46,260 +42,210 @@
     html, body {
       width: 1280px; height: 800px; overflow: hidden;
       background: var(--bg-base);
-      color: var(--text-primary);
+      color: var(--text);
       font-family: var(--font-body);
       -webkit-font-smoothing: antialiased;
     }
 
     @keyframes pulse {
-      0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+      0%,100% { opacity: 1; } 50% { opacity: 0.25; }
     }
     @keyframes danger-pulse {
-      0%,100% { background: rgba(248,113,113,.08); }
-      50%      { background: rgba(248,113,113,.18); }
+      0%,100% { background: rgba(244,63,94,.08); }
+      50%      { background: rgba(244,63,94,.18); }
     }
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(8px); }
       to   { opacity: 1; transform: none; }
     }
-    @keyframes dataFade {
-      from { opacity: 0.4; } to { opacity: 1; }
-    }
-    @keyframes lineGrow {
-      from { height: 0; } to { height: 100%; }
-    }
+    @keyframes dataFade { from { opacity: 0.4; } to { opacity: 1; } }
+    @keyframes lineGrow { from { height: 0; } to { height: 100%; } }
 
-    /* ─── Top bar ─────────────────────────────────────────────────────── */
+    /* ── Top bar ───────────────────────────────────────────────────────── */
     .top {
       height: 100px;
       padding: 0 40px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border);
-      background: linear-gradient(120deg, #201308 0%, var(--bg-base) 55%);
-      position: relative;
-      overflow: hidden;
+      background: var(--bg-card);
+      border-bottom: 2px solid var(--border);
     }
-    /* subtle sunrise glow halo behind the clock */
-    .top::before {
-      content: '';
-      position: absolute;
-      left: -20px; top: -60px;
-      width: 300px; height: 220px;
-      background: radial-gradient(ellipse at 40% 60%, rgba(245,158,11,.12) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .clock-wrap { display: flex; align-items: center; gap: 14px; position: relative; }
+    .clock-wrap { display: flex; align-items: center; gap: 14px; }
     .live-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--amber);
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--yellow);
       flex-shrink: 0;
       animation: pulse 2s ease-in-out infinite;
-      box-shadow: 0 0 6px rgba(245,158,11,.5);
+      box-shadow: 0 0 0 3px rgba(250,204,21,.25);
     }
     #clock {
       font-family: var(--font-display);
       font-size: 72px; font-weight: 300; line-height: 1;
-      color: var(--amber);
-      text-shadow: 0 0 40px rgba(245,158,11,.2);
+      color: var(--blue);
     }
     .date-block { margin-left: 20px; }
-    #day {
-      font-family: var(--font-body);
-      font-size: 11px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: .12em;
-      color: var(--text-secondary);
-    }
-    #date {
-      font-family: var(--font-body);
-      font-size: 16px; font-weight: 400;
-      color: var(--text-primary);
-    }
-    #greeting {
-      font-family: var(--font-body);
-      font-size: 18px; font-weight: 400;
-      color: var(--text-secondary);
-      font-style: italic;
-    }
+    #day  { font: 600 11px var(--font-body); text-transform: uppercase; letter-spacing: .12em; color: var(--dim); }
+    #date { font: 400 16px var(--font-body); color: var(--text); }
+    #greeting { font: 400 18px var(--font-body); color: var(--sub); }
 
-    /* ─── Layout ──────────────────────────────────────────────────────── */
+    /* ── Layout ────────────────────────────────────────────────────────── */
     .main { display: flex; height: 700px; }
     .col  { overflow: hidden; }
 
-    /* ─── Left — Notes ────────────────────────────────────────────────── */
+    /* ── Left — Notes ──────────────────────────────────────────────────── */
     .col-left {
       width: 340px;
-      border-right: 1px solid var(--border);
+      border-right: 2px solid var(--border);
       background-color: var(--bg-cork);
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
       animation: fadeUp .4s ease-out both;
     }
     .col-left-header { padding: 24px 28px 0; }
-
     .section-label {
-      font-family: var(--font-body);
-      font-size: 11px; font-weight: 600;
+      font: 600 11px var(--font-body);
       letter-spacing: .12em; text-transform: uppercase;
-      color: var(--text-dim);
+      color: var(--dim);
     }
-    .section-line { height: 1px; background: var(--border); margin-top: 10px; }
-
-    #tasks { padding: 32px 28px; }
+    .section-line { height: 2px; background: var(--border); margin-top: 10px; border-radius: 1px; }
+    #tasks { padding: 28px 28px; }
 
     .note {
       width: 280px; min-height: 100px; max-height: 160px;
       overflow: hidden; border-radius: 6px;
-      padding: 14px 16px 16px;
+      padding: 12px 14px 14px;
       position: relative; cursor: pointer;
-      transition: opacity .3s;
+      box-shadow: 0 2px 8px rgba(14,165,233,.08), 0 1px 3px rgba(0,0,0,.06);
+      transition: box-shadow .2s;
     }
-    .note + .note { margin-top: -12px; }
-    .note.done { opacity: .3; }
+    .note + .note { margin-top: -10px; }
+    .note.done { opacity: .35; }
     .note.done .note-text { text-decoration: line-through; }
 
     .tape {
       width: 48px; height: 8px;
-      background: rgba(255,255,255,.05);
+      background: rgba(0,0,0,.08);
       border-radius: 2px;
-      margin: 0 auto 12px; display: block;
+      margin: 0 auto 10px; display: block;
     }
-    .tape.overdue { background: rgba(248,113,113,.3); }
-    .tape.faded   { opacity: .15; }
+    .tape.overdue { background: rgba(244,63,94,.3); }
+    .tape.faded   { opacity: .2; }
 
-    .note-text { font-family: var(--font-body); font-size: 16px; font-weight: 500; }
-    .note-due  {
-      font-family: var(--font-display); font-size: 12px; font-weight: 400;
-      color: var(--text-secondary); margin-top: 6px;
-    }
-    .note-due.overdue { color: var(--danger); }
-    .note-priority {
-      font-family: var(--font-body); font-size: 10px; font-weight: 600;
-      text-transform: uppercase; margin-top: 6px;
-    }
+    .note-text     { font: 500 15px var(--font-body); }
+    .note-due      { font: 400 11px var(--font-display); color: var(--sub); margin-top: 5px; }
+    .note-due.overdue { color: var(--rose); }
+    .note-priority { font: 600 10px var(--font-body); text-transform: uppercase; margin-top: 5px; }
 
-    /* ─── Centre — Calendar ───────────────────────────────────────────── */
+    /* ── Centre — Calendar ─────────────────────────────────────────────── */
     .col-center {
       width: 580px;
-      border-right: 1px solid var(--border);
+      border-right: 2px solid var(--border);
       padding: 28px;
-      background: var(--bg-base);
+      background: var(--bg-card);
       animation: fadeUp .4s ease-out .15s both;
     }
     .all-day-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 20px; }
     .all-day-pill {
-      background: rgba(125,211,252,.1);
-      border: 1px solid rgba(125,211,252,.25);
-      border-radius: 4px; padding: 3px 10px;
-      font-family: var(--font-body); font-size: 11px; font-weight: 600;
-      color: var(--sky);
+      background: var(--blue-lt); border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 12px;
+      font: 600 11px var(--font-body); color: var(--blue);
     }
     .event-row {
       display: flex; gap: 14px; margin-bottom: 20px;
-      transition: opacity .4s ease;
+      border-radius: 10px; transition: opacity .4s;
     }
     .event-row.past    { opacity: .3; }
     .event-row.current {
-      background: var(--bg-card); border-radius: 8px;
-      padding: 12px; box-shadow: 0 0 0 1px var(--border);
+      background: var(--blue-lt);
+      padding: 14px; border: 1.5px solid var(--border);
     }
-    .event-bar {
-      width: 3px; background: var(--sky);
-      border-radius: 2px; flex-shrink: 0;
-    }
-    .event-time  { font-family: var(--font-display); font-size: 14px; font-weight: 400; color: var(--text-secondary); }
-    .event-title { font-family: var(--font-body); font-size: 18px; font-weight: 500; color: var(--text-primary); }
-    .event-loc   { font-family: var(--font-body); font-size: 13px; font-weight: 400; color: var(--text-secondary); }
+    .event-bar { width: 4px; background: var(--blue); border-radius: 2px; flex-shrink: 0; }
+    .event-time  { font: 400 14px var(--font-display); color: var(--sub); }
+    .event-title { font: 600 18px var(--font-body); color: var(--text); }
+    .event-loc   { font: 400 13px var(--font-body); color: var(--sub); }
     .no-events {
-      height: 600px; display: flex; align-items: center; justify-content: center;
-      font: 400 14px var(--font-body); color: var(--text-dim);
+      height: 580px; display: flex; align-items: center; justify-content: center;
+      font: 400 15px var(--font-body); color: var(--dim);
     }
 
-    /* ─── Right — Bus ─────────────────────────────────────────────────── */
-    .col-right { width: 360px; padding: 20px 24px; animation: fadeUp .4s ease-out .3s both; }
+    /* ── Right — Bus ───────────────────────────────────────────────────── */
+    .col-right { width: 360px; padding: 20px 24px; background: var(--bg-base); animation: fadeUp .4s ease-out .3s both; }
     .right-header { display: flex; justify-content: space-between; align-items: center; }
 
     .tab {
       padding: 4px 14px; border-radius: 20px;
-      font-family: var(--font-body); font-size: 11px; font-weight: 600;
+      font: 600 11px var(--font-body);
       cursor: pointer; min-height: 44px;
       display: flex; align-items: center;
       border: none; background: transparent;
-      transition: background .2s, color .2s;
+      transition: all .2s;
     }
-    .tab.active   { background: var(--amber); color: #1A0D00; }
-    .tab.inactive { color: var(--text-dim); border: 1px solid var(--border); }
+    .tab.active   { background: var(--yellow); color: #1A1200; }
+    .tab.inactive { color: var(--dim); border: 1.5px solid var(--border); }
 
     #journey-tabs { display: none; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
 
     .stop-group  { margin-top: 16px; }
-    .stop-label  {
-      font-family: var(--font-body); font-size: 12px; font-weight: 600;
-      text-transform: uppercase; color: var(--text-secondary); margin-bottom: 4px;
-    }
+    .stop-label  { font: 600 11px var(--font-body); text-transform: uppercase; letter-spacing: .1em; color: var(--dim); margin-bottom: 6px; }
+
     .eta-row {
       display: flex; align-items: center; gap: 12px;
-      padding: 8px 0; min-height: 44px;
+      padding: 6px 0; min-height: 44px;
     }
-    .bus-row-critical { animation: danger-pulse 1s ease-in-out infinite; border-radius: 4px; }
+    .bus-row-critical { animation: danger-pulse 1s ease-in-out infinite; border-radius: 8px; padding: 0 4px; }
 
     .route-badge {
-      border: 1px solid var(--border); border-radius: 6px;
-      padding: 2px 8px;
-      font-family: var(--font-display); font-size: 22px; font-weight: 500;
-      color: var(--amber); min-width: 64px; text-align: center; flex-shrink: 0;
+      border: 2px solid var(--yellow);
+      border-radius: 8px; padding: 2px 8px;
+      font: 500 20px var(--font-display);
+      color: var(--text); min-width: 64px; text-align: center; flex-shrink: 0;
+      background: var(--yellow-lt);
     }
-    .eta-dest { flex: 1; font: 400 13px var(--font-body); color: var(--text-secondary); }
-    .eta-mins { font-family: var(--font-display); font-size: 36px; font-weight: 300; color: var(--amber); }
-    .eta-mins.danger { color: var(--danger); }
+    .eta-dest { flex: 1; font: 400 13px var(--font-body); color: var(--sub); }
+    .eta-mins { font: 300 36px var(--font-display); color: var(--blue); }
+    .eta-mins.danger { color: var(--rose); }
 
-    /* ─── Journey timeline ────────────────────────────────────────────── */
-    .j-stop {
-      display: flex; align-items: center; gap: 12px;
-      min-height: 44px; padding: 6px 0;
-    }
+    /* ── Journey ───────────────────────────────────────────────────────── */
+    .j-stop { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 4px 0; }
     .j-dot-wrap {
       position: relative; width: 16px;
       display: flex; justify-content: center; align-items: center;
       flex-shrink: 0; align-self: stretch;
     }
     .j-line {
-      position: absolute; top: 14px; bottom: -6px;
+      position: absolute; top: 14px; bottom: -4px;
       width: 2px; background: var(--border);
       animation: lineGrow .6s ease-out forwards;
     }
     .j-dot { border-radius: 50%; position: relative; z-index: 1; }
-    .j-dot.dep  { width: 10px; height: 10px; background: var(--amber); box-shadow: 0 0 8px rgba(245,158,11,.4); }
-    .j-dot.arr  { width: 10px; height: 10px; background: var(--sage);  box-shadow: 0 0 8px rgba(110,231,183,.3); }
-    .j-dot.mid  { width: 8px;  height: 8px;  background: transparent; border: 2px solid var(--border); }
+    .j-dot.dep { width: 12px; height: 12px; background: var(--yellow); box-shadow: 0 0 0 3px rgba(250,204,21,.3); }
+    .j-dot.arr { width: 12px; height: 12px; background: var(--blue);   box-shadow: 0 0 0 3px rgba(14,165,233,.2); }
+    .j-dot.mid { width: 8px;  height: 8px;  background: var(--bg-card); border: 2px solid var(--border); }
 
-    .j-name { flex: 1; font: 400 13px var(--font-body); color: var(--text-primary); }
-    .j-time { font: 400 13px var(--font-display); color: var(--text-secondary); }
-    .j-time.dep { color: var(--amber); font-weight: 500; }
-    .j-time.arr { color: var(--sage);  font-weight: 500; }
+    .j-name { flex: 1; font: 400 13px var(--font-body); color: var(--text); }
+    .j-time { font: 400 13px var(--font-display); color: var(--sub); }
+    .j-time.dep { color: var(--text); font-weight: 500; }
+    .j-time.arr { color: var(--blue); font-weight: 500; }
 
-    .arrives-block { padding-top: 16px; }
-    .arrives-label {
-      font: 600 11px var(--font-body);
-      text-transform: uppercase; letter-spacing: .12em;
-      color: var(--text-dim);
+    .arrives-block { padding-top: 16px; border-top: 2px solid var(--border); margin-top: 8px; }
+    .arrives-label { font: 600 11px var(--font-body); text-transform: uppercase; letter-spacing: .12em; color: var(--dim); }
+    .arrives-time  { font: 300 32px var(--font-display); color: var(--blue); margin-top: 4px; }
+    .arrives-time.danger { color: var(--rose); }
+
+    .info-msg {
+      margin-top: 16px; padding: 14px 16px;
+      background: var(--yellow-lt); border: 1.5px solid var(--yellow);
+      border-radius: 10px; font: 400 13px var(--font-body); color: var(--sub);
+      line-height: 1.5;
     }
-    .arrives-time { font: 300 28px var(--font-display); color: var(--sage); margin-top: 4px; }
-    .arrives-time.danger { color: var(--danger); }
 
-    #stale { font: 400 11px var(--font-body); color: var(--text-dim); }
+    #stale { font: 400 11px var(--font-body); color: var(--rose); }
 
-    /* ─── Setup link ──────────────────────────────────────────────────── */
     .setup-link {
       position: fixed; bottom: 14px; right: 18px;
       font: 500 11px var(--font-body);
-      color: var(--text-dim);
-      text-decoration: none;
-      opacity: .4;
-      transition: opacity .2s;
+      color: var(--dim); text-decoration: none; opacity: .5;
     }
-    .setup-link:active { opacity: 1; }
   </style>
 </head>
 <body>
@@ -373,27 +319,28 @@ const JOURNEYS = [
 const TZ = 'Asia/Hong_Kong';
 let mode = 'eta', activeJourney = 0;
 const doneTasks = new Set();
+const PLACEHOLDER = 'XXXXXXXXXX';
 
 const NOTE_COLORS = [
-  { bg: 'var(--note-a-bg)', acc: 'var(--note-a-acc)' },
-  { bg: 'var(--note-b-bg)', acc: 'var(--note-b-acc)' },
-  { bg: 'var(--note-c-bg)', acc: 'var(--note-c-acc)' },
-  { bg: 'var(--note-d-bg)', acc: 'var(--note-d-acc)' }
+  { bg: 'var(--na-bg)', acc: 'var(--na-acc)', bdr: 'var(--na-bdr)' },
+  { bg: 'var(--nb-bg)', acc: 'var(--nb-acc)', bdr: 'var(--nb-bdr)' },
+  { bg: 'var(--nc-bg)', acc: 'var(--nc-acc)', bdr: 'var(--nc-bdr)' },
+  { bg: 'var(--nd-bg)', acc: 'var(--nd-acc)', bdr: 'var(--nd-bdr)' }
 ];
 const NOTE_ROTS = [-1.5, 0.8, -0.5, 1.2, -1.8, 0.4];
-const PINK      = { bg: 'var(--note-d-bg)', acc: 'var(--note-d-acc)' };
+const PINK = NOTE_COLORS[3];
 
 function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function fmt(iso) {
-  return new Date(iso).toLocaleTimeString('en-GB', { timeZone: TZ, hour:'2-digit', minute:'2-digit', hour12: false });
+  return new Date(iso).toLocaleTimeString('en-GB', { timeZone: TZ, hour:'2-digit', minute:'2-digit', hour12:false });
 }
 function fadeIn(el) {
-  el.style.animation = 'none';
-  void el.offsetWidth;
+  el.style.animation = 'none'; void el.offsetWidth;
   el.style.animation = 'dataFade .4s ease';
 }
+function isPlaceholder(id) { return !id || id === PLACEHOLDER || id.startsWith('X'); }
 
 // ── Clock ─────────────────────────────────────────────────────────────────────
 function tickClock() {
@@ -402,13 +349,13 @@ function tickClock() {
 }
 function tickMeta() {
   const now = new Date();
-  const h   = Number(now.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: false }));
-  const g   = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('greeting').textContent = `${g}, Kingsley`;
+  const h   = Number(now.toLocaleString('en-US', { timeZone: TZ, hour:'numeric', hour12:false }));
+  document.getElementById('greeting').textContent =
+    `${h<5?'Good night':h<12?'Good morning':h<18?'Good afternoon':'Good evening'}, Kingsley`;
   document.getElementById('day').textContent =
-    now.toLocaleString('en-US', { timeZone: TZ, weekday: 'short' }).toUpperCase();
+    now.toLocaleString('en-US', { timeZone: TZ, weekday:'short' }).toUpperCase();
   document.getElementById('date').textContent =
-    now.toLocaleDateString('en-GB', { timeZone: TZ, day: 'numeric', month: 'short', year: 'numeric' });
+    now.toLocaleDateString('en-GB', { timeZone: TZ, day:'numeric', month:'short', year:'numeric' });
 }
 
 // ── Tasks ─────────────────────────────────────────────────────────────────────
@@ -418,17 +365,21 @@ async function loadTasks() {
     if (!r.ok) return;
     const tasks = await r.json();
     const container = document.getElementById('tasks');
-    container.innerHTML = (tasks || []).slice(0, 6).map((t, i) => {
-      const c   = t.priority === 4 ? PINK : NOTE_COLORS[i % 4];
-      const rot = NOTE_ROTS[i] ?? 0;
+    if (!Array.isArray(tasks) || !tasks.length) {
+      container.innerHTML = '<div style="color:var(--dim);font-size:14px;padding-top:8px">No tasks</div>';
+      return;
+    }
+    container.innerHTML = tasks.slice(0, 6).map((t, i) => {
+      const c    = t.priority === 4 ? PINK : NOTE_COLORS[i % 4];
+      const rot  = NOTE_ROTS[i] ?? 0;
       const done = doneTasks.has(t.id);
-      return `<article class="note${done ? ' done' : ''}" data-id="${esc(t.id)}"
-                style="background:${c.bg};border-left:3px solid ${c.acc};transform:rotate(${rot}deg)">
+      return `<article class="note${done?' done':''}" data-id="${esc(t.id)}"
+                style="background:${c.bg};border-left:4px solid ${c.bdr};transform:rotate(${rot}deg)">
         <span class="tape${t.isOverdue?' overdue':''}${done?' faded':''}"></span>
         <div class="note-text" style="color:${c.acc}">${esc(t.content)}</div>
-        ${t.due ? `<div class="note-due${t.isOverdue?' overdue':''}">${esc(t.due.string||t.due.date||'')}</div>` : ''}
-        ${t.priority===4 ? `<div class="note-priority" style="color:${c.acc}99">!! Urgent</div>` : ''}
-        ${t.priority===3 ? `<div class="note-priority" style="color:${c.acc}99">! High</div>`    : ''}
+        ${t.due?`<div class="note-due${t.isOverdue?' overdue':''}">${esc(t.due.string||t.due.date||'')}</div>`:''}
+        ${t.priority===4?`<div class="note-priority" style="color:${c.acc}">!! Urgent</div>`:''}
+        ${t.priority===3?`<div class="note-priority" style="color:${c.acc}">! High</div>`:''}
       </article>`;
     }).join('');
     container.querySelectorAll('.note').forEach(n => { n.onclick = () => closeTask(n); });
@@ -442,12 +393,12 @@ async function closeTask(el) {
   doneTasks.add(id); el.classList.add('done');
   try {
     const r = await fetch('/api/todoist', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ taskId: id })
     });
     const j = await r.json();
     if (!j.success) { doneTasks.delete(id); el.classList.remove('done'); }
-  } catch (_) { doneTasks.delete(id); el.classList.remove('done'); }
+  } catch(_) { doneTasks.delete(id); el.classList.remove('done'); }
 }
 
 // ── Calendar ──────────────────────────────────────────────────────────────────
@@ -465,60 +416,67 @@ async function loadCalendar() {
     const timed  = events.filter(e => !e.isAllDay);
     const now    = new Date();
     const hi     = (() => {
-      const cur = timed.findIndex(e => new Date(e.start) <= now && new Date(e.end) > now);
-      return cur !== -1 ? cur : timed.findIndex(e => new Date(e.start) > now);
+      const cur = timed.findIndex(e => new Date(e.start)<=now && new Date(e.end)>now);
+      return cur!==-1 ? cur : timed.findIndex(e => new Date(e.start)>now);
     })();
     let html = '';
     if (allDay.length) {
-      html += `<div class="all-day-row">
-        ${allDay.map(a => `<span class="all-day-pill">All day · ${esc(a.title)}</span>`).join('')}
-      </div>`;
+      html += `<div class="all-day-row">${allDay.map(a=>
+        `<span class="all-day-pill">All day · ${esc(a.title)}</span>`).join('')}</div>`;
     }
-    html += timed.map((e, i) => `
+    html += timed.map((e,i) => `
       <div class="event-row${new Date(e.end)<now?' past':''}${i===hi?' current':''}">
         <div class="event-bar"></div>
         <div>
           <div class="event-time">${fmt(e.start)} – ${fmt(e.end)}</div>
           <div class="event-title">${esc(e.title)}</div>
-          ${e.location ? `<div class="event-loc">${esc(e.location)}</div>` : ''}
+          ${e.location?`<div class="event-loc">${esc(e.location)}</div>`:''}
         </div>
       </div>`).join('');
     cal.innerHTML = html;
     fadeIn(cal);
-  } catch (_) {}
+  } catch(_) {}
 }
 
-// ── Bus Mode A ────────────────────────────────────────────────────────────────
+// ── Bus ETA ───────────────────────────────────────────────────────────────────
 async function loadETA() {
   const staleEl = document.getElementById('stale');
+  const configured = BUS_STOPS.some(g => g.stops.some(s => !isPlaceholder(s.stopId)));
+  if (!configured) {
+    document.getElementById('bus').innerHTML =
+      '<div class="info-msg">Configure your stop IDs in the <strong>BUS_STOPS</strong> constant, or use the <a href="/3062470030624770/setup.html">setup page</a> to find them.</div>';
+    return;
+  }
   try {
-    const groups = await Promise.all(BUS_STOPS.slice(0, 2).map(async g => {
-      const rows = (await Promise.all(g.stops.map(async s => {
-        const j = await fetch(
-          `https://data.etabus.gov.hk/v1/transport/kmb/eta/${s.stopId}/${s.route}/${s.serviceType}`
-        ).then(r => r.json());
-        return (j.data || []).slice(0, 3).map(x => ({
-          route: s.route, dest: x.dest_en || '',
-          mins: Math.max(0, Math.round((new Date(x.eta) - new Date()) / 60000))
-        }));
-      }))).flat();
-      return { name: g.name, rows: rows.slice(0, 3) };
+    const groups = await Promise.all(BUS_STOPS.slice(0,2).map(async g => {
+      const rows = (await Promise.all(
+        g.stops.filter(s => !isPlaceholder(s.stopId)).map(async s => {
+          const j = await fetch(
+            `https://data.etabus.gov.hk/v1/transport/kmb/eta/${s.stopId}/${s.route}/${s.serviceType}`
+          ).then(r=>r.json());
+          return (j.data||[]).slice(0,3).map(x=>({
+            route:s.route, dest:x.dest_en||'',
+            mins:Math.max(0,Math.round((new Date(x.eta)-new Date())/60000))
+          }));
+        })
+      )).flat();
+      return { name:g.name, rows:rows.slice(0,3) };
     }));
     staleEl.style.display = 'none';
-    if (mode === 'eta') renderETA(groups);
-  } catch (_) {
+    if (mode==='eta') renderETA(groups);
+  } catch(_) {
     staleEl.style.display = 'inline';
-    if (mode === 'eta') renderETA([]);
+    if (mode==='eta') renderETA([]);
   }
 }
 
 function renderETA(groups) {
   const bus = document.getElementById('bus');
-  bus.innerHTML = groups.map(g => `
+  bus.innerHTML = groups.map(g=>`
     <div class="stop-group">
       <div class="stop-label">${esc(g.name)}</div>
       <div class="section-line"></div>
-      ${g.rows.map(r => `
+      ${g.rows.map(r=>`
         <div class="eta-row${r.mins<=1?' bus-row-critical':''}">
           <div class="route-badge">${esc(r.route)}</div>
           <div class="eta-dest">${esc(r.dest)}</div>
@@ -528,37 +486,42 @@ function renderETA(groups) {
   fadeIn(bus);
 }
 
-// ── Bus Mode B ────────────────────────────────────────────────────────────────
+// ── Journey ───────────────────────────────────────────────────────────────────
 async function loadJourney() {
   const j   = JOURNEYS[activeJourney];
   const bus = document.getElementById('bus');
+  if (isPlaceholder(j.departureStopId) || isPlaceholder(j.arrivalStopId)) {
+    bus.innerHTML =
+      '<div class="info-msg">Configure your <strong>departureStopId</strong> and <strong>arrivalStopId</strong> in the JOURNEYS constant, or use the <a href="/3062470030624770/setup.html">setup page</a>.</div>';
+    return;
+  }
   try {
     const params = new URLSearchParams({
-      route: j.route, direction: j.direction, serviceType: j.serviceType,
-      departureStopId: j.departureStopId, arrivalStopId: j.arrivalStopId
+      route:j.route, direction:j.direction, serviceType:j.serviceType,
+      departureStopId:j.departureStopId, arrivalStopId:j.arrivalStopId
     });
-    const d = await fetch(`/api/kmb-route?${params}`).then(r => {
-      if (!r.ok) throw new Error();
+    const d = await fetch(`/api/kmb-route?${params}`).then(r=>{
+      if(!r.ok) throw new Error();
       return r.json();
     });
     if (d.noService) {
-      bus.innerHTML = '<div style="padding:20px;color:var(--text-dim)">No service right now</div>';
+      bus.innerHTML = '<div class="info-msg">No service on this route right now.</div>';
       return;
     }
     const now  = new Date();
-    const arrM = Math.max(0, Math.round((new Date(d.stops.at(-1).projectedTime) - now) / 60000));
+    const arrM = Math.max(0, Math.round((new Date(d.stops.at(-1).projectedTime)-now)/60000));
     bus.innerHTML = `<div style="margin-top:8px">
-      ${d.stops.map((s, i) => {
-        const last    = i === d.stops.length - 1;
-        const dotCls  = s.isDeparture ? 'dep' : s.isArrival ? 'arr' : 'mid';
-        const timeCls = s.isDeparture ? 'dep' : s.isArrival ? 'arr' : '';
+      ${d.stops.map((s,i)=>{
+        const last=i===d.stops.length-1;
+        const dc=s.isDeparture?'dep':s.isArrival?'arr':'mid';
+        const tc=s.isDeparture?'dep':s.isArrival?'arr':'';
         return `<div class="j-stop">
           <div class="j-dot-wrap">
-            ${!last ? '<div class="j-line"></div>' : ''}
-            <div class="j-dot ${dotCls}"></div>
+            ${!last?'<div class="j-line"></div>':''}
+            <div class="j-dot ${dc}"></div>
           </div>
           <div class="j-name">${esc(s.nameEn)}</div>
-          <div class="j-time ${timeCls}">${fmt(s.projectedTime)}</div>
+          <div class="j-time ${tc}">${fmt(s.projectedTime)}</div>
         </div>`;
       }).join('')}
       <div class="arrives-block">
@@ -567,33 +530,33 @@ async function loadJourney() {
       </div>
     </div>`;
     fadeIn(bus);
-  } catch (_) {
-    bus.innerHTML = '<div style="padding:20px;color:var(--text-dim)">Unable to load journey</div>';
+  } catch(_) {
+    bus.innerHTML = '<div class="info-msg">Unable to load journey data.</div>';
   }
 }
 
 function renderJourneyTabs() {
   const c = document.getElementById('journey-tabs');
-  if (JOURNEYS.length <= 1) { c.style.display = 'none'; return; }
-  c.style.display = 'flex';
-  c.innerHTML = JOURNEYS.map((j, i) =>
+  if (JOURNEYS.length<=1) { c.style.display='none'; return; }
+  c.style.display='flex';
+  c.innerHTML = JOURNEYS.map((j,i)=>
     `<button class="tab ${i===activeJourney?'active':'inactive'}" data-i="${i}">${esc(j.label)}</button>`
   ).join('');
-  c.querySelectorAll('button').forEach(b => {
-    b.onclick = () => { activeJourney = +b.dataset.i; renderJourneyTabs(); loadJourney(); };
+  c.querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{ activeJourney=+b.dataset.i; renderJourneyTabs(); loadJourney(); };
   });
 }
 
 // ── Mode switch ───────────────────────────────────────────────────────────────
 document.getElementById('tab-eta').onclick = () => {
-  mode = 'eta';
+  mode='eta';
   document.getElementById('tab-eta').className     = 'tab active';
   document.getElementById('tab-journey').className = 'tab inactive';
   document.getElementById('journey-tabs').style.display = 'none';
   loadETA();
 };
 document.getElementById('tab-journey').onclick = () => {
-  mode = 'journey';
+  mode='journey';
   document.getElementById('tab-journey').className = 'tab active';
   document.getElementById('tab-eta').className     = 'tab inactive';
   renderJourneyTabs();
@@ -607,7 +570,7 @@ setInterval(tickMeta,  60000);
 loadTasks(); loadCalendar(); loadETA();
 setInterval(loadTasks,    60000);
 setInterval(loadCalendar, 300000);
-setInterval(() => mode === 'eta' ? loadETA() : loadJourney(), 30000);
+setInterval(()=>mode==='eta'?loadETA():loadJourney(), 30000);
 </script>
 </body>
 </html>
