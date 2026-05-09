@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1280, initial-scale=1.0" />
+  <title>Kingsley Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body style="margin:0;background:#0D0F14;color:#F1F0EC;font-family:Outfit,sans-serif;width:1280px;height:800px;overflow:hidden;">
+  <div id="app"></div>
+  <script>
+    const TZ = 'Asia/Hong_Kong';
+    const BUS_STOPS = [
+      { name: 'STOP NAME 1', stops: [{ stopId: 'XXXXXXXXXX', route: 'XX', serviceType: 1 }] },
+      { name: 'STOP NAME 2', stops: [{ stopId: 'XXXXXXXXXX', route: 'XX', serviceType: 1 }] }
+    ];
+    const JOURNEYS = [
+      { label: 'To School', route: '12A', direction: 'outbound', serviceType: 1, departureStopId: 'XXXXXXXXXX', arrivalStopId: 'XXXXXXXXXX' }
+    ];
+
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div style="height:100px;border-bottom:1px solid #1F2535;padding:0 40px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="width:8px;height:8px;background:#F87171;border-radius:50%;display:inline-block;animation:pulse 1s infinite;"></span>
+          <div id="clock" style="font:300 72px 'DM Mono',monospace;line-height:1">--:--:--</div>
+          <div style="margin-left:20px"><div id="day" style="font:600 11px Outfit;color:#8A8F9E;text-transform:uppercase"></div><div id="date" style="font:400 16px Outfit"></div></div>
+        </div>
+        <div id="greeting" style="font:400 18px Outfit;color:#8A8F9E"></div>
+      </div>
+      <div style="display:flex;height:700px">
+        <section style="width:340px;border-right:1px solid #1F2535;background:#111418;padding:24px 28px;overflow:hidden"><div style="font:600 11px Outfit;color:#3D4255;letter-spacing:.12em">TASKS</div><div style="height:1px;background:#1F2535;margin-top:10px"></div><div id="tasks" style="padding-top:20px"></div></section>
+        <section style="width:580px;border-right:1px solid #1F2535;padding:28px;overflow:hidden"><div style="font:600 11px Outfit;color:#3D4255;letter-spacing:.12em">TODAY</div><div id="calendar"></div></section>
+        <section style="width:360px;padding:20px 24px;overflow:hidden"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font:600 11px Outfit;color:#3D4255;letter-spacing:.12em">BUS <span id="stale" style="display:none">· stale</span></div><div><button id="etaBtn">ETA</button><button id="journeyBtn">JOURNEY</button></div></div><div id="bus"></div></section>
+      </div>
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = '@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}';
+    document.head.appendChild(style);
+
+    function nowHKT() { return new Date(); }
+    function fmtTimeISO(v){ return new Date(v).toLocaleTimeString('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hour12:false}); }
+    function updateClock(){
+      const d = nowHKT();
+      const hour = Number(d.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: false }));
+      document.getElementById('clock').textContent = d.toLocaleTimeString('en-GB', { timeZone: TZ, hour12: false });
+      document.getElementById('day').textContent = d.toLocaleString('en-US', { timeZone: TZ, weekday: 'short' });
+      document.getElementById('date').textContent = d.toLocaleDateString('en-GB', { timeZone: TZ, day: 'numeric', month: 'short', year: 'numeric' });
+      const greeting = hour < 5 ? 'Good night' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+      document.getElementById('greeting').textContent = `${greeting}, Kingsley`;
+    }
+
+    async function loadCalendar(){
+      try{
+        const r = await fetch('/api/calendar');
+        if(!r.ok) return;
+        const data = await r.json();
+        const root = document.getElementById('calendar');
+        if(!Array.isArray(data) || data.length===0){ root.innerHTML = '<div style="color:#3D4255;padding-top:40px">No more events today</div>'; return; }
+        root.innerHTML = data.map((e)=>`<div style="margin-top:16px"><div style="font:400 14px 'DM Mono';color:#8A8F9E">${fmtTimeISO(e.start)} – ${fmtTimeISO(e.end)}</div><div style="font:500 18px Outfit">${e.title}</div></div>`).join('');
+      }catch{}
+    }
+
+    async function loadTasks(){
+      try{
+        const r = await fetch('/api/todoist'); if(!r.ok) return;
+        const tasks = await r.json();
+        document.getElementById('tasks').innerHTML = (tasks||[]).slice(0,6).map(t=>`<div style="background:#2A2510;border-left:3px solid #FBBF24;border-radius:4px;padding:10px 12px;margin-bottom:8px">${t.content||''}</div>`).join('');
+      }catch{}
+    }
+
+    async function loadBus(){
+      try{
+        const groups = await Promise.all(BUS_STOPS.slice(0,2).map(async (g)=>{
+          const all = [];
+          for (const s of g.stops) {
+            const r = await fetch(`https://data.etabus.gov.hk/v1/transport/kmb/eta/${s.stopId}/${s.route}/${s.serviceType}`);
+            const j = await r.json();
+            (j.data||[]).slice(0,3).forEach(item=>all.push({route:s.route,dest:item.dest_en||'',eta:item.eta}));
+          }
+          return {name:g.name,rows:all.slice(0,3)};
+        }));
+        document.getElementById('stale').style.display = 'none';
+        document.getElementById('bus').innerHTML = groups.map(g=>`<div style="margin-top:14px"><div style="font:600 12px Outfit;color:#8A8F9E">${g.name}</div>${g.rows.map(r=>`<div style="display:flex;justify-content:space-between;min-height:44px;align-items:center"><span>${r.route}</span><span>${r.dest}</span><span>${Math.max(0,Math.round((new Date(r.eta)-new Date())/60000))}m</span></div>`).join('')}</div>`).join('');
+      }catch{ document.getElementById('stale').style.display = 'inline'; }
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+    loadCalendar();
+    loadTasks();
+    loadBus();
+    setInterval(loadCalendar, 300000);
+    setInterval(loadTasks, 60000);
+    setInterval(loadBus, 30000);
+  </script>
+</body>
+</html>
