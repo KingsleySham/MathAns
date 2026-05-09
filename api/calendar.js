@@ -6,6 +6,10 @@ export default async function handler(req, res) {
   const url = process.env.GCAL_ICAL_URL;
   if (!url) return res.status(500).json({ error: 'Missing GCAL_ICAL_URL' });
 
+  if (!url.includes('calendar.google.com') && !url.includes('.ics')) {
+    return res.status(500).json({ error: 'GCAL_ICAL_URL does not look like a Google Calendar iCal link. It should contain calendar.google.com and end with .ics' });
+  }
+
   try {
     const events = await ical.async.fromURL(url);
     const now = new Date();
@@ -35,6 +39,10 @@ export default async function handler(req, res) {
 
     return res.status(200).json(out);
   } catch (e) {
-    return res.status(500).json({ error: `Calendar fetch failed: ${e.message}` });
+    const msg = e.message || '';
+    if (msg.includes('404')) {
+      return res.status(500).json({ error: 'iCal URL returned 404. The Google Calendar private link may be wrong or revoked. Go to Google Calendar → Settings → [your calendar] → "Secret address in iCal format" and copy the URL again.' });
+    }
+    return res.status(500).json({ error: `Calendar fetch failed: ${msg}` });
   }
 }
