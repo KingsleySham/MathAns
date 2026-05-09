@@ -8,7 +8,10 @@ async function syncPost(token, body) {
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(body)
   });
-  if (!r.ok) throw Object.assign(new Error(`Todoist ${r.status}`), { status: r.status });
+  if (!r.ok) {
+    const text = await r.text().catch(() => '');
+    throw Object.assign(new Error(`Todoist ${r.status}: ${text.slice(0, 200)}`), { status: r.status });
+  }
   return r.json();
 }
 
