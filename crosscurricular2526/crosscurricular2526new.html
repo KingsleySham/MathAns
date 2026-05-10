@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lead Nitrate &amp; Mung Bean — Cross-Curricular 25/26 | MathAns</title>
+<meta http-equiv="X-Frame-Options" content="ALLOWALL"/>
+<meta property="og:title" content="Lead Nitrate Toxicity — Mung Bean Experiment 25/26"/>
+<meta property="og:description" content="S.3 Cross-Curricular Science: effect of Pb(NO₃)₂ concentration on mung bean growth. St. Margaret's Co-educational School, HK."/>
+<style>
+:root{
+  --bg:#f5f3ee;--card:#fff;--ink:#1a1a18;--ink2:#4a4a46;--ink3:#8a8a84;
+  --teal:#0f6e56;--teal-l:#e1f5ee;--coral:#993c1d;--coral-l:#faece7;
+  --blue:#185fa5;--blue-l:#e6f1fb;--green:#3b6d11;--border:rgba(26,26,24,0.1);--radius:10px;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --mono:'SF Mono','Fira Code','Courier New',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.65;}
+header{background:var(--ink);color:#fff;padding:2.5rem 2rem 2rem;position:relative;overflow:hidden;}
+header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.03) 39px,rgba(255,255,255,.03) 40px);pointer-events:none;}
+.header-tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:.5rem;}
+header h1{font-size:clamp(1.5rem,4vw,2.4rem);font-weight:700;line-height:1.15;max-width:600px;margin-bottom:.75rem;}
+header h1 em{font-style:italic;font-weight:300;}
+.header-meta{font-size:12px;color:rgba(255,255,255,.5);font-family:var(--mono);}
+.header-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:1.25rem;}
+.pill{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.65);}
+main{max-width:860px;margin:0 auto;padding:2.5rem 1.5rem 4rem;}
+.section-label{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:.4rem;}
+.section-title{font-size:1.4rem;font-weight:700;margin-bottom:1.25rem;color:var(--ink);}
+section{margin-bottom:3rem;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;}
+.flask-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;}
+.flask-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center;}
+.flask-name{font-weight:700;font-size:14px;color:var(--ink);}
+.flask-mass{font-family:var(--mono);font-size:12px;color:var(--ink3);margin-top:2px;}
+.flask-note{font-size:12px;color:var(--ink2);margin-top:6px;}
+.step{display:flex;gap:14px;align-items:flex-start;padding:12px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);margin-bottom:6px;}
+.step-num{font-family:var(--mono);font-size:11px;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;margin-top:1px;}
+.step.teal .step-num{background:var(--teal-l);color:var(--teal);}
+.step.purple .step-num{background:#eeedfe;color:#534ab7;}
+.step.coral .step-num{background:var(--coral-l);color:var(--coral);}
+.step-title{font-weight:700;font-size:14px;color:var(--ink);}
+.step-sub{font-size:13px;color:var(--ink2);margin-top:2px;}
+.step-badge{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+.badge-actual{background:#eeedfe;color:#534ab7;}
+.badge-warn{background:var(--coral-l);color:var(--coral);}
+.connector{width:1px;height:10px;background:var(--border);margin:0 0 0 21px;}
+.obs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:1rem 0;}
+.obs{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--ink2);border-left:3px solid transparent;}
+.obs.ctrl{border-left-color:var(--green);}
+.obs.sola{border-left-color:var(--blue);}
+.obs.solb{border-left-color:var(--coral);}
+.obs strong{display:block;font-weight:700;color:var(--ink);margin-bottom:4px;font-size:13px;}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.25rem;}
+.metric{background:#f0ede6;border-radius:8px;padding:.9rem 1rem;}
+.metric-label{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-bottom:4px;}
+.metric-val{font-size:1.4rem;font-weight:700;color:var(--ink);}
+.metric-sub{font-size:12px;color:var(--ink3);margin-top:2px;}
+.note-box{background:#faeeda;border:1px solid #f0c875;border-radius:8px;padding:12px 16px;font-size:13px;color:#633806;margin:1rem 0;}
+.note-box strong{color:#412402;}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:12px;color:var(--ink2);font-family:var(--mono);}
+.legend span{display:flex;align-items:center;gap:6px;}
+.ld{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.phase-row{display:flex;justify-content:space-between;margin-top:8px;}
+.phase{font-family:var(--mono);font-size:10px;color:var(--ink3);text-align:center;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;}
+td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--ink2);}
+td:first-child{color:var(--ink);font-weight:600;}
+tr:last-child td{border-bottom:none;}
+.flow-part-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin:1.5rem 0 .5rem;}
+footer{background:var(--ink);color:rgba(255,255,255,.4);font-family:var(--mono);font-size:11px;text-align:center;padding:1.5rem;letter-spacing:.05em;}
+@media(max-width:540px){.flask-row{grid-template-columns:1fr;}header{padding:1.75rem 1.25rem 1.5rem;}main{padding:1.5rem 1rem 3rem;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-tag">MathAns · Cross-Curricular 2025/26</div>
+  <h1>Effect of <em>lead nitrate</em> on mung bean growth</h1>
+  <div class="header-meta">St. Margaret's Co-ed School · S.3C · 27 Mar – 15 Apr 2026 · Hong Kong</div>
+  <div class="header-pills">
+    <span class="pill">Pb(NO₃)₂</span>
+    <span class="pill">Vigna radiata</span>
+    <span class="pill">250 mL volumetric flask</span>
+    <span class="pill">20 days</span>
+    <span class="pill">Biology × Chemistry</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- PART A -->
+  <section>
+    <div class="section-label">Part A</div>
+    <div class="section-title">Preparation of solutions</div>
+    <div class="flask-row">
+      <div class="flask-card">
+        <svg width="72" height="100" viewBox="0 0 72 100" style="display:block;margin:0 auto 10px">
+          <defs><clipPath id="fc0"><path d="M25,6 L25,40 L5,80 Q2,90 10,94 L62,94 Q70,90 67,80 L47,40 L47,6 Z"/></clipPath></defs>
+          <g clip-path="url(#fc0)"><rect x="2" y="58" width="68" height="38" fill="#b5d4f4" opacity="0.35"/></g>
+          <path d="M25,6 L25,40 L5,80 Q2,90 10,94 L62,94 Q70,90 67,80 L47,40 L47,6 Z" fill="none" stroke="#1a1a18" stroke-width="1.5" stroke-linejoin="round"/>
+          <rect x="23" y="2" width="26" height="7" rx="2" fill="none" stroke="#1a1a18" stroke-width="1.2"/>
+          <line x1="8" y1="68" x2="64" y2="68" stroke="#1a1a18" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.35"/>
+          <text x="36" y="72" text-anchor="middle" font-family="monospace" font-size="6" fill="#1a1a18" opacity="0.5">250 mL</text>
+        </svg>
+        <div class="flask-name">Control</div>
+        <div class="flask-mass">0 g</div>
+        <div class="flask-note">Distilled water · clear</div>
+      </div>
+      <div class="flask-card">
+        <svg width="72" height="100" viewBox="0 0 72 100" style="display:block;margin:0 auto 10px">
+          <defs><clipPath id="fc1"><path d="M25,6 L25,40 L5,80 Q2,90 10,94 L62,94 Q70,90 67,80 L47,40 L47,6 Z"/></clipPath></defs>
+          <g clip-path="url(#fc1)"><rect x="2" y="58" width="68" height="38" fill="#378add" opacity="0.4"/></g>
+          <path d="M25,6 L25,40 L5,80 Q2,90 10,94 L62,94 Q70,90 67,80 L47,40 L47,6 Z" fill="none" stroke="#1a1a18" stroke-width="1.5" stroke-linejoin="round"/>
+          <rect x="23" y="2" width="26" height="7" rx="2" fill="none" stroke="#1a1a18" stroke-width="1.2"/>
+          <line x1="8" y1="68" x2="64" y2="68" stroke="#1a1a18" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.35"/>
+          <text x="36" y="72" text-anchor="middle" font-family="monospace" font-size="6" fill="#1a1a18" opacity="0.5">250 mL</text>
+        </svg>
+        <div class="flask-name">Solution A</div>
+        <div class="flask-mass">4.144 g Pb(NO₃)₂</div>
+        <div class="flask-note">Pale blue · moderate</div>
+      </div>
+      <div class="flask-card">
+        <svg width="72" height="100" viewBox="0 0 72 100" style="display:block;margin:0 auto 10px">
+          <defs><clipPath id="fc2"><path d="M25,6 L25,40 L5,80 Q2,90 10,94 L62,94 Q70,90 67,80 L47,40 L47,6 Z"/></clipPath></defs>
+          <g clip-path="url(#fc2)"><rect x="2" y="58" width="68" height="38" fill="#0c447c" opacity="0.75"/></g>
+          <path d="M25,6 L25,40 L5,80 Q2,90 10,94 L62,94 Q70,90 67,80 L47,40 L47,6 Z" fill="none" stroke="#1a1a18" stroke-width="1.5" stroke-linejoin="round"/>
+          <rect x="23" y="2" width="26" height="7" rx="2" fill="none" stroke="#1a1a18" stroke-width="1.2"/>
+          <line x1="8" y1="68" x2="64" y2="68" stroke="#1a1a18" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.35"/>
+          <text x="36" y="72" text-anchor="middle" font-family="monospace" font-size="6" fill="#fff" opacity="0.7">250 mL</text>
+        </svg>
+        <div class="flask-name">Solution B</div>
+        <div class="flask-mass">12.424 g Pb(NO₃)₂</div>
+        <div class="flask-note">Deep blue · high conc.</div>
+      </div>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Step</th><th>Action</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Weigh</td><td>Analytical balance — 0 g / 4.144 g / 12.424 g Pb(NO₃)₂</td></tr>
+          <tr><td>2</td><td>Transfer</td><td>Pour into 250 mL volumetric flask via funnel</td></tr>
+          <tr><td>3</td><td>Dissolve</td><td>Add distilled water to ~¾ full; swirl until fully dissolved</td></tr>
+          <tr><td>4</td><td>Top up</td><td>Add distilled water dropwise to exactly the 250 mL calibration mark</td></tr>
+          <tr><td>5</td><td>Mix</td><td>Stopper flask; invert × 10 to homogenise</td></tr>
+          <tr><td>6</td><td>Label</td><td>Mark each flask clearly: Control / Sol A / Sol B</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PART B -->
+  <section>
+    <div class="section-label">Part B</div>
+    <div class="section-title">Experiment design &amp; observations</div>
+    <div class="flow-part-label">Fair test setup</div>
+    <div class="step teal">
+      <div class="step-num">4</div>
+      <div><div class="step-title">Set up petri dishes with cotton wool</div>
+      <div class="step-sub">~15 mung bean seeds per dish · same dish size · same cotton volume · same placement</div></div>
+    </div>
+    <div class="connector"></div>
+    <div class="step teal">
+      <div class="step-num">5</div>
+      <div><div class="step-title">Apply solution and germinate <span class="step-badge badge-actual">27 Mar start</span></div>
+      <div class="step-sub">Water daily with assigned solution (equal volume) · Control germinated day 3–4 · Sol A delayed ~1–2 days · Sol B minimal germination</div></div>
+    </div>
+    <div class="connector"></div>
+    <div class="step teal">
+      <div class="step-num">6</div>
+      <div><div class="step-title">Daily measurements for 20 days</div>
+      <div class="step-sub">Shoot height (mm) · root length (mm) · germination count · qualitative notes</div></div>
+    </div>
+    <div class="connector"></div>
+    <div class="step purple">
+      <div class="step-num">7</div>
+      <div><div class="step-title">Qualitative observations <span class="step-badge badge-warn">actual results</span></div>
+      <div class="step-sub">Etiolation in all groups (low indoor light) · Cotton yellowing in Sol A · Seeds blackened and failed in Sol B</div></div>
+    </div>
+    <div class="obs-grid">
+      <div class="obs ctrl"><strong>Control (0 g)</strong>Germination by day 3–4. Long pale shoots (etiolated indoors). Roots healthy white. Cotton remained white throughout.</div>
+      <div class="obs sola"><strong>Solution A (4.144 g)</strong>Germination delayed ~1–2 days. Shoots shorter, yellowing visible. Cotton turned yellow — Pb²⁺ staining. Growth ~50% of control.</div>
+      <div class="obs solb"><strong>Solution B (12.424 g)</strong>Most seeds failed to germinate. Remaining seeds blackened and shrunken. Only a few short shoots emerged. Severe toxicity.</div>
+    </div>
+    <div class="note-box"><strong>Confounding variable — etiolation:</strong> All groups including the control produced pale yellow elongated shoots due to limited indoor light. This is not caused by lead nitrate. Next time, place dishes near a window or under a grow lamp.</div>
+  </section>
+
+  <!-- PART C -->
+  <section>
+    <div class="section-label">Part C</div>
+    <div class="section-title">Data analysis &amp; results</div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Period</div><div class="metric-val">20 days</div><div class="metric-sub">27 Mar – 15 Apr 2026</div></div>
+      <div class="metric"><div class="metric-label">Control final height</div><div class="metric-val">~71 mm</div><div class="metric-sub">baseline growth</div></div>
+      <div class="metric"><div class="metric-label">Sol A inhibition</div><div class="metric-val">~61%</div><div class="metric-sub">28 mm actual</div></div>
+      <div class="metric"><div class="metric-label">Sol B inhibition</div><div class="metric-val">~93%</div><div class="metric-sub">~5 mm actual</div></div>
+    </div>
+
+    <div class="card">
+      <div class="legend">
+        <span><span class="ld" style="background:#3b6d11"></span>Control (0 g) — actual</span>
+        <span><span class="ld" style="background:#378add"></span>Sol A (4.144 g) — actual</span>
+        <span><span class="ld" style="background:#d85a30"></span>Sol B (12.424 g) — actual</span>
+        <span><span class="ld" style="background:#c8c6be;outline:1px dashed #999;outline-offset:1px"></span>Estimated</span>
+      </div>
+
+      <!-- Pure SVG chart — zero external dependencies -->
+      <!-- Chart area: x 60–720, y 20–240. Scale: 95mm = 220px → 1mm = 2.316px. y = 240 - val*2.316 -->
+      <svg width="100%" viewBox="0 0 760 270" style="display:block;overflow:visible">
+        <!-- Grid -->
+        <line x1="60" y1="20"  x2="720" y2="20"  stroke="#e8e5de" stroke-width="0.5"/>
+        <line x1="60" y1="66"  x2="720" y2="66"  stroke="#e8e5de" stroke-width="0.5"/>
+        <line x1="60" y1="112" x2="720" y2="112" stroke="#e8e5de" stroke-width="0.5"/>
+        <line x1="60" y1="158" x2="720" y2="158" stroke="#e8e5de" stroke-width="0.5"/>
+        <line x1="60" y1="204" x2="720" y2="204" stroke="#e8e5de" stroke-width="0.5"/>
+        <line x1="60" y1="240" x2="720" y2="240" stroke="#c8c6be" stroke-width="1"/>
+        <line x1="60" y1="20"  x2="60"  y2="240" stroke="#c8c6be" stroke-width="1"/>
+        <!-- Y labels: 0,20,40,60,80,95 -->
+        <text x="54" y="244" text-anchor="end" font-family="monospace" font-size="10" fill="#8a8a84">0</text>
+        <text x="54" y="208" text-anchor="end" font-family="monospace" font-size="10" fill="#8a8a84">20</text>
+        <text x="54" y="162" text-anchor="end" font-family="monospace" font-size="10" fill="#8a8a84">40</text>
+        <text x="54" y="116" text-anchor="end" font-family="monospace" font-size="10" fill="#8a8a84">60</text>
+        <text x="54" y="70"  text-anchor="end" font-family="monospace" font-size="10" fill="#8a8a84">80</text>
+        <text x="54" y="24"  text-anchor="end" font-family="monospace" font-size="10" fill="#8a8a84">95</text>
+        <text x="8" y="140" text-anchor="middle" font-family="monospace" font-size="9" fill="#8a8a84" transform="rotate(-90,8,140)">height (mm)</text>
+        <!-- X labels: day1=27/3 x=60, day5=31/3 x=199, day10=5/4 x=388, day15=10/4 x=577, day20=15/4 x=720 -->
+        <!-- x = 60 + (day-1)*(660/19) -->
+        <text x="60"  y="256" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8a84">27/3</text>
+        <text x="199" y="256" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8a84">31/3</text>
+        <text x="388" y="256" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8a84">5/4</text>
+        <text x="577" y="256" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8a84">10/4</text>
+        <text x="720" y="256" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8a84">15/4</text>
+
+        <!-- Estimated lines (gray dashed) — ctrl,solA,solB -->
+        <!-- ctrl est vals: 0,0,3,7,12,18,25,32,40,48,55,61,66,71,75,78,80,81,82,82 → y=240-v*2.316 -->
+        <polyline fill="none" stroke="#c8c6be" stroke-width="1.2" stroke-dasharray="5 3"
+          points="60,240 94.7,240 129.5,233 164.2,223.8 199,212.2 233.7,198.9 268.4,182.1 303.2,166 337.9,147.4 372.6,128.8 407.4,112.7 442.1,99.1 476.8,87.1 511.6,75.6 546.3,65.8 581.1,59.3 615.8,54.7 650.5,52.4 685.3,50.1 720,50.1"/>
+        <!-- solA est: 0,0,1,3,6,9,13,17,21,25,29,32,35,37,39,40,41,41,41,41 -->
+        <polyline fill="none" stroke="#c8c6be" stroke-width="1.2" stroke-dasharray="5 3"
+          points="60,240 94.7,240 129.5,237.7 164.2,233 199,226.1 233.7,219.2 268.4,209.9 303.2,200.6 337.9,191.3 372.6,182.1 407.4,172.8 442.1,166 476.8,158.9 511.6,154.3 546.3,149.7 581.1,147.4 615.8,145.1 650.5,145.1 685.3,145.1 720,145.1"/>
+        <!-- solB est: 0,0,0,1,2,3,4,5,6,7,8,9,10,10,11,11,12,12,12,12 -->
+        <polyline fill="none" stroke="#c8c6be" stroke-width="1.2" stroke-dasharray="5 3"
+          points="60,240 94.7,240 129.5,240 164.2,237.7 199,235.4 233.7,233.1 268.4,230.7 303.2,228.4 337.9,226.1 372.6,223.8 407.4,221.5 442.1,219.2 476.8,216.8 511.6,216.8 546.3,214.5 581.1,214.5 615.8,212.2 650.5,212.2 685.3,212.2 720,212.2"/>
+
+        <!-- Actual: ctrl (solid green) vals: 0,0,4,9,15,22,30,38,46,53,58,62,65,67,69,70,71,71,71,71 -->
+        <polyline fill="none" stroke="#3b6d11" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+          points="60,240 94.7,240 129.5,230.7 164.2,219.2 199,205.3 233.7,189.1 268.4,170.5 303.2,152 337.9,133.4 372.6,117.2 407.4,105.7 442.1,96.5 476.8,89.5 511.6,84.9 546.3,80.3 581.1,78 615.8,75.7 650.5,75.7 685.3,75.7 720,75.7"/>
+        <!-- Actual: solA (dashed blue) vals: 0,0,1,3,6,9,12,15,18,20,22,24,25,26,27,28,28,28,28,28 -->
+        <polyline fill="none" stroke="#378add" stroke-width="2.5" stroke-dasharray="8 4" stroke-linejoin="round" stroke-linecap="round"
+          points="60,240 94.7,240 129.5,237.7 164.2,233.1 199,226.1 233.7,219.2 268.4,212.2 303.2,205.3 337.9,198.3 372.6,193.7 407.4,189.1 442.1,184.4 476.8,182.1 511.6,179.8 546.3,177.5 581.1,175.2 615.8,175.2 650.5,175.2 685.3,175.2 720,175.2"/>
+        <!-- Actual: solB (dotted coral) vals: 0,0,0,0,1,1,2,2,3,3,4,4,5,5,5,5,5,5,5,5 -->
+        <polyline fill="none" stroke="#d85a30" stroke-width="2.5" stroke-dasharray="3 3" stroke-linejoin="round" stroke-linecap="round"
+          points="60,240 94.7,240 129.5,240 164.2,240 199,237.7 233.7,237.7 268.4,235.4 303.2,235.4 337.9,233.1 372.6,233.1 407.4,230.7 442.1,230.7 476.8,228.4 511.6,228.4 546.3,228.4 581.1,228.4 615.8,228.4 650.5,228.4 685.3,228.4 720,228.4"/>
+
+        <!-- Key-day dots -->
+        <circle cx="60"  cy="240"   r="4" fill="#3b6d11"/><circle cx="199" cy="205.3" r="4" fill="#3b6d11"/><circle cx="388" cy="105.7" r="4" fill="#3b6d11"/><circle cx="577" cy="78"    r="4" fill="#3b6d11"/><circle cx="720" cy="75.7"  r="4" fill="#3b6d11"/>
+        <circle cx="60"  cy="240"   r="4" fill="#378add"/><circle cx="199" cy="226.1" r="4" fill="#378add"/><circle cx="388" cy="189.1" r="4" fill="#378add"/><circle cx="577" cy="177.5" r="4" fill="#378add"/><circle cx="720" cy="175.2" r="4" fill="#378add"/>
+        <circle cx="60"  cy="240"   r="4" fill="#d85a30"/><circle cx="199" cy="237.7" r="4" fill="#d85a30"/><circle cx="388" cy="230.7" r="4" fill="#d85a30"/><circle cx="577" cy="228.4" r="4" fill="#d85a30"/><circle cx="720" cy="228.4" r="4" fill="#d85a30"/>
+
+        <!-- End labels -->
+        <text x="726" y="79"    font-family="monospace" font-size="10" fill="#3b6d11" font-weight="600">71 mm</text>
+        <text x="726" y="179"   font-family="monospace" font-size="10" fill="#378add" font-weight="600">28 mm</text>
+        <text x="726" y="232"   font-family="monospace" font-size="10" fill="#d85a30" font-weight="600">5 mm</text>
+      </svg>
+
+      <div class="phase-row">
+        <div class="phase">Germination<br>Days 1–5</div>
+        <div class="phase">Early growth<br>Days 6–12</div>
+        <div class="phase">Plateau<br>Days 13–20</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem;">
+      <table>
+        <thead><tr><th>Group</th><th>Mass (g)</th><th>Final height (mm)</th><th>% inhibition</th><th>Key observation</th></tr></thead>
+        <tbody>
+          <tr><td>Control</td><td>0</td><td>~71</td><td>—</td><td>Etiolated; healthy otherwise</td></tr>
+          <tr><td>Solution A</td><td>4.144</td><td>~28</td><td>~61%</td><td>Cotton yellowed; roots short</td></tr>
+          <tr><td>Solution B</td><td>12.424</td><td>~5</td><td>~93%</td><td>Seeds blackened; most failed</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flow-part-label" style="margin-top:1.5rem;">Conclusion</div>
+    <div class="step coral">
+      <div class="step-num">9</div>
+      <div>
+        <div class="step-title">Negative correlation confirmed</div>
+        <div class="step-sub">As Pb(NO₃)₂ concentration increases, mung bean shoot height decreases. Lead ions disrupt root cell division and chlorophyll synthesis, inhibiting germination and growth. Results support the hypothesis that lead nitrate is toxic to Vigna radiata even at moderate concentrations.</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  mathans.app/crosscurricular2526new.html · St. Margaret's Co-educational English Secondary &amp; Primary School · S.3C 2025/26
+</footer>
+
+</body>
+</html>
