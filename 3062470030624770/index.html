@@ -95,7 +95,7 @@
 
     /* ── Left — Notes ──────────────────────────────────────────────────── */
     .col-left {
-      width: 340px;
+      width: 500px;
       border-right: 2px solid var(--border);
       background-color: var(--bg-cork);
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
@@ -111,7 +111,7 @@
     #tasks { padding: 28px 28px; }
 
     .note {
-      width: 280px; min-height: 100px; max-height: 160px;
+      width: 400px; min-height: 100px; max-height: 160px;
       overflow: hidden; border-radius: 6px;
       padding: 12px 14px 14px;
       position: relative; cursor: pointer;
@@ -138,9 +138,9 @@
 
     /* ── Centre — Calendar ─────────────────────────────────────────────── */
     .col-center {
-      width: 580px;
+      width: 320px;
       border-right: 2px solid var(--border);
-      padding: 28px;
+      padding: 20px;
       background: var(--bg-card);
       animation: fadeUp .4s ease-out .15s both;
     }
@@ -161,7 +161,7 @@
     }
     .event-bar { width: 4px; background: var(--blue); border-radius: 2px; flex-shrink: 0; }
     .event-time  { font: 400 14px var(--font-display); color: var(--sub); }
-    .event-title { font: 600 18px var(--font-body); color: var(--text); }
+    .event-title { font: 600 15px var(--font-body); color: var(--text); }
     .event-loc   { font: 400 13px var(--font-body); color: var(--sub); }
     .no-events {
       height: 580px; display: flex; align-items: center; justify-content: center;
@@ -169,7 +169,7 @@
     }
 
     /* ── Right — Bus ───────────────────────────────────────────────────── */
-    .col-right { width: 360px; padding: 20px 24px; background: var(--bg-base); animation: fadeUp .4s ease-out .3s both; }
+    .col-right { width: 460px; padding: 20px 24px; background: var(--bg-base); animation: fadeUp .4s ease-out .3s both; }
     .right-header { display: flex; justify-content: space-between; align-items: center; }
 
     .tab {
