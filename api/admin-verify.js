@@ -1,9 +1,14 @@
 // Vercel Serverless Function: POST /api/admin-verify
 // Dedicated passcode-check endpoint for the finals admin page.
 // Returns:
-//   200 { ok: true }      — passcode matches FINALS_ADMIN_SECRET
+//   200 { ok: true }      — passcode matches
 //   401 { error: "..." }  — wrong passcode
-//   500 { error: "..." }  — server misconfigured (env var missing)
+//
+// The accepted passcode is hardcoded below. If you'd rather keep it out
+// of source, set FINALS_ADMIN_SECRET in Vercel — when present, it takes
+// precedence. Same trust model as the existing /edit1125 editor.
+
+const ADMIN_PASSCODE = '20101125';
 
 function bad(res, code, msg) { return res.status(code).json({ error: msg }); }
 
@@ -15,8 +20,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return bad(res, 405, "Method not allowed");
 
-  const secret = process.env.FINALS_ADMIN_SECRET;
-  if (!secret) return bad(res, 500, "Server misconfigured: FINALS_ADMIN_SECRET is not set in Vercel.");
+  const secret = process.env.FINALS_ADMIN_SECRET || ADMIN_PASSCODE;
 
   let body;
   try { body = typeof req.body === "string" ? JSON.parse(req.body) : req.body; }

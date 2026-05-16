@@ -1,13 +1,16 @@
 // Vercel Serverless Function: POST /api/delete-note
 // Admin-only — removes a file from finals-uploads/{noteId}/{filename} in
 // the repo. Authentication: the request body must include `passcode`
-// matching the FINALS_ADMIN_SECRET env var. The matching Firestore doc
-// is deleted client-side after this returns OK.
+// matching ADMIN_PASSCODE below (or FINALS_ADMIN_SECRET env var, if set
+// — env var takes precedence). The matching Firestore doc is deleted
+// client-side after this returns OK.
 
 const GITHUB_OWNER = "KingsleySham";
 const GITHUB_REPO  = "MathAns";
 const GITHUB_BRANCH = "main";
 const GITHUB_API = "https://api.github.com";
+
+const ADMIN_PASSCODE = '20101125';
 
 function bad(res, code, msg) { return res.status(code).json({ error: msg }); }
 
@@ -45,8 +48,7 @@ export default async function handler(req, res) {
   const token = process.env.GITHUB_TOKEN;
   if (!token) return bad(res, 500, "Server misconfiguration: missing GITHUB_TOKEN");
 
-  const secret = process.env.FINALS_ADMIN_SECRET;
-  if (!secret) return bad(res, 500, "Server misconfiguration: missing FINALS_ADMIN_SECRET");
+  const secret = process.env.FINALS_ADMIN_SECRET || ADMIN_PASSCODE;
 
   let body;
   try { body = typeof req.body === "string" ? JSON.parse(req.body) : req.body; }
