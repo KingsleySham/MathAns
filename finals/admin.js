@@ -16,11 +16,17 @@ const gateEl = document.getElementById('gate');
 const appEl  = document.getElementById('admin-app');
 const gateForm = document.getElementById('gate-form');
 const gateInput = document.getElementById('gate-passcode');
-const gateError = document.getElementById('gate-error');
+const gateSubmit = document.getElementById('gate-submit');
+const gateStatus = document.getElementById('gate-status');
 
 function getPasscode() { return sessionStorage.getItem(ADMIN_PASSCODE_KEY) || ''; }
 function setPasscode(v) { sessionStorage.setItem(ADMIN_PASSCODE_KEY, v); }
 function clearPasscode() { sessionStorage.removeItem(ADMIN_PASSCODE_KEY); }
+
+function setGateStatus(kind, msg) {
+  gateStatus.className = 'gate-status' + (kind ? ' gate-status-' + kind : '');
+  gateStatus.textContent = msg || '';
+}
 
 function showApp() {
   gateEl.style.display = 'none';
@@ -28,48 +34,73 @@ function showApp() {
   startAdmin();
 }
 
-function showGate() {
+function showGate(message) {
   gateEl.style.display = 'block';
   appEl.style.display = 'none';
-  gateError.style.display = 'none';
+  setGateStatus(message ? 'err' : '', message || '');
   setTimeout(() => gateInput && gateInput.focus(), 0);
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Verify passcode via /api/admin-verify. Returns a status string:
+     'ok'        → correct passcode
+     'wrong'     → wrong passcode
+     'misconf'   → server is missing FINALS_ADMIN_SECRET
+     'network'   → couldn't reach the server
+   ────────────────────────────────────────────────────────────────────────── */
 async function verifyPasscode(passcode) {
-  // Probe the delete endpoint with a randomized path that cannot exist.
-  // Wrong passcode → server returns 401. Right passcode → GitHub returns
-  // 404 for the missing file and the server replies `{ ok: true,
-  // alreadyGone: true }`. Any non-401 status means the secret matched.
-  const probePath = `finals-uploads/__probe__/${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+  let resp;
   try {
-    const resp = await fetch('/api/delete-note', {
+    resp = await fetch('/api/admin-verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ passcode, filePath: probePath })
+      body: JSON.stringify({ passcode })
     });
-    if (resp.status === 401) return false;
-    return true;
   } catch (e) {
-    console.error('verify failed', e);
-    return false;
+    console.error('verify network error', e);
+    return { kind: 'network', message: e.message || 'Network error' };
   }
+  let payload = {};
+  try { payload = await resp.json(); } catch (_) {}
+  if (resp.status === 200) return { kind: 'ok' };
+  if (resp.status === 401) return { kind: 'wrong' };
+  if (resp.status === 500) return { kind: 'misconf', message: payload.error || 'Server error' };
+  return { kind: 'wrong', message: payload.error || `HTTP ${resp.status}` };
 }
 
 gateForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const input = gateInput.value;
-  gateError.style.display = 'none';
+  if (!input) return;
+
+  gateSubmit.disabled = true;
   gateInput.disabled = true;
-  const ok = await verifyPasscode(input);
+  gateSubmit.textContent = 'Checking…';
+  setGateStatus('info', 'Checking passcode…');
+
+  const result = await verifyPasscode(input);
+
+  gateSubmit.disabled = false;
   gateInput.disabled = false;
-  if (ok) {
+  gateSubmit.textContent = 'Unlock';
+
+  if (result.kind === 'ok') {
+    setGateStatus('ok', '✓ Correct — unlocking…');
     setPasscode(input);
-    showApp();
-  } else {
-    gateError.style.display = 'block';
-    gateError.textContent = 'Incorrect passcode.';
-    gateInput.select();
+    setTimeout(showApp, 400);
+    return;
   }
+  if (result.kind === 'wrong') {
+    setGateStatus('err', '✗ Wrong passcode. Try again.');
+    gateInput.select();
+    return;
+  }
+  if (result.kind === 'misconf') {
+    setGateStatus('err',
+      'Server misconfigured: FINALS_ADMIN_SECRET is not set in Vercel. Set it in Project Settings → Environment Variables, then redeploy.');
+    return;
+  }
+  setGateStatus('err', 'Could not reach the server (' + (result.message || 'network error') + ').');
 });
 
 document.getElementById('admin-signout').addEventListener('click', () => {
@@ -336,9 +367,7 @@ deleteConfirmBtn.addEventListener('click', async () => {
         if (resp.status === 401) {
           closeModal(deleteModal);
           clearPasscode();
-          showGate();
-          gateError.style.display = 'block';
-          gateError.textContent = 'Your session expired — sign in again.';
+          showGate('Your session expired — sign in again.');
           return;
         }
         throw new Error(result.error || `HTTP ${resp.status}`);
