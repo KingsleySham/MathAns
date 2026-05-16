@@ -20,16 +20,37 @@
   <!-- ===== Gate ===== -->
   <div id="gate" class="admin-wrap">
     <div class="card gate-card">
-      <h2 class="section-title">Admin sign-in</h2>
-      <p class="section-desc">Enter the admin passcode to manage uploaded notes.</p>
-      <form id="gate-form" autocomplete="off">
-        <div class="form-row">
+      <div class="gate-icon" aria-hidden="true">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <h2 class="gate-title">Admin sign-in</h2>
+      <p class="gate-desc">Enter the admin passcode to manage uploaded notes.</p>
+
+      <form id="gate-form" autocomplete="off" novalidate>
+        <div class="form-row gate-pw-row">
           <label class="form-label" for="gate-passcode">Passcode</label>
-          <input type="password" id="gate-passcode" required autofocus />
+          <div class="gate-pw-wrap">
+            <input type="password" id="gate-passcode" required autofocus inputmode="numeric" autocomplete="off" />
+            <button type="button" class="gate-pw-toggle" id="gate-pw-toggle" aria-label="Show passcode" tabindex="-1">
+              <svg class="gate-pw-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+          <div class="gate-caps" id="gate-caps" hidden>⚠ Caps Lock is on</div>
         </div>
-        <button type="submit" class="btn-primary" id="gate-submit" style="width:100%;">Unlock</button>
+        <button type="submit" class="btn-primary gate-submit" id="gate-submit">
+          <span class="gate-submit-label">Unlock</span>
+          <span class="gate-submit-spinner" aria-hidden="true"></span>
+        </button>
         <div id="gate-status" class="gate-status" role="status" aria-live="polite"></div>
       </form>
+
+      <a class="gate-back" href="/finals/">← Back to Finals Hub</a>
     </div>
   </div>
 
