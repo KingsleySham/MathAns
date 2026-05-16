@@ -305,8 +305,9 @@ function renderNotes() {
   notesListEl.innerHTML = filtered.map(n => {
     const typeLabel = n.type === 'mock_paper' ? 'Mock Paper' : 'Notes';
     const typeClass = n.type === 'mock_paper' ? 'mock_paper' : 'notes';
+    const canPreview = isPreviewable(n.fileName);
     return `
-      <div class="note-card">
+      <div class="note-card" data-id="${escapeHtml(n.id)}">
         <div class="note-card-top">
           <div class="note-title">${escapeHtml(n.title)}</div>
           <div class="note-type ${typeClass}">${typeLabel}</div>
@@ -322,12 +323,27 @@ function renderNotes() {
         </div>
         ${n.description ? `<div class="note-desc">${escapeHtml(n.description)}</div>` : ''}
         <div class="note-actions">
-          <a class="btn-primary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>
+          ${canPreview ? `<button class="btn-primary" data-action="view">View</button>` : ''}
+          <a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>
         </div>
       </div>
     `;
   }).join('');
 }
+
+function isPreviewable(fileName) {
+  const ext = (String(fileName || '').split('.').pop() || '').toLowerCase();
+  return ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'txt', 'doc', 'docx'].includes(ext);
+}
+
+notesListEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-action="view"]');
+  if (!btn) return;
+  const card = btn.closest('.note-card');
+  if (!card) return;
+  const note = allNotes.find(n => n.id === card.dataset.id);
+  if (note) openViewer(note);
+});
 
 filterSubjectEl.addEventListener('change', renderNotes);
 filterTypeEl.addEventListener('change', renderNotes);
@@ -1037,3 +1053,103 @@ function mathsRenderMath(rawText) {
   );
   return s;
 }
+
+/* ==========================================================================
+   In-browser viewer — renders a note's file inside a modal:
+   - Images (png/jpg/jpeg/webp/gif): <img src>
+   - PDFs: fetch as blob, force Content-Type, embed in iframe
+   - Plain text: fetch and render in <pre>
+   - Word (doc/docx): Microsoft Office Online viewer iframe
+   ========================================================================== */
+const viewerModal = document.getElementById('viewer-modal');
+const viewerTitle = document.getElementById('viewer-title');
+const viewerMeta = document.getElementById('viewer-meta');
+const viewerDownload = document.getElementById('viewer-download');
+const viewerBody = document.getElementById('viewer-body');
+
+function openViewer(note) {
+  viewerTitle.textContent = note.title || '(untitled)';
+  viewerMeta.textContent = [
+    note.subject,
+    note.type === 'mock_paper' ? 'Mock Paper' : 'Notes',
+    note.uploaderName ? 'by ' + note.uploaderName : null,
+    fmtBytes(note.fileSize)
+  ].filter(Boolean).join(' · ');
+  viewerDownload.href = note.downloadUrl || '#';
+  viewerDownload.setAttribute('download', note.fileName || 'download');
+
+  viewerBody.innerHTML = '<div class="viewer-loading">Loading…</div>';
+  viewerModal.style.display = 'flex';
+
+  const ext = (String(note.fileName || '').split('.').pop() || '').toLowerCase();
+
+  if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
+    renderImageViewer(note);
+  } else if (ext === 'pdf') {
+    renderPdfViewer(note);
+  } else if (ext === 'txt') {
+    renderTextViewer(note);
+  } else if (['doc', 'docx'].includes(ext)) {
+    renderOfficeViewer(note);
+  } else {
+    viewerBody.innerHTML = '<div class="viewer-error">Preview not available for this file type. Use Download instead.</div>';
+  }
+}
+
+function closeViewer() {
+  // Free any blob URL we created for the PDF viewer.
+  const url = viewerBody.dataset.blobUrl;
+  if (url) { URL.revokeObjectURL(url); delete viewerBody.dataset.blobUrl; }
+  viewerBody.innerHTML = '';
+  viewerModal.style.display = 'none';
+}
+
+function renderImageViewer(note) {
+  viewerBody.innerHTML = `<img src="${escapeHtml(note.downloadUrl)}" alt="${escapeHtml(note.title || '')}" class="viewer-img" />`;
+}
+
+async function renderPdfViewer(note) {
+  try {
+    const resp = await fetch(note.downloadUrl);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const blob = await resp.blob();
+    // raw.githubusercontent.com may serve PDFs as octet-stream — re-wrap with
+    // application/pdf so the browser's built-in viewer kicks in.
+    const typedBlob = blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' });
+    const url = URL.createObjectURL(typedBlob);
+    viewerBody.dataset.blobUrl = url;
+    viewerBody.innerHTML = `<iframe src="${url}" class="viewer-iframe" title="${escapeHtml(note.title || '')}"></iframe>`;
+  } catch (err) {
+    viewerBody.innerHTML = `<div class="viewer-error">Couldn't load PDF: ${escapeHtml(err.message || String(err))}. Try Download.</div>`;
+  }
+}
+
+async function renderTextViewer(note) {
+  try {
+    const resp = await fetch(note.downloadUrl);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    viewerBody.innerHTML = `<pre class="viewer-text">${escapeHtml(text)}</pre>`;
+  } catch (err) {
+    viewerBody.innerHTML = `<div class="viewer-error">Couldn't load file: ${escapeHtml(err.message || String(err))}.</div>`;
+  }
+}
+
+function renderOfficeViewer(note) {
+  // Microsoft Office Online viewer accepts any publicly accessible URL.
+  // raw.githubusercontent.com URLs qualify.
+  const src = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(note.downloadUrl);
+  viewerBody.innerHTML = `<iframe src="${src}" class="viewer-iframe" title="${escapeHtml(note.title || '')}"></iframe>`;
+}
+
+// Modal close wiring.
+viewerModal.addEventListener('click', (e) => {
+  const role = e.target.dataset.close;
+  if (!role) return;
+  if (role === 'overlay' && e.target !== viewerModal) return;
+  closeViewer();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && viewerModal.style.display === 'flex') closeViewer();
+});
+
