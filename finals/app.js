@@ -91,6 +91,26 @@ nameInput.addEventListener('change', () => {
   localStorage.setItem(NAME_KEY, nameInput.value.trim());
 });
 
+const uploadToggle = document.getElementById('upload-toggle');
+const uploadCollapse = document.getElementById('upload-collapse');
+function setUploadOpen(open) {
+  uploadToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  uploadCollapse.hidden = !open;
+  uploadToggle.querySelector('.upload-toggle-text').textContent =
+    open ? 'Hide upload form' : 'Share notes or a mock paper';
+  if (open) {
+    setTimeout(() => {
+      const firstEmpty = !nameInput.value
+        ? nameInput
+        : document.getElementById('note-title');
+      firstEmpty.focus({ preventScroll: false });
+    }, 100);
+  }
+}
+uploadToggle.addEventListener('click', () => {
+  setUploadOpen(uploadToggle.getAttribute('aria-expanded') !== 'true');
+});
+
 const uploadForm = document.getElementById('upload-form');
 const uploadBtn = document.getElementById('upload-btn');
 const progressBox = document.getElementById('upload-progress');
@@ -211,7 +231,11 @@ uploadForm.addEventListener('submit', async (e) => {
     nameInput.value = name;          // keep the name
     document.getElementById('note-subject').value = subject;
     document.getElementById('note-type').value = type;
-    setTimeout(() => { progressBox.style.display = 'none'; }, 800);
+    setTimeout(() => {
+      progressBox.style.display = 'none';
+      setUploadOpen(false);
+      setStatus('');
+    }, 1600);
   } catch (err) {
     console.error(err);
     setStatus('Upload failed: ' + (err && err.message ? err.message : err), 'err');
