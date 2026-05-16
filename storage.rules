@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Finals study hub — student-uploaded notes/mock papers live under
+// /notes/{noteId}/{filename}. Open read so anyone can download; open create
+// (with size + MIME caps) so the share-with-name flow works without auth;
+// open delete because the admin client (finals.mathans.app/admin) is the
+// only thing that ever calls it — same trusted-environment model the rest
+// of this Firebase project uses (see firestore.rules for context).
+//
+// Deploy with:
+//   firebase deploy --only storage --project mathans---roster
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /notes/{noteId}/{filename} {
+      allow read: if true;
+
+      allow create: if
+        request.resource.size < 50 * 1024 * 1024
+        && request.resource.contentType.matches(
+             'application/pdf|image/(png|jpe?g|webp)|application/vnd\\.openxmlformats-officedocument\\..*|application/msword|text/plain'
+           );
+
+      allow delete: if true;
+      allow update: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

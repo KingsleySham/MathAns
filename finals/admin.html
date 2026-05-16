@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Finals Study Hub</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#1a56db" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="site-header" style="background:linear-gradient(135deg,#1a56db 0%,#1340a8 100%);box-shadow:0 2px 10px rgba(26,86,219,0.18);">
+    <div class="header-inner">
+      <h1 class="site-title">Admin</h1>
+      <div class="site-tagline">Finals Study Hub — note management</div>
+    </div>
+  </header>
+
+  <!-- ===== Gate ===== -->
+  <div id="gate" class="admin-wrap">
+    <div class="card gate-card">
+      <h2 class="section-title">Admin sign-in</h2>
+      <p class="section-desc">Enter the admin passcode to manage uploaded notes.</p>
+      <form id="gate-form" autocomplete="off">
+        <div class="form-row">
+          <label class="form-label" for="gate-passcode">Passcode</label>
+          <input type="password" id="gate-passcode" required autofocus />
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;">Unlock</button>
+        <div id="gate-error" class="upload-status err" style="display:none;margin-top:10px;">Incorrect passcode.</div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Admin app ===== -->
+  <main id="admin-app" class="admin-wrap" style="display:none;">
+
+    <div class="card">
+      <div class="admin-header">
+        <h1>All uploaded notes</h1>
+        <div class="admin-bar">
+          <input type="text" id="admin-search" placeholder="Search title or uploader…" style="width:240px;padding:8px 12px;font-size:0.85rem;" />
+          <button class="btn-secondary" id="admin-signout">Sign out</button>
+        </div>
+      </div>
+
+      <div class="admin-stats">
+        <div>Total notes: <strong id="stat-count">0</strong></div>
+        <div>Total size: <strong id="stat-size">0 B</strong></div>
+        <div>Notes: <strong id="stat-notes">0</strong></div>
+        <div>Mock papers: <strong id="stat-mocks">0</strong></div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="admin-table" id="admin-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Subject</th>
+              <th>Type</th>
+              <th>Uploader</th>
+              <th>Size</th>
+              <th>Uploaded</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-tbody">
+            <tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-links">
+      <a href="/">← Back to Finals Hub</a>
+    </div>
+  </footer>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
