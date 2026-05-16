@@ -282,6 +282,21 @@
     </div>
   </footer>
 
+  <!-- ===== In-browser viewer modal ===== -->
+  <div class="modal-overlay viewer-modal" id="viewer-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card viewer-card">
+      <div class="modal-card-header viewer-header">
+        <div class="viewer-header-text">
+          <div class="viewer-title" id="viewer-title">Note</div>
+          <div class="viewer-meta" id="viewer-meta"></div>
+        </div>
+        <a class="viewer-download" id="viewer-download" href="#" target="_blank" rel="noopener" download>Download</a>
+        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-card-body viewer-body" id="viewer-body"></div>
+    </div>
+  </div>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>
