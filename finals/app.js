@@ -67,7 +67,7 @@ renderCountdown();
 setInterval(renderCountdown, 1000);
 
 /* ==========================================================================
-   Main tabs (Notes / Timer)
+   Main tabs (Notes / Maths / Timer)
    ========================================================================== */
 document.getElementById('main-tabs').addEventListener('click', (e) => {
   const btn = e.target.closest('.main-tab');
@@ -77,6 +77,7 @@ document.getElementById('main-tabs').addEventListener('click', (e) => {
   document.querySelectorAll('.tab-panel').forEach(p => {
     p.classList.toggle('active', p.id === 'panel-' + target);
   });
+  if (target === 'maths') ensureMathsInitialized();
 });
 
 /* ==========================================================================
@@ -767,3 +768,248 @@ if (sw.running) {
   swTickTimer = setInterval(swTick, 50);
 }
 renderSw();
+
+/* ==========================================================================
+   Maths Answers — ported from /app.js, lazy-loaded when the tab opens.
+   `/data.js` (132 KB) and `/diagrams.json` are only fetched on first use.
+   ========================================================================== */
+let mathsState = null;
+
+function ensureMathsInitialized() {
+  if (mathsState) return mathsState.ready;
+
+  const loader = document.getElementById('maths-loader');
+  const appBox = document.getElementById('maths-app');
+  loader.style.display = 'block';
+
+  mathsState = {
+    section: '4.1',
+    utChapter: '',
+    diagrams: {},
+    ready: null
+  };
+
+  const loadScript = (src) => new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Failed to load ' + src));
+    document.head.appendChild(s);
+  });
+
+  mathsState.ready = (async () => {
+    try {
+      await loadScript('/data.js');
+      try {
+        const r = await fetch('/diagrams.json');
+        if (r.ok) mathsState.diagrams = await r.json() || {};
+      } catch (_) { /* optional, ignore */ }
+
+      loader.style.display = 'none';
+      appBox.style.display = 'block';
+      wireMathsUI();
+      mathsSelectSection('4.1');
+    } catch (err) {
+      loader.textContent = 'Failed to load answer database: ' + (err.message || err);
+    }
+  })();
+
+  return mathsState.ready;
+}
+
+function wireMathsUI() {
+  document.querySelectorAll('#m-section-tabs .tab').forEach(btn => {
+    btn.addEventListener('click', () => mathsSelectSection(btn.getAttribute('data-section')));
+  });
+  document.getElementById('m-ut-chapter-select').addEventListener('change', (e) => {
+    mathsState.utChapter = e.target.value;
+    mathsPopulateQuestions();
+    mathsHideAnswer();
+  });
+  document.getElementById('m-question-select').addEventListener('change', mathsHideAnswer);
+  document.getElementById('m-btn-check').addEventListener('click', mathsShowResult);
+}
+
+function mathsSelectSection(key) {
+  mathsState.section = key;
+  mathsState.utChapter = '';
+  document.querySelectorAll('#m-section-tabs .tab').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-section') === key);
+  });
+  const utGroup = document.getElementById('m-ut-chapter-group');
+  const qLabel = document.getElementById('m-q-step-label');
+  if (key === 'UT') {
+    utGroup.style.display = 'block';
+    document.getElementById('m-ut-chapter-select').value = '';
+    qLabel.textContent = '3. 選擇題號 (Question)';
+  } else {
+    utGroup.style.display = 'none';
+    qLabel.textContent = '2. 選擇題號 (Question)';
+  }
+  mathsPopulateQuestions();
+  mathsHideAnswer();
+}
+
+function mathsPopulateQuestions() {
+  const sel = document.getElementById('m-question-select');
+  sel.innerHTML = '<option value="">— 請選擇 / Select —</option>';
+  const SECTIONS = window.SECTIONS;
+  if (!SECTIONS) return;
+
+  if (mathsState.section === 'UT') {
+    if (!mathsState.utChapter) return;
+    const utData = SECTIONS['UT'];
+    if (!utData || !utData.questions) return;
+    const prefix = mathsState.utChapter + '_';
+    const chapterKeys = Object.keys(utData.questions)
+      .filter(k => k.indexOf(prefix) === 0)
+      .sort((a, b) => parseInt(a.split('_')[1], 10) - parseInt(b.split('_')[1], 10));
+    chapterKeys.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = 'Q' + k.split('_')[1];
+      sel.appendChild(opt);
+    });
+  } else {
+    const data = SECTIONS[mathsState.section];
+    if (!data || !data.questions) return;
+    const keys = Object.keys(data.questions).map(Number).sort((a, b) => a - b);
+    keys.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = String(k);
+      opt.textContent = 'Q' + k;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+function mathsShowResult() {
+  const SECTIONS = window.SECTIONS;
+  if (!SECTIONS) return;
+  const sel = document.getElementById('m-question-select');
+  const qKey = sel.value;
+  if (!qKey) { alert('請選擇題號 / Please select a question number.'); return; }
+
+  let qData, sectionLabel;
+  if (mathsState.section === 'UT') {
+    if (!mathsState.utChapter) { alert('請選擇章節 / Please select a chapter.'); return; }
+    qData = SECTIONS['UT'].questions[qKey];
+    sectionLabel = 'UT · ' + mathsState.utChapter + ' · Q' + qKey.split('_')[1];
+  } else {
+    qData = SECTIONS[mathsState.section].questions[parseInt(qKey, 10)];
+    sectionLabel = 'Section ' + mathsState.section + ' · Q' + qKey;
+  }
+  if (!qData) { alert('找不到答案 / Answer not found.'); return; }
+
+  document.getElementById('m-answer-header').textContent = sectionLabel;
+
+  const stepsContainer = document.getElementById('m-steps-container');
+  stepsContainer.innerHTML = '';
+
+  const sectionDiagrams = mathsState.diagrams[mathsState.section] || {};
+  const imgPath = sectionDiagrams[qKey];
+  if (imgPath) {
+    const imgDiv = document.createElement('div');
+    imgDiv.className = 'diagram-img-container';
+    const img = document.createElement('img');
+    img.src = '/' + imgPath;
+    img.alt = 'Diagram for ' + sectionLabel;
+    img.className = 'diagram-img';
+    imgDiv.appendChild(img);
+    stepsContainer.appendChild(imgDiv);
+  }
+
+  const finalDiv = document.getElementById('m-final-answer');
+  if (qData.parts) {
+    qData.parts.forEach(part => {
+      const block = document.createElement('div');
+      block.className = 'part-block';
+      if (part.label) {
+        const lbl = document.createElement('div');
+        lbl.className = 'part-label';
+        lbl.textContent = 'Part ' + part.label;
+        block.appendChild(lbl);
+      }
+      if (part.steps && part.steps.length > 0) block.appendChild(mathsBuildStepsList(part.steps));
+      if (part.answer) {
+        const ans = document.createElement('div');
+        ans.className = 'part-final-answer';
+        ans.innerHTML = mathsRenderMath(part.answer);
+        block.appendChild(ans);
+      }
+      stepsContainer.appendChild(block);
+    });
+    finalDiv.style.display = 'none';
+  } else {
+    if (qData.steps && qData.steps.length > 0) stepsContainer.appendChild(mathsBuildStepsList(qData.steps));
+    finalDiv.style.display = 'block';
+    if (qData.answer && /^[A-Da-d]$/.test(qData.answer.trim())) {
+      finalDiv.innerHTML = '<span class="mcq-answer">' + mathsEscapeHtml(qData.answer.trim()) + '</span>';
+    } else {
+      finalDiv.innerHTML = mathsRenderMath(qData.answer || '');
+    }
+  }
+
+  const panel = document.getElementById('m-answer-panel');
+  panel.style.display = 'block';
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+}
+
+function mathsBuildStepsList(steps) {
+  const ol = document.createElement('ol');
+  ol.className = 'steps-list' + (steps.length === 1 ? ' single-step' : '');
+  steps.forEach((text, i) => {
+    const li = document.createElement('li');
+    li.setAttribute('data-n', i + 1);
+    const pipeIdx = text.indexOf(' | ');
+    if (pipeIdx !== -1) {
+      const workText = text.slice(0, pipeIdx);
+      const reasonText = text.slice(pipeIdx + 3);
+      const workSpan = document.createElement('span');
+      workSpan.className = 'step-work';
+      workSpan.innerHTML = mathsRenderMath(workText);
+      const reasonSpan = document.createElement('span');
+      reasonSpan.className = 'step-reason';
+      reasonSpan.textContent = reasonText;
+      li.appendChild(workSpan);
+      li.appendChild(reasonSpan);
+    } else {
+      const workSpan2 = document.createElement('span');
+      workSpan2.className = 'step-work';
+      workSpan2.innerHTML = mathsRenderMath(text);
+      li.appendChild(workSpan2);
+    }
+    ol.appendChild(li);
+  });
+  return ol;
+}
+
+function mathsHideAnswer() {
+  const panel = document.getElementById('m-answer-panel');
+  panel.style.display = 'none';
+  document.getElementById('m-steps-container').innerHTML = '';
+  document.getElementById('m-final-answer').textContent = '';
+  document.getElementById('m-final-answer').style.display = 'block';
+}
+
+function mathsEscapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function mathsRenderMath(rawText) {
+  let s = mathsEscapeHtml(rawText);
+  s = s.replace(
+    /\(([A-Za-z0-9°²³√∠△]+)\/([A-Za-z0-9°²³√∠△]+(?:[ ][A-Za-z0-9°²³√∠△]+)*)\)([A-Za-z0-9°²³√∠△]*)/g,
+    (m, num, den, unit) => {
+      const frac = '<span class="frac"><span class="num">' + num + '</span><span class="den">' + den + '</span></span>';
+      return unit ? frac + ' ' + unit : frac;
+    }
+  );
+  s = s.replace(
+    /(^|[^A-Za-z0-9(])([A-Za-z0-9°²³√∠△]+)\/([A-Za-z0-9°²³√∠△]+(?:[ ][A-Za-z0-9°²³√∠△]+)*)(?![A-Za-z0-9)])/g,
+    (m, prefix, num, den) => prefix + '<span class="frac"><span class="num">' + num + '</span><span class="den">' + den + '</span></span>'
+  );
+  return s;
+}

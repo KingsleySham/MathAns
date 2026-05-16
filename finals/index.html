@@ -43,6 +43,7 @@
     <!-- ===== Top-level tabs ===== -->
     <nav class="main-tabs" id="main-tabs" role="tablist">
       <button class="main-tab active" data-tab="notes" role="tab">Notes &amp; Papers</button>
+      <button class="main-tab" data-tab="maths" role="tab">Maths Answers</button>
       <button class="main-tab" data-tab="timer" role="tab">Study Timer</button>
     </nav>
 
@@ -133,6 +134,65 @@
         </div>
       </div>
 
+    </section>
+
+    <!-- ===== Maths Answers tab ===== -->
+    <section class="tab-panel" id="panel-maths">
+      <div class="card maths-finder">
+        <h2 class="section-title">S.3 Maths Answer Finder</h2>
+        <p class="section-desc">按章節及題號查看中三數學參考答案。Look up S.3 maths answers by section and question number.</p>
+
+        <div id="maths-loader" class="maths-loader" style="display:none;">Loading answer database…</div>
+
+        <div id="maths-app" style="display:none;">
+          <div class="form-group">
+            <div class="step-label">1. 選擇章節 (Section)</div>
+            <div class="section-tabs" id="m-section-tabs">
+              <button class="tab active" data-section="4.1">4.1</button>
+              <button class="tab" data-section="4.2">4.2</button>
+              <button class="tab" data-section="4.3">4.3</button>
+              <button class="tab" data-section="5.1">5.1</button>
+              <button class="tab" data-section="5.2">5.2</button>
+              <button class="tab" data-section="6.1">6.1</button>
+              <button class="tab" data-section="6.3">6.3</button>
+              <button class="tab" data-section="7.1">7.1</button>
+              <button class="tab tab-ut" data-section="UT">UT</button>
+            </div>
+          </div>
+
+          <div class="form-group" id="m-ut-chapter-group" style="display:none;">
+            <div class="step-label">2. 選擇章節 (Chapter)</div>
+            <div class="select-wrap">
+              <select id="m-ut-chapter-select">
+                <option value="">— 請選擇 / Select —</option>
+                <option value="Ch4">Chapter 4</option>
+                <option value="Ch5">Chapter 5</option>
+                <option value="Ch6">Chapter 6</option>
+                <option value="Ch7">Chapter 7</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" id="m-question-group">
+            <div class="step-label" id="m-q-step-label">2. 選擇題號 (Question)</div>
+            <div class="select-wrap">
+              <select id="m-question-select">
+                <option value="">— 請選擇 / Select —</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn-check" id="m-btn-check">查看答案 (View Answer)</button>
+
+          <div class="answer-panel" id="m-answer-panel" style="display:none;">
+            <div class="answer-header" id="m-answer-header"></div>
+            <div id="m-steps-container"></div>
+            <div class="final-answer" id="m-final-answer"></div>
+          </div>
+        </div>
+
+        <p class="maths-foot">For reference only. 只供參考。</p>
+      </div>
     </section>
 
     <!-- ===== Timer tab ===== -->
