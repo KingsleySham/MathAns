@@ -675,3 +675,6 @@ const SECTIONS = {
   }
 
 };
+
+// Expose to module scripts (top-level `const` doesn't attach to `window`).
+if (typeof window !== 'undefined') window.SECTIONS = SECTIONS;
