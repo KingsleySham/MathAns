@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — Finals Study Hub</title>
   <meta name="robots" content="noindex, nofollow" />
-  <meta name="theme-color" content="#1a56db" />
+  <meta name="theme-color" content="#0d9488" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <header class="site-header admin-site-header">
+  <header class="site-header">
     <div class="header-inner">
-      <h1 class="site-title">Admin</h1>
-      <div class="site-tagline">Finals Study Hub — note management</div>
+      <h1 class="site-title">Finals Study Hub · Admin</h1>
+      <div class="site-tagline">Manage uploaded notes &amp; mock papers</div>
     </div>
   </header>
 
@@ -27,8 +27,8 @@
           <label class="form-label" for="gate-passcode">Passcode</label>
           <input type="password" id="gate-passcode" required autofocus />
         </div>
-        <button type="submit" class="btn-primary" style="width:100%;">Unlock</button>
-        <div id="gate-error" class="upload-status err" style="display:none;margin-top:10px;">Incorrect passcode.</div>
+        <button type="submit" class="btn-primary" id="gate-submit" style="width:100%;">Unlock</button>
+        <div id="gate-status" class="gate-status" role="status" aria-live="polite"></div>
       </form>
     </div>
   </div>
@@ -77,7 +77,7 @@
       <div class="admin-controls">
         <h2 class="section-title" style="margin-bottom:0;">All uploaded notes</h2>
         <div class="admin-bar">
-          <input type="text" id="admin-search" placeholder="Search title or uploader…" />
+          <input type="text" id="admin-search" placeholder="Search title, uploader, subject…" />
           <button class="btn-secondary" id="admin-signout">Sign out</button>
         </div>
       </div>
@@ -130,7 +130,7 @@
 
   <footer class="site-footer">
     <div class="footer-links">
-      <a href="/">← Back to Finals Hub</a>
+      <a href="/finals/">← Back to Finals Hub</a>
     </div>
   </footer>
 
