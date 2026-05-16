@@ -33,6 +33,39 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Finals study hub — student-uploaded note metadata.
+    // Open create with shape validation; open update/delete because the
+    // admin client at finals.mathans.app/admin is the only thing that
+    // ever calls them (same trusted-environment model as the rest of
+    // this project).
+    match /notes/{noteId} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasAll([
+          'title', 'uploaderName', 'fileName', 'filePath',
+          'fileSize', 'downloadUrl', 'type', 'subject', 'createdAt'
+        ]) &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() < 200 &&
+        request.resource.data.uploaderName is string &&
+        request.resource.data.uploaderName.size() > 0 &&
+        request.resource.data.uploaderName.size() < 80 &&
+        request.resource.data.fileName is string &&
+        request.resource.data.fileName.size() < 200 &&
+        request.resource.data.filePath is string &&
+        request.resource.data.filePath.size() < 300 &&
+        request.resource.data.fileSize is number &&
+        request.resource.data.fileSize < 50 * 1024 * 1024 &&
+        request.resource.data.downloadUrl is string &&
+        request.resource.data.type in ['notes', 'mock_paper'];
+      allow update: if
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() < 200;
+      allow delete: if true;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
