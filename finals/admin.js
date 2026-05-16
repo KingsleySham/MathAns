@@ -17,7 +17,10 @@ const appEl  = document.getElementById('admin-app');
 const gateForm = document.getElementById('gate-form');
 const gateInput = document.getElementById('gate-passcode');
 const gateSubmit = document.getElementById('gate-submit');
+const gateSubmitLabel = gateSubmit.querySelector('.gate-submit-label');
 const gateStatus = document.getElementById('gate-status');
+const gatePwToggle = document.getElementById('gate-pw-toggle');
+const gateCaps = document.getElementById('gate-caps');
 
 function getPasscode() { return sessionStorage.getItem(ADMIN_PASSCODE_KEY) || ''; }
 function setPasscode(v) { sessionStorage.setItem(ADMIN_PASSCODE_KEY, v); }
@@ -25,8 +28,26 @@ function clearPasscode() { sessionStorage.removeItem(ADMIN_PASSCODE_KEY); }
 
 function setGateStatus(kind, msg) {
   gateStatus.className = 'gate-status' + (kind ? ' gate-status-' + kind : '');
-  gateStatus.textContent = msg || '';
+  gateStatus.innerHTML = msg || '';
 }
+
+// Show / hide passcode
+gatePwToggle.addEventListener('click', () => {
+  const isPw = gateInput.type === 'password';
+  gateInput.type = isPw ? 'text' : 'password';
+  gatePwToggle.setAttribute('aria-label', isPw ? 'Hide passcode' : 'Show passcode');
+  gatePwToggle.classList.toggle('on', isPw);
+});
+
+// Caps Lock detection
+function syncCapsHint(e) {
+  if (e && typeof e.getModifierState === 'function') {
+    gateCaps.hidden = !e.getModifierState('CapsLock');
+  }
+}
+gateInput.addEventListener('keydown', syncCapsHint);
+gateInput.addEventListener('keyup', syncCapsHint);
+gateInput.addEventListener('input', () => { gateCaps.hidden = true; });
 
 function showApp() {
   gateEl.style.display = 'none';
@@ -42,11 +63,8 @@ function showGate(message) {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Verify passcode via /api/admin-verify. Returns a status string:
-     'ok'        → correct passcode
-     'wrong'     → wrong passcode
-     'misconf'   → server is missing FINALS_ADMIN_SECRET
-     'network'   → couldn't reach the server
+   Verify passcode via /api/admin-verify. Returns an object so the UI can
+   distinguish wrong-passcode from server-down from endpoint-not-deployed.
    ────────────────────────────────────────────────────────────────────────── */
 async function verifyPasscode(passcode) {
   let resp;
@@ -57,32 +75,57 @@ async function verifyPasscode(passcode) {
       body: JSON.stringify({ passcode })
     });
   } catch (e) {
-    console.error('verify network error', e);
+    console.error('admin-verify network error', e);
     return { kind: 'network', message: e.message || 'Network error' };
   }
-  let payload = {};
-  try { payload = await resp.json(); } catch (_) {}
-  if (resp.status === 200) return { kind: 'ok' };
-  if (resp.status === 401) return { kind: 'wrong' };
-  if (resp.status === 500) return { kind: 'misconf', message: payload.error || 'Server error' };
-  return { kind: 'wrong', message: payload.error || `HTTP ${resp.status}` };
+
+  const ct = resp.headers.get('content-type') || '';
+  let payload = null;
+  let rawText = '';
+  if (ct.includes('application/json')) {
+    try { payload = await resp.json(); } catch (_) {}
+  } else {
+    try { rawText = await resp.text(); } catch (_) {}
+  }
+  console.debug('admin-verify response', resp.status, payload || rawText.slice(0, 200));
+
+  if (resp.status === 200 && payload && payload.ok) return { kind: 'ok', status: 200 };
+  if (resp.status === 401) return { kind: 'wrong', status: 401, message: payload && payload.error };
+  if (resp.status === 404) return { kind: 'notfound', status: 404, message: 'The /api/admin-verify endpoint returned 404. The latest deploy may not include it yet — try a hard refresh, or redeploy from Vercel.' };
+  if (resp.status === 500) return { kind: 'misconf', status: 500, message: (payload && payload.error) || 'Server error' };
+
+  // Anything else (likely the request bounced off some intermediary or
+  // returned HTML instead of JSON).
+  return {
+    kind: 'unexpected',
+    status: resp.status,
+    message: (payload && payload.error)
+      || (rawText && rawText.slice(0, 240))
+      || `HTTP ${resp.status}`
+  };
+}
+
+function setGateBusy(busy) {
+  gateSubmit.disabled = busy;
+  gateInput.disabled = busy;
+  gateSubmit.classList.toggle('is-loading', busy);
+  gateSubmitLabel.textContent = busy ? 'Checking…' : 'Unlock';
 }
 
 gateForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const input = gateInput.value;
-  if (!input) return;
+  const input = gateInput.value.trim();
+  if (!input) {
+    setGateStatus('err', 'Please enter a passcode.');
+    gateInput.focus();
+    return;
+  }
 
-  gateSubmit.disabled = true;
-  gateInput.disabled = true;
-  gateSubmit.textContent = 'Checking…';
+  setGateBusy(true);
   setGateStatus('info', 'Checking passcode…');
 
   const result = await verifyPasscode(input);
-
-  gateSubmit.disabled = false;
-  gateInput.disabled = false;
-  gateSubmit.textContent = 'Unlock';
+  setGateBusy(false);
 
   if (result.kind === 'ok') {
     setGateStatus('ok', '✓ Correct — unlocking…');
@@ -90,17 +133,33 @@ gateForm.addEventListener('submit', async (e) => {
     setTimeout(showApp, 400);
     return;
   }
+
   if (result.kind === 'wrong') {
     setGateStatus('err', '✗ Wrong passcode. Try again.');
     gateInput.select();
     return;
   }
-  if (result.kind === 'misconf') {
-    setGateStatus('err',
-      'Server misconfigured: FINALS_ADMIN_SECRET is not set in Vercel. Set it in Project Settings → Environment Variables, then redeploy.');
+
+  if (result.kind === 'notfound') {
+    setGateStatus('err', result.message);
     return;
   }
-  setGateStatus('err', 'Could not reach the server (' + (result.message || 'network error') + ').');
+
+  if (result.kind === 'misconf') {
+    setGateStatus('err',
+      'Server error (500): ' + escapeHtml(result.message || '') +
+      '<br><br>If you see this, set <code>FINALS_ADMIN_SECRET</code> in Vercel or check that the latest deploy includes <code>/api/admin-verify.js</code>.');
+    return;
+  }
+
+  if (result.kind === 'network') {
+    setGateStatus('err', 'Could not reach the server. Check your internet, then try again.<br><span style="font-size:0.78rem;opacity:0.8;">(' + escapeHtml(result.message || '') + ')</span>');
+    return;
+  }
+
+  // Unexpected response — show the raw status + message so we can debug.
+  setGateStatus('err',
+    'Unexpected response from server (HTTP ' + result.status + ').<br><span style="font-size:0.78rem;opacity:0.85;">' + escapeHtml(result.message || '') + '</span>');
 });
 
 document.getElementById('admin-signout').addEventListener('click', () => {
