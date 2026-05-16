@@ -1,16 +1,16 @@
-// Finals admin — passcode-gated note management.
-// Pattern mirrors roster/roster.js (admin passcode constant + sessionStorage
-// flag). The passcode is intentionally separate so a leak doesn't compromise
-// the roster admin.
+// Finals admin — note management.
+// The gate prompts for a passcode and keeps it in sessionStorage. The
+// passcode is ONLY validated server-side: every destructive action (delete)
+// sends it to /api/delete-note, which checks it against the
+// FINALS_ADMIN_SECRET env var. There is no hardcoded client-side passcode
+// — viewing the table is open (the data is public Firestore anyway).
 import {
-  db, storage,
+  db,
   collection, doc, deleteDoc, updateDoc,
-  onSnapshot, query, orderBy, serverTimestamp,
-  ref, deleteObject
+  onSnapshot, query, orderBy, serverTimestamp
 } from './firebase-init.js';
 
-const ADMIN_PASSCODE = '20260612finals';
-const ADMIN_SESSION_KEY = 'finals.adminAuthed';
+const ADMIN_PASSCODE_KEY = 'finals.adminPasscode';
 
 const gateEl = document.getElementById('gate');
 const appEl  = document.getElementById('admin-app');
@@ -18,9 +18,9 @@ const gateForm = document.getElementById('gate-form');
 const gateInput = document.getElementById('gate-passcode');
 const gateError = document.getElementById('gate-error');
 
-function isAuthed() { return sessionStorage.getItem(ADMIN_SESSION_KEY) === '1'; }
-function setAuthed() { sessionStorage.setItem(ADMIN_SESSION_KEY, '1'); }
-function clearAuthed() { sessionStorage.removeItem(ADMIN_SESSION_KEY); }
+function getPasscode() { return sessionStorage.getItem(ADMIN_PASSCODE_KEY) || ''; }
+function setPasscode(v) { sessionStorage.setItem(ADMIN_PASSCODE_KEY, v); }
+function clearPasscode() { sessionStorage.removeItem(ADMIN_PASSCODE_KEY); }
 
 function showApp() {
   gateEl.style.display = 'none';
@@ -31,27 +31,53 @@ function showApp() {
 function showGate() {
   gateEl.style.display = 'block';
   appEl.style.display = 'none';
+  gateError.style.display = 'none';
   setTimeout(() => gateInput && gateInput.focus(), 0);
 }
 
-gateForm.addEventListener('submit', (e) => {
+async function verifyPasscode(passcode) {
+  // Probe the delete endpoint with a randomized path that cannot exist.
+  // Wrong passcode → server returns 401. Right passcode → GitHub returns
+  // 404 for the missing file and the server replies `{ ok: true,
+  // alreadyGone: true }`. Any non-401 status means the secret matched.
+  const probePath = `finals-uploads/__probe__/${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+  try {
+    const resp = await fetch('/api/delete-note', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passcode, filePath: probePath })
+    });
+    if (resp.status === 401) return false;
+    return true;
+  } catch (e) {
+    console.error('verify failed', e);
+    return false;
+  }
+}
+
+gateForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (gateInput.value === ADMIN_PASSCODE) {
-    setAuthed();
-    gateError.style.display = 'none';
+  const input = gateInput.value;
+  gateError.style.display = 'none';
+  gateInput.disabled = true;
+  const ok = await verifyPasscode(input);
+  gateInput.disabled = false;
+  if (ok) {
+    setPasscode(input);
     showApp();
   } else {
     gateError.style.display = 'block';
+    gateError.textContent = 'Incorrect passcode.';
     gateInput.select();
   }
 });
 
 document.getElementById('admin-signout').addEventListener('click', () => {
-  clearAuthed();
+  clearPasscode();
   showGate();
 });
 
-if (isAuthed()) showApp(); else showGate();
+if (getPasscode()) showApp(); else showGate();
 
 /* ==========================================================================
    Admin app
@@ -184,9 +210,21 @@ tbody.addEventListener('click', async (e) => {
     btn.disabled = true;
     try {
       if (note.filePath) {
-        try { await deleteObject(ref(storage, note.filePath)); }
-        catch (e) {
-          if (e && e.code !== 'storage/object-not-found') throw e;
+        const resp = await fetch('/api/delete-note', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passcode: getPasscode(), filePath: note.filePath })
+        });
+        const result = await resp.json().catch(() => ({}));
+        if (!resp.ok && !(result && result.alreadyGone)) {
+          if (resp.status === 401) {
+            clearPasscode();
+            showGate();
+            gateError.style.display = 'block';
+            gateError.textContent = 'Your session expired — sign in again.';
+            return;
+          }
+          throw new Error(result.error || `HTTP ${resp.status}`);
         }
       }
       await deleteDoc(doc(db, 'notes', id));

@@ -2,10 +2,9 @@
 // Sections: countdown, tab routing, notes upload + browse, timer (pomodoro,
 // custom countdown, stopwatch).
 import {
-  db, storage,
-  collection, addDoc, doc, deleteDoc,
-  onSnapshot, query, orderBy, serverTimestamp,
-  ref, uploadBytesResumable, getDownloadURL
+  db,
+  collection, addDoc,
+  onSnapshot, query, orderBy, serverTimestamp
 } from './firebase-init.js';
 
 /* ==========================================================================
@@ -98,12 +97,33 @@ const progressFill = document.getElementById('upload-progress-fill');
 const progressText = document.getElementById('upload-progress-text');
 const statusEl = document.getElementById('upload-status');
 
-const MAX_BYTES = 50 * 1024 * 1024;
+const MAX_BYTES = 3 * 1024 * 1024;   // Vercel serverless body cap (4.5 MB) + base64 overhead
 const ALLOWED_EXT = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'webp', 'txt'];
 
 function setStatus(msg, kind) {
   statusEl.textContent = msg || '';
   statusEl.className = 'upload-status' + (kind ? ' ' + kind : '');
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // dataURL like "data:application/pdf;base64,XXXX"
+      const s = String(reader.result || '');
+      const idx = s.indexOf(',');
+      resolve(idx >= 0 ? s.slice(idx + 1) : s);
+    };
+    reader.onerror = () => reject(reader.error || new Error('Read failed'));
+    reader.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const pct = (e.loaded / e.total) * 50;          // first half: read
+        progressFill.style.width = pct.toFixed(1) + '%';
+        progressText.textContent = Math.round(pct) + '%';
+      }
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 uploadForm.addEventListener('submit', async (e) => {
@@ -121,7 +141,10 @@ uploadForm.addEventListener('submit', async (e) => {
   if (!name) { setStatus('Please enter your name.', 'err'); return; }
   if (!title) { setStatus('Please enter a title.', 'err'); return; }
   if (!file) { setStatus('Please pick a file.', 'err'); return; }
-  if (file.size > MAX_BYTES) { setStatus('File is larger than 50 MB.', 'err'); return; }
+  if (file.size > MAX_BYTES) {
+    setStatus('File is larger than 3 MB. Try compressing the PDF first.', 'err');
+    return;
+  }
 
   const ext = (file.name.split('.').pop() || '').toLowerCase();
   if (!ALLOWED_EXT.includes(ext)) {
@@ -129,34 +152,41 @@ uploadForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  const noteId = (crypto.randomUUID ? crypto.randomUUID()
-                                    : Date.now().toString(36) + Math.random().toString(36).slice(2));
-  const safeFilename = file.name.replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 120);
-  const filePath = `notes/${noteId}/${safeFilename}`;
-
   uploadBtn.disabled = true;
   progressBox.style.display = 'flex';
   progressFill.style.width = '0%';
   progressText.textContent = '0%';
-  setStatus('Uploading…');
+  setStatus('Reading file…');
 
   try {
-    const storageRef = ref(storage, filePath);
-    const task = uploadBytesResumable(storageRef, file, { contentType: file.type || undefined });
+    const fileBase64 = await fileToBase64(file);
 
-    await new Promise((resolve, reject) => {
-      task.on('state_changed',
-        (snap) => {
-          const pct = snap.totalBytes ? (snap.bytesTransferred / snap.totalBytes) * 100 : 0;
-          progressFill.style.width = pct.toFixed(1) + '%';
-          progressText.textContent = Math.round(pct) + '%';
-        },
-        reject,
-        resolve
-      );
+    progressFill.style.width = '55%';
+    progressText.textContent = '55%';
+    setStatus('Uploading…');
+
+    const resp = await fetch('/api/upload-note', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        uploaderName: name,
+        title,
+        subject,
+        type,
+        description,
+        fileName: file.name,
+        fileMime: file.type || '',
+        fileBase64
+      })
     });
 
-    const downloadUrl = await getDownloadURL(task.snapshot.ref);
+    progressFill.style.width = '90%';
+    progressText.textContent = '90%';
+
+    const result = await resp.json().catch(() => ({}));
+    if (!resp.ok || !result.ok) {
+      throw new Error(result.error || `HTTP ${resp.status}`);
+    }
 
     await addDoc(collection(db, 'notes'), {
       title,
@@ -165,19 +195,22 @@ uploadForm.addEventListener('submit', async (e) => {
       subject,
       type,
       fileName: file.name,
-      filePath,
-      fileSize: file.size,
+      filePath: result.filePath,
+      fileSize: result.fileSize || file.size,
       fileMime: file.type || '',
-      downloadUrl,
+      downloadUrl: result.downloadUrl,
       createdAt: serverTimestamp()
     });
+
+    progressFill.style.width = '100%';
+    progressText.textContent = '100%';
 
     setStatus('Uploaded! Thanks for sharing.', 'ok');
     uploadForm.reset();
     nameInput.value = name;          // keep the name
     document.getElementById('note-subject').value = subject;
     document.getElementById('note-type').value = type;
-    progressBox.style.display = 'none';
+    setTimeout(() => { progressBox.style.display = 'none'; }, 800);
   } catch (err) {
     console.error(err);
     setStatus('Upload failed: ' + (err && err.message ? err.message : err), 'err');
