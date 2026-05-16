@@ -50,70 +50,75 @@
     <!-- ===== Notes & Papers tab ===== -->
     <section class="tab-panel active" id="panel-notes">
 
-      <!-- Upload card -->
-      <div class="card">
-        <h2 class="section-title">Share your notes</h2>
-        <p class="section-desc">Upload your notes or a mock paper so other students can study from them. PDFs, Word, images, and plain text up to <strong>3 MB</strong> per file.</p>
+      <!-- Upload card (collapsed by default — click to expand) -->
+      <div class="card upload-card">
+        <button type="button" class="upload-toggle" id="upload-toggle" aria-expanded="false" aria-controls="upload-collapse">
+          <span class="upload-toggle-icon" aria-hidden="true">+</span>
+          <span class="upload-toggle-text">Share notes or a mock paper</span>
+          <span class="upload-toggle-hint">PDF / Word / image / text · up to 3 MB</span>
+        </button>
 
-        <form id="upload-form" class="upload-form" autocomplete="off">
-          <div class="form-row">
-            <label class="form-label" for="uploader-name">Your name <span class="req">*</span></label>
-            <input type="text" id="uploader-name" maxlength="60" required placeholder="e.g. Chris Wong" />
-          </div>
-
-          <div class="form-row">
-            <label class="form-label" for="note-title">Title <span class="req">*</span></label>
-            <input type="text" id="note-title" maxlength="150" required placeholder="e.g. S.4 Maths Ch.5 Summary" />
-          </div>
-
-          <div class="form-row-2col">
-            <div>
-              <label class="form-label" for="note-subject">Subject</label>
-              <select id="note-subject">
-                <option value="Mathematics">Mathematics</option>
-                <option value="English">English</option>
-                <option value="Chinese">Chinese</option>
-                <option value="Physics">Physics</option>
-                <option value="Chemistry">Chemistry</option>
-                <option value="Biology">Biology</option>
-                <option value="Economics">Economics</option>
-                <option value="Geography">Geography</option>
-                <option value="History">History</option>
-                <option value="ICT">ICT</option>
-                <option value="THS">THS</option>
-                <option value="CES">CES</option>
-                <option value="Other">Other</option>
-              </select>
+        <div class="upload-collapse" id="upload-collapse" hidden>
+          <form id="upload-form" class="upload-form" autocomplete="off">
+            <div class="form-row">
+              <label class="form-label" for="uploader-name">Your name <span class="req">*</span></label>
+              <input type="text" id="uploader-name" maxlength="60" required placeholder="e.g. Chris Wong" />
             </div>
-            <div>
-              <label class="form-label" for="note-type">Type</label>
-              <select id="note-type">
-                <option value="notes">Notes</option>
-                <option value="mock_paper">Mock Paper</option>
-              </select>
+
+            <div class="form-row">
+              <label class="form-label" for="note-title">Title <span class="req">*</span></label>
+              <input type="text" id="note-title" maxlength="150" required placeholder="e.g. S.4 Maths Ch.5 Summary" />
             </div>
-          </div>
 
-          <div class="form-row">
-            <label class="form-label" for="note-desc">Description (optional)</label>
-            <textarea id="note-desc" maxlength="500" rows="2" placeholder="A quick note about what this covers."></textarea>
-          </div>
+            <div class="form-row-2col">
+              <div>
+                <label class="form-label" for="note-subject">Subject</label>
+                <select id="note-subject">
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="English">English</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Biology">Biology</option>
+                  <option value="Economics">Economics</option>
+                  <option value="Geography">Geography</option>
+                  <option value="History">History</option>
+                  <option value="ICT">ICT</option>
+                  <option value="THS">THS</option>
+                  <option value="CES">CES</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" for="note-type">Type</label>
+                <select id="note-type">
+                  <option value="notes">Notes</option>
+                  <option value="mock_paper">Mock Paper</option>
+                </select>
+              </div>
+            </div>
 
-          <div class="form-row">
-            <label class="form-label" for="note-file">File <span class="req">*</span></label>
-            <input type="file" id="note-file" required accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.txt" />
-            <div class="file-hint">Max 3 MB. PDF, Word, images, or plain text.</div>
-          </div>
+            <div class="form-row">
+              <label class="form-label" for="note-desc">Description (optional)</label>
+              <textarea id="note-desc" maxlength="500" rows="2" placeholder="A quick note about what this covers."></textarea>
+            </div>
 
-          <button type="submit" class="btn-primary" id="upload-btn">Upload</button>
+            <div class="form-row">
+              <label class="form-label" for="note-file">File <span class="req">*</span></label>
+              <input type="file" id="note-file" required accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.txt" />
+              <div class="file-hint">Max 3 MB. PDF, Word, images, or plain text.</div>
+            </div>
 
-          <div class="upload-progress" id="upload-progress" style="display:none;">
-            <div class="upload-progress-bar"><div class="upload-progress-fill" id="upload-progress-fill"></div></div>
-            <div class="upload-progress-text" id="upload-progress-text">0%</div>
-          </div>
+            <button type="submit" class="btn-primary" id="upload-btn">Upload</button>
 
-          <div class="upload-status" id="upload-status"></div>
-        </form>
+            <div class="upload-progress" id="upload-progress" style="display:none;">
+              <div class="upload-progress-bar"><div class="upload-progress-fill" id="upload-progress-fill"></div></div>
+              <div class="upload-progress-text" id="upload-progress-text">0%</div>
+            </div>
+
+            <div class="upload-status" id="upload-status"></div>
+          </form>
+        </div>
       </div>
 
       <!-- Browse card -->

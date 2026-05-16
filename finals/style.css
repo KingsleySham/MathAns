@@ -249,6 +249,62 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
 
 #upload-btn { width: 100%; margin-top: 6px; }
 
+/* Collapsible upload card */
+.upload-card { padding: 0; overflow: hidden; }
+.upload-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: #1a56db;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+.upload-toggle:hover { background: #f9fafb; }
+.upload-toggle-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1a56db;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: transform 0.2s, background 0.15s;
+}
+.upload-toggle[aria-expanded="true"] .upload-toggle-icon {
+  transform: rotate(45deg);
+  background: #6b7280;
+}
+.upload-toggle-text { flex: 1; }
+.upload-toggle-hint {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+.upload-collapse {
+  padding: 4px 22px 24px;
+  border-top: 1px solid #f3f4f6;
+  animation: fadeIn 0.2s ease;
+}
+.upload-collapse > .form-row:first-child { margin-top: 14px; }
+@media (max-width: 520px) {
+  .upload-toggle { padding: 14px 16px; gap: 10px; }
+  .upload-toggle-hint { display: none; }
+  .upload-collapse { padding: 4px 16px 20px; }
+}
+
 /* ---------- Upload progress ---------- */
 .upload-progress {
   margin-top: 14px;
