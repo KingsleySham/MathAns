@@ -94,6 +94,16 @@
                 <select id="note-type">
                   <option value="notes">Notes</option>
                   <option value="mock_paper">Mock Paper</option>
+                  <option value="flashcards">Flashcards (Quizlet)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label" for="note-folder">Folder (optional)</label>
+              <div class="select-wrap">
+                <select id="note-folder">
+                  <option value="">— No folder —</option>
                 </select>
               </div>
             </div>
@@ -103,10 +113,16 @@
               <textarea id="note-desc" maxlength="500" rows="2" placeholder="A quick note about what this covers."></textarea>
             </div>
 
-            <div class="form-row">
+            <div class="form-row" id="note-file-row">
               <label class="form-label" for="note-file">File <span class="req">*</span></label>
-              <input type="file" id="note-file" required accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.txt" />
+              <input type="file" id="note-file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.txt" />
               <div class="file-hint">Max 3 MB. PDF, Word, images, or plain text.</div>
+            </div>
+
+            <div class="form-row" id="note-quizlet-row" style="display:none;">
+              <label class="form-label" for="note-quizlet-url">Quizlet URL <span class="req">*</span></label>
+              <input type="url" id="note-quizlet-url" placeholder="https://quizlet.com/123456789/..." />
+              <div class="file-hint">Paste the full URL of a Quizlet study set (e.g. https://quizlet.com/123456789/s4-physics-flash-cards/).</div>
             </div>
 
             <button type="submit" class="btn-primary" id="upload-btn">Upload</button>
@@ -126,11 +142,13 @@
         <div class="browse-header">
           <h2 class="section-title">Browse community notes</h2>
           <div class="browse-filters">
+            <select id="filter-folder"><option value="">All folders</option></select>
             <select id="filter-subject"><option value="">All subjects</option></select>
             <select id="filter-type">
               <option value="">All types</option>
               <option value="notes">Notes</option>
               <option value="mock_paper">Mock Papers</option>
+              <option value="flashcards">Flashcards</option>
             </select>
           </div>
         </div>

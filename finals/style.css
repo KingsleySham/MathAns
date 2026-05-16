@@ -405,6 +405,24 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
 }
 .note-type.notes { background: #dbeafe; color: #1e40af; }
 .note-type.mock_paper { background: #fef3c7; color: #92400e; }
+.note-type.flashcards { background: #ede9fe; color: #5b21b6; }
+.note-card-flashcards {
+  border-color: #ddd6fe;
+}
+.note-card-flashcards:hover {
+  border-color: #7c3aed;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12);
+}
+.note-folder, .admin-card-folder {
+  font-size: 0.78rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  margin-top: 2px;
+}
 .note-meta {
   font-size: 0.78rem;
   color: #6b7280;
@@ -1332,6 +1350,85 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   white-space: pre-wrap;
   word-break: break-word;
   overflow-y: auto;
+}
+.viewer-iframe-quizlet {
+  background: #fff;
+}
+.viewer-quizlet-fallback {
+  width: 100%;
+  padding: 10px 16px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.82rem;
+  color: #6b7280;
+  text-align: center;
+}
+.viewer-quizlet-fallback a {
+  color: #7c3aed;
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: 4px;
+}
+.viewer-quizlet-fallback a:hover { text-decoration: underline; }
+
+/* Admin folder tree */
+.folder-tree {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.folder-tree li {
+  border-bottom: 1px solid #f3f4f6;
+}
+.folder-tree li:last-child { border-bottom: none; }
+.folder-tree li.empty-state-small {
+  padding: 24px;
+}
+.folder-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 10px 6px;
+  background: #fff;
+  transition: background 0.12s;
+}
+.folder-row:hover { background: #f9fafb; }
+.folder-row-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.folder-row-name {
+  font-weight: 700;
+  color: #111827;
+  flex: 0 0 auto;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.folder-row-count {
+  flex: 1;
+  font-size: 0.78rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.folder-row-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.folder-row-actions button {
+  padding: 6px 10px;
+  font-size: 0.76rem;
+}
+@media (max-width: 640px) {
+  .folder-row { flex-wrap: wrap; }
+  .folder-row-count { flex-basis: 100%; padding-left: 24px; }
 }
 
 /* ---------- Responsive ---------- */

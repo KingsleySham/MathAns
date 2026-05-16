@@ -4,7 +4,8 @@
 import {
   db,
   collection, addDoc,
-  onSnapshot, query, orderBy, serverTimestamp
+  onSnapshot, query, orderBy, serverTimestamp,
+  doc
 } from './firebase-init.js';
 
 /* ==========================================================================
@@ -147,6 +148,28 @@ function fileToBase64(file) {
   });
 }
 
+/* Quizlet URL → set ID extraction. Supports:
+     https://quizlet.com/123456789/foo-flash-cards/
+     https://quizlet.com/123456789
+     https://quizlet.com/set/123456789/foo
+     https://www.quizlet.com/...
+*/
+function parseQuizletUrl(url) {
+  const m = String(url || '').trim().match(/^https?:\/\/(?:www\.)?quizlet\.com\/(?:set\/)?(\d{4,})/i);
+  return m ? m[1] : null;
+}
+
+const typeSelect = document.getElementById('note-type');
+const fileRow = document.getElementById('note-file-row');
+const quizletRow = document.getElementById('note-quizlet-row');
+function syncTypeUI() {
+  const isFc = typeSelect.value === 'flashcards';
+  fileRow.style.display = isFc ? 'none' : '';
+  quizletRow.style.display = isFc ? '' : 'none';
+}
+typeSelect.addEventListener('change', syncTypeUI);
+syncTypeUI();
+
 uploadForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   setStatus('');
@@ -154,19 +177,78 @@ uploadForm.addEventListener('submit', async (e) => {
   const name = nameInput.value.trim();
   const title = document.getElementById('note-title').value.trim();
   const subject = document.getElementById('note-subject').value;
-  const type = document.getElementById('note-type').value;
+  const type = typeSelect.value;
   const description = document.getElementById('note-desc').value.trim();
-  const fileInput = document.getElementById('note-file');
-  const file = fileInput.files && fileInput.files[0];
+  const folderId = document.getElementById('note-folder').value || null;
 
   if (!name) { setStatus('Please enter your name.', 'err'); return; }
   if (!title) { setStatus('Please enter a title.', 'err'); return; }
+
+  if (type === 'flashcards') {
+    return submitFlashcards({ name, title, subject, description, folderId });
+  }
+  return submitFile({ name, title, subject, type, description, folderId });
+});
+
+async function submitFlashcards({ name, title, subject, description, folderId }) {
+  const url = document.getElementById('note-quizlet-url').value.trim();
+  if (!url) { setStatus('Please paste a Quizlet URL.', 'err'); return; }
+  const setId = parseQuizletUrl(url);
+  if (!setId) {
+    setStatus('That doesn\'t look like a Quizlet URL. It should look like https://quizlet.com/123456789/...', 'err');
+    return;
+  }
+
+  uploadBtn.disabled = true;
+  progressBox.style.display = 'flex';
+  progressFill.style.width = '50%';
+  progressText.textContent = '50%';
+  setStatus('Saving…');
+
+  try {
+    await addDoc(collection(db, 'notes'), {
+      title,
+      description,
+      uploaderName: name,
+      subject,
+      type: 'flashcards',
+      folderId,
+      quizletUrl: url,
+      quizletSetId: setId,
+      createdAt: serverTimestamp()
+    });
+
+    progressFill.style.width = '100%';
+    progressText.textContent = '100%';
+    setStatus('Saved! Thanks for sharing.', 'ok');
+    uploadForm.reset();
+    nameInput.value = name;
+    document.getElementById('note-subject').value = subject;
+    typeSelect.value = 'flashcards';
+    syncTypeUI();
+    setTimeout(() => {
+      progressBox.style.display = 'none';
+      setUploadOpen(false);
+      setStatus('');
+    }, 1600);
+  } catch (err) {
+    console.error(err);
+    setStatus('Save failed: ' + (err && err.message ? err.message : err), 'err');
+    progressBox.style.display = 'none';
+  } finally {
+    uploadBtn.disabled = false;
+  }
+}
+
+async function submitFile({ name, title, subject, type, description, folderId }) {
+  const fileInput = document.getElementById('note-file');
+  const file = fileInput.files && fileInput.files[0];
+
   if (!file) { setStatus('Please pick a file.', 'err'); return; }
   if (file.size > MAX_BYTES) {
     setStatus('File is larger than 3 MB. Try compressing the PDF first.', 'err');
     return;
   }
-
   const ext = (file.name.split('.').pop() || '').toLowerCase();
   if (!ALLOWED_EXT.includes(ext)) {
     setStatus('Unsupported file type. Allowed: ' + ALLOWED_EXT.join(', '), 'err');
@@ -190,14 +272,8 @@ uploadForm.addEventListener('submit', async (e) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        uploaderName: name,
-        title,
-        subject,
-        type,
-        description,
-        fileName: file.name,
-        fileMime: file.type || '',
-        fileBase64
+        uploaderName: name, title, subject, type, description,
+        fileName: file.name, fileMime: file.type || '', fileBase64
       })
     });
 
@@ -215,6 +291,7 @@ uploadForm.addEventListener('submit', async (e) => {
       uploaderName: name,
       subject,
       type,
+      folderId,
       fileName: file.name,
       filePath: result.filePath,
       fileSize: result.fileSize || file.size,
@@ -225,12 +302,12 @@ uploadForm.addEventListener('submit', async (e) => {
 
     progressFill.style.width = '100%';
     progressText.textContent = '100%';
-
     setStatus('Uploaded! Thanks for sharing.', 'ok');
     uploadForm.reset();
-    nameInput.value = name;          // keep the name
+    nameInput.value = name;
     document.getElementById('note-subject').value = subject;
-    document.getElementById('note-type').value = type;
+    typeSelect.value = type;
+    syncTypeUI();
     setTimeout(() => {
       progressBox.style.display = 'none';
       setUploadOpen(false);
@@ -243,7 +320,7 @@ uploadForm.addEventListener('submit', async (e) => {
   } finally {
     uploadBtn.disabled = false;
   }
-});
+}
 
 /* ==========================================================================
    Notes — browse
@@ -281,13 +358,92 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+/* Folders — flat list from Firestore, transformed into a tree client-side.
+   `folderTree` is keyed by folder id; each node has { id, name, parentId,
+   children: [id…], depth, path: 'Parent / Child' }. */
+let allFolders = [];
+let folderById = new Map();
+const filterFolderEl = document.getElementById('filter-folder');
+const noteFolderEl = document.getElementById('note-folder');
+
+function rebuildFolderTree() {
+  folderById = new Map();
+  allFolders.forEach(f => folderById.set(f.id, { ...f, children: [], depth: 0, path: f.name }));
+
+  const roots = [];
+  folderById.forEach(node => {
+    if (node.parentId && folderById.has(node.parentId)) {
+      folderById.get(node.parentId).children.push(node.id);
+    } else {
+      roots.push(node.id);
+    }
+  });
+
+  function assignDepth(id, depth, parentPath) {
+    const node = folderById.get(id);
+    if (!node) return;
+    node.depth = depth;
+    node.path = parentPath ? `${parentPath} / ${node.name}` : node.name;
+    node.children.sort((a, b) => folderById.get(a).name.localeCompare(folderById.get(b).name));
+    node.children.forEach(cid => assignDepth(cid, depth + 1, node.path));
+  }
+  roots.sort((a, b) => folderById.get(a).name.localeCompare(folderById.get(b).name));
+  roots.forEach(id => assignDepth(id, 0, ''));
+
+  // Linear order — depth-first, alphabetical at each level.
+  const linear = [];
+  function walk(id) {
+    const node = folderById.get(id);
+    if (!node) return;
+    linear.push(node);
+    node.children.forEach(walk);
+  }
+  roots.forEach(walk);
+  return linear;
+}
+
+function populateFolderSelects(linear) {
+  const selects = [filterFolderEl, noteFolderEl];
+  selects.forEach(sel => {
+    if (!sel) return;
+    const prevValue = sel.value;
+    const placeholder = sel === filterFolderEl ? 'All folders' : '— No folder —';
+    sel.innerHTML = `<option value="">${placeholder}</option>`;
+    linear.forEach(node => {
+      const opt = document.createElement('option');
+      opt.value = node.id;
+      opt.textContent = '—'.repeat(node.depth) + (node.depth ? ' ' : '') + node.name;
+      sel.appendChild(opt);
+    });
+    if (prevValue && folderById.has(prevValue)) sel.value = prevValue;
+  });
+}
+
+// `folderId` matches if it equals the filter, OR if its ancestor chain
+// includes the filter (so picking a parent folder shows everything under it).
+function noteInFolder(noteFolderId, filterId) {
+  if (!filterId) return true;
+  if (!noteFolderId) return false;
+  let cur = noteFolderId;
+  let guard = 0;
+  while (cur && guard++ < 32) {
+    if (cur === filterId) return true;
+    const node = folderById.get(cur);
+    if (!node) return false;
+    cur = node.parentId;
+  }
+  return false;
+}
+
 function renderNotes() {
   const subjectFilter = filterSubjectEl.value;
   const typeFilter = filterTypeEl.value;
+  const folderFilter = filterFolderEl ? filterFolderEl.value : '';
 
   const filtered = allNotes.filter(n => {
     if (subjectFilter && n.subject !== subjectFilter) return false;
     if (typeFilter && n.type !== typeFilter) return false;
+    if (folderFilter && !noteInFolder(n.folderId, folderFilter)) return false;
     return true;
   });
 
@@ -303,32 +459,43 @@ function renderNotes() {
 
   notesEmpty.style.display = 'none';
   notesListEl.innerHTML = filtered.map(n => {
-    const typeLabel = n.type === 'mock_paper' ? 'Mock Paper' : 'Notes';
-    const typeClass = n.type === 'mock_paper' ? 'mock_paper' : 'notes';
-    const canPreview = isPreviewable(n.fileName);
+    const typeMeta = noteTypeMeta(n.type);
+    const folderNode = n.folderId ? folderById.get(n.folderId) : null;
+    const isFlash = n.type === 'flashcards';
+    const canPreview = isFlash || isPreviewable(n.fileName);
+    const sizeOrSetId = isFlash ? `Quizlet · #${escapeHtml(n.quizletSetId || '')}` : fmtBytes(n.fileSize);
     return `
-      <div class="note-card" data-id="${escapeHtml(n.id)}">
+      <div class="note-card ${isFlash ? 'note-card-flashcards' : ''}" data-id="${escapeHtml(n.id)}">
         <div class="note-card-top">
           <div class="note-title">${escapeHtml(n.title)}</div>
-          <div class="note-type ${typeClass}">${typeLabel}</div>
+          <div class="note-type ${typeMeta.cls}">${typeMeta.label}</div>
         </div>
         <div class="note-meta">
           <span>${escapeHtml(n.subject || '—')}</span>
           <span>·</span>
           <span>by ${escapeHtml(n.uploaderName || 'Anonymous')}</span>
           <span>·</span>
-          <span>${fmtBytes(n.fileSize)}</span>
+          <span>${sizeOrSetId}</span>
           <span>·</span>
           <span>${escapeHtml(fmtDate(n.createdAt))}</span>
         </div>
+        ${folderNode ? `<div class="note-folder">📁 ${escapeHtml(folderNode.path)}</div>` : ''}
         ${n.description ? `<div class="note-desc">${escapeHtml(n.description)}</div>` : ''}
         <div class="note-actions">
-          ${canPreview ? `<button class="btn-primary" data-action="view">View</button>` : ''}
-          <a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>
+          ${canPreview ? `<button class="btn-primary" data-action="view">${isFlash ? 'Study' : 'View'}</button>` : ''}
+          ${isFlash
+            ? `<a class="btn-secondary" href="${escapeHtml(n.quizletUrl)}" target="_blank" rel="noopener">Open in Quizlet</a>`
+            : `<a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`}
         </div>
       </div>
     `;
   }).join('');
+}
+
+function noteTypeMeta(type) {
+  if (type === 'mock_paper') return { label: 'Mock Paper', cls: 'mock_paper' };
+  if (type === 'flashcards') return { label: 'Flashcards', cls: 'flashcards' };
+  return { label: 'Notes', cls: 'notes' };
 }
 
 function isPreviewable(fileName) {
@@ -347,6 +514,7 @@ notesListEl.addEventListener('click', (e) => {
 
 filterSubjectEl.addEventListener('change', renderNotes);
 filterTypeEl.addEventListener('change', renderNotes);
+if (filterFolderEl) filterFolderEl.addEventListener('change', renderNotes);
 
 // Populate subject filter from upload-form options once.
 (function seedSubjectFilter() {
@@ -358,6 +526,18 @@ filterTypeEl.addEventListener('change', renderNotes);
     filterSubjectEl.appendChild(opt);
   }
 })();
+
+onSnapshot(
+  query(collection(db, 'folders'), orderBy('createdAt', 'asc')),
+  (snap) => {
+    allFolders = [];
+    snap.forEach(d => allFolders.push({ id: d.id, ...d.data() }));
+    const linear = rebuildFolderTree();
+    populateFolderSelects(linear);
+    renderNotes();
+  },
+  (err) => console.warn('folders listener offline:', err.message)
+);
 
 onSnapshot(
   query(collection(db, 'notes'), orderBy('createdAt', 'desc')),
@@ -1068,21 +1248,31 @@ const viewerDownload = document.getElementById('viewer-download');
 const viewerBody = document.getElementById('viewer-body');
 
 function openViewer(note) {
+  const isFlash = note.type === 'flashcards';
   viewerTitle.textContent = note.title || '(untitled)';
   viewerMeta.textContent = [
     note.subject,
-    note.type === 'mock_paper' ? 'Mock Paper' : 'Notes',
+    isFlash ? 'Flashcards' : (note.type === 'mock_paper' ? 'Mock Paper' : 'Notes'),
     note.uploaderName ? 'by ' + note.uploaderName : null,
-    fmtBytes(note.fileSize)
+    isFlash ? null : fmtBytes(note.fileSize)
   ].filter(Boolean).join(' · ');
-  viewerDownload.href = note.downloadUrl || '#';
-  viewerDownload.setAttribute('download', note.fileName || 'download');
+
+  if (isFlash) {
+    viewerDownload.href = note.quizletUrl || '#';
+    viewerDownload.removeAttribute('download');
+    viewerDownload.textContent = 'Open in Quizlet';
+  } else {
+    viewerDownload.href = note.downloadUrl || '#';
+    viewerDownload.setAttribute('download', note.fileName || 'download');
+    viewerDownload.textContent = 'Download';
+  }
 
   viewerBody.innerHTML = '<div class="viewer-loading">Loading…</div>';
   viewerModal.style.display = 'flex';
 
-  const ext = (String(note.fileName || '').split('.').pop() || '').toLowerCase();
+  if (isFlash) return renderFlashcardsViewer(note);
 
+  const ext = (String(note.fileName || '').split('.').pop() || '').toLowerCase();
   if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
     renderImageViewer(note);
   } else if (ext === 'pdf') {
@@ -1094,6 +1284,30 @@ function openViewer(note) {
   } else {
     viewerBody.innerHTML = '<div class="viewer-error">Preview not available for this file type. Use Download instead.</div>';
   }
+}
+
+function renderFlashcardsViewer(note) {
+  // Quizlet's official embed URL — works inside an iframe.
+  // Quizlet sets X-Frame-Options that allow iframe embedding for their
+  // /flashcards/embed endpoint. We render a fallback link below the iframe
+  // in case the iframe is blocked by the browser or the set was made
+  // unembeddable by its author.
+  const setId = note.quizletSetId;
+  const embedUrl = setId
+    ? `https://quizlet.com/${encodeURIComponent(setId)}/flashcards/embed`
+    : '';
+  const linkUrl = note.quizletUrl || '#';
+  viewerBody.innerHTML = `
+    <iframe
+      src="${escapeHtml(embedUrl)}"
+      class="viewer-iframe viewer-iframe-quizlet"
+      title="${escapeHtml(note.title || '')}"
+      allow="fullscreen"></iframe>
+    <div class="viewer-quizlet-fallback">
+      Flashcards not loading?
+      <a href="${escapeHtml(linkUrl)}" target="_blank" rel="noopener">Open this set in Quizlet ↗</a>
+    </div>
+  `;
 }
 
 function closeViewer() {

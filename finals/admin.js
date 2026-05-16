@@ -248,7 +248,7 @@ if (getPasscode()) {
    Admin app — runs after unlock, with Firebase module passed in.
    ========================================================================== */
 function startAdmin(fb) {
-  const { db, collection, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp } = fb;
+  const { db, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp } = fb;
 
   const cardsEl       = $('admin-cards');
   const emptyEl       = $('admin-empty');
@@ -259,8 +259,12 @@ function startAdmin(fb) {
   const statMocks     = $('stat-mocks');
   const subjectListEl = $('subject-breakdown');
   const recentListEl  = $('recent-list');
+  const folderTreeEl  = $('folder-tree');
 
   let allNotes = [];
+  let allFolders = [];
+  let folderById = new Map();   // id → { id, name, parentId, children, depth, path }
+  let folderLinear = [];        // depth-first ordered list
 
   function fmtBytes(n) {
     if (n == null) return '';
@@ -312,27 +316,33 @@ function startAdmin(fb) {
     if (emptyEl) emptyEl.style.display = 'none';
 
     cardsEl.innerHTML = filtered.map(n => {
-      const typeLabel = n.type === 'mock_paper' ? 'Mock Paper' : 'Notes';
-      const typeClass = n.type === 'mock_paper' ? 'mock_paper' : 'notes';
+      const meta = n.type === 'mock_paper' ? { label: 'Mock Paper', cls: 'mock_paper' }
+                 : n.type === 'flashcards'  ? { label: 'Flashcards', cls: 'flashcards' }
+                 : { label: 'Notes', cls: 'notes' };
+      const isFlash = n.type === 'flashcards';
+      const folderNode = n.folderId ? folderById.get(n.folderId) : null;
+      const sizeOrSetId = isFlash ? `Quizlet · #${escapeHtmlSimple(n.quizletSetId || '')}` : fmtBytes(n.fileSize);
+      const openHref = isFlash ? (n.quizletUrl || '#') : (n.downloadUrl || '#');
       return `
-        <div class="admin-card" data-id="${escapeHtmlSimple(n.id)}">
+        <div class="admin-card ${isFlash ? 'note-card-flashcards' : ''}" data-id="${escapeHtmlSimple(n.id)}">
           <div class="admin-card-top">
             <div class="admin-card-title">${escapeHtmlSimple(n.title || '(untitled)')}</div>
-            <div class="note-type ${typeClass}">${typeLabel}</div>
+            <div class="note-type ${meta.cls}">${meta.label}</div>
           </div>
           <div class="admin-card-meta">
             <span><strong>${escapeHtmlSimple(n.subject || '—')}</strong></span>
             <span>·</span>
             <span>by ${escapeHtmlSimple(n.uploaderName || 'Anonymous')}</span>
             <span>·</span>
-            <span>${fmtBytes(n.fileSize)}</span>
+            <span>${sizeOrSetId}</span>
             <span>·</span>
             <span title="${escapeHtmlSimple(fmtDate(n.createdAt))}">${escapeHtmlSimple(fmtRelative(n.createdAt))}</span>
           </div>
+          ${folderNode ? `<div class="admin-card-folder">📁 ${escapeHtmlSimple(folderNode.path)}</div>` : ''}
           ${n.description ? `<div class="admin-card-desc">${escapeHtmlSimple(n.description)}</div>` : ''}
           <div class="admin-card-actions">
-            <a class="btn-secondary" href="${escapeHtmlSimple(n.downloadUrl || '#')}" target="_blank" rel="noopener">Open</a>
-            <button class="btn-primary" data-action="edit">Edit title</button>
+            <a class="btn-secondary" href="${escapeHtmlSimple(openHref)}" target="_blank" rel="noopener">Open</a>
+            <button class="btn-primary" data-action="edit">Edit</button>
             <button class="btn-primary btn-danger" data-action="delete">Delete</button>
           </div>
         </div>
@@ -343,7 +353,7 @@ function startAdmin(fb) {
   function renderStats() {
     if (statCount) statCount.textContent = allNotes.length;
     if (statSize)  statSize.textContent  = fmtBytes(allNotes.reduce((sum, n) => sum + (n.fileSize || 0), 0));
-    if (statNotes) statNotes.textContent = allNotes.filter(n => n.type !== 'mock_paper').length;
+    if (statNotes) statNotes.textContent = allNotes.filter(n => n.type === 'notes').length;
     if (statMocks) statMocks.textContent = allNotes.filter(n => n.type === 'mock_paper').length;
 
     if (subjectListEl) {
@@ -391,6 +401,216 @@ function startAdmin(fb) {
     }
   }
 
+  /* ──────────────────────────────────────────────────────────────────────
+     Folders tree — flat collection in Firestore, transformed into a tree
+     client-side. Same shape as in /finals/app.js so the picker dropdowns
+     behave identically.
+     ──────────────────────────────────────────────────────────────────── */
+  function rebuildFolderTree() {
+    folderById = new Map();
+    allFolders.forEach(f => folderById.set(f.id, { ...f, children: [], depth: 0, path: f.name }));
+
+    const roots = [];
+    folderById.forEach(node => {
+      if (node.parentId && folderById.has(node.parentId)) {
+        folderById.get(node.parentId).children.push(node.id);
+      } else {
+        roots.push(node.id);
+      }
+    });
+
+    function assignDepth(id, depth, parentPath) {
+      const node = folderById.get(id);
+      if (!node) return;
+      node.depth = depth;
+      node.path = parentPath ? `${parentPath} / ${node.name}` : node.name;
+      node.children.sort((a, b) => folderById.get(a).name.localeCompare(folderById.get(b).name));
+      node.children.forEach(cid => assignDepth(cid, depth + 1, node.path));
+    }
+    roots.sort((a, b) => folderById.get(a).name.localeCompare(folderById.get(b).name));
+    roots.forEach(id => assignDepth(id, 0, ''));
+
+    const linear = [];
+    function walk(id) {
+      const node = folderById.get(id);
+      if (!node) return;
+      linear.push(node);
+      node.children.forEach(walk);
+    }
+    roots.forEach(walk);
+    folderLinear = linear;
+  }
+
+  function countNotesInFolder(folderId) {
+    let cur = 0;
+    allNotes.forEach(n => { if (n.folderId === folderId) cur++; });
+    return cur;
+  }
+
+  function renderFolderTree() {
+    if (!folderTreeEl) return;
+    if (folderLinear.length === 0) {
+      folderTreeEl.innerHTML = '<li class="empty-state-small">No folders yet. Click "+ New folder" to create one.</li>';
+      return;
+    }
+    folderTreeEl.innerHTML = folderLinear.map(node => {
+      const noteCount = countNotesInFolder(node.id);
+      const hasChildren = node.children.length > 0;
+      return `
+        <li class="folder-row" data-id="${escapeHtmlSimple(node.id)}" style="padding-left:${node.depth * 22 + 6}px;">
+          <span class="folder-row-icon">📁</span>
+          <span class="folder-row-name">${escapeHtmlSimple(node.name)}</span>
+          <span class="folder-row-count">${noteCount} note${noteCount === 1 ? '' : 's'}${hasChildren ? ` · ${node.children.length} subfolder${node.children.length === 1 ? '' : 's'}` : ''}</span>
+          <span class="folder-row-actions">
+            <button class="btn-secondary" data-folder-action="rename">Rename</button>
+            <button class="btn-secondary" data-folder-action="move">Move</button>
+            <button class="btn-primary btn-danger" data-folder-action="delete">Delete</button>
+          </span>
+        </li>
+      `;
+    }).join('');
+  }
+
+  function populateFolderSelect(selectEl, opts) {
+    if (!selectEl) return;
+    const prev = selectEl.value;
+    const placeholder = (opts && opts.placeholder) || '— No folder —';
+    selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+    folderLinear.forEach(node => {
+      if (opts && opts.excludeId && (node.id === opts.excludeId || isDescendantOf(node.id, opts.excludeId))) return;
+      const opt = document.createElement('option');
+      opt.value = node.id;
+      opt.textContent = '—'.repeat(node.depth) + (node.depth ? ' ' : '') + node.name;
+      selectEl.appendChild(opt);
+    });
+    if (prev && folderById.has(prev)) selectEl.value = prev;
+  }
+
+  function isDescendantOf(maybeChildId, ancestorId) {
+    let cur = folderById.get(maybeChildId);
+    let guard = 0;
+    while (cur && cur.parentId && guard++ < 32) {
+      if (cur.parentId === ancestorId) return true;
+      cur = folderById.get(cur.parentId);
+    }
+    return false;
+  }
+
+  onSnapshot(
+    query(collection(db, 'folders'), orderBy('createdAt', 'asc')),
+    (snap) => {
+      allFolders = [];
+      snap.forEach(d => allFolders.push({ id: d.id, ...d.data() }));
+      rebuildFolderTree();
+      renderFolderTree();
+      renderCards();
+    },
+    (err) => {
+      console.error('[admin] folders listener:', err);
+      if (folderTreeEl) folderTreeEl.innerHTML = `<li class="empty-state-small" style="color:#b91c1c;">Failed to load folders: ${escapeHtmlSimple(err.message || String(err))}</li>`;
+    }
+  );
+
+  /* Folder CRUD via modal */
+  const folderModal = $('folder-modal');
+  const folderModalTitle = $('folder-modal-title');
+  const folderNameInput = $('folder-name-input');
+  const folderParentSelect = $('folder-parent-select');
+  const folderSaveBtn = $('folder-save-btn');
+  const folderNewBtn = $('folder-new-btn');
+
+  // mode: 'create' (no editingId) | 'rename' | 'move'
+  let folderModalState = { mode: 'create', editingId: null };
+
+  function openFolderModal(mode, folder) {
+    folderModalState = { mode, editingId: folder ? folder.id : null };
+    if (mode === 'create') {
+      folderModalTitle.textContent = 'New folder';
+      folderNameInput.value = '';
+      folderNameInput.disabled = false;
+      populateFolderSelect(folderParentSelect, { placeholder: '(top level)' });
+      folderParentSelect.disabled = false;
+    } else if (mode === 'rename') {
+      folderModalTitle.textContent = 'Rename folder';
+      folderNameInput.value = folder.name || '';
+      folderNameInput.disabled = false;
+      populateFolderSelect(folderParentSelect, { placeholder: '(top level)', excludeId: folder.id });
+      folderParentSelect.value = folder.parentId || '';
+      folderParentSelect.disabled = true;     // rename mode: don't move
+    } else if (mode === 'move') {
+      folderModalTitle.textContent = `Move "${folder.name}"`;
+      folderNameInput.value = folder.name || '';
+      folderNameInput.disabled = true;
+      populateFolderSelect(folderParentSelect, { placeholder: '(top level)', excludeId: folder.id });
+      folderParentSelect.value = folder.parentId || '';
+      folderParentSelect.disabled = false;
+    }
+    folderSaveBtn.disabled = false;
+    folderSaveBtn.textContent = 'Save';
+    folderModal.style.display = 'flex';
+    setTimeout(() => folderNameInput.focus(), 0);
+  }
+
+  if (folderNewBtn) folderNewBtn.addEventListener('click', () => openFolderModal('create', null));
+
+  folderSaveBtn.addEventListener('click', async () => {
+    const name = folderNameInput.value.trim();
+    if (!name) { folderNameInput.focus(); return; }
+    folderSaveBtn.disabled = true;
+    folderSaveBtn.textContent = 'Saving…';
+    try {
+      if (folderModalState.mode === 'create') {
+        await addDoc(collection(db, 'folders'), {
+          name,
+          parentId: folderParentSelect.value || null,
+          createdAt: serverTimestamp()
+        });
+      } else if (folderModalState.mode === 'rename') {
+        await updateDoc(doc(db, 'folders', folderModalState.editingId), { name });
+      } else if (folderModalState.mode === 'move') {
+        await updateDoc(doc(db, 'folders', folderModalState.editingId), {
+          parentId: folderParentSelect.value || null
+        });
+      }
+      closeModal(folderModal);
+    } catch (err) {
+      folderSaveBtn.disabled = false;
+      folderSaveBtn.textContent = 'Save';
+      alert('Folder save failed: ' + (err.message || err));
+    }
+  });
+
+  if (folderTreeEl) {
+    folderTreeEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-folder-action]');
+      if (!btn) return;
+      const row = btn.closest('.folder-row');
+      if (!row) return;
+      const id = row.dataset.id;
+      const folder = folderById.get(id);
+      if (!folder) return;
+      const action = btn.dataset.folderAction;
+
+      if (action === 'rename') return openFolderModal('rename', folder);
+      if (action === 'move')   return openFolderModal('move', folder);
+
+      if (action === 'delete') {
+        const notesIn = allNotes.filter(n => n.folderId === id).length;
+        const subs = folder.children.length;
+        if (notesIn > 0 || subs > 0) {
+          alert(`Can't delete "${folder.name}" — it contains ${notesIn} note${notesIn === 1 ? '' : 's'} and ${subs} subfolder${subs === 1 ? '' : 's'}. Move or delete those first.`);
+          return;
+        }
+        if (!confirm(`Delete folder "${folder.name}"?`)) return;
+        try {
+          await deleteDoc(doc(db, 'folders', id));
+        } catch (err) {
+          alert('Delete failed: ' + (err.message || err));
+        }
+      }
+    });
+  }
+
   onSnapshot(
     query(collection(db, 'notes'), orderBy('createdAt', 'desc')),
     (snap) => {
@@ -398,6 +618,7 @@ function startAdmin(fb) {
       snap.forEach(d => allNotes.push({ id: d.id, ...d.data() }));
       renderStats();
       renderCards();
+      renderFolderTree();      // refresh note counts in tree
     },
     (err) => {
       console.error('[admin] notes listener:', err);
@@ -412,6 +633,7 @@ function startAdmin(fb) {
      ──────────────────────────────────────────────────────────────────── */
   const editModal = $('edit-modal');
   const editTitleInput = $('edit-title-input');
+  const editFolderSelect = $('edit-folder-select');
   const editModalMeta = $('edit-modal-meta');
   const editSaveBtn = $('edit-save-btn');
 
@@ -425,8 +647,18 @@ function startAdmin(fb) {
     if (!editModal) return;
     activeNoteId = note.id;
     if (editTitleInput) editTitleInput.value = note.title || '';
-    if (editModalMeta)  editModalMeta.textContent =
-      `${note.subject || '—'} · by ${note.uploaderName || 'Anonymous'} · ${fmtBytes(note.fileSize)}`;
+    if (editFolderSelect) {
+      populateFolderSelect(editFolderSelect, { placeholder: '— No folder —' });
+      editFolderSelect.value = note.folderId || '';
+    }
+    if (editModalMeta) {
+      const isFlash = note.type === 'flashcards';
+      editModalMeta.textContent = [
+        note.subject || '—',
+        'by ' + (note.uploaderName || 'Anonymous'),
+        isFlash ? `Quizlet · #${note.quizletSetId || ''}` : fmtBytes(note.fileSize)
+      ].join(' · ');
+    }
     if (editSaveBtn) { editSaveBtn.disabled = false; editSaveBtn.textContent = 'Save'; }
     editModal.style.display = 'flex';
     setTimeout(() => { if (editTitleInput) { editTitleInput.focus(); editTitleInput.select(); } }, 0);
@@ -445,7 +677,7 @@ function startAdmin(fb) {
     activeNoteId = null;
   }
 
-  [editModal, deleteModal].forEach(modal => {
+  [editModal, deleteModal, folderModal].forEach(modal => {
     if (!modal) return;
     modal.addEventListener('click', (e) => {
       const closeRole = e.target.dataset.close;
@@ -458,6 +690,7 @@ function startAdmin(fb) {
     if (e.key !== 'Escape') return;
     if (editModal && editModal.style.display === 'flex') closeModal(editModal);
     if (deleteModal && deleteModal.style.display === 'flex') closeModal(deleteModal);
+    if (folderModal && folderModal.style.display === 'flex') closeModal(folderModal);
   });
 
   if (editSaveBtn) {
@@ -466,15 +699,19 @@ function startAdmin(fb) {
       const note = allNotes.find(n => n.id === activeNoteId);
       if (!note) { closeModal(editModal); return; }
       const newTitle = (editTitleInput && editTitleInput.value || '').trim();
+      const newFolderId = (editFolderSelect && editFolderSelect.value) || null;
       if (!newTitle) { if (editTitleInput) editTitleInput.focus(); return; }
-      if (newTitle === note.title) { closeModal(editModal); return; }
+      const titleChanged = newTitle !== note.title;
+      const folderChanged = newFolderId !== (note.folderId || null);
+      if (!titleChanged && !folderChanged) { closeModal(editModal); return; }
+
       editSaveBtn.disabled = true;
       editSaveBtn.textContent = 'Saving…';
       try {
-        await updateDoc(doc(db, 'notes', activeNoteId), {
-          title: newTitle,
-          editedAt: serverTimestamp()
-        });
+        const patch = { editedAt: serverTimestamp() };
+        if (titleChanged) patch.title = newTitle;
+        if (folderChanged) patch.folderId = newFolderId;
+        await updateDoc(doc(db, 'notes', activeNoteId), patch);
         closeModal(editModal);
       } catch (err) {
         editSaveBtn.disabled = false;
