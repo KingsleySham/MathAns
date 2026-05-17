@@ -1851,23 +1851,12 @@ function openGdocs(note) {
   gdocsWarnModal.classList.add('open');
 }
 
-// Quizlet: open the existing viewer modal with the embedded set.
-// Reuses renderFlashcardsViewer which already handles the iframe
-// and the fallback link. Title / meta header reflects "Flashcards".
+// Quizlet: open the set in a new browser tab — no embed, no modal.
+// (We used to render Quizlet inside the in-app viewer, but Quizlet's
+// own page is a better study experience and lots of sets disallow
+// embedding anyway.)
 function openQuizlet(note) {
-  viewerTitle.textContent = note.title || '(untitled)';
-  viewerMeta.textContent = [
-    note.subject,
-    'Flashcards',
-    note.uploaderName ? 'by ' + note.uploaderName : null,
-    note.quizletSetId ? '#' + note.quizletSetId : null
-  ].filter(Boolean).join(' · ');
-  viewerDownload.href = note.quizletUrl || '#';
-  viewerDownload.removeAttribute('download');
-  viewerDownload.textContent = 'Open in Quizlet';
-  viewerBody.innerHTML = '<div class="viewer-loading">Loading…</div>';
-  viewerModal.style.display = 'flex';
-  renderFlashcardsViewer(note);
+  openInNewTab(note.quizletUrl || '#');
 }
 
 function closeGdocsModal() {
