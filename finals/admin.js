@@ -631,11 +631,17 @@ function startAdmin(fb) {
   /* ────────────────────────────────────────────────────────────────────
      Modals — edit + delete
      ──────────────────────────────────────────────────────────────────── */
-  const editModal = $('edit-modal');
-  const editTitleInput = $('edit-title-input');
+  const editModal        = $('edit-modal');
+  const editTitleInput   = $('edit-title-input');
+  const editDescInput    = $('edit-desc-input');
   const editFolderSelect = $('edit-folder-select');
-  const editModalMeta = $('edit-modal-meta');
-  const editSaveBtn = $('edit-save-btn');
+  const editFileInput    = $('edit-file-input');
+  const editCurrentFile  = $('edit-current-file');
+  const editGdocsInput   = $('edit-gdocs-input');
+  const editQuizletInput = $('edit-quizlet-input');
+  const editModalMeta    = $('edit-modal-meta');
+  const editStatus       = $('edit-status');
+  const editSaveBtn      = $('edit-save-btn');
 
   const deleteModal = $('delete-modal');
   const deleteNoteTitleEl = $('delete-note-title');
@@ -643,23 +649,72 @@ function startAdmin(fb) {
 
   let activeNoteId = null;
 
+  function setEditStatus(kind, msg) {
+    if (!editStatus) return;
+    editStatus.textContent = msg || '';
+    editStatus.className = 'upload-status' + (kind ? ' ' + kind : '');
+  }
+
+  function isGdocsUrl(url) {
+    return /^https?:\/\/(?:docs|drive)\.google\.com\//i.test(String(url || '').trim());
+  }
+  function gdocsKindFromUrl(url) {
+    const u = String(url || '');
+    if (u.includes('docs.google.com/document'))     return 'document';
+    if (u.includes('docs.google.com/spreadsheets')) return 'spreadsheet';
+    if (u.includes('docs.google.com/presentation')) return 'presentation';
+    if (u.includes('drive.google.com'))             return 'drive';
+    return 'gdocs';
+  }
+  function parseQuizletUrl(url) {
+    const m = String(url || '').trim().match(/^https?:\/\/(?:www\.)?quizlet\.com\/(?:set\/)?(\d{4,})/i);
+    return m ? m[1] : null;
+  }
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const s = String(r.result || '');
+        const idx = s.indexOf(',');
+        resolve(idx >= 0 ? s.slice(idx + 1) : s);
+      };
+      r.onerror = () => reject(r.error || new Error('Read failed'));
+      r.readAsDataURL(file);
+    });
+  }
+  const EDIT_MAX_BYTES = 3 * 1024 * 1024;
+  const EDIT_ALLOWED_EXT = ['pdf','doc','docx','png','jpg','jpeg','webp','txt','html','htm'];
+
   function openEditModal(note) {
     if (!editModal) return;
     activeNoteId = note.id;
-    if (editTitleInput) editTitleInput.value = note.title || '';
+    if (editTitleInput)   editTitleInput.value   = note.title || '';
+    if (editDescInput)    editDescInput.value    = note.description || '';
+    if (editGdocsInput)   editGdocsInput.value   = note.gdocsUrl || '';
+    if (editQuizletInput) editQuizletInput.value = note.quizletUrl || '';
+    if (editFileInput)    editFileInput.value    = '';
+    if (editCurrentFile) {
+      if (note.fileName) {
+        editCurrentFile.textContent = `Current: ${note.fileName} (${fmtBytes(note.fileSize)})`;
+        editCurrentFile.classList.remove('empty');
+      } else {
+        editCurrentFile.textContent = 'No file attached';
+        editCurrentFile.classList.add('empty');
+      }
+    }
     if (editFolderSelect) {
       populateFolderSelect(editFolderSelect, { placeholder: '— No folder —' });
       editFolderSelect.value = note.folderId || '';
     }
     if (editModalMeta) {
-      const isFlash = note.type === 'flashcards';
       editModalMeta.textContent = [
         note.subject || '—',
         'by ' + (note.uploaderName || 'Anonymous'),
-        isFlash ? `Quizlet · #${note.quizletSetId || ''}` : fmtBytes(note.fileSize)
-      ].join(' · ');
+        note.createdAt ? fmtDate(note.createdAt) : null
+      ].filter(Boolean).join(' · ');
     }
-    if (editSaveBtn) { editSaveBtn.disabled = false; editSaveBtn.textContent = 'Save'; }
+    setEditStatus('', '');
+    if (editSaveBtn) { editSaveBtn.disabled = false; editSaveBtn.textContent = 'Save changes'; }
     editModal.style.display = 'flex';
     setTimeout(() => { if (editTitleInput) { editTitleInput.focus(); editTitleInput.select(); } }, 0);
   }
@@ -698,25 +753,118 @@ function startAdmin(fb) {
       if (!activeNoteId) return;
       const note = allNotes.find(n => n.id === activeNoteId);
       if (!note) { closeModal(editModal); return; }
-      const newTitle = (editTitleInput && editTitleInput.value || '').trim();
+
+      const newTitle   = (editTitleInput   && editTitleInput.value   || '').trim();
+      const newDesc    = (editDescInput    && editDescInput.value    || '').trim();
+      const newGdocs   = (editGdocsInput   && editGdocsInput.value   || '').trim();
+      const newQuizlet = (editQuizletInput && editQuizletInput.value || '').trim();
       const newFolderId = (editFolderSelect && editFolderSelect.value) || null;
-      if (!newTitle) { if (editTitleInput) editTitleInput.focus(); return; }
-      const titleChanged = newTitle !== note.title;
-      const folderChanged = newFolderId !== (note.folderId || null);
-      if (!titleChanged && !folderChanged) { closeModal(editModal); return; }
+      const newFile = editFileInput && editFileInput.files && editFileInput.files[0];
+
+      if (!newTitle) { setEditStatus('err', 'Title is required.'); editTitleInput.focus(); return; }
+      if (newGdocs && !isGdocsUrl(newGdocs)) {
+        setEditStatus('err', 'Google Docs link must start with https://docs.google.com/ or https://drive.google.com/.');
+        return;
+      }
+      let newQuizletSetId = null;
+      if (newQuizlet) {
+        newQuizletSetId = parseQuizletUrl(newQuizlet);
+        if (!newQuizletSetId) {
+          setEditStatus('err', 'Quizlet link must look like https://quizlet.com/123456789/...');
+          return;
+        }
+      }
+      if (newFile) {
+        if (newFile.size > EDIT_MAX_BYTES) {
+          setEditStatus('err', 'File is larger than 3 MB.');
+          return;
+        }
+        const ext = (newFile.name.split('.').pop() || '').toLowerCase();
+        if (!EDIT_ALLOWED_EXT.includes(ext)) {
+          setEditStatus('err', 'Unsupported file type. Allowed: ' + EDIT_ALLOWED_EXT.join(', '));
+          return;
+        }
+      }
+
+      const titleChanged   = newTitle !== (note.title || '');
+      const descChanged    = newDesc !== (note.description || '');
+      const folderChanged  = newFolderId !== (note.folderId || null);
+      const gdocsChanged   = newGdocs !== (note.gdocsUrl || '');
+      const quizletChanged = newQuizlet !== (note.quizletUrl || '');
+
+      if (!titleChanged && !descChanged && !folderChanged && !gdocsChanged && !quizletChanged && !newFile) {
+        closeModal(editModal);
+        return;
+      }
 
       editSaveBtn.disabled = true;
       editSaveBtn.textContent = 'Saving…';
+      setEditStatus('info', 'Saving…');
+
       try {
         const patch = { editedAt: serverTimestamp() };
-        if (titleChanged) patch.title = newTitle;
+        if (titleChanged)  patch.title = newTitle;
+        if (descChanged)   patch.description = newDesc;
         if (folderChanged) patch.folderId = newFolderId;
+        if (gdocsChanged) {
+          patch.gdocsUrl = newGdocs || null;
+          if (newGdocs) patch.gdocsKind = gdocsKindFromUrl(newGdocs);
+          else          patch.gdocsKind = null;
+        }
+        if (quizletChanged) {
+          patch.quizletUrl = newQuizlet || null;
+          patch.quizletSetId = newQuizletSetId;
+        }
+
+        // If a new file was picked, upload it first, then delete the old
+        // file from the repo (best-effort cleanup).
+        let oldFilePath = null;
+        if (newFile) {
+          setEditStatus('info', 'Uploading new file…');
+          const fileBase64 = await fileToBase64(newFile);
+          const resp = await fetch('/api/upload-note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              uploaderName: note.uploaderName || 'Admin',
+              title: newTitle,
+              subject: note.subject || '',
+              type: note.type || 'notes',
+              description: newDesc,
+              fileName: newFile.name,
+              fileMime: newFile.type || '',
+              fileBase64
+            })
+          });
+          const result = await resp.json().catch(() => ({}));
+          if (!resp.ok || !result.ok) {
+            throw new Error('Upload failed: ' + (result.error || `HTTP ${resp.status}`));
+          }
+          patch.fileName = newFile.name;
+          patch.filePath = result.filePath;
+          patch.fileSize = result.fileSize || newFile.size;
+          patch.fileMime = newFile.type || '';
+          patch.downloadUrl = result.downloadUrl;
+          oldFilePath = note.filePath || null;
+        }
+
         await updateDoc(doc(db, 'notes', activeNoteId), patch);
-        closeModal(editModal);
+
+        // Clean up old file in the background — non-blocking.
+        if (oldFilePath && oldFilePath !== patch.filePath) {
+          fetch('/api/delete-note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ passcode: getPasscode(), filePath: oldFilePath })
+          }).catch(e => console.warn('Old file cleanup failed (harmless):', e));
+        }
+
+        setEditStatus('ok', '✓ Saved');
+        setTimeout(() => closeModal(editModal), 600);
       } catch (err) {
         editSaveBtn.disabled = false;
-        editSaveBtn.textContent = 'Save';
-        alert('Save failed: ' + (err.message || err));
+        editSaveBtn.textContent = 'Save changes';
+        setEditStatus('err', 'Save failed: ' + (err.message || err));
       }
     });
   }
