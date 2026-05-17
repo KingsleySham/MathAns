@@ -968,10 +968,7 @@ function finishPomoPhase() {
 function advancePomoPhase(completedNaturally) {
   const cfg = getPomoConfig();
   if (pomo.phase === 'focus') {
-    if (completedNaturally) {
-      pomo.completedFocus += 1;
-      addStudyMinutes(cfg.focus);
-    }
+    if (completedNaturally) pomo.completedFocus += 1;
     pomo.phase = (pomo.completedFocus > 0 && pomo.completedFocus % cfg.every === 0) ? 'long' : 'short';
   } else {
     pomo.phase = 'focus';
@@ -1203,95 +1200,6 @@ if (sw.running) {
   swTickTimer = setInterval(swTick, 50);
 }
 renderSw();
-
-/* ==========================================================================
-   Study streak — track per-day Pomodoro focus minutes, share an
-   Instagram-story page populated with today's minutes, the picked
-   subject, and the live countdown.
-   ========================================================================== */
-const STUDY_MIN_PREFIX = 'finals.studyMin.';
-const STUDY_SUBJECT_KEY = 'finals.studySubject';
-
-// HKT (UTC+8) so the day rolls over at HK midnight, not the user's
-// local midnight (which matters for students travelling or for tabs
-// left open across midnight).
-function getTodayKey() {
-  const hktMs = Date.now() + 8 * 3600_000;
-  return new Date(hktMs).toISOString().slice(0, 10);
-}
-
-function getTodayStudyMinutes() {
-  try {
-    return parseInt(localStorage.getItem(STUDY_MIN_PREFIX + getTodayKey()) || '0', 10) || 0;
-  } catch (_) { return 0; }
-}
-
-function addStudyMinutes(min) {
-  if (!isFinite(min) || min <= 0) return;
-  const key = STUDY_MIN_PREFIX + getTodayKey();
-  try {
-    const current = parseInt(localStorage.getItem(key) || '0', 10) || 0;
-    localStorage.setItem(key, String(current + min));
-  } catch (_) {}
-  renderStudyToday();
-}
-
-function fmtStudyMinutes(m) {
-  if (!m) return '0m';
-  const h = Math.floor(m / 60);
-  const rem = m % 60;
-  if (h === 0) return rem + 'm';
-  if (rem === 0) return h + 'h';
-  return h + 'h ' + rem + 'm';
-}
-
-function renderStudyToday() {
-  const el = document.getElementById('study-today');
-  if (el) el.textContent = fmtStudyMinutes(getTodayStudyMinutes());
-}
-
-// Build the subject dropdown from COVERAGE so it stays in sync with
-// exam-data. "Self study" is a catch-all when the student didn't
-// focus on one specific exam subject.
-(function populateStorySubjects() {
-  const sel = document.getElementById('story-subject');
-  if (!sel) return;
-
-  const subjects = Array.from(new Set(
-    COVERAGE.map(c => c.subject).filter(Boolean)
-  )).sort((a, b) => a.localeCompare(b));
-
-  const selfOpt = document.createElement('option');
-  selfOpt.value = 'Self study';
-  selfOpt.textContent = 'Self study';
-  sel.appendChild(selfOpt);
-
-  subjects.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s;
-    opt.textContent = s;
-    sel.appendChild(opt);
-  });
-
-  let saved = 'Self study';
-  try { saved = localStorage.getItem(STUDY_SUBJECT_KEY) || 'Self study'; } catch (_) {}
-  sel.value = Array.from(sel.options).some(o => o.value === saved) ? saved : 'Self study';
-
-  sel.addEventListener('change', () => {
-    try { localStorage.setItem(STUDY_SUBJECT_KEY, sel.value); } catch (_) {}
-  });
-})();
-
-document.getElementById('story-share-btn').addEventListener('click', () => {
-  const subject = document.getElementById('story-subject').value || 'Self study';
-  const min = getTodayStudyMinutes();
-  const url = 'story.html'
-    + '?min=' + encodeURIComponent(min)
-    + '&subject=' + encodeURIComponent(subject);
-  window.open(url, '_blank', 'noopener');
-});
-
-renderStudyToday();
 
 /* ==========================================================================
    Maths Answers — ported from /app.js, lazy-loaded when the tab opens.
