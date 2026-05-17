@@ -15,6 +15,48 @@ body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-tap-highlight-color: transparent;
+  transition: padding-top 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------- Peek mode (triple-tap site title) ----------
+   Squashes the entire page into the bottom half of the viewport so a
+   student peeking at their iPad from a drawer doesn't have to crane
+   their neck. Adds a small badge at the top so they can find their
+   way back out. Toggle is persisted to localStorage. */
+body.peek-mode {
+  padding-top: 50vh;
+}
+body.peek-mode::before {
+  content: '🤫  Peek mode — triple-tap title to exit';
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  z-index: 9999;
+  pointer-events: none;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+  animation: peekBadgeIn 0.4s 0.25s both;
+}
+@keyframes peekBadgeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.site-title {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.site-title.peek-pulse { animation: peekTitlePulse 0.25s ease; }
+@keyframes peekTitlePulse {
+  50% { transform: scale(1.06); }
 }
 
 /* ---------- Header ---------- */
