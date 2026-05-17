@@ -15,16 +15,34 @@ body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-tap-highlight-color: transparent;
-  transition: padding-top 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ---------- Peek mode (triple-tap site title) ----------
-   Squashes the entire page into the bottom half of the viewport so a
-   student peeking at their iPad from a drawer doesn't have to crane
-   their neck. Adds a small badge at the top so they can find their
-   way back out. Toggle is persisted to localStorage. */
+   Locks the page into the bottom half of the viewport so a student
+   peeking at their iPad from a drawer doesn't have to crane their
+   neck. The html element loses its scroll entirely; body becomes a
+   fixed-position pane in the bottom 50vh with its own internal scroll.
+   That way no amount of scrolling exposes the top half. */
+html.peek-mode {
+  background: #f0f2f5;
+  height: 100vh;
+  overflow: hidden;
+}
 body.peek-mode {
-  padding-top: 50vh;
+  position: fixed;
+  top: 50vh;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  /* iOS Safari: prevent the body's own pull-to-refresh from disengaging
+     the peek pane. */
+  overscroll-behavior: contain;
 }
 body.peek-mode::before {
   content: '🤫  Peek mode — triple-tap title to exit';
