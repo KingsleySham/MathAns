@@ -1449,7 +1449,8 @@ function mathsRenderMath(rawText) {
 /* ==========================================================================
    In-browser viewer — renders a note's file inside a modal:
    - Images (png/jpg/jpeg/webp/gif): <img src>
-   - PDFs: fetch as blob, force Content-Type, embed in iframe
+   - PDFs: open in a new tab so the browser's native PDF viewer takes
+     over fullscreen (with its built-in zoom / search / page nav)
    - Plain text: fetch and render in <pre>
    - Word (doc/docx): Microsoft Office Online viewer iframe
    ========================================================================== */
@@ -1461,6 +1462,14 @@ const viewerBody = document.getElementById('viewer-body');
 
 function openViewer(note) {
   const isFlash = note.type === 'flashcards';
+  const ext = (String(note.fileName || '').split('.').pop() || '').toLowerCase();
+
+  // PDFs bypass the modal entirely — they open in a fresh browser tab so
+  // the user gets the native PDF viewer (fullscreen, paged, searchable).
+  if (!isFlash && ext === 'pdf') {
+    return openPdfInNewTab(note);
+  }
+
   viewerTitle.textContent = note.title || '(untitled)';
   viewerMeta.textContent = [
     note.subject,
@@ -1484,17 +1493,53 @@ function openViewer(note) {
 
   if (isFlash) return renderFlashcardsViewer(note);
 
-  const ext = (String(note.fileName || '').split('.').pop() || '').toLowerCase();
   if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
     renderImageViewer(note);
-  } else if (ext === 'pdf') {
-    renderPdfViewer(note);
   } else if (ext === 'txt') {
     renderTextViewer(note);
   } else if (['doc', 'docx'].includes(ext)) {
     renderOfficeViewer(note);
   } else {
     viewerBody.innerHTML = '<div class="viewer-error">Preview not available for this file type. Use Download instead.</div>';
+  }
+}
+
+// Opens the PDF in a new tab. We can't just window.open(downloadUrl)
+// because the storage CDN often serves PDFs with Content-Disposition:
+// attachment (forcing download) or as application/octet-stream — so we
+// fetch the bytes, re-wrap as a typed blob, and hand a blob: URL to the
+// new tab. window.open is called synchronously to keep the user-gesture
+// chain alive (otherwise pop-up blockers reject it).
+async function openPdfInNewTab(note) {
+  const win = window.open('', '_blank');
+  if (!win) {
+    alert('Pop-up blocked. Allow pop-ups for this site to view PDFs in a new tab.');
+    return;
+  }
+  // Friendly loader so the new tab isn't blank while we fetch.
+  win.document.write(
+    '<!doctype html><meta charset="utf-8"><title>' +
+    escapeHtml(note.title || 'Loading PDF…') +
+    '</title><body style="margin:0;display:grid;place-items:center;' +
+    'height:100vh;font-family:-apple-system,BlinkMacSystemFont,sans-serif;' +
+    'color:#9ca3af;background:#1f2937">Loading PDF…</body>'
+  );
+  try {
+    const resp = await fetch(note.downloadUrl);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const blob = await resp.blob();
+    const typedBlob = blob.type === 'application/pdf'
+      ? blob
+      : new Blob([blob], { type: 'application/pdf' });
+    const url = URL.createObjectURL(typedBlob);
+    win.location.replace(url);
+    // Keep the blob URL alive long enough for the new tab to load it,
+    // then release. Five minutes is plenty even on slow networks.
+    setTimeout(() => URL.revokeObjectURL(url), 5 * 60 * 1000);
+  } catch (err) {
+    try {
+      win.document.body.textContent = "Couldn't load PDF: " + (err.message || String(err));
+    } catch (_) {}
   }
 }
 
@@ -1523,31 +1568,12 @@ function renderFlashcardsViewer(note) {
 }
 
 function closeViewer() {
-  // Free any blob URL we created for the PDF viewer.
-  const url = viewerBody.dataset.blobUrl;
-  if (url) { URL.revokeObjectURL(url); delete viewerBody.dataset.blobUrl; }
   viewerBody.innerHTML = '';
   viewerModal.style.display = 'none';
 }
 
 function renderImageViewer(note) {
   viewerBody.innerHTML = `<img src="${escapeHtml(note.downloadUrl)}" alt="${escapeHtml(note.title || '')}" class="viewer-img" />`;
-}
-
-async function renderPdfViewer(note) {
-  try {
-    const resp = await fetch(note.downloadUrl);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const blob = await resp.blob();
-    // raw.githubusercontent.com may serve PDFs as octet-stream — re-wrap with
-    // application/pdf so the browser's built-in viewer kicks in.
-    const typedBlob = blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' });
-    const url = URL.createObjectURL(typedBlob);
-    viewerBody.dataset.blobUrl = url;
-    viewerBody.innerHTML = `<iframe src="${url}" class="viewer-iframe" title="${escapeHtml(note.title || '')}"></iframe>`;
-  } catch (err) {
-    viewerBody.innerHTML = `<div class="viewer-error">Couldn't load PDF: ${escapeHtml(err.message || String(err))}. Try Download.</div>`;
-  }
 }
 
 async function renderTextViewer(note) {
