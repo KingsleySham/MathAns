@@ -21,8 +21,9 @@ const ALLOWED_MIME = new Set([
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "text/plain",
+  "text/html",
 ]);
-const ALLOWED_EXT = new Set(["pdf", "doc", "docx", "png", "jpg", "jpeg", "webp", "txt"]);
+const ALLOWED_EXT = new Set(["pdf", "doc", "docx", "png", "jpg", "jpeg", "webp", "txt", "html", "htm"]);
 const ALLOWED_TYPES = new Set(["notes", "mock_paper"]);
 
 function bad(res, code, msg) { return res.status(code).json({ error: msg }); }
