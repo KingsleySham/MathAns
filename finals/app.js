@@ -178,11 +178,11 @@ const fileRow = document.getElementById('note-file-row');
 const quizletRow = document.getElementById('note-quizlet-row');
 const gdocsRow = document.getElementById('note-gdocs-row');
 function syncTypeUI() {
-  const t = typeSelect.value;
-  const isFile = (t === 'notes' || t === 'mock_paper');
-  fileRow.style.display    = isFile ? '' : 'none';
-  gdocsRow.style.display   = isFile ? '' : 'none';
-  quizletRow.style.display = (t === 'flashcards') ? '' : 'none';
+  // Notes and Mock Paper both show file + gdocs + quizlet rows.
+  // (Flashcards is no longer a separate type — it's an optional link.)
+  fileRow.style.display    = '';
+  gdocsRow.style.display   = '';
+  quizletRow.style.display = '';
 }
 typeSelect.addEventListener('change', syncTypeUI);
 syncTypeUI();
@@ -201,12 +201,11 @@ uploadForm.addEventListener('submit', async (e) => {
   if (!name) { setStatus('Please enter your name.', 'err'); return; }
   if (!title) { setStatus('Please enter a title.', 'err'); return; }
 
-  if (type === 'flashcards') {
-    return submitFlashcards({ name, title, subject, description, folderId });
-  }
   return submitFile({ name, title, subject, type, description, folderId });
 });
 
+// Legacy stub kept so any external caller that referenced this name
+// doesn't blow up; new uploads go through submitFile.
 async function submitFlashcards({ name, title, subject, description, folderId }) {
   const url = document.getElementById('note-quizlet-url').value.trim();
   if (!url) { setStatus('Please paste a Quizlet URL.', 'err'); return; }
@@ -241,7 +240,7 @@ async function submitFlashcards({ name, title, subject, description, folderId })
     uploadForm.reset();
     nameInput.value = name;
     document.getElementById('note-subject').value = subject;
-    typeSelect.value = 'flashcards';
+    typeSelect.value = 'notes';
     syncTypeUI();
     setTimeout(() => {
       progressBox.style.display = 'none';
@@ -261,15 +260,24 @@ async function submitFile({ name, title, subject, type, description, folderId })
   const fileInput = document.getElementById('note-file');
   const file = fileInput.files && fileInput.files[0];
   const gdocsUrlRaw = document.getElementById('note-gdocs-url').value.trim();
+  const quizletUrlRaw = document.getElementById('note-quizlet-url').value.trim();
 
-  // At least one of the two must be present.
-  if (!file && !gdocsUrlRaw) {
-    setStatus('Add a file, a Google Docs link, or both.', 'err');
+  // At least one of file / gdocs / quizlet must be present.
+  if (!file && !gdocsUrlRaw && !quizletUrlRaw) {
+    setStatus('Add a file, a Google Docs link, a Quizlet link, or any combination.', 'err');
     return;
   }
   if (gdocsUrlRaw && !isGdocsUrl(gdocsUrlRaw)) {
     setStatus('Google Docs link must start with https://docs.google.com/ or https://drive.google.com/.', 'err');
     return;
+  }
+  let quizletSetId = null;
+  if (quizletUrlRaw) {
+    quizletSetId = parseQuizletUrl(quizletUrlRaw);
+    if (!quizletSetId) {
+      setStatus('That doesn\'t look like a Quizlet URL. It should look like https://quizlet.com/123456789/...', 'err');
+      return;
+    }
   }
   if (file) {
     if (file.size > MAX_BYTES) {
@@ -337,6 +345,10 @@ async function submitFile({ name, title, subject, type, description, folderId })
     if (gdocsUrlRaw) {
       docData.gdocsUrl = gdocsUrlRaw;
       docData.gdocsKind = gdocsKind(gdocsUrlRaw);
+    }
+    if (quizletUrlRaw) {
+      docData.quizletUrl = quizletUrlRaw;
+      docData.quizletSetId = quizletSetId;
     }
 
     await addDoc(collection(db, 'notes'), docData);
@@ -486,34 +498,46 @@ function gdocsButtonHTML(compact) {
   `;
 }
 
+function quizletButtonHTML() {
+  // Simple Quizlet-purple "Q" roundel — recognisable without infringing on
+  // their exact wordmark.
+  return `
+    <button class="quizlet-btn" data-action="quizlet-open">
+      <span class="quizlet-btn-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <rect x="2" y="2" width="20" height="20" rx="5" fill="#4255ff"/>
+          <text x="12" y="17.5" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="800" fill="white" text-anchor="middle">Q</text>
+        </svg>
+      </span>
+      <span class="quizlet-btn-label">Flashcards</span>
+    </button>
+  `;
+}
+
 function noteCardHTML(n, opts) {
   const typeMeta = noteTypeMeta(n.type);
   const folderNode = n.folderId ? folderById.get(n.folderId) : null;
-  const isFlash = n.type === 'flashcards';
   const hasFile = !!n.downloadUrl;
   const hasGdocs = !!n.gdocsUrl;
-  const canPreview = !isFlash && hasFile && isPreviewable(n.fileName);
+  const hasQuizlet = !!n.quizletUrl;
+  const canPreview = hasFile && isPreviewable(n.fileName);
   const showFolder = opts && opts.showFolder !== false;
 
-  const sizeOrId = isFlash
-    ? `Quizlet · #${escapeHtml(n.quizletSetId || '')}`
-    : hasFile
-      ? fmtBytes(n.fileSize)
-      : (hasGdocs ? `Google ${escapeHtml(({document:'Doc',spreadsheet:'Sheet',presentation:'Slides',drive:'Drive'})[n.gdocsKind] || 'Docs')}` : '');
+  // Pick what to show in the meta line as the "primary" identifier.
+  let sizeOrId = '';
+  if (hasFile)              sizeOrId = fmtBytes(n.fileSize);
+  else if (hasGdocs)        sizeOrId = `Google ${({document:'Doc',spreadsheet:'Sheet',presentation:'Slides',drive:'Drive'})[n.gdocsKind] || 'Docs'}`;
+  else if (hasQuizlet)      sizeOrId = `Quizlet · #${escapeHtml(n.quizletSetId || '')}`;
 
-  // Build the actions list — order: View, Download, Google Docs, Quizlet.
+  // Actions in a consistent order: View, Download, Google, Quizlet.
   const actions = [];
-  if (isFlash) {
-    actions.push(`<button class="btn-primary" data-action="view">Study</button>`);
-    actions.push(`<a class="btn-secondary" href="${escapeHtml(n.quizletUrl)}" target="_blank" rel="noopener">Open in Quizlet</a>`);
-  } else {
-    if (canPreview) actions.push(`<button class="btn-primary" data-action="view">View</button>`);
-    if (hasFile)    actions.push(`<a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`);
-    if (hasGdocs)   actions.push(gdocsButtonHTML(actions.length > 0));
-  }
+  if (canPreview)  actions.push(`<button class="btn-primary" data-action="view">View</button>`);
+  if (hasFile)     actions.push(`<a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`);
+  if (hasGdocs)    actions.push(gdocsButtonHTML(actions.length > 0));
+  if (hasQuizlet)  actions.push(quizletButtonHTML());
 
   return `
-    <div class="note-card ${isFlash ? 'note-card-flashcards' : ''}" data-id="${escapeHtml(n.id)}">
+    <div class="note-card${hasQuizlet ? ' note-card-flashcards' : ''}" data-id="${escapeHtml(n.id)}">
       <div class="note-card-top">
         <div class="note-title">${escapeHtml(n.title)}</div>
         <div class="note-type ${typeMeta.cls}">${typeMeta.label}</div>
@@ -559,8 +583,9 @@ function renderNotes() {
 
 function noteTypeMeta(type) {
   if (type === 'mock_paper') return { label: 'Mock Paper', cls: 'mock_paper' };
-  if (type === 'flashcards') return { label: 'Flashcards', cls: 'flashcards' };
-  // Legacy 'gdocs' type from an earlier version still reads — display as Notes.
+  // Legacy 'flashcards' / 'gdocs' types from earlier versions still
+  // read — display them as Notes since they're no longer creation
+  // categories.
   return { label: 'Notes', cls: 'notes' };
 }
 
@@ -574,8 +599,9 @@ notesListEl.addEventListener('click', (e) => {
   if (!card) return;
   const note = allNotes.find(n => n.id === card.dataset.id);
   if (!note) return;
-  if (e.target.closest('button[data-action="gdocs-open"]')) return openGdocs(note);
-  if (e.target.closest('button[data-action="view"]'))      return openViewer(note);
+  if (e.target.closest('button[data-action="gdocs-open"]'))   return openGdocs(note);
+  if (e.target.closest('button[data-action="quizlet-open"]')) return openQuizlet(note);
+  if (e.target.closest('button[data-action="view"]'))         return openViewer(note);
 });
 
 filterSubjectEl.addEventListener('change', renderNotes);
@@ -711,8 +737,9 @@ viewFoldersEl.addEventListener('click', (e) => {
     if (card) {
       const note = allNotes.find(n => n.id === card.dataset.id);
       if (note) {
-        if (actionBtn.dataset.action === 'gdocs-open') openGdocs(note);
-        else if (actionBtn.dataset.action === 'view')  openViewer(note);
+        if (actionBtn.dataset.action === 'gdocs-open')        openGdocs(note);
+        else if (actionBtn.dataset.action === 'quizlet-open') openQuizlet(note);
+        else if (actionBtn.dataset.action === 'view')         openViewer(note);
       }
     }
     return;
@@ -1822,6 +1849,25 @@ function openGdocs(note) {
   gdocsWarnModal.style.display = 'flex';
   gdocsWarnModal.offsetHeight;            // reflow for transition
   gdocsWarnModal.classList.add('open');
+}
+
+// Quizlet: open the existing viewer modal with the embedded set.
+// Reuses renderFlashcardsViewer which already handles the iframe
+// and the fallback link. Title / meta header reflects "Flashcards".
+function openQuizlet(note) {
+  viewerTitle.textContent = note.title || '(untitled)';
+  viewerMeta.textContent = [
+    note.subject,
+    'Flashcards',
+    note.uploaderName ? 'by ' + note.uploaderName : null,
+    note.quizletSetId ? '#' + note.quizletSetId : null
+  ].filter(Boolean).join(' · ');
+  viewerDownload.href = note.quizletUrl || '#';
+  viewerDownload.removeAttribute('download');
+  viewerDownload.textContent = 'Open in Quizlet';
+  viewerBody.innerHTML = '<div class="viewer-loading">Loading…</div>';
+  viewerModal.style.display = 'flex';
+  renderFlashcardsViewer(note);
 }
 
 function closeGdocsModal() {

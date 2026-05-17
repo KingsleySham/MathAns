@@ -34,22 +34,20 @@ service cloud.firestore {
     }
 
     // Finals study hub — student-uploaded note metadata.
-    // Open create with shape validation; open update/delete because the
-    // admin client at finals.mathans.app/admin is the only thing that
-    // ever calls them (same trusted-environment model as the rest of
-    // this project).
+    // Open create/update/delete because the admin client at
+    // finals.mathans.app/admin is the only thing that ever calls
+    // them (same trusted-environment model as the rest of this
+    // project).
     //
-    // type can be 'notes' | 'mock_paper' | 'flashcards'.
-    //   'notes' / 'mock_paper' must have a file (fileName/filePath/
-    //     fileSize/downloadUrl) AND/OR a Google Docs link (gdocsUrl).
-    //     At least one is required; both is fine.
-    //   'flashcards' uploads are Quizlet links — they require quizletUrl
-    //     and quizletSetId instead of file fields.
+    // type is 'notes' | 'mock_paper'.
+    //   At least one of {file fields, gdocsUrl, quizletUrl} must be
+    //   present; multiple is fine. The card UI shows whichever
+    //   buttons apply.
     //
-    // The legacy type 'gdocs' (from an earlier version) is still accepted
-    // for backward compatibility: existing docs with that type continue
-    // to read/update normally; new uploads should use 'notes' or
-    // 'mock_paper' with an optional gdocsUrl instead.
+    // Legacy 'flashcards' and 'gdocs' types from earlier versions are
+    // still accepted so existing docs continue to read/update normally;
+    // new uploads use 'notes' or 'mock_paper' with the relevant
+    // optional URL fields instead.
     match /notes/{noteId} {
       allow read: if true;
       allow create: if
@@ -64,10 +62,10 @@ service cloud.firestore {
         request.resource.data.uploaderName.size() < 80 &&
         request.resource.data.type in ['notes', 'mock_paper', 'flashcards', 'gdocs'] &&
         (
-          // notes / mock_paper: needs a file OR a gdocs URL (or both).
+          // notes / mock_paper: file fields OR a gdocs link OR a
+          // quizlet link (or any combination of those).
           (request.resource.data.type in ['notes', 'mock_paper'] && (
             (
-              // File fields validated together when present.
               request.resource.data.keys().hasAll(['fileName', 'filePath', 'fileSize', 'downloadUrl']) &&
               request.resource.data.fileName is string &&
               request.resource.data.fileName.size() < 200 &&
@@ -79,14 +77,19 @@ service cloud.firestore {
             )
             ||
             (
-              // Google Docs URL on its own (no file).
               request.resource.data.keys().hasAll(['gdocsUrl']) &&
               request.resource.data.gdocsUrl is string &&
               request.resource.data.gdocsUrl.size() < 600
             )
+            ||
+            (
+              request.resource.data.keys().hasAll(['quizletUrl']) &&
+              request.resource.data.quizletUrl is string &&
+              request.resource.data.quizletUrl.size() < 500
+            )
           ))
           ||
-          // Flashcards must include the parsed Quizlet URL + set ID.
+          // Legacy 'flashcards' type — Quizlet link only.
           (request.resource.data.type == 'flashcards' &&
             request.resource.data.keys().hasAll(['quizletUrl', 'quizletSetId']) &&
             request.resource.data.quizletUrl is string &&
@@ -94,12 +97,14 @@ service cloud.firestore {
             request.resource.data.quizletSetId is string &&
             request.resource.data.quizletSetId.size() < 60)
           ||
-          // Legacy: standalone gdocs-typed entries created before the rework.
+          // Legacy 'gdocs' type — Google Docs link only.
           (request.resource.data.type == 'gdocs' &&
             request.resource.data.keys().hasAll(['gdocsUrl']) &&
             request.resource.data.gdocsUrl is string &&
             request.resource.data.gdocsUrl.size() < 600)
         );
+      // Admin edits — allow any combination of editable fields, as long
+      // as title stays valid.
       allow update: if
         request.resource.data.title is string &&
         request.resource.data.title.size() > 0 &&

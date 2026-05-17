@@ -150,25 +150,42 @@
 
   <!-- ===== Edit modal ===== -->
   <div class="modal-overlay" id="edit-modal" style="display:none;" data-close="overlay">
-    <div class="modal-card">
+    <div class="modal-card modal-card-wide">
       <div class="modal-card-header">
-        <span>Edit note title</span>
+        <span>Edit note</span>
         <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
       </div>
       <div class="modal-card-body">
         <label class="form-label" for="edit-title-input">Title</label>
         <input type="text" id="edit-title-input" maxlength="200" />
+
+        <label class="form-label" for="edit-desc-input" style="margin-top:14px;">Description</label>
+        <textarea id="edit-desc-input" maxlength="500" rows="2" placeholder="A quick note about what this covers."></textarea>
+
         <label class="form-label" for="edit-folder-select" style="margin-top:14px;">Folder</label>
         <div class="select-wrap">
           <select id="edit-folder-select">
             <option value="">— No folder —</option>
           </select>
         </div>
-        <div class="modal-meta" id="edit-modal-meta"></div>
+
+        <label class="form-label" style="margin-top:14px;">File</label>
+        <div class="edit-current-file" id="edit-current-file">No file attached</div>
+        <input type="file" id="edit-file-input" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.txt,.html,.htm" />
+        <div class="file-hint">Picking a new file replaces the existing one (the old file is deleted from the repo). Leave empty to keep the current file.</div>
+
+        <label class="form-label" for="edit-gdocs-input" style="margin-top:14px;">Google Docs link</label>
+        <input type="url" id="edit-gdocs-input" placeholder="https://docs.google.com/document/d/..." />
+
+        <label class="form-label" for="edit-quizlet-input" style="margin-top:14px;">Quizlet flashcards link</label>
+        <input type="url" id="edit-quizlet-input" placeholder="https://quizlet.com/123456789/..." />
+
+        <div class="modal-meta" id="edit-modal-meta" style="margin-top:14px;"></div>
+        <div class="upload-status" id="edit-status"></div>
       </div>
       <div class="modal-card-footer">
         <button class="btn-secondary" data-close="cancel">Cancel</button>
-        <button class="btn-primary" id="edit-save-btn">Save</button>
+        <button class="btn-primary" id="edit-save-btn">Save changes</button>
       </div>
     </div>
   </div>

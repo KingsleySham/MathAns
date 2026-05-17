@@ -104,7 +104,6 @@
                 <select id="note-type">
                   <option value="notes">Notes</option>
                   <option value="mock_paper">Mock Paper</option>
-                  <option value="flashcards">Flashcards (Quizlet)</option>
                 </select>
               </div>
             </div>
@@ -133,14 +132,13 @@
             <div class="form-row" id="note-gdocs-row">
               <label class="form-label" for="note-gdocs-url">Google Docs link <span class="opt">(optional)</span></label>
               <input type="url" id="note-gdocs-url" placeholder="https://docs.google.com/document/d/..." />
-              <div class="file-hint">A Google Docs, Sheets, Slides, or Drive link. Viewers will be prompted to sign in with <strong>@smcesps.edu.hk</strong>. Provide a file, a link, or both — at least one is required.</div>
+              <div class="file-hint">A Google Docs, Sheets, Slides, or Drive link. Viewers will be prompted to sign in with <strong>@smcesps.edu.hk</strong>.</div>
             </div>
 
-            <!-- Flashcards (Quizlet) uses its own URL field instead -->
-            <div class="form-row" id="note-quizlet-row" style="display:none;">
-              <label class="form-label" for="note-quizlet-url">Quizlet URL <span class="req">*</span></label>
+            <div class="form-row" id="note-quizlet-row">
+              <label class="form-label" for="note-quizlet-url">Quizlet flashcards link <span class="opt">(optional)</span></label>
               <input type="url" id="note-quizlet-url" placeholder="https://quizlet.com/123456789/..." />
-              <div class="file-hint">Paste the full URL of a Quizlet study set (e.g. https://quizlet.com/123456789/s4-physics-flash-cards/).</div>
+              <div class="file-hint">A Quizlet study-set URL. Provide a file, any link, or any combination — at least one is required.</div>
             </div>
 
             <button type="submit" class="btn-primary" id="upload-btn">Upload</button>
@@ -183,7 +181,6 @@
               <option value="">All types</option>
               <option value="notes">Notes</option>
               <option value="mock_paper">Mock Papers</option>
-              <option value="flashcards">Flashcards</option>
             </select>
           </div>
         </div>
