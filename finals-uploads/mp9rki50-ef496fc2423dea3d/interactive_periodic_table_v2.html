@@ -1,0 +1,475 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+#pt-wrap { padding: 1rem 0; }
+#controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+#controls select, #search { font-size: 13px; padding: 5px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); }
+#search { flex: 1; min-width: 140px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.leg { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--color-text-secondary); }
+.leg-dot { width: 10px; height: 10px; border-radius: 2px; }
+#grid { display: grid; grid-template-columns: repeat(18, 1fr); gap: 2px; }
+.cell { aspect-ratio: 1; border-radius: 3px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.1s, box-shadow 0.1s; position: relative; border: 0.5px solid transparent; }
+.cell:hover { transform: scale(1.12); z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.18); border-color: var(--color-border-primary); }
+.cell.dimmed { opacity: 0.15; }
+.cell .num { font-size: 7px; opacity: 0.7; line-height: 1; }
+.cell .sym { font-size: 11px; font-weight: 500; line-height: 1.1; }
+.cell .name-s { font-size: 5px; opacity: 0.7; line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; text-align: center; }
+.spacer { aspect-ratio: 1; }
+#panel { display: none; background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-top: 12px; position: relative; }
+#panel.show { display: block; }
+#close-btn { position: absolute; top: 10px; right: 10px; background: none; border: 0.5px solid var(--color-border-tertiary); border-radius: 50%; width: 24px; height: 24px; cursor: pointer; color: var(--color-text-secondary); font-size: 14px; display: flex; align-items: center; justify-content: center; }
+#panel-top { display: grid; grid-template-columns: auto 1fr; gap: 1rem; align-items: start; }
+#el-badge { width: 72px; height: 72px; border-radius: var(--border-radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+#el-badge .b-num { font-size: 12px; opacity: 0.75; }
+#el-badge .b-sym { font-size: 28px; font-weight: 500; }
+#el-badge .b-mass { font-size: 10px; opacity: 0.7; }
+#el-info h3 { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+#el-info .cat-tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-bottom: 8px; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 12px; }
+.info-row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.info-label { color: var(--color-text-secondary); }
+.info-val { font-weight: 500; text-align: right; }
+#el-desc { margin-top: 10px; font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+#panel-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 0.5px solid var(--color-border-tertiary); align-items: center; }
+#bohr-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#bohr-title { font-size: 11px; color: var(--color-text-secondary); }
+#bohr-canvas { width: 160px; height: 160px; }
+#shell-wrap { display: flex; flex-direction: column; gap: 6px; }
+#shell-title { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 2px; }
+.shell-row { display: flex; align-items: center; gap: 8px; }
+.shell-label { font-size: 11px; color: var(--color-text-secondary); width: 48px; }
+.shell-dots { display: flex; gap: 3px; flex-wrap: wrap; }
+.e-dot { width: 10px; height: 10px; border-radius: 50%; }
+.e-dot.filled { }
+.e-dot.empty { opacity: 0.2; border: 0.5px solid currentColor; background: transparent !important; }
+.shell-count { font-size: 11px; font-weight: 500; margin-left: 4px; }
+</style>
+
+<div id="pt-wrap">
+<h2 class="sr-only">Interactive Periodic Table — click any element to see details and electron arrangement</h2>
+<div id="controls">
+  <input type="text" id="search" placeholder="Search element or symbol…" oninput="filterEls()" />
+  <select id="cat-filter" onchange="filterEls()">
+    <option value="">All categories</option>
+    <option value="alkali metal">Alkali metals</option>
+    <option value="alkaline earth metal">Alkaline earth metals</option>
+    <option value="transition metal">Transition metals</option>
+    <option value="post-transition metal">Post-transition metals</option>
+    <option value="metalloid">Metalloids</option>
+    <option value="nonmetal">Nonmetals</option>
+    <option value="noble gas">Noble gases</option>
+    <option value="lanthanide">Lanthanides</option>
+    <option value="actinide">Actinides</option>
+  </select>
+  <select id="state-filter" onchange="filterEls()">
+    <option value="">All states</option>
+    <option value="solid">Solid</option>
+    <option value="liquid">Liquid</option>
+    <option value="gas">Gas</option>
+    <option value="unknown">Unknown</option>
+  </select>
+</div>
+<div class="legend" id="legend"></div>
+<div id="grid"></div>
+<div id="panel">
+  <button id="close-btn" onclick="closePanel()" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button>
+  <div id="panel-top">
+    <div id="el-badge"></div>
+    <div id="el-info">
+      <h3 id="el-name"></h3>
+      <span id="el-cat-tag" class="cat-tag"></span>
+      <div class="info-grid" id="el-props"></div>
+      <p id="el-desc"></p>
+    </div>
+  </div>
+  <div id="panel-bottom">
+    <div id="bohr-wrap">
+      <div id="bohr-title">Bohr model</div>
+      <canvas id="bohr-canvas" width="160" height="160"></canvas>
+    </div>
+    <div id="shell-wrap">
+      <div id="shell-title">Electron shells</div>
+      <div id="shell-rows"></div>
+      <div id="ea-str" style="margin-top:8px;font-size:12px;color:var(--color-text-secondary);"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const CATS = {
+  "alkali metal":         { label: "Alkali metal",          bg: "#F5C4B3", fg: "#4A1B0C" },
+  "alkaline earth metal": { label: "Alkaline earth metal",  bg: "#FAC775", fg: "#412402" },
+  "transition metal":     { label: "Transition metal",      bg: "#B5D4F4", fg: "#042C53" },
+  "post-transition metal":{ label: "Post-transition metal", bg: "#D3D1C7", fg: "#2C2C2A" },
+  "metalloid":            { label: "Metalloid",             bg: "#9FE1CB", fg: "#04342C" },
+  "nonmetal":             { label: "Nonmetal",              bg: "#C0DD97", fg: "#173404" },
+  "noble gas":            { label: "Noble gas",             bg: "#CECBF6", fg: "#26215C" },
+  "lanthanide":           { label: "Lanthanide",            bg: "#F4C0D1", fg: "#4B1528" },
+  "actinide":             { label: "Actinide",              bg: "#FAE0B0", fg: "#633806" },
+};
+
+const SHELL_CAPACITY = [2, 8, 18, 32, 32, 18, 8];
+const SHELL_NAMES = ['K (1)','L (2)','M (3)','N (4)','O (5)','P (6)','Q (7)'];
+
+function getElectronArrangement(z) {
+  const shells = [0,0,0,0,0,0,0];
+  const cap = SHELL_CAPACITY;
+  let remaining = z;
+  for(let i=0;i<7;i++){
+    const fill = Math.min(remaining, cap[i]);
+    shells[i] = fill;
+    remaining -= fill;
+    if(remaining <= 0) break;
+  }
+  return shells.filter((_,i) => z > [0,2,10,28,60,92,110][i]).length > 0
+    ? shells : shells;
+}
+
+function computeShells(z) {
+  const cap = SHELL_CAPACITY;
+  const result = [];
+  let rem = z;
+  for(let i=0;i<7;i++){
+    if(rem <= 0) break;
+    const fill = Math.min(rem, cap[i]);
+    result.push(fill);
+    rem -= fill;
+  }
+  return result;
+}
+
+function drawBohr(canvas, shells, color) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const cx = W/2, cy = H/2;
+  const nShells = shells.length;
+  const maxR = Math.min(cx,cy) - 10;
+  const minR = 10;
+  const step = nShells > 1 ? (maxR - minR)/(nShells-1) : 0;
+
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const orbitColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+  const nucleusColor = color;
+  const electronColor = color;
+
+  shells.forEach((count, i) => {
+    const r = nShells === 1 ? maxR * 0.5 : minR + i * step;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = orbitColor;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    for(let e=0; e<count; e++) {
+      const angle = (2*Math.PI/count)*e - Math.PI/2;
+      const ex = cx + r * Math.cos(angle);
+      const ey = cy + r * Math.sin(angle);
+      ctx.beginPath();
+      ctx.arc(ex, ey, 3.5, 0, Math.PI*2);
+      ctx.fillStyle = electronColor;
+      ctx.fill();
+    }
+  });
+
+  const nuclR = Math.max(6, 3 + shells.reduce((a,b)=>a+b,0)*0.08);
+  ctx.beginPath();
+  ctx.arc(cx, cy, Math.min(nuclR,12), 0, Math.PI*2);
+  ctx.fillStyle = nucleusColor;
+  ctx.fill();
+}
+
+const ELS = [
+  {z:1,sym:"H",name:"Hydrogen",mass:1.008,cat:"nonmetal",state:"gas",group:1,period:1,config:"1s¹",en:2.2,mp:-259.1,bp:-252.9,desc:"The lightest and most abundant element in the universe. Colourless, odourless, and highly flammable gas."},
+  {z:2,sym:"He",name:"Helium",mass:4.003,cat:"noble gas",state:"gas",group:18,period:1,config:"1s²",en:null,mp:-272.2,bp:-268.9,desc:"Second lightest element. Unreactive noble gas used in balloons, cryogenics, and as a breathing mixture for divers."},
+  {z:3,sym:"Li",name:"Lithium",mass:6.941,cat:"alkali metal",state:"solid",group:1,period:2,config:"[He] 2s¹",en:0.98,mp:180.5,bp:1342,desc:"Lightest solid metal. Used in lithium-ion batteries, psychiatric medication, and lightweight alloys."},
+  {z:4,sym:"Be",name:"Beryllium",mass:9.012,cat:"alkaline earth metal",state:"solid",group:2,period:2,config:"[He] 2s²",en:1.57,mp:1287,bp:2470,desc:"Lightweight, stiff metal used in aerospace structures, X-ray windows, and nuclear reactors. Toxic."},
+  {z:5,sym:"B",name:"Boron",mass:10.811,cat:"metalloid",state:"solid",group:13,period:2,config:"[He] 2s² 2p¹",en:2.04,mp:2076,bp:3927,desc:"Metalloid used in glass (borosilicate), detergents, semiconductors, and as a neutron absorber."},
+  {z:6,sym:"C",name:"Carbon",mass:12.011,cat:"nonmetal",state:"solid",group:14,period:2,config:"[He] 2s² 2p²",en:2.55,mp:3550,bp:4827,desc:"Foundation of all known life. Exists as graphite, diamond, and fullerenes. Backbone of organic chemistry."},
+  {z:7,sym:"N",name:"Nitrogen",mass:14.007,cat:"nonmetal",state:"gas",group:15,period:2,config:"[He] 2s² 2p³",en:3.04,mp:-210,bp:-195.8,desc:"Makes up 78% of Earth's atmosphere. Essential for amino acids and nucleic acids. Used in fertilisers."},
+  {z:8,sym:"O",name:"Oxygen",mass:15.999,cat:"nonmetal",state:"gas",group:16,period:2,config:"[He] 2s² 2p⁴",en:3.44,mp:-218.8,bp:-183,desc:"Essential for respiration and combustion. Second most abundant element in Earth's crust and atmosphere."},
+  {z:9,sym:"F",name:"Fluorine",mass:18.998,cat:"nonmetal",state:"gas",group:17,period:2,config:"[He] 2s² 2p⁵",en:3.98,mp:-219.6,bp:-188.1,desc:"Most electronegative element. Highly reactive pale yellow gas. Used in Teflon and toothpaste (fluoride)."},
+  {z:10,sym:"Ne",name:"Neon",mass:20.18,cat:"noble gas",state:"gas",group:18,period:2,config:"[He] 2s² 2p⁶",en:null,mp:-248.6,bp:-246.1,desc:"Colourless noble gas famous for its orange-red glow in signs. Second lightest noble gas."},
+  {z:11,sym:"Na",name:"Sodium",mass:22.99,cat:"alkali metal",state:"solid",group:1,period:3,config:"[Ne] 3s¹",en:0.93,mp:97.8,bp:883,desc:"Soft, reactive metal. Essential biological electrolyte. Used in table salt (NaCl) and sodium-vapour lamps."},
+  {z:12,sym:"Mg",name:"Magnesium",mass:24.305,cat:"alkaline earth metal",state:"solid",group:2,period:3,config:"[Ne] 3s²",en:1.31,mp:650,bp:1090,desc:"Lightweight structural metal. Central atom in chlorophyll. Burns with intense white flame."},
+  {z:13,sym:"Al",name:"Aluminium",mass:26.982,cat:"post-transition metal",state:"solid",group:13,period:3,config:"[Ne] 3s² 3p¹",en:1.61,mp:660.3,bp:2519,desc:"Most abundant metal in Earth's crust. Lightweight, corrosion-resistant. Extensively used in packaging and transport."},
+  {z:14,sym:"Si",name:"Silicon",mass:28.086,cat:"metalloid",state:"solid",group:14,period:3,config:"[Ne] 3s² 3p²",en:1.9,mp:1414,bp:3265,desc:"Second most abundant element in Earth's crust. Semiconductor backbone of modern electronics and computing."},
+  {z:15,sym:"P",name:"Phosphorus",mass:30.974,cat:"nonmetal",state:"solid",group:15,period:3,config:"[Ne] 3s² 3p³",en:2.19,mp:44.2,bp:280.5,desc:"Essential for DNA, RNA, and ATP. Exists as white, red, and black allotropes. Used in fertilisers and matches."},
+  {z:16,sym:"S",name:"Sulfur",mass:32.06,cat:"nonmetal",state:"solid",group:16,period:3,config:"[Ne] 3s² 3p⁴",en:2.58,mp:115.2,bp:444.6,desc:"Yellow non-metal with distinctive smell. Used in vulcanising rubber, sulphuric acid, and as a fungicide."},
+  {z:17,sym:"Cl",name:"Chlorine",mass:35.453,cat:"nonmetal",state:"gas",group:17,period:3,config:"[Ne] 3s² 3p⁵",en:3.16,mp:-101.5,bp:-34.1,desc:"Greenish-yellow toxic gas. Used widely in water purification, PVC plastics, and as a disinfectant."},
+  {z:18,sym:"Ar",name:"Argon",mass:39.948,cat:"noble gas",state:"gas",group:18,period:3,config:"[Ne] 3s² 3p⁶",en:null,mp:-189.4,bp:-185.9,desc:"Third most abundant gas in Earth's atmosphere. Inert and used as a protective atmosphere in welding."},
+  {z:19,sym:"K",name:"Potassium",mass:39.098,cat:"alkali metal",state:"solid",group:1,period:4,config:"[Ar] 4s¹",en:0.82,mp:63.4,bp:759,desc:"Essential biological cation regulating nerve signals and muscle contraction. Burns with a lilac flame."},
+  {z:20,sym:"Ca",name:"Calcium",mass:40.078,cat:"alkaline earth metal",state:"solid",group:2,period:4,config:"[Ar] 4s²",en:1,mp:842,bp:1484,desc:"Essential for bones and teeth. Fifth most abundant element in Earth's crust. Used in cement and plaster."},
+  {z:21,sym:"Sc",name:"Scandium",mass:44.956,cat:"transition metal",state:"solid",group:3,period:4,config:"[Ar] 3d¹ 4s²",en:1.36,mp:1541,bp:2836,desc:"Rare silvery metal. Used in aluminium-scandium alloys for aerospace and sports equipment."},
+  {z:22,sym:"Ti",name:"Titanium",mass:47.867,cat:"transition metal",state:"solid",group:4,period:4,config:"[Ar] 3d² 4s²",en:1.54,mp:1668,bp:3287,desc:"Strong, lightweight, corrosion-resistant metal. Widely used in aerospace, medical implants, and pigments (TiO₂)."},
+  {z:23,sym:"V",name:"Vanadium",mass:50.942,cat:"transition metal",state:"solid",group:5,period:4,config:"[Ar] 3d³ 4s²",en:1.63,mp:1910,bp:3407,desc:"Hard grey metal. Used mainly in high-strength steel alloys and vanadium redox flow batteries."},
+  {z:24,sym:"Cr",name:"Chromium",mass:51.996,cat:"transition metal",state:"solid",group:6,period:4,config:"[Ar] 3d⁵ 4s¹",en:1.66,mp:1907,bp:2671,desc:"Shiny, hard metal. Key component of stainless steel. Chromium(III) compounds give rubies and emeralds their colour."},
+  {z:25,sym:"Mn",name:"Manganese",mass:54.938,cat:"transition metal",state:"solid",group:7,period:4,config:"[Ar] 3d⁵ 4s²",en:1.55,mp:1246,bp:2061,desc:"Brittle grey-white metal. Essential for steel production and a key component in alkaline batteries."},
+  {z:26,sym:"Fe",name:"Iron",mass:55.845,cat:"transition metal",state:"solid",group:8,period:4,config:"[Ar] 3d⁶ 4s²",en:1.83,mp:1538,bp:2861,desc:"Most common element on Earth by mass. Foundation of steel and cast iron. Central atom in haemoglobin."},
+  {z:27,sym:"Co",name:"Cobalt",mass:58.933,cat:"transition metal",state:"solid",group:9,period:4,config:"[Ar] 3d⁷ 4s²",en:1.88,mp:1495,bp:2927,desc:"Hard ferromagnetic metal. Used in superalloys, lithium-ion battery cathodes, and blue pigments (cobalt blue)."},
+  {z:28,sym:"Ni",name:"Nickel",mass:58.693,cat:"transition metal",state:"solid",group:10,period:4,config:"[Ar] 3d⁸ 4s²",en:1.91,mp:1455,bp:2913,desc:"Silvery, hard metal. Corrosion-resistant and used in stainless steel, coins, and rechargeable batteries."},
+  {z:29,sym:"Cu",name:"Copper",mass:63.546,cat:"transition metal",state:"solid",group:11,period:4,config:"[Ar] 3d¹⁰ 4s¹",en:1.9,mp:1085,bp:2562,desc:"Reddish-orange metal. Excellent electrical conductor. Used in wiring, plumbing, and alloys (brass, bronze)."},
+  {z:30,sym:"Zn",name:"Zinc",mass:65.38,cat:"transition metal",state:"solid",group:12,period:4,config:"[Ar] 3d¹⁰ 4s²",en:1.65,mp:419.5,bp:907,desc:"Bluish-white metal. Used in galvanising steel, die-casting, and as an essential trace element for humans."},
+  {z:31,sym:"Ga",name:"Gallium",mass:69.723,cat:"post-transition metal",state:"solid",group:13,period:4,config:"[Ar] 3d¹⁰ 4s² 4p¹",en:1.81,mp:29.8,bp:2204,desc:"Soft metal that melts in your hand (29.8°C). Used in semiconductors (GaAs) and LEDs."},
+  {z:32,sym:"Ge",name:"Germanium",mass:72.63,cat:"metalloid",state:"solid",group:14,period:4,config:"[Ar] 3d¹⁰ 4s² 4p²",en:2.01,mp:938.3,bp:2833,desc:"Semiconductor metalloid used in transistors, infrared optics, and fibre-optic cables."},
+  {z:33,sym:"As",name:"Arsenic",mass:74.922,cat:"metalloid",state:"solid",group:15,period:4,config:"[Ar] 3d¹⁰ 4s² 4p³",en:2.18,mp:817,bp:614,desc:"Toxic metalloid. Used historically as a poison and still used in semiconductors (GaAs) and wood preservatives."},
+  {z:34,sym:"Se",name:"Selenium",mass:78.971,cat:"nonmetal",state:"solid",group:16,period:4,config:"[Ar] 3d¹⁰ 4s² 4p⁴",en:2.55,mp:220.8,bp:685,desc:"Essential trace element. Used in photocopiers (xerography), solar cells, and as a glass decolourant."},
+  {z:35,sym:"Br",name:"Bromine",mass:79.904,cat:"nonmetal",state:"liquid",group:17,period:4,config:"[Ar] 3d¹⁰ 4s² 4p⁵",en:2.96,mp:-7.3,bp:58.8,desc:"One of only two elements liquid at room temperature. Dark red, toxic. Used in flame retardants and photography."},
+  {z:36,sym:"Kr",name:"Krypton",mass:83.798,cat:"noble gas",state:"gas",group:18,period:4,config:"[Ar] 3d¹⁰ 4s² 4p⁶",en:3,mp:-157.4,bp:-153.2,desc:"Dense, colourless noble gas. Used in high-performance flashlights and formerly to define the metre."},
+  {z:37,sym:"Rb",name:"Rubidium",mass:85.468,cat:"alkali metal",state:"solid",group:1,period:5,config:"[Kr] 5s¹",en:0.82,mp:39.3,bp:688,desc:"Soft, silvery alkali metal. Burns with a red-violet flame. Used in atomic clocks and as a getter in vacuum tubes."},
+  {z:38,sym:"Sr",name:"Strontium",mass:87.62,cat:"alkaline earth metal",state:"solid",group:2,period:5,config:"[Kr] 5s²",en:0.95,mp:777,bp:1382,desc:"Silvery metal. Burns with a bright red flame. Used in fireworks, flares, and cathode ray tube glass."},
+  {z:39,sym:"Y",name:"Yttrium",mass:88.906,cat:"transition metal",state:"solid",group:3,period:5,config:"[Kr] 4d¹ 5s²",en:1.22,mp:1526,bp:3336,desc:"Silvery-white metal. Used in YAG lasers, red phosphors in CRT displays, and high-temperature superconductors."},
+  {z:40,sym:"Zr",name:"Zirconium",mass:91.224,cat:"transition metal",state:"solid",group:4,period:5,config:"[Kr] 4d² 5s²",en:1.33,mp:1855,bp:4409,desc:"Lustrous, corrosion-resistant metal. Used in nuclear reactor cladding, ceramics, and cubic zirconia."},
+  {z:41,sym:"Nb",name:"Niobium",mass:92.906,cat:"transition metal",state:"solid",group:5,period:5,config:"[Kr] 4d⁴ 5s¹",en:1.6,mp:2477,bp:4744,desc:"Soft grey metal. Used in superconducting magnets and high-strength steel alloys."},
+  {z:42,sym:"Mo",name:"Molybdenum",mass:95.96,cat:"transition metal",state:"solid",group:6,period:5,config:"[Kr] 4d⁵ 5s¹",en:2.16,mp:2623,bp:4639,desc:"Hard, high-melting metal. Used in high-speed steels and catalysts for oil refining."},
+  {z:43,sym:"Tc",name:"Technetium",mass:98,cat:"transition metal",state:"solid",group:7,period:5,config:"[Kr] 4d⁵ 5s²",en:1.9,mp:2157,bp:4265,desc:"First artificially produced element. All isotopes are radioactive. Used in nuclear medicine diagnostics."},
+  {z:44,sym:"Ru",name:"Ruthenium",mass:101.07,cat:"transition metal",state:"solid",group:8,period:5,config:"[Kr] 4d⁷ 5s¹",en:2.2,mp:2334,bp:4150,desc:"Rare, hard platinum-group metal. Used to harden platinum and palladium, and in electrical contacts."},
+  {z:45,sym:"Rh",name:"Rhodium",mass:102.906,cat:"transition metal",state:"solid",group:9,period:5,config:"[Kr] 4d⁸ 5s¹",en:2.28,mp:1964,bp:3695,desc:"Rarest and most valuable platinum-group metal. Essential catalyst in automotive catalytic converters."},
+  {z:46,sym:"Pd",name:"Palladium",mass:106.42,cat:"transition metal",state:"solid",group:10,period:5,config:"[Kr] 4d¹⁰",en:2.2,mp:1555,bp:2963,desc:"Lustrous silvery-white metal. Used in catalytic converters, jewellery, and hydrogen purification."},
+  {z:47,sym:"Ag",name:"Silver",mass:107.868,cat:"transition metal",state:"solid",group:11,period:5,config:"[Kr] 4d¹⁰ 5s¹",en:1.93,mp:961.8,bp:2162,desc:"Best electrical and thermal conductor. Used in coins, jewellery, electronics, and antimicrobials."},
+  {z:48,sym:"Cd",name:"Cadmium",mass:112.411,cat:"transition metal",state:"solid",group:12,period:5,config:"[Kr] 4d¹⁰ 5s²",en:1.69,mp:321.1,bp:767,desc:"Toxic heavy metal. Used in nickel-cadmium batteries, electroplating, and as a neutron absorber."},
+  {z:49,sym:"In",name:"Indium",mass:114.818,cat:"post-transition metal",state:"solid",group:13,period:5,config:"[Kr] 4d¹⁰ 5s² 5p¹",en:1.78,mp:156.6,bp:2072,desc:"Soft, silvery metal. Critical for transparent conductive coatings (ITO) in LCD screens and touchscreens."},
+  {z:50,sym:"Sn",name:"Tin",mass:118.71,cat:"post-transition metal",state:"solid",group:14,period:5,config:"[Kr] 4d¹⁰ 5s² 5p²",en:1.96,mp:231.9,bp:2602,desc:"Silvery, malleable metal. Used in solder, tin plating for food cans, bronze, and pewter."},
+  {z:51,sym:"Sb",name:"Antimony",mass:121.76,cat:"metalloid",state:"solid",group:15,period:5,config:"[Kr] 4d¹⁰ 5s² 5p³",en:2.05,mp:630.6,bp:1587,desc:"Brittle metalloid. Used in flame retardants, semiconductors, and hardening lead for batteries."},
+  {z:52,sym:"Te",name:"Tellurium",mass:127.6,cat:"metalloid",state:"solid",group:16,period:5,config:"[Kr] 4d¹⁰ 5s² 5p⁴",en:2.1,mp:449.5,bp:988,desc:"Brittle metalloid. Used in CdTe solar cells, phase-change memory, and rubber vulcanisation."},
+  {z:53,sym:"I",name:"Iodine",mass:126.904,cat:"nonmetal",state:"solid",group:17,period:5,config:"[Kr] 4d¹⁰ 5s² 5p⁵",en:2.66,mp:113.7,bp:184.3,desc:"Purple-black solid that sublimes. Essential for thyroid hormones. Used as an antiseptic."},
+  {z:54,sym:"Xe",name:"Xenon",mass:131.293,cat:"noble gas",state:"gas",group:18,period:5,config:"[Kr] 4d¹⁰ 5s² 5p⁶",en:2.6,mp:-111.8,bp:-108.1,desc:"Heavy noble gas. Used in high-intensity lamps, ion propulsion, and as an anaesthetic."},
+  {z:55,sym:"Cs",name:"Caesium",mass:132.905,cat:"alkali metal",state:"solid",group:1,period:6,config:"[Xe] 6s¹",en:0.79,mp:28.5,bp:671,desc:"Softest metal. Caesium-133 defines the SI second via atomic clock oscillations."},
+  {z:56,sym:"Ba",name:"Barium",mass:137.327,cat:"alkaline earth metal",state:"solid",group:2,period:6,config:"[Xe] 6s²",en:0.89,mp:727,bp:1897,desc:"Soft, silvery alkaline earth metal. Barium compounds give green colour in fireworks."},
+  {z:57,sym:"La",name:"Lanthanum",mass:138.905,cat:"lanthanide",state:"solid",group:3,period:6,config:"[Xe] 5d¹ 6s²",en:1.1,mp:920,bp:3464,desc:"Soft rare-earth metal. Used in high-refractive-index glass and nickel-metal hydride batteries."},
+  {z:58,sym:"Ce",name:"Cerium",mass:140.116,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f¹ 5d¹ 6s²",en:1.12,mp:798,bp:3443,desc:"Most abundant rare-earth metal. Used in catalytic converters and polishing powder."},
+  {z:59,sym:"Pr",name:"Praseodymium",mass:140.908,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f³ 6s²",en:1.13,mp:931,bp:3520,desc:"Soft rare-earth metal. Used in high-strength permanent magnets and green pigments."},
+  {z:60,sym:"Nd",name:"Neodymium",mass:144.242,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f⁴ 6s²",en:1.14,mp:1016,bp:3074,desc:"Key component of the strongest permanent magnets. Used in wind turbines and EV motors."},
+  {z:61,sym:"Pm",name:"Promethium",mass:145,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f⁵ 6s²",en:1.13,mp:1042,bp:3000,desc:"Radioactive rare-earth metal. All isotopes are unstable. Used in atomic batteries for spacecraft."},
+  {z:62,sym:"Sm",name:"Samarium",mass:150.36,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f⁶ 6s²",en:1.17,mp:1072,bp:1794,desc:"Hard rare-earth metal. Used in SmCo permanent magnets and as a neutron absorber."},
+  {z:63,sym:"Eu",name:"Europium",mass:151.964,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f⁷ 6s²",en:1.2,mp:822,bp:1596,desc:"Most reactive rare-earth metal. Used as a red and blue phosphor in LEDs and TV screens."},
+  {z:64,sym:"Gd",name:"Gadolinium",mass:157.25,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f⁷ 5d¹ 6s²",en:1.2,mp:1313,bp:3273,desc:"Highest magnetic moment. Used as MRI contrast agent and in neutron capture cancer therapy."},
+  {z:65,sym:"Tb",name:"Terbium",mass:158.925,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f⁹ 6s²",en:1.1,mp:1356,bp:3230,desc:"Silvery-white metal. Used in green phosphors for LCD displays and magneto-optical storage."},
+  {z:66,sym:"Dy",name:"Dysprosium",mass:162.5,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f¹⁰ 6s²",en:1.22,mp:1412,bp:2567,desc:"Added to neodymium magnets for high-temperature performance. Used in nuclear reactor control rods."},
+  {z:67,sym:"Ho",name:"Holmium",mass:164.93,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f¹¹ 6s²",en:1.23,mp:1474,bp:2700,desc:"Highest magnetic moment. Used in powerful magnets for MRI machines."},
+  {z:68,sym:"Er",name:"Erbium",mass:167.259,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f¹² 6s²",en:1.24,mp:1529,bp:2868,desc:"Used in optical fibre amplifiers (EDFA) enabling long-distance internet and dermatology lasers."},
+  {z:69,sym:"Tm",name:"Thulium",mass:168.934,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f¹³ 6s²",en:1.25,mp:1545,bp:1950,desc:"Rarest stable lanthanide. Used in portable X-ray sources and solid-state lasers."},
+  {z:70,sym:"Yb",name:"Ytterbium",mass:173.045,cat:"lanthanide",state:"solid",group:null,period:8,config:"[Xe] 4f¹⁴ 6s²",en:1.1,mp:824,bp:1196,desc:"Soft, malleable rare-earth metal. Used in fibre lasers and atomic clocks."},
+  {z:71,sym:"Lu",name:"Lutetium",mass:174.967,cat:"lanthanide",state:"solid",group:3,period:6,config:"[Xe] 4f¹⁴ 5d¹ 6s²",en:1.27,mp:1663,bp:3402,desc:"Hardest and densest rare-earth metal. Used in PET scan detectors and as a catalyst."},
+  {z:72,sym:"Hf",name:"Hafnium",mass:178.49,cat:"transition metal",state:"solid",group:4,period:6,config:"[Xe] 4f¹⁴ 5d² 6s²",en:1.3,mp:2233,bp:4603,desc:"Lustrous silvery metal. Used in nuclear reactor control rods and CPU transistors."},
+  {z:73,sym:"Ta",name:"Tantalum",mass:180.948,cat:"transition metal",state:"solid",group:5,period:6,config:"[Xe] 4f¹⁴ 5d³ 6s²",en:1.5,mp:3017,bp:5458,desc:"Very hard, corrosion-resistant metal. Used in capacitors for phones and laptops."},
+  {z:74,sym:"W",name:"Tungsten",mass:183.84,cat:"transition metal",state:"solid",group:6,period:6,config:"[Xe] 4f¹⁴ 5d⁴ 6s²",en:2.36,mp:3422,bp:5555,desc:"Highest melting point of all metals. Used in light bulb filaments and cutting tools."},
+  {z:75,sym:"Re",name:"Rhenium",mass:186.207,cat:"transition metal",state:"solid",group:7,period:6,config:"[Xe] 4f¹⁴ 5d⁵ 6s²",en:1.9,mp:3186,bp:5596,desc:"Second-highest melting point. Used in superalloys for jet engine turbine blades."},
+  {z:76,sym:"Os",name:"Osmium",mass:190.23,cat:"transition metal",state:"solid",group:8,period:6,config:"[Xe] 4f¹⁴ 5d⁶ 6s²",en:2.2,mp:3033,bp:5012,desc:"Densest naturally occurring element. Used in pen tips and electrical contacts."},
+  {z:77,sym:"Ir",name:"Iridium",mass:192.217,cat:"transition metal",state:"solid",group:9,period:6,config:"[Xe] 4f¹⁴ 5d⁷ 6s²",en:2.2,mp:2446,bp:4428,desc:"Most corrosion-resistant metal. Used in spark plugs and the original international kilogram."},
+  {z:78,sym:"Pt",name:"Platinum",mass:195.084,cat:"transition metal",state:"solid",group:10,period:6,config:"[Xe] 4f¹⁴ 5d⁹ 6s¹",en:2.28,mp:1768,bp:3825,desc:"Precious metal. Major catalyst in fuel cells and catalytic converters. Used in cancer chemotherapy."},
+  {z:79,sym:"Au",name:"Gold",mass:196.967,cat:"transition metal",state:"solid",group:11,period:6,config:"[Xe] 4f¹⁴ 5d¹⁰ 6s¹",en:2.54,mp:1064,bp:2856,desc:"Noble metal. Excellent conductor. Used in jewellery, electronics, and as monetary reserve."},
+  {z:80,sym:"Hg",name:"Mercury",mass:200.592,cat:"transition metal",state:"liquid",group:12,period:6,config:"[Xe] 4f¹⁴ 5d¹⁰ 6s²",en:2,mp:-38.8,bp:356.7,desc:"Only metal liquid at room temperature. Toxic. Used in thermometers and fluorescent lights."},
+  {z:81,sym:"Tl",name:"Thallium",mass:204.383,cat:"post-transition metal",state:"solid",group:13,period:6,config:"[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p¹",en:1.62,mp:304,bp:1473,desc:"Soft, toxic metal. Used in infrared detectors and superconductors."},
+  {z:82,sym:"Pb",name:"Lead",mass:207.2,cat:"post-transition metal",state:"solid",group:14,period:6,config:"[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²",en:2.33,mp:327.5,bp:1749,desc:"Dense, soft, toxic heavy metal. Used in batteries and radiation shielding."},
+  {z:83,sym:"Bi",name:"Bismuth",mass:208.98,cat:"post-transition metal",state:"solid",group:15,period:6,config:"[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p³",en:2.02,mp:271.5,bp:1564,desc:"Brittle pinkish metal with lowest toxicity of heavy metals. Used in pharmaceuticals and cosmetics."},
+  {z:84,sym:"Po",name:"Polonium",mass:209,cat:"metalloid",state:"solid",group:16,period:6,config:"[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁴",en:2,mp:254,bp:962,desc:"Highly radioactive metalloid discovered by Marie Curie. Used as a neutron source."},
+  {z:85,sym:"At",name:"Astatine",mass:210,cat:"nonmetal",state:"solid",group:17,period:6,config:"[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁵",en:2.2,mp:302,bp:337,desc:"Rarest naturally occurring element. Highly radioactive halogen researched for cancer therapy."},
+  {z:86,sym:"Rn",name:"Radon",mass:222,cat:"noble gas",state:"gas",group:18,period:6,config:"[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁶",en:null,mp:-71,bp:-61.8,desc:"Dense, radioactive noble gas. A leading cause of lung cancer in non-smokers."},
+  {z:87,sym:"Fr",name:"Francium",mass:223,cat:"alkali metal",state:"solid",group:1,period:7,config:"[Rn] 7s¹",en:0.7,mp:27,bp:677,desc:"Most unstable naturally occurring element. Highly radioactive alkali metal."},
+  {z:88,sym:"Ra",name:"Radium",mass:226,cat:"alkaline earth metal",state:"solid",group:2,period:7,config:"[Rn] 7s²",en:0.9,mp:700,bp:1737,desc:"Radioactive alkaline earth metal discovered by Marie Curie. Used in cancer treatment."},
+  {z:89,sym:"Ac",name:"Actinium",mass:227,cat:"actinide",state:"solid",group:3,period:7,config:"[Rn] 6d¹ 7s²",en:1.1,mp:1050,bp:3200,desc:"Soft, glowing radioactive metal. First actinide. Used in neutron sources for cancer treatment."},
+  {z:90,sym:"Th",name:"Thorium",mass:232.038,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 6d² 7s²",en:1.3,mp:1750,bp:4788,desc:"Radioactive actinide. Abundant potential nuclear fuel. Used in high-temperature gas mantles."},
+  {z:91,sym:"Pa",name:"Protactinium",mass:231.036,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f² 6d¹ 7s²",en:1.5,mp:1572,bp:4000,desc:"Rare, highly radioactive actinide. Intermediate in uranium-235 decay chain."},
+  {z:92,sym:"U",name:"Uranium",mass:238.029,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f³ 6d¹ 7s²",en:1.38,mp:1135,bp:4131,desc:"Dense radioactive metal. Principal nuclear fuel for reactors and nuclear weapons."},
+  {z:93,sym:"Np",name:"Neptunium",mass:237,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f⁴ 6d¹ 7s²",en:1.36,mp:644,bp:4000,desc:"First transuranic element, produced artificially. Radioactive precursor to plutonium."},
+  {z:94,sym:"Pu",name:"Plutonium",mass:244,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f⁶ 7s²",en:1.28,mp:640,bp:3228,desc:"Highly radioactive. Key material in nuclear weapons and some reactor fuels."},
+  {z:95,sym:"Am",name:"Americium",mass:243,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f⁷ 7s²",en:1.13,mp:1176,bp:2607,desc:"Silvery radioactive element. Used in household smoke detectors as Am-241."},
+  {z:96,sym:"Cm",name:"Curium",mass:247,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f⁷ 6d¹ 7s²",en:1.28,mp:1345,bp:3110,desc:"Named after Marie and Pierre Curie. Used as a power source in space missions."},
+  {z:97,sym:"Bk",name:"Berkelium",mass:247,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f⁹ 7s²",en:1.3,mp:986,bp:2627,desc:"Radioactive synthetic element named after Berkeley. Used to produce heavier elements."},
+  {z:98,sym:"Cf",name:"Californium",mass:251,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f¹⁰ 7s²",en:1.3,mp:900,bp:1470,desc:"Radioactive synthetic element. Used as a neutron source in cancer treatments."},
+  {z:99,sym:"Es",name:"Einsteinium",mass:252,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f¹¹ 7s²",en:1.3,mp:860,bp:996,desc:"Named after Albert Einstein. Discovered in fallout from the first hydrogen bomb test in 1952."},
+  {z:100,sym:"Fm",name:"Fermium",mass:257,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f¹² 7s²",en:1.3,mp:1527,bp:null,desc:"Named after Enrico Fermi. Too short-lived to be produced in visible quantities."},
+  {z:101,sym:"Md",name:"Mendelevium",mass:258,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f¹³ 7s²",en:1.3,mp:827,bp:null,desc:"Named after Dmitri Mendeleev. First produced in 1955. No practical applications."},
+  {z:102,sym:"No",name:"Nobelium",mass:259,cat:"actinide",state:"solid",group:null,period:9,config:"[Rn] 5f¹⁴ 7s²",en:1.3,mp:827,bp:null,desc:"Named after Alfred Nobel. Very short half-lives. Few atoms produced at a time."},
+  {z:103,sym:"Lr",name:"Lawrencium",mass:266,cat:"actinide",state:"solid",group:3,period:7,config:"[Rn] 5f¹⁴ 7s² 7p¹",en:1.3,mp:1627,bp:null,desc:"Named after Ernest Lawrence. Last actinide. No significant applications."},
+  {z:104,sym:"Rf",name:"Rutherfordium",mass:267,cat:"transition metal",state:"solid",group:4,period:7,config:"[Rn] 5f¹⁴ 6d² 7s²",en:null,mp:2100,bp:5500,desc:"Named after Ernest Rutherford. First transactinide element. No practical applications."},
+  {z:105,sym:"Db",name:"Dubnium",mass:268,cat:"transition metal",state:"solid",group:5,period:7,config:"[Rn] 5f¹⁴ 6d³ 7s²",en:null,mp:null,bp:null,desc:"Named after Dubna, Russia. Highly radioactive synthetic element."},
+  {z:106,sym:"Sg",name:"Seaborgium",mass:269,cat:"transition metal",state:"solid",group:6,period:7,config:"[Rn] 5f¹⁴ 6d⁴ 7s²",en:null,mp:null,bp:null,desc:"Named after Glenn Seaborg. Radioactive synthetic element with very short half-life."},
+  {z:107,sym:"Bh",name:"Bohrium",mass:270,cat:"transition metal",state:"solid",group:7,period:7,config:"[Rn] 5f¹⁴ 6d⁵ 7s²",en:null,mp:null,bp:null,desc:"Named after Niels Bohr. Extremely radioactive synthetic element."},
+  {z:108,sym:"Hs",name:"Hassium",mass:277,cat:"transition metal",state:"solid",group:8,period:7,config:"[Rn] 5f¹⁴ 6d⁶ 7s²",en:null,mp:null,bp:null,desc:"Named after Hesse, Germany. Chemical properties studied in minute quantities."},
+  {z:109,sym:"Mt",name:"Meitnerium",mass:278,cat:"transition metal",state:"unknown",group:9,period:7,config:"[Rn] 5f¹⁴ 6d⁷ 7s²",en:null,mp:null,bp:null,desc:"Named after Lise Meitner. Too short-lived for chemical studies."},
+  {z:110,sym:"Ds",name:"Darmstadtium",mass:281,cat:"transition metal",state:"unknown",group:10,period:7,config:"[Rn] 5f¹⁴ 6d⁸ 7s²",en:null,mp:null,bp:null,desc:"Named after Darmstadt, Germany. Radioactive superheavy element. Decays within milliseconds."},
+  {z:111,sym:"Rg",name:"Roentgenium",mass:282,cat:"transition metal",state:"unknown",group:11,period:7,config:"[Rn] 5f¹⁴ 6d¹⁰ 7s¹",en:null,mp:null,bp:null,desc:"Named after Wilhelm Röntgen. Only a few atoms ever produced."},
+  {z:112,sym:"Cn",name:"Copernicium",mass:285,cat:"transition metal",state:"unknown",group:12,period:7,config:"[Rn] 5f¹⁴ 6d¹⁰ 7s²",en:null,mp:null,bp:null,desc:"Named after Nicolaus Copernicus. Predicted to be a gas at room temperature."},
+  {z:113,sym:"Nh",name:"Nihonium",mass:286,cat:"post-transition metal",state:"unknown",group:13,period:7,config:"[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p¹",en:null,mp:null,bp:null,desc:"Named after Japan (Nihon). First element discovered in Asia."},
+  {z:114,sym:"Fl",name:"Flerovium",mass:289,cat:"post-transition metal",state:"unknown",group:14,period:7,config:"[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p²",en:null,mp:null,bp:null,desc:"Predicted to behave like a noble gas due to relativistic effects."},
+  {z:115,sym:"Mc",name:"Moscovium",mass:290,cat:"post-transition metal",state:"unknown",group:15,period:7,config:"[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p³",en:null,mp:null,bp:null,desc:"Named after Moscow Oblast. Decays in milliseconds."},
+  {z:116,sym:"Lv",name:"Livermorium",mass:293,cat:"post-transition metal",state:"unknown",group:16,period:7,config:"[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁴",en:null,mp:null,bp:null,desc:"Named after Livermore, California. Only a handful of atoms ever produced."},
+  {z:117,sym:"Ts",name:"Tennessine",mass:294,cat:"nonmetal",state:"unknown",group:17,period:7,config:"[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁵",en:null,mp:null,bp:null,desc:"Named after Tennessee. Second heaviest confirmed element."},
+  {z:118,sym:"Og",name:"Oganesson",mass:294,cat:"noble gas",state:"unknown",group:18,period:7,config:"[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁶",en:null,mp:null,bp:null,desc:"Heaviest known element. Predicted to be a solid at room temperature. Fewer than 5 atoms ever observed."},
+];
+
+function computeShells(z) {
+  const cap = [2,8,18,32,32,18,8];
+  const result = [];
+  let rem = z;
+  for(let i=0;i<7;i++){
+    if(rem<=0) break;
+    result.push(Math.min(rem,cap[i]));
+    rem -= cap[i];
+  }
+  return result;
+}
+
+function getStyle(el) {
+  const c = CATS[el.cat]||{bg:"#ccc",fg:"#333"};
+  return `background:${c.bg};color:${c.fg};`;
+}
+
+function buildLegend() {
+  const lg = document.getElementById('legend');
+  Object.entries(CATS).forEach(([k,v])=>{
+    const d=document.createElement('div');
+    d.className='leg';
+    d.innerHTML=`<div class="leg-dot" style="background:${v.bg};border:0.5px solid rgba(0,0,0,0.12)"></div><span>${v.label}</span>`;
+    lg.appendChild(d);
+  });
+}
+
+const GRID_MAP = {};
+ELS.forEach(el=>{
+  if(el.period<=7&&el.group) GRID_MAP[`${el.period}-${el.group}`]=el;
+});
+const LANTHANIDES=ELS.filter(e=>e.cat==='lanthanide'&&!e.group);
+const ACTINIDES=ELS.filter(e=>e.cat==='actinide'&&!e.group);
+
+function buildGrid() {
+  const grid=document.getElementById('grid');
+  for(let p=1;p<=7;p++){
+    for(let g=1;g<=18;g++){
+      const el=GRID_MAP[`${p}-${g}`];
+      const div=document.createElement('div');
+      if(el){
+        div.className='cell';
+        div.style.cssText=getStyle(el);
+        div.innerHTML=`<span class="num">${el.z}</span><span class="sym">${el.sym}</span><span class="name-s">${el.name}</span>`;
+        div.dataset.z=el.z;
+        div.addEventListener('click',()=>showPanel(el));
+      } else {
+        if(p===6&&g===3){div.className='spacer';div.style.cssText='font-size:8px;color:var(--color-text-tertiary);display:flex;align-items:center;justify-content:center;';div.textContent='57–71';}
+        else if(p===7&&g===3){div.className='spacer';div.style.cssText='font-size:8px;color:var(--color-text-tertiary);display:flex;align-items:center;justify-content:center;';div.textContent='89–103';}
+        else div.className='spacer';
+      }
+      grid.appendChild(div);
+    }
+  }
+  const gap=document.createElement('div');
+  gap.style.cssText='grid-column:1/-1;height:6px;';
+  grid.appendChild(gap);
+
+  const lanLabel=document.createElement('div');
+  lanLabel.style.cssText='grid-column:1/4;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:8px;color:var(--color-text-tertiary);';
+  lanLabel.textContent='57–71';
+  const lanRow=document.createElement('div');
+  lanRow.style.cssText='grid-column:4/19;display:grid;grid-template-columns:repeat(15,1fr);gap:2px;';
+  LANTHANIDES.forEach(el=>{
+    const div=document.createElement('div');
+    div.className='cell';div.style.cssText=getStyle(el);
+    div.innerHTML=`<span class="num">${el.z}</span><span class="sym">${el.sym}</span><span class="name-s">${el.name}</span>`;
+    div.dataset.z=el.z;div.addEventListener('click',()=>showPanel(el));
+    lanRow.appendChild(div);
+  });
+  grid.appendChild(lanLabel);grid.appendChild(lanRow);
+
+  const actLabel=document.createElement('div');
+  actLabel.style.cssText='grid-column:1/4;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:8px;color:var(--color-text-tertiary);';
+  actLabel.textContent='89–103';
+  const actRow=document.createElement('div');
+  actRow.style.cssText='grid-column:4/19;display:grid;grid-template-columns:repeat(15,1fr);gap:2px;';
+  ACTINIDES.forEach(el=>{
+    const div=document.createElement('div');
+    div.className='cell';div.style.cssText=getStyle(el);
+    div.innerHTML=`<span class="num">${el.z}</span><span class="sym">${el.sym}</span><span class="name-s">${el.name}</span>`;
+    div.dataset.z=el.z;div.addEventListener('click',()=>showPanel(el));
+    actRow.appendChild(div);
+  });
+  grid.appendChild(actLabel);grid.appendChild(actRow);
+}
+
+function drawBohr(shells, color) {
+  const canvas=document.getElementById('bohr-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2;
+  ctx.clearRect(0,0,W,H);
+  const n=shells.length;
+  const maxR=Math.min(cx,cy)-8;
+  const minR=n>1?10:maxR*0.5;
+  const step=n>1?(maxR-minR)/(n-1):0;
+  const isDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const orbitC=isDark?'rgba(255,255,255,0.13)':'rgba(0,0,0,0.1)';
+
+  shells.forEach((count,i)=>{
+    const r=n===1?maxR*0.5:minR+i*step;
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle=orbitC;ctx.lineWidth=0.8;ctx.stroke();
+    for(let e=0;e<count;e++){
+      const angle=(2*Math.PI/count)*e-Math.PI/2;
+      ctx.beginPath();ctx.arc(cx+r*Math.cos(angle),cy+r*Math.sin(angle),3.2,0,Math.PI*2);
+      ctx.fillStyle=color;ctx.fill();
+    }
+  });
+  const nr=Math.min(10+shells.reduce((a,b)=>a+b,0)*0.07,14);
+  ctx.beginPath();ctx.arc(cx,cy,nr,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+}
+
+function showPanel(el) {
+  const c=CATS[el.cat]||{bg:'#ccc',fg:'#333'};
+  const badge=document.getElementById('el-badge');
+  badge.style.cssText=`background:${c.bg};color:${c.fg};width:72px;height:72px;border-radius:var(--border-radius-md);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;`;
+  badge.innerHTML=`<span class="b-num">${el.z}</span><span class="b-sym">${el.sym}</span><span class="b-mass">${el.mass}</span>`;
+  document.getElementById('el-name').textContent=el.name;
+  const tag=document.getElementById('el-cat-tag');
+  tag.textContent=CATS[el.cat]?.label||el.cat;
+  tag.style.cssText=`display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-bottom:8px;background:${c.bg};color:${c.fg};`;
+  const props=[
+    ['Atomic number',el.z],['Atomic mass',el.mass+' u'],
+    ['State (STP)',el.state],['Electronegativity',el.en??'—'],
+    ['Melting point',el.mp!=null?el.mp+'°C':'—'],['Boiling point',el.bp!=null?el.bp+'°C':'—'],
+    ['Electron config.',el.config],['Group / Period',(el.group||'—')+' / '+el.period],
+  ];
+  document.getElementById('el-props').innerHTML=props.map(([l,v])=>`<div class="info-row"><span class="info-label">${l}</span><span class="info-val">${v}</span></div>`).join('');
+  document.getElementById('el-desc').textContent=el.desc;
+
+  const shells=computeShells(el.z);
+  const shellNames=['K','L','M','N','O','P','Q'];
+  const shellMax=[2,8,18,32,32,18,8];
+
+  drawBohr(shells,c.fg==='#fff'||c.fg.startsWith('#0')||c.fg.startsWith('#1')||c.fg.startsWith('#04')||c.fg.startsWith('#17')||c.fg.startsWith('#26')||c.fg.startsWith('#4A')||c.fg.startsWith('#41')||c.fg.startsWith('#4B')||c.fg.startsWith('#63')||c.fg.startsWith('#17')?c.fg:c.fg);
+
+  const shellRows=document.getElementById('shell-rows');
+  shellRows.innerHTML=shells.map((count,i)=>{
+    const cap=shellMax[i];
+    const dots=Array.from({length:cap},(_,d)=>`<div class="e-dot ${d<count?'filled':'empty'}" style="background:${d<count?c.fg:'transparent'};border:0.5px solid ${c.fg};"></div>`).join('');
+    return `<div class="shell-row">
+      <span class="shell-label" style="color:var(--color-text-secondary);">${shellNames[i]} (n=${i+1})</span>
+      <div class="shell-dots">${dots}</div>
+      <span class="shell-count" style="color:${c.fg}">${count}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('ea-str').innerHTML=`<span style="color:var(--color-text-secondary);">Arrangement: </span><strong>${shells.join(', ')}</strong>`;
+
+  document.getElementById('panel').className='panel show';
+  document.getElementById('panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closePanel(){document.getElementById('panel').className='panel';}
+
+function filterEls(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const cat=document.getElementById('cat-filter').value;
+  const state=document.getElementById('state-filter').value;
+  document.querySelectorAll('.cell').forEach(c=>{
+    const z=parseInt(c.dataset.z);if(!z)return;
+    const el=ELS.find(e=>e.z===z);if(!el)return;
+    const match=(!q||(el.name.toLowerCase().includes(q)||el.sym.toLowerCase().includes(q)||String(el.z).includes(q)))&&(!cat||el.cat===cat)&&(!state||el.state===state);
+    c.classList.toggle('dimmed',!match);
+  });
+}
+
+buildLegend();
+buildGrid();
+</script>
