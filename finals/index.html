@@ -147,10 +147,22 @@
         </div>
       </div>
 
-      <!-- View mode toggle: All vs Browse by folder -->
+      <!-- Mode picker: two big abstract-colored cards -->
       <nav class="view-mode-tabs" id="view-mode-tabs" role="tablist">
-        <button class="view-mode-tab active" data-view="all" role="tab">View all</button>
-        <button class="view-mode-tab" data-view="folders" role="tab">Browse by folder</button>
+        <button class="view-mode-tab view-mode-tab-all" data-view="all" role="tab" aria-selected="false">
+          <span class="view-mode-tab-icon" aria-hidden="true">✨</span>
+          <span class="view-mode-tab-text">
+            <span class="view-mode-tab-title">View all</span>
+            <span class="view-mode-tab-sub">Every note in one big list</span>
+          </span>
+        </button>
+        <button class="view-mode-tab view-mode-tab-folders" data-view="folders" role="tab" aria-selected="false">
+          <span class="view-mode-tab-icon" aria-hidden="true">📁</span>
+          <span class="view-mode-tab-text">
+            <span class="view-mode-tab-title">Browse by folder</span>
+            <span class="view-mode-tab-sub">Navigate the tree of subjects</span>
+          </span>
+        </button>
       </nav>
 
       <!-- View: All notes (filterable flat list) -->

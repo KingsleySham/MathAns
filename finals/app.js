@@ -525,7 +525,9 @@ function setViewMode(mode) {
   viewMode = mode === 'folders' ? 'folders' : 'all';
   try { localStorage.setItem(VIEW_MODE_KEY, viewMode); } catch (_) {}
   viewModeTabsEl.querySelectorAll('.view-mode-tab').forEach(b => {
-    b.classList.toggle('active', b.dataset.view === viewMode);
+    const isActive = b.dataset.view === viewMode;
+    b.classList.toggle('active', isActive);
+    b.setAttribute('aria-selected', isActive ? 'true' : 'false');
   });
   viewAllEl.style.display     = viewMode === 'all'     ? '' : 'none';
   viewFoldersEl.style.display = viewMode === 'folders' ? '' : 'none';
@@ -591,25 +593,25 @@ function renderFolderBrowser() {
     }).join('');
   }
 
-  // Notes directly in this folder (or, at root, notes with no folder at all)
-  const notesHere = currentFolderId
-    ? allNotes.filter(n => n.folderId === currentFolderId)
-    : allNotes.filter(n => !n.folderId);
-
-  folderNotesHead.textContent = currentFolderId
-    ? 'Notes in this folder'
-    : 'Notes without a folder';
-
-  if (notesHere.length === 0) {
-    folderNotesListEl.innerHTML = '';
-    folderNotesEmpty.style.display = 'block';
-    folderNotesEmpty.textContent = currentFolderId
-      ? 'No notes in this folder yet.'
-      : 'No uncategorised notes.';
-    folderNotesListEl.appendChild(folderNotesEmpty);
+  // Notes directly in this folder. At root we just show the folder tree —
+  // no "uncategorised" section. Use the "View all" mode if you want to see
+  // notes that aren't in any folder.
+  const folderNotesSection = document.getElementById('folder-notes-section');
+  if (!currentFolderId) {
+    if (folderNotesSection) folderNotesSection.style.display = 'none';
   } else {
-    folderNotesEmpty.style.display = 'none';
-    folderNotesListEl.innerHTML = notesHere.map(n => noteCardHTML(n, { showFolder: false })).join('');
+    if (folderNotesSection) folderNotesSection.style.display = '';
+    const notesHere = allNotes.filter(n => n.folderId === currentFolderId);
+    folderNotesHead.textContent = 'Notes in this folder';
+    if (notesHere.length === 0) {
+      folderNotesListEl.innerHTML = '';
+      folderNotesEmpty.style.display = 'block';
+      folderNotesEmpty.textContent = 'No notes in this folder yet.';
+      folderNotesListEl.appendChild(folderNotesEmpty);
+    } else {
+      folderNotesEmpty.style.display = 'none';
+      folderNotesListEl.innerHTML = notesHere.map(n => noteCardHTML(n, { showFolder: false })).join('');
+    }
   }
 }
 
