@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ion Flashcards — S3 Chemistry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal-50:  #f0fdfa;
+    --teal-100: #ccfbf1;
+    --teal-200: #99f6e4;
+    --teal-300: #5eead4;
+    --teal-400: #2dd4bf;
+    --teal-500: #14b8a6;
+    --teal-600: #0d9488;
+    --teal-700: #0f766e;
+    --teal-800: #115e59;
+    --teal-900: #134e4a;
+    --teal-950: #042f2e;
+
+    --ink-50:   #f8fafc;
+    --ink-100:  #f1f5f9;
+    --ink-200:  #e2e8f0;
+    --ink-300:  #cbd5e1;
+    --ink-400:  #94a3b8;
+    --ink-500:  #64748b;
+    --ink-600:  #475569;
+    --ink-700:  #334155;
+    --ink-800:  #1e293b;
+    --ink-900:  #0f172a;
+
+    --bg: #fafaf7;
+    --card: #ffffff;
+    --line: rgba(15, 118, 110, 0.12);
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.06);
+    --shadow-md: 0 4px 6px rgba(15,23,42,0.04), 0 10px 25px rgba(15,23,42,0.08);
+    --shadow-lg: 0 20px 60px rgba(15,118,110,0.15), 0 4px 12px rgba(15,23,42,0.05);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink-900);
+    font-family: 'Manrope', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(45, 212, 191, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(20, 184, 166, 0.06) 0%, transparent 45%),
+      linear-gradient(180deg, var(--bg) 0%, #f4f4ee 100%);
+    min-height: 100vh;
+  }
+
+  .app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+
+  header.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .title-block .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--teal-700);
+    margin-bottom: 6px;
+  }
+
+  .title-block h1 {
+    font-family: 'Lexend', sans-serif;
+    font-weight: 600;
+    font-size: clamp(28px, 4vw, 40px);
+    letter-spacing: -0.02em;
+    color: var(--ink-900);
+    line-height: 1.05;
+  }
+
+  .title-block h1 span {
+    color: var(--teal-600);
+    font-weight: 500;
+  }
+
+  .title-block p {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--ink-500);
+    max-width: 480px;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    align-items: center;
+  }
+
+  .control-group {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 4px;
+    display: flex;
+    gap: 2px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .control-group button {
+    background: transparent;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .control-group button:hover {
+    background: var(--teal-50);
+    color: var(--teal-800);
+  }
+
+  .control-group button.active {
+    background: var(--teal-900);
+    color: white;
+  }
+
+  .control-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-600);
+    cursor: pointer;
+  }
+
+  .control-group label input {
+    cursor: pointer;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 4px;
+    background: var(--ink-200);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal-500), var(--teal-700));
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 2px;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-500);
+  }
+
+  /* Card */
+  .card-stage {
+    perspective: 1500px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+    cursor: pointer;
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+
+  .card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+
+  .face::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--teal-400), var(--teal-700), var(--teal-400));
+  }
+
+  .face.back {
+    transform: rotateY(180deg);
+    background: linear-gradient(135deg, #ffffff 0%, var(--teal-50) 100%);
+  }
+
+  .corner-label {
+    position: absolute;
+    top: 24px;
+    left: 28px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--teal-600);
+  }
+
+  .card-index {
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-400);
+  }
+
+  .face .prompt-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-400);
+    margin-bottom: 18px;
+  }
+
+  .ion-name {
+    font-family: 'Lexend', sans-serif;
+    font-weight: 500;
+    font-size: clamp(28px, 5vw, 44px);
+    color: var(--ink-900);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    max-width: 700px;
+  }
+
+  .ion-formula {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: clamp(40px, 7vw, 64px);
+    color: var(--teal-800);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  .formula-row {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .colour-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .colour-block[hidden] {
+    display: none !important;
+  }
+
+  .colour-block .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-400);
+  }
+
+  .colour-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px 10px 14px;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .colour-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.08);
+    flex-shrink: 0;
+  }
+
+  .colour-name {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--ink-800);
+  }
+
+  .colour-pill.colourless .colour-swatch {
+    background:
+      linear-gradient(135deg, transparent 0%, transparent 45%, var(--ink-300) 45%, var(--ink-300) 55%, transparent 55%) center / 100% 100%,
+      white;
+  }
+
+  .hint {
+    margin-top: 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-400);
+  }
+
+  /* Nav buttons */
+  .nav-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .nav-btn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-700);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-btn:hover {
+    border-color: var(--teal-500);
+    color: var(--teal-800);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .nav-btn:active {
+    transform: translateY(0);
+  }
+
+  .nav-btn.primary {
+    background: var(--teal-800);
+    color: white;
+    border-color: var(--teal-800);
+    padding: 14px 28px;
+  }
+
+  .nav-btn.primary:hover {
+    background: var(--teal-900);
+    border-color: var(--teal-900);
+    color: white;
+  }
+
+  .nav-btn.danger:hover {
+    border-color: #dc2626;
+    color: #dc2626;
+  }
+
+  .nav-btn.success:hover {
+    border-color: var(--teal-600);
+    color: var(--teal-700);
+  }
+
+  .keymap {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-400);
+    margin-top: 8px;
+  }
+
+  .keymap span kbd {
+    background: var(--ink-100);
+    border: 1px solid var(--ink-200);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-700);
+    margin: 0 4px;
+  }
+
+  /* Done screen */
+  .done-screen {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 60px 40px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    display: none;
+  }
+
+  .done-screen.show {
+    display: block;
+  }
+
+  .ring-wrap {
+    width: 180px;
+    height: 180px;
+    margin: 0 auto 24px;
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+
+  .ring-wrap svg {
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg {
+    stroke: var(--ink-200);
+    fill: none;
+    stroke-width: 12;
+  }
+
+  .ring-fg {
+    stroke: var(--teal-600);
+    fill: none;
+    stroke-width: 12;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease;
+  }
+
+  .ring-value {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: 'Lexend', sans-serif;
+    font-weight: 500;
+    font-size: 44px;
+    color: var(--ink-900);
+  }
+
+  .done-screen h2 {
+    font-family: 'Lexend', sans-serif;
+    font-weight: 500;
+    font-size: 28px;
+    color: var(--ink-900);
+    margin-bottom: 8px;
+  }
+
+  .done-screen p {
+    color: var(--ink-500);
+    font-size: 15px;
+    margin-bottom: 28px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 500px;
+    margin: 0 auto 32px;
+  }
+
+  .stat-cell {
+    background: var(--teal-50);
+    border-radius: 12px;
+    padding: 20px 12px;
+  }
+
+  .stat-cell .stat-value {
+    font-family: 'Lexend', sans-serif;
+    font-weight: 500;
+    font-size: 32px;
+    color: var(--teal-800);
+    line-height: 1;
+  }
+
+  .stat-cell .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+    margin-top: 8px;
+  }
+
+  .stat-cell.miss { background: #fef2f2; }
+  .stat-cell.miss .stat-value { color: #b91c1c; }
+
+  .stage-wrap.hidden { display: none; }
+  .table-view.hidden { display: none; }
+
+  /* Table view */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+
+  .table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #ffffff 0%, var(--teal-50) 100%);
+  }
+
+  .table-header-row h2 {
+    font-family: 'Lexend', sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+    color: var(--ink-900);
+  }
+
+  .table-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  #ion-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Manrope', sans-serif;
+  }
+
+  #ion-table thead th {
+    text-align: left;
+    padding: 14px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+    background: var(--ink-50);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  #ion-table tbody td {
+    padding: 14px 20px;
+    font-size: 14px;
+    color: var(--ink-800);
+    border-bottom: 1px solid var(--ink-100);
+    vertical-align: middle;
+  }
+
+  #ion-table tbody tr {
+    transition: background 0.15s ease;
+  }
+
+  #ion-table tbody tr:hover {
+    background: var(--teal-50);
+  }
+
+  #ion-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .row-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-400);
+  }
+
+  .cell-formula {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--teal-800);
+    font-size: 15px;
+  }
+
+  .cell-category {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+
+  .cell-colour {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cell-colour .swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.1);
+    flex-shrink: 0;
+  }
+
+  .cell-colour .name {
+    font-size: 13px;
+    color: var(--ink-700);
+  }
+
+  .cell-colour.none {
+    color: var(--ink-300);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+
+  #card-only-controls.hidden {
+    display: none;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ink-400);
+  }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    .app { padding: 20px 16px 48px; }
+    .face { padding: 36px 24px; }
+    .card { min-height: 360px; }
+    .nav-btn { padding: 12px 16px; font-size: 13px; }
+    .nav-btn.primary { padding: 12px 22px; }
+    .keymap { display: none; }
+    .control-group label { padding: 8px 10px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="title-block">
+      <div class="eyebrow">S3 Chemistry · Ionic Bond</div>
+      <h1>Ion <span>Flashcards</span></h1>
+      <p>Formulae and characteristic colours of cations, anions, and polyatomic ions. Click the card to flip.</p>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="control-group" role="group" aria-label="View mode">
+      <button data-view="cards" class="active">Cards</button>
+      <button data-view="table">Table</button>
+    </div>
+    <div class="control-group" role="group" aria-label="Deck filter">
+      <button data-deck="all" class="active">All ions</button>
+      <button data-deck="coloured">Coloured only</button>
+      <button data-deck="cations">Cations</button>
+      <button data-deck="anions">Anions</button>
+      <button data-deck="polyatomic">Polyatomic</button>
+    </div>
+    <div class="control-group" id="card-only-controls">
+      <label><input type="checkbox" id="shuffle-toggle" checked /> Shuffle</label>
+      <label><input type="checkbox" id="colour-only" /> Hide name (test mode)</label>
+    </div>
+  </div>
+
+  <div class="progress-row">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <span id="progress-text">0 / 0</span>
+  </div>
+
+  <div class="stage-wrap" id="stage-wrap">
+    <div class="card-stage">
+      <div class="card" id="card" tabindex="0" aria-label="Flashcard - press space to flip">
+        <div class="face front">
+          <div class="corner-label" id="front-corner">Front</div>
+          <div class="card-index" id="card-index">01 / 40</div>
+          <div class="prompt-label">What is the formula?</div>
+          <div class="ion-name" id="front-name">—</div>
+          <div class="hint">Click card or press <kbd style="background: var(--ink-100); border: 1px solid var(--ink-200); border-radius: 4px; padding: 2px 6px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-700);">space</kbd> to flip</div>
+        </div>
+        <div class="face back">
+          <div class="corner-label">Answer</div>
+          <div class="card-index" id="card-index-back">01 / 40</div>
+          <div class="prompt-label">Formula</div>
+          <div class="ion-formula" id="back-formula">—</div>
+          <div class="colour-block" id="colour-block" hidden>
+            <div class="label">Solution colour</div>
+            <div class="colour-pill" id="colour-pill">
+              <span class="colour-swatch" id="colour-swatch"></span>
+              <span class="colour-name" id="colour-name"></span>
+            </div>
+          </div>
+          <div class="hint">Did you get it right?</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-btn danger" id="btn-miss">✗ Missed</button>
+      <button class="nav-btn primary" id="btn-flip">Flip</button>
+      <button class="nav-btn success" id="btn-got">✓ Got it</button>
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-btn" id="btn-prev">← Previous</button>
+      <button class="nav-btn" id="btn-next">Next →</button>
+    </div>
+
+    <div class="keymap">
+      <span><kbd>←</kbd> previous</span>
+      <span><kbd>→</kbd> next</span>
+      <span><kbd>space</kbd> flip</span>
+      <span><kbd>1</kbd> missed</span>
+      <span><kbd>2</kbd> got it</span>
+    </div>
+  </div>
+
+  <div class="table-view hidden" id="table-view">
+    <div class="table-card">
+      <div class="table-header-row">
+        <h2 id="table-title">All ions</h2>
+        <span class="table-count" id="table-count">0 entries</span>
+      </div>
+      <div class="table-scroll">
+        <table id="ion-table">
+          <thead>
+            <tr>
+              <th style="width: 48px;">#</th>
+              <th>Name</th>
+              <th>Formula</th>
+              <th>Category</th>
+              <th>Colour</th>
+            </tr>
+          </thead>
+          <tbody id="ion-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="done-screen" id="done-screen">
+    <div class="ring-wrap">
+      <svg width="180" height="180" viewBox="0 0 180 180">
+        <circle class="ring-bg" cx="90" cy="90" r="78"></circle>
+        <circle class="ring-fg" id="ring-fg" cx="90" cy="90" r="78"
+                stroke-dasharray="490" stroke-dashoffset="490"></circle>
+      </svg>
+      <div class="ring-value" id="ring-value">0%</div>
+    </div>
+    <h2>Deck complete</h2>
+    <p id="done-message">Good work — keep the missed ones in rotation.</p>
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Cards</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value" id="stat-got">0</div>
+        <div class="stat-label">Got it</div>
+      </div>
+      <div class="stat-cell miss">
+        <div class="stat-value" id="stat-miss">0</div>
+        <div class="stat-label">Missed</div>
+      </div>
+    </div>
+    <div class="nav-row" style="margin-bottom: 0;">
+      <button class="nav-btn" id="btn-restart-all">Restart deck</button>
+      <button class="nav-btn primary" id="btn-restart-missed">Practise missed only</button>
+    </div>
+  </div>
+
+  <footer>
+    <span>MathAns · S3 Chemistry</span>
+    <span id="footer-meta">Ionic Bond &mdash; Topic World I</span>
+  </footer>
+</div>
+
+<script>
+const IONS = [
+  // Cations
+  { name: "hydrogen ion",        formula: "H⁺",    category: "cations" },
+  { name: "sodium ion",          formula: "Na⁺",   category: "cations" },
+  { name: "potassium ion",       formula: "K⁺",    category: "cations" },
+  { name: "magnesium ion",       formula: "Mg²⁺",  category: "cations" },
+  { name: "calcium ion",         formula: "Ca²⁺",  category: "cations" },
+  { name: "barium ion",          formula: "Ba²⁺",  category: "cations" },
+  { name: "aluminium ion",       formula: "Al³⁺",  category: "cations" },
+  { name: "silver ion",          formula: "Ag⁺",   category: "cations" },
+  { name: "zinc ion",            formula: "Zn²⁺",  category: "cations" },
+  { name: "lead(II) ion",        formula: "Pb²⁺",  category: "cations" },
+  { name: "iron(II) ion",        formula: "Fe²⁺",  category: "cations", colour: "pale green",      hex: "#86efac" },
+  { name: "iron(III) ion",       formula: "Fe³⁺",  category: "cations", colour: "yellow",          hex: "#fde047" },
+  { name: "cobalt(II) ion",      formula: "Co²⁺",  category: "cations", colour: "pink",            hex: "#f9a8d4" },
+  { name: "nickel(II) ion",      formula: "Ni²⁺",  category: "cations", colour: "green",           hex: "#22c55e" },
+  { name: "copper(II) ion",      formula: "Cu²⁺",  category: "cations", colour: "blue",            hex: "#3b82f6" },
+  { name: "copper(II) chloride (solution)", formula: "CuCl₂", category: "cations", colour: "green", hex: "#22c55e" },
+  { name: "manganese(II) ion",   formula: "Mn²⁺",  category: "cations", colour: "very pale pink",  hex: "#fbcfe8" },
+  { name: "chromium(III) ion",   formula: "Cr³⁺",  category: "cations", colour: "green",           hex: "#16a34a" },
+
+  // Simple anions
+  { name: "hydride ion",         formula: "H⁻",    category: "anions" },
+  { name: "fluoride ion",        formula: "F⁻",    category: "anions" },
+  { name: "chloride ion",        formula: "Cl⁻",   category: "anions" },
+  { name: "bromide ion",         formula: "Br⁻",   category: "anions" },
+  { name: "iodide ion",          formula: "I⁻",    category: "anions" },
+  { name: "oxide ion",           formula: "O²⁻",   category: "anions" },
+  { name: "sulphide ion",        formula: "S²⁻",   category: "anions" },
+  { name: "nitride ion",         formula: "N³⁻",   category: "anions" },
+  { name: "phosphide ion",       formula: "P³⁻",   category: "anions" },
+
+  // Polyatomic
+  { name: "ammonium ion",          formula: "NH₄⁺",   category: "polyatomic" },
+  { name: "hydroxide ion",         formula: "OH⁻",    category: "polyatomic" },
+  { name: "hydrogencarbonate ion", formula: "HCO₃⁻",  category: "polyatomic" },
+  { name: "hydrogensulphate ion",  formula: "HSO₄⁻",  category: "polyatomic" },
+  { name: "nitrate ion",           formula: "NO₃⁻",   category: "polyatomic" },
+  { name: "nitrite ion",           formula: "NO₂⁻",   category: "polyatomic" },
+  { name: "sulphate ion",          formula: "SO₄²⁻",  category: "polyatomic" },
+  { name: "sulphite ion",          formula: "SO₃²⁻",  category: "polyatomic" },
+  { name: "carbonate ion",         formula: "CO₃²⁻",  category: "polyatomic" },
+  { name: "permanganate ion",      formula: "MnO₄⁻",  category: "polyatomic", colour: "purple",  hex: "#7e22ce" },
+  { name: "chromate ion",          formula: "CrO₄²⁻", category: "polyatomic", colour: "yellow",  hex: "#facc15" },
+  { name: "dichromate ion",        formula: "Cr₂O₇²⁻", category: "polyatomic", colour: "orange", hex: "#f97316" },
+  { name: "chlorate ion",          formula: "ClO₃⁻",  category: "polyatomic" },
+  { name: "hypochlorite ion",      formula: "ClO⁻",   category: "polyatomic" },
+];
+
+// State
+let deck = [];
+let position = 0;
+let flipped = false;
+let results = {}; // index -> 'got' | 'miss'
+let currentFilter = 'all';
+let shuffleOn = true;
+let testMode = false;
+let viewMode = 'cards';
+
+// Elements
+const cardEl = document.getElementById('card');
+const frontName = document.getElementById('front-name');
+const frontCorner = document.getElementById('front-corner');
+const backFormula = document.getElementById('back-formula');
+const colourBlock = document.getElementById('colour-block');
+const colourSwatch = document.getElementById('colour-swatch');
+const colourName = document.getElementById('colour-name');
+const colourPill = document.getElementById('colour-pill');
+const cardIndex = document.getElementById('card-index');
+const cardIndexBack = document.getElementById('card-index-back');
+const progressFill = document.getElementById('progress-fill');
+const progressText = document.getElementById('progress-text');
+const stageWrap = document.getElementById('stage-wrap');
+const doneScreen = document.getElementById('done-screen');
+const tableView = document.getElementById('table-view');
+const ionTbody = document.getElementById('ion-tbody');
+const tableTitle = document.getElementById('table-title');
+const tableCount = document.getElementById('table-count');
+const progressRow = document.querySelector('.progress-row');
+const cardOnlyControls = document.getElementById('card-only-controls');
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildDeck(filter) {
+  let base;
+  switch (filter) {
+    case 'coloured':  base = IONS.filter(i => i.colour); break;
+    case 'cations':   base = IONS.filter(i => i.category === 'cations'); break;
+    case 'anions':    base = IONS.filter(i => i.category === 'anions'); break;
+    case 'polyatomic':base = IONS.filter(i => i.category === 'polyatomic'); break;
+    default:          base = IONS.slice();
+  }
+  return shuffleOn ? shuffle(base) : base;
+}
+
+function startDeck(filter, customDeck = null) {
+  currentFilter = filter;
+  deck = customDeck || buildDeck(filter);
+  position = 0;
+  flipped = false;
+  results = {};
+  doneScreen.classList.remove('show');
+
+  if (viewMode === 'table') {
+    renderTable();
+  } else {
+    stageWrap.classList.remove('hidden');
+    render();
+  }
+}
+
+function renderTable() {
+  // Build an unshuffled, deterministic list filtered by currentFilter
+  let base;
+  switch (currentFilter) {
+    case 'coloured':  base = IONS.filter(i => i.colour); break;
+    case 'cations':   base = IONS.filter(i => i.category === 'cations'); break;
+    case 'anions':    base = IONS.filter(i => i.category === 'anions'); break;
+    case 'polyatomic':base = IONS.filter(i => i.category === 'polyatomic'); break;
+    default:          base = IONS.slice();
+  }
+
+  const titles = {
+    all: 'All ions',
+    coloured: 'Coloured ions',
+    cations: 'Cations',
+    anions: 'Anions',
+    polyatomic: 'Polyatomic ions',
+  };
+  tableTitle.textContent = titles[currentFilter] || 'Ions';
+  tableCount.textContent = `${base.length} ${base.length === 1 ? 'entry' : 'entries'}`;
+
+  ionTbody.innerHTML = base.map((ion, i) => {
+    const colourCell = ion.colour
+      ? `<div class="cell-colour"><span class="swatch" style="background:${ion.hex};"></span><span class="name">${ion.colour}</span></div>`
+      : `<div class="cell-colour none">—</div>`;
+    return `
+      <tr>
+        <td class="row-num">${String(i + 1).padStart(2, '0')}</td>
+        <td>${ion.name}</td>
+        <td class="cell-formula">${ion.formula}</td>
+        <td class="cell-category">${ion.category}</td>
+        <td>${colourCell}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function setViewMode(mode) {
+  viewMode = mode;
+  document.querySelectorAll('[data-view]').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === mode);
+  });
+
+  if (mode === 'table') {
+    stageWrap.classList.add('hidden');
+    doneScreen.classList.remove('show');
+    tableView.classList.remove('hidden');
+    progressRow.style.display = 'none';
+    cardOnlyControls.classList.add('hidden');
+    renderTable();
+  } else {
+    tableView.classList.add('hidden');
+    stageWrap.classList.remove('hidden');
+    progressRow.style.display = '';
+    cardOnlyControls.classList.remove('hidden');
+    render();
+  }
+}
+
+function categoryLabel(cat) {
+  if (cat === 'cations') return 'Cation';
+  if (cat === 'anions') return 'Anion';
+  if (cat === 'polyatomic') return 'Polyatomic';
+  return 'Ion';
+}
+
+function render() {
+  if (deck.length === 0) {
+    progressText.textContent = '0 / 0';
+    progressFill.style.width = '0%';
+    frontName.textContent = 'No cards in this deck';
+    backFormula.textContent = '—';
+    return;
+  }
+
+  const ion = deck[position];
+
+  // Front
+  frontCorner.textContent = categoryLabel(ion.category);
+  if (testMode) {
+    // In test mode for coloured deck, show colour first, ask for name+formula
+    if (ion.colour) {
+      frontName.innerHTML = `<span style="display:inline-flex;align-items:center;gap:14px;">
+        <span style="width:32px;height:32px;border-radius:50%;background:${ion.hex};border:1px solid rgba(0,0,0,0.08);"></span>
+        <span style="text-transform:capitalize;">${ion.colour}</span>
+      </span>`;
+    } else {
+      frontName.textContent = ion.name;
+    }
+  } else {
+    frontName.textContent = ion.name;
+  }
+
+  // Back
+  backFormula.textContent = ion.formula;
+  if (ion.colour) {
+    colourBlock.hidden = false;
+    colourSwatch.style.background = ion.hex;
+    colourSwatch.style.backgroundImage = 'none';
+    colourName.textContent = ion.colour;
+    colourPill.classList.remove('colourless');
+  } else {
+    colourBlock.hidden = true;
+  }
+
+  // Index
+  const total = deck.length;
+  const idxStr = `${String(position + 1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
+  cardIndex.textContent = idxStr;
+  cardIndexBack.textContent = idxStr;
+
+  // Progress
+  const answered = Object.keys(results).length;
+  progressText.textContent = `${answered} / ${total}`;
+  progressFill.style.width = `${(answered / total) * 100}%`;
+
+  // Reset flip
+  flipped = false;
+  cardEl.classList.remove('flipped');
+}
+
+function flip() {
+  flipped = !flipped;
+  cardEl.classList.toggle('flipped', flipped);
+}
+
+function nextCard() {
+  if (deck.length === 0) return;
+  if (position < deck.length - 1) {
+    position++;
+    render();
+  }
+}
+
+function prevCard() {
+  if (deck.length === 0) return;
+  if (position > 0) {
+    position--;
+    render();
+  }
+}
+
+function mark(result) {
+  if (deck.length === 0) return;
+  results[position] = result;
+  // auto advance
+  if (position < deck.length - 1) {
+    position++;
+    render();
+  } else {
+    showDone();
+  }
+}
+
+function showDone() {
+  const total = deck.length;
+  const got = Object.values(results).filter(r => r === 'got').length;
+  const miss = Object.values(results).filter(r => r === 'miss').length;
+  const pct = total ? Math.round((got / total) * 100) : 0;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-got').textContent = got;
+  document.getElementById('stat-miss').textContent = miss;
+
+  const circumference = 2 * Math.PI * 78;
+  const ring = document.getElementById('ring-fg');
+  ring.style.strokeDasharray = circumference;
+  ring.style.strokeDashoffset = circumference;
+  document.getElementById('ring-value').textContent = pct + '%';
+
+  setTimeout(() => {
+    ring.style.strokeDashoffset = circumference * (1 - pct / 100);
+  }, 80);
+
+  const msg = document.getElementById('done-message');
+  if (pct === 100) msg.textContent = "Perfect run. Try a fresh shuffle to lock it in.";
+  else if (pct >= 80) msg.textContent = "Strong — focus on the missed ones below.";
+  else if (pct >= 50) msg.textContent = "Halfway there. Run the missed-only deck next.";
+  else msg.textContent = "Take it slow. Run the missed deck a few times until it sticks.";
+
+  stageWrap.classList.add('hidden');
+  doneScreen.classList.add('show');
+}
+
+// Event listeners
+cardEl.addEventListener('click', flip);
+document.getElementById('btn-flip').addEventListener('click', flip);
+document.getElementById('btn-next').addEventListener('click', nextCard);
+document.getElementById('btn-prev').addEventListener('click', prevCard);
+document.getElementById('btn-got').addEventListener('click', () => mark('got'));
+document.getElementById('btn-miss').addEventListener('click', () => mark('miss'));
+
+document.getElementById('btn-restart-all').addEventListener('click', () => {
+  startDeck(currentFilter);
+});
+
+document.getElementById('btn-restart-missed').addEventListener('click', () => {
+  const missedIons = Object.entries(results)
+    .filter(([_, r]) => r === 'miss')
+    .map(([idx, _]) => deck[idx]);
+  if (missedIons.length === 0) {
+    startDeck(currentFilter);
+  } else {
+    startDeck(currentFilter, shuffleOn ? shuffle(missedIons) : missedIons);
+  }
+});
+
+// View mode buttons
+document.querySelectorAll('[data-view]').forEach(btn => {
+  btn.addEventListener('click', () => setViewMode(btn.dataset.view));
+});
+
+// Deck filter buttons
+document.querySelectorAll('[data-deck]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-deck]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.deck;
+    if (viewMode === 'table') {
+      renderTable();
+    } else {
+      startDeck(currentFilter);
+    }
+  });
+});
+
+// Toggles
+document.getElementById('shuffle-toggle').addEventListener('change', e => {
+  shuffleOn = e.target.checked;
+  startDeck(currentFilter);
+});
+
+document.getElementById('colour-only').addEventListener('change', e => {
+  testMode = e.target.checked;
+  render();
+});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (doneScreen.classList.contains('show')) return;
+  if (e.key === ' ') { e.preventDefault(); flip(); }
+  else if (e.key === 'ArrowRight') nextCard();
+  else if (e.key === 'ArrowLeft') prevCard();
+  else if (e.key === '1') mark('miss');
+  else if (e.key === '2') mark('got');
+});
+
+// Init
+startDeck('all');
+</script>
+</body>
+</html>
