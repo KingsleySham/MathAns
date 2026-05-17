@@ -388,6 +388,31 @@
     </div>
   </div>
 
+  <!-- Peek mode (triple-tap the title to squash the page into the
+       bottom half of the viewport — for peeking from a drawer). -->
+  <script>
+    (function () {
+      var KEY = 'finals.peekMode';
+      var title = document.querySelector('.site-title');
+      if (!title) return;
+      try { if (localStorage.getItem(KEY) === '1') document.body.classList.add('peek-mode'); } catch (e) {}
+      var count = 0, timer = null;
+      title.addEventListener('click', function () {
+        title.classList.remove('peek-pulse');
+        void title.offsetWidth;
+        title.classList.add('peek-pulse');
+        count++;
+        clearTimeout(timer);
+        timer = setTimeout(function () { count = 0; }, 800);
+        if (count >= 3) {
+          count = 0;
+          var on = document.body.classList.toggle('peek-mode');
+          try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) {}
+        }
+      });
+    })();
+  </script>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>
