@@ -377,6 +377,7 @@ body.peek-mode::before {
   letter-spacing: 0.01em;
 }
 .req { color: #dc2626; }
+.opt { color: #9ca3af; font-weight: 500; font-size: 0.78rem; margin-left: 4px; }
 
 input[type="text"],
 input[type="number"],
@@ -625,54 +626,45 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   box-shadow: 0 4px 14px rgba(66, 133, 244, 0.18);
 }
 
-/* Big Google Docs action button (in place of standard View / Download) */
+/* Google Docs action button.
+   - Default: a Google-blue secondary button that fits next to View /
+     Download.
+   - .gdocs-btn-compact (set automatically when other actions are
+     present): smaller padding so the row doesn't get crowded. */
 .gdocs-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 14px 16px;
+  gap: 8px;
+  padding: 8px 14px;
   background: #fff;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
   cursor: pointer;
   font-family: inherit;
-  text-align: left;
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1f1f1f;
+  letter-spacing: -0.005em;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s, background 0.15s;
 }
 .gdocs-btn:hover {
   border-color: #4285f4;
-  box-shadow: 0 6px 18px rgba(66, 133, 244, 0.20);
-  transform: translateY(-1px);
+  background: #f0f7ff;
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.18);
 }
-.gdocs-btn:active { transform: translateY(0) scale(0.99); }
+.gdocs-btn:active { transform: scale(0.98); }
+.gdocs-btn-compact {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+}
 .gdocs-btn-logo {
-  flex-shrink: 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
 }
-.gdocs-btn-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.gdocs-btn-title {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: #1f1f1f;
-  letter-spacing: -0.01em;
-}
-.gdocs-btn-sub {
-  font-size: 0.72rem;
-  color: #6b7280;
-  font-weight: 500;
+.gdocs-btn-label {
+  white-space: nowrap;
 }
 
 /* Mode picker — two big abstract-colored cards */

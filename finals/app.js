@@ -179,9 +179,10 @@ const quizletRow = document.getElementById('note-quizlet-row');
 const gdocsRow = document.getElementById('note-gdocs-row');
 function syncTypeUI() {
   const t = typeSelect.value;
-  fileRow.style.display    = (t === 'notes' || t === 'mock_paper') ? '' : 'none';
+  const isFile = (t === 'notes' || t === 'mock_paper');
+  fileRow.style.display    = isFile ? '' : 'none';
+  gdocsRow.style.display   = isFile ? '' : 'none';
   quizletRow.style.display = (t === 'flashcards') ? '' : 'none';
-  gdocsRow.style.display   = (t === 'gdocs')      ? '' : 'none';
 }
 typeSelect.addEventListener('change', syncTypeUI);
 syncTypeUI();
@@ -203,59 +204,8 @@ uploadForm.addEventListener('submit', async (e) => {
   if (type === 'flashcards') {
     return submitFlashcards({ name, title, subject, description, folderId });
   }
-  if (type === 'gdocs') {
-    return submitGdocs({ name, title, subject, description, folderId });
-  }
   return submitFile({ name, title, subject, type, description, folderId });
 });
-
-async function submitGdocs({ name, title, subject, description, folderId }) {
-  const url = document.getElementById('note-gdocs-url').value.trim();
-  if (!url) { setStatus('Please paste a Google Docs URL.', 'err'); return; }
-  if (!isGdocsUrl(url)) {
-    setStatus('That doesn\'t look like a Google Docs URL. It should start with https://docs.google.com/ or https://drive.google.com/.', 'err');
-    return;
-  }
-
-  uploadBtn.disabled = true;
-  progressBox.style.display = 'flex';
-  progressFill.style.width = '50%';
-  progressText.textContent = '50%';
-  setStatus('Saving…');
-
-  try {
-    await addDoc(collection(db, 'notes'), {
-      title,
-      description,
-      uploaderName: name,
-      subject,
-      type: 'gdocs',
-      folderId,
-      gdocsUrl: url,
-      gdocsKind: gdocsKind(url),
-      createdAt: serverTimestamp()
-    });
-    progressFill.style.width = '100%';
-    progressText.textContent = '100%';
-    setStatus('Saved! Thanks for sharing.', 'ok');
-    uploadForm.reset();
-    nameInput.value = name;
-    document.getElementById('note-subject').value = subject;
-    typeSelect.value = 'gdocs';
-    syncTypeUI();
-    setTimeout(() => {
-      progressBox.style.display = 'none';
-      setUploadOpen(false);
-      setStatus('');
-    }, 1600);
-  } catch (err) {
-    console.error(err);
-    setStatus('Save failed: ' + (err && err.message ? err.message : err), 'err');
-    progressBox.style.display = 'none';
-  } finally {
-    uploadBtn.disabled = false;
-  }
-}
 
 async function submitFlashcards({ name, title, subject, description, folderId }) {
   const url = document.getElementById('note-quizlet-url').value.trim();
@@ -310,66 +260,90 @@ async function submitFlashcards({ name, title, subject, description, folderId })
 async function submitFile({ name, title, subject, type, description, folderId }) {
   const fileInput = document.getElementById('note-file');
   const file = fileInput.files && fileInput.files[0];
+  const gdocsUrlRaw = document.getElementById('note-gdocs-url').value.trim();
 
-  if (!file) { setStatus('Please pick a file.', 'err'); return; }
-  if (file.size > MAX_BYTES) {
-    setStatus('File is larger than 3 MB. Try compressing the PDF first.', 'err');
+  // At least one of the two must be present.
+  if (!file && !gdocsUrlRaw) {
+    setStatus('Add a file, a Google Docs link, or both.', 'err');
     return;
   }
-  const ext = (file.name.split('.').pop() || '').toLowerCase();
-  if (!ALLOWED_EXT.includes(ext)) {
-    setStatus('Unsupported file type. Allowed: ' + ALLOWED_EXT.join(', '), 'err');
+  if (gdocsUrlRaw && !isGdocsUrl(gdocsUrlRaw)) {
+    setStatus('Google Docs link must start with https://docs.google.com/ or https://drive.google.com/.', 'err');
     return;
+  }
+  if (file) {
+    if (file.size > MAX_BYTES) {
+      setStatus('File is larger than 3 MB. Try compressing the PDF first.', 'err');
+      return;
+    }
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!ALLOWED_EXT.includes(ext)) {
+      setStatus('Unsupported file type. Allowed: ' + ALLOWED_EXT.join(', '), 'err');
+      return;
+    }
   }
 
   uploadBtn.disabled = true;
   progressBox.style.display = 'flex';
   progressFill.style.width = '0%';
   progressText.textContent = '0%';
-  setStatus('Reading file…');
+  setStatus(file ? 'Reading file…' : 'Saving…');
 
   try {
-    const fileBase64 = await fileToBase64(file);
-
-    progressFill.style.width = '55%';
-    progressText.textContent = '55%';
-    setStatus('Uploading…');
-
-    const resp = await fetch('/api/upload-note', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        uploaderName: name, title, subject, type, description,
-        fileName: file.name, fileMime: file.type || '', fileBase64
-      })
-    });
-
-    progressFill.style.width = '90%';
-    progressText.textContent = '90%';
-
-    const result = await resp.json().catch(() => ({}));
-    if (!resp.ok || !result.ok) {
-      throw new Error(result.error || `HTTP ${resp.status}`);
-    }
-
-    await addDoc(collection(db, 'notes'), {
+    const docData = {
       title,
       description,
       uploaderName: name,
       subject,
       type,
       folderId,
-      fileName: file.name,
-      filePath: result.filePath,
-      fileSize: result.fileSize || file.size,
-      fileMime: file.type || '',
-      downloadUrl: result.downloadUrl,
       createdAt: serverTimestamp()
-    });
+    };
+
+    if (file) {
+      const fileBase64 = await fileToBase64(file);
+      progressFill.style.width = '55%';
+      progressText.textContent = '55%';
+      setStatus('Uploading…');
+
+      const resp = await fetch('/api/upload-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uploaderName: name, title, subject, type, description,
+          fileName: file.name, fileMime: file.type || '', fileBase64
+        })
+      });
+      progressFill.style.width = '85%';
+      progressText.textContent = '85%';
+
+      const result = await resp.json().catch(() => ({}));
+      if (!resp.ok || !result.ok) {
+        throw new Error(result.error || `HTTP ${resp.status}`);
+      }
+
+      docData.fileName = file.name;
+      docData.filePath = result.filePath;
+      docData.fileSize = result.fileSize || file.size;
+      docData.fileMime = file.type || '';
+      docData.downloadUrl = result.downloadUrl;
+    } else {
+      // No file → just bump the bar so the user sees progress on the
+      // Firestore write below.
+      progressFill.style.width = '60%';
+      progressText.textContent = '60%';
+    }
+
+    if (gdocsUrlRaw) {
+      docData.gdocsUrl = gdocsUrlRaw;
+      docData.gdocsKind = gdocsKind(gdocsUrlRaw);
+    }
+
+    await addDoc(collection(db, 'notes'), docData);
 
     progressFill.style.width = '100%';
     progressText.textContent = '100%';
-    setStatus('Uploaded! Thanks for sharing.', 'ok');
+    setStatus(file ? 'Uploaded! Thanks for sharing.' : 'Saved! Thanks for sharing.', 'ok');
     uploadForm.reset();
     nameInput.value = name;
     document.getElementById('note-subject').value = subject;
@@ -492,45 +466,54 @@ function populateFolderSelects(linear) {
   if (prevValue && folderById.has(prevValue)) noteFolderEl.value = prevValue;
 }
 
-function noteCardHTML(n, opts) {
-  const typeMeta = noteTypeMeta(n.type);
-  const folderNode = n.folderId ? folderById.get(n.folderId) : null;
-  const isFlash = n.type === 'flashcards';
-  const isGdocs = n.type === 'gdocs';
-  const canPreview = isFlash || isPreviewable(n.fileName);
-  const showFolder = opts && opts.showFolder !== false;
-
-  const sizeOrId = isFlash
-    ? `Quizlet · #${escapeHtml(n.quizletSetId || '')}`
-    : isGdocs
-      ? `Google ${escapeHtml(({document:'Doc',spreadsheet:'Sheet',presentation:'Slides',drive:'Drive'})[n.gdocsKind] || 'Docs')}`
-      : fmtBytes(n.fileSize);
-
-  // Google Docs cards get a big branded action button instead of the
-  // standard View/Download pair.
-  const gdocsButton = `
-    <button class="gdocs-btn" data-action="gdocs-open">
+/* Compact Google Docs button — used wherever a note has a gdocsUrl
+   set (the field is now optional alongside file uploads). The big
+   variant from the previous design is gone; instead, the button sits
+   alongside Download/View like the other action buttons. */
+function gdocsButtonHTML(compact) {
+  return `
+    <button class="gdocs-btn${compact ? ' gdocs-btn-compact' : ''}" data-action="gdocs-open">
       <span class="gdocs-btn-logo" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="22" height="22">
+        <svg viewBox="0 0 24 24" width="${compact ? 16 : 22}" height="${compact ? 16 : 22}">
           <path fill="#4285f4" d="M21.6 12.227c0-.708-.058-1.39-.166-2.045H12v3.87h5.385a4.6 4.6 0 0 1-1.996 3.016v2.508h3.227c1.886-1.737 2.984-4.295 2.984-7.349z"/>
           <path fill="#34a853" d="M12 22c2.7 0 4.964-.895 6.616-2.424l-3.227-2.508c-.895.6-2.037.953-3.389.953-2.603 0-4.806-1.756-5.59-4.12H3.07v2.59A9.997 9.997 0 0 0 12 22z"/>
           <path fill="#fbbc05" d="M6.41 13.901A6.013 6.013 0 0 1 6.09 12c0-.66.114-1.302.32-1.901V7.508H3.07A9.997 9.997 0 0 0 2 12c0 1.614.386 3.14 1.07 4.49l3.34-2.589z"/>
           <path fill="#ea4335" d="M12 5.977c1.47 0 2.788.505 3.826 1.498l2.866-2.866C16.96 2.99 14.696 2 12 2 8.087 2 4.705 4.244 3.07 7.508l3.34 2.59C7.194 7.734 9.397 5.977 12 5.977z"/>
         </svg>
       </span>
-      <span class="gdocs-btn-text">
-        <span class="gdocs-btn-title">Google Docs view</span>
-        <span class="gdocs-btn-sub">Opens in a new tab · sign in with @smcesps.edu.hk</span>
-      </span>
+      <span class="gdocs-btn-label">Google Docs view</span>
     </button>
   `;
+}
 
-  const standardActions = isFlash
-    ? `<a class="btn-secondary" href="${escapeHtml(n.quizletUrl)}" target="_blank" rel="noopener">Open in Quizlet</a>`
-    : `<a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`;
+function noteCardHTML(n, opts) {
+  const typeMeta = noteTypeMeta(n.type);
+  const folderNode = n.folderId ? folderById.get(n.folderId) : null;
+  const isFlash = n.type === 'flashcards';
+  const hasFile = !!n.downloadUrl;
+  const hasGdocs = !!n.gdocsUrl;
+  const canPreview = !isFlash && hasFile && isPreviewable(n.fileName);
+  const showFolder = opts && opts.showFolder !== false;
+
+  const sizeOrId = isFlash
+    ? `Quizlet · #${escapeHtml(n.quizletSetId || '')}`
+    : hasFile
+      ? fmtBytes(n.fileSize)
+      : (hasGdocs ? `Google ${escapeHtml(({document:'Doc',spreadsheet:'Sheet',presentation:'Slides',drive:'Drive'})[n.gdocsKind] || 'Docs')}` : '');
+
+  // Build the actions list — order: View, Download, Google Docs, Quizlet.
+  const actions = [];
+  if (isFlash) {
+    actions.push(`<button class="btn-primary" data-action="view">Study</button>`);
+    actions.push(`<a class="btn-secondary" href="${escapeHtml(n.quizletUrl)}" target="_blank" rel="noopener">Open in Quizlet</a>`);
+  } else {
+    if (canPreview) actions.push(`<button class="btn-primary" data-action="view">View</button>`);
+    if (hasFile)    actions.push(`<a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`);
+    if (hasGdocs)   actions.push(gdocsButtonHTML(actions.length > 0));
+  }
 
   return `
-    <div class="note-card ${isFlash ? 'note-card-flashcards' : ''} ${isGdocs ? 'note-card-gdocs' : ''}" data-id="${escapeHtml(n.id)}">
+    <div class="note-card ${isFlash ? 'note-card-flashcards' : ''}" data-id="${escapeHtml(n.id)}">
       <div class="note-card-top">
         <div class="note-title">${escapeHtml(n.title)}</div>
         <div class="note-type ${typeMeta.cls}">${typeMeta.label}</div>
@@ -540,17 +523,12 @@ function noteCardHTML(n, opts) {
         <span>·</span>
         <span>by ${escapeHtml(n.uploaderName || 'Anonymous')}</span>
         <span>·</span>
-        <span>${sizeOrId}</span>
-        <span>·</span>
+        ${sizeOrId ? `<span>${sizeOrId}</span><span>·</span>` : ''}
         <span>${escapeHtml(fmtDate(n.createdAt))}</span>
       </div>
       ${showFolder && folderNode ? `<div class="note-folder">📁 ${escapeHtml(folderNode.path)}</div>` : ''}
       ${n.description ? `<div class="note-desc">${escapeHtml(n.description)}</div>` : ''}
-      <div class="note-actions">
-        ${isGdocs
-          ? gdocsButton
-          : `${canPreview ? `<button class="btn-primary" data-action="view">${isFlash ? 'Study' : 'View'}</button>` : ''}${standardActions}`}
-      </div>
+      <div class="note-actions">${actions.join('')}</div>
     </div>
   `;
 }
@@ -582,7 +560,7 @@ function renderNotes() {
 function noteTypeMeta(type) {
   if (type === 'mock_paper') return { label: 'Mock Paper', cls: 'mock_paper' };
   if (type === 'flashcards') return { label: 'Flashcards', cls: 'flashcards' };
-  if (type === 'gdocs')      return { label: 'Google Docs', cls: 'gdocs' };
+  // Legacy 'gdocs' type from an earlier version still reads — display as Notes.
   return { label: 'Notes', cls: 'notes' };
 }
 
