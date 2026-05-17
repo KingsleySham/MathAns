@@ -1504,43 +1504,19 @@ function openViewer(note) {
   }
 }
 
-// Opens the PDF in a new tab. We can't just window.open(downloadUrl)
-// because the storage CDN often serves PDFs with Content-Disposition:
-// attachment (forcing download) or as application/octet-stream — so we
-// fetch the bytes, re-wrap as a typed blob, and hand a blob: URL to the
-// new tab. window.open is called synchronously to keep the user-gesture
-// chain alive (otherwise pop-up blockers reject it).
-async function openPdfInNewTab(note) {
-  const win = window.open('', '_blank');
-  if (!win) {
-    alert('Pop-up blocked. Allow pop-ups for this site to view PDFs in a new tab.');
-    return;
-  }
-  // Friendly loader so the new tab isn't blank while we fetch.
-  win.document.write(
-    '<!doctype html><meta charset="utf-8"><title>' +
-    escapeHtml(note.title || 'Loading PDF…') +
-    '</title><body style="margin:0;display:grid;place-items:center;' +
-    'height:100vh;font-family:-apple-system,BlinkMacSystemFont,sans-serif;' +
-    'color:#9ca3af;background:#1f2937">Loading PDF…</body>'
-  );
-  try {
-    const resp = await fetch(note.downloadUrl);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const blob = await resp.blob();
-    const typedBlob = blob.type === 'application/pdf'
-      ? blob
-      : new Blob([blob], { type: 'application/pdf' });
-    const url = URL.createObjectURL(typedBlob);
-    win.location.replace(url);
-    // Keep the blob URL alive long enough for the new tab to load it,
-    // then release. Five minutes is plenty even on slow networks.
-    setTimeout(() => URL.revokeObjectURL(url), 5 * 60 * 1000);
-  } catch (err) {
-    try {
-      win.document.body.textContent = "Couldn't load PDF: " + (err.message || String(err));
-    } catch (_) {}
-  }
+// Opens the PDF in a new tab via /api/pdf, which streams the file
+// back with Content-Type: application/pdf + inline disposition. We
+// can't link to note.downloadUrl directly because raw.githubusercontent.com
+// serves every file as application/octet-stream with nosniff and a
+// strict sandbox CSP, which forces a download instead of viewing.
+//
+// Synchronous window.open in a click handler — no fetch, no blob, no
+// popup-blocker dance, no loading splash.
+function openPdfInNewTab(note) {
+  const target = note.filePath
+    ? '/api/pdf?path=' + encodeURIComponent(note.filePath)
+    : note.downloadUrl; // legacy uploads pre-filePath, best-effort
+  window.open(target, '_blank', 'noopener');
 }
 
 function renderFlashcardsViewer(note) {
