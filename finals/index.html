@@ -137,12 +137,17 @@
         </div>
       </div>
 
-      <!-- Browse card -->
-      <div class="card">
+      <!-- View mode toggle: All vs Browse by folder -->
+      <nav class="view-mode-tabs" id="view-mode-tabs" role="tablist">
+        <button class="view-mode-tab active" data-view="all" role="tab">View all</button>
+        <button class="view-mode-tab" data-view="folders" role="tab">Browse by folder</button>
+      </nav>
+
+      <!-- View: All notes (filterable flat list) -->
+      <div class="card" id="view-all">
         <div class="browse-header">
-          <h2 class="section-title">Browse community notes</h2>
+          <h2 class="section-title">All community notes</h2>
           <div class="browse-filters">
-            <select id="filter-folder"><option value="">All folders</option></select>
             <select id="filter-subject"><option value="">All subjects</option></select>
             <select id="filter-type">
               <option value="">All types</option>
@@ -154,6 +159,24 @@
         </div>
         <div id="notes-list" class="notes-list">
           <div class="empty-state" id="notes-empty">Loading…</div>
+        </div>
+      </div>
+
+      <!-- View: Browse by folder (tree navigation) -->
+      <div class="card" id="view-folders" style="display:none;">
+        <div class="folder-nav-header">
+          <h2 class="section-title" id="folder-nav-title">Folders</h2>
+          <nav class="folder-breadcrumb" id="folder-breadcrumb" aria-label="Folder path"></nav>
+        </div>
+        <div class="folder-children-section" id="folder-children-section">
+          <h3 class="folder-subhead" id="folder-children-head">Subfolders</h3>
+          <div class="folder-children" id="folder-children-list"></div>
+        </div>
+        <div class="folder-notes-section" id="folder-notes-section">
+          <h3 class="folder-subhead" id="folder-notes-head">Notes here</h3>
+          <div class="notes-list" id="folder-notes-list">
+            <div class="empty-state" id="folder-notes-empty">Loading…</div>
+          </div>
         </div>
       </div>
 

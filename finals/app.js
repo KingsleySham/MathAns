@@ -363,8 +363,17 @@ function escapeHtml(s) {
    children: [id…], depth, path: 'Parent / Child' }. */
 let allFolders = [];
 let folderById = new Map();
-const filterFolderEl = document.getElementById('filter-folder');
+let folderLinear = [];
 const noteFolderEl = document.getElementById('note-folder');
+
+/* View mode (All vs Browse-by-folder) — persisted to localStorage so a
+   returning visitor lands on whatever they last picked. */
+const VIEW_MODE_KEY = 'finals.viewMode';
+let viewMode = (function () {
+  try { return localStorage.getItem(VIEW_MODE_KEY) === 'folders' ? 'folders' : 'all'; }
+  catch (_) { return 'all'; }
+})();
+let currentFolderId = null;   // null = root level in folder browser
 
 function rebuildFolderTree() {
   folderById = new Map();
@@ -403,47 +412,60 @@ function rebuildFolderTree() {
 }
 
 function populateFolderSelects(linear) {
-  const selects = [filterFolderEl, noteFolderEl];
-  selects.forEach(sel => {
-    if (!sel) return;
-    const prevValue = sel.value;
-    const placeholder = sel === filterFolderEl ? 'All folders' : '— No folder —';
-    sel.innerHTML = `<option value="">${placeholder}</option>`;
-    linear.forEach(node => {
-      const opt = document.createElement('option');
-      opt.value = node.id;
-      opt.textContent = '—'.repeat(node.depth) + (node.depth ? ' ' : '') + node.name;
-      sel.appendChild(opt);
-    });
-    if (prevValue && folderById.has(prevValue)) sel.value = prevValue;
+  folderLinear = linear;
+  if (!noteFolderEl) return;
+  const prevValue = noteFolderEl.value;
+  noteFolderEl.innerHTML = `<option value="">— No folder —</option>`;
+  linear.forEach(node => {
+    const opt = document.createElement('option');
+    opt.value = node.id;
+    opt.textContent = '—'.repeat(node.depth) + (node.depth ? ' ' : '') + node.name;
+    noteFolderEl.appendChild(opt);
   });
+  if (prevValue && folderById.has(prevValue)) noteFolderEl.value = prevValue;
 }
 
-// `folderId` matches if it equals the filter, OR if its ancestor chain
-// includes the filter (so picking a parent folder shows everything under it).
-function noteInFolder(noteFolderId, filterId) {
-  if (!filterId) return true;
-  if (!noteFolderId) return false;
-  let cur = noteFolderId;
-  let guard = 0;
-  while (cur && guard++ < 32) {
-    if (cur === filterId) return true;
-    const node = folderById.get(cur);
-    if (!node) return false;
-    cur = node.parentId;
-  }
-  return false;
+function noteCardHTML(n, opts) {
+  const typeMeta = noteTypeMeta(n.type);
+  const folderNode = n.folderId ? folderById.get(n.folderId) : null;
+  const isFlash = n.type === 'flashcards';
+  const canPreview = isFlash || isPreviewable(n.fileName);
+  const sizeOrSetId = isFlash ? `Quizlet · #${escapeHtml(n.quizletSetId || '')}` : fmtBytes(n.fileSize);
+  const showFolder = opts && opts.showFolder !== false;
+  return `
+    <div class="note-card ${isFlash ? 'note-card-flashcards' : ''}" data-id="${escapeHtml(n.id)}">
+      <div class="note-card-top">
+        <div class="note-title">${escapeHtml(n.title)}</div>
+        <div class="note-type ${typeMeta.cls}">${typeMeta.label}</div>
+      </div>
+      <div class="note-meta">
+        <span>${escapeHtml(n.subject || '—')}</span>
+        <span>·</span>
+        <span>by ${escapeHtml(n.uploaderName || 'Anonymous')}</span>
+        <span>·</span>
+        <span>${sizeOrSetId}</span>
+        <span>·</span>
+        <span>${escapeHtml(fmtDate(n.createdAt))}</span>
+      </div>
+      ${showFolder && folderNode ? `<div class="note-folder">📁 ${escapeHtml(folderNode.path)}</div>` : ''}
+      ${n.description ? `<div class="note-desc">${escapeHtml(n.description)}</div>` : ''}
+      <div class="note-actions">
+        ${canPreview ? `<button class="btn-primary" data-action="view">${isFlash ? 'Study' : 'View'}</button>` : ''}
+        ${isFlash
+          ? `<a class="btn-secondary" href="${escapeHtml(n.quizletUrl)}" target="_blank" rel="noopener">Open in Quizlet</a>`
+          : `<a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`}
+      </div>
+    </div>
+  `;
 }
 
 function renderNotes() {
   const subjectFilter = filterSubjectEl.value;
   const typeFilter = filterTypeEl.value;
-  const folderFilter = filterFolderEl ? filterFolderEl.value : '';
 
   const filtered = allNotes.filter(n => {
     if (subjectFilter && n.subject !== subjectFilter) return false;
     if (typeFilter && n.type !== typeFilter) return false;
-    if (folderFilter && !noteInFolder(n.folderId, folderFilter)) return false;
     return true;
   });
 
@@ -458,38 +480,7 @@ function renderNotes() {
   }
 
   notesEmpty.style.display = 'none';
-  notesListEl.innerHTML = filtered.map(n => {
-    const typeMeta = noteTypeMeta(n.type);
-    const folderNode = n.folderId ? folderById.get(n.folderId) : null;
-    const isFlash = n.type === 'flashcards';
-    const canPreview = isFlash || isPreviewable(n.fileName);
-    const sizeOrSetId = isFlash ? `Quizlet · #${escapeHtml(n.quizletSetId || '')}` : fmtBytes(n.fileSize);
-    return `
-      <div class="note-card ${isFlash ? 'note-card-flashcards' : ''}" data-id="${escapeHtml(n.id)}">
-        <div class="note-card-top">
-          <div class="note-title">${escapeHtml(n.title)}</div>
-          <div class="note-type ${typeMeta.cls}">${typeMeta.label}</div>
-        </div>
-        <div class="note-meta">
-          <span>${escapeHtml(n.subject || '—')}</span>
-          <span>·</span>
-          <span>by ${escapeHtml(n.uploaderName || 'Anonymous')}</span>
-          <span>·</span>
-          <span>${sizeOrSetId}</span>
-          <span>·</span>
-          <span>${escapeHtml(fmtDate(n.createdAt))}</span>
-        </div>
-        ${folderNode ? `<div class="note-folder">📁 ${escapeHtml(folderNode.path)}</div>` : ''}
-        ${n.description ? `<div class="note-desc">${escapeHtml(n.description)}</div>` : ''}
-        <div class="note-actions">
-          ${canPreview ? `<button class="btn-primary" data-action="view">${isFlash ? 'Study' : 'View'}</button>` : ''}
-          ${isFlash
-            ? `<a class="btn-secondary" href="${escapeHtml(n.quizletUrl)}" target="_blank" rel="noopener">Open in Quizlet</a>`
-            : `<a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`}
-        </div>
-      </div>
-    `;
-  }).join('');
+  notesListEl.innerHTML = filtered.map(n => noteCardHTML(n)).join('');
 }
 
 function noteTypeMeta(type) {
@@ -514,7 +505,146 @@ notesListEl.addEventListener('click', (e) => {
 
 filterSubjectEl.addEventListener('change', renderNotes);
 filterTypeEl.addEventListener('change', renderNotes);
-if (filterFolderEl) filterFolderEl.addEventListener('change', renderNotes);
+
+/* ──────────────────────────────────────────────────────────────────────────
+   View mode (All notes vs Browse by folder) + folder browser rendering.
+   ────────────────────────────────────────────────────────────────────────── */
+const viewModeTabsEl = document.getElementById('view-mode-tabs');
+const viewAllEl      = document.getElementById('view-all');
+const viewFoldersEl  = document.getElementById('view-folders');
+const folderBreadcrumbEl     = document.getElementById('folder-breadcrumb');
+const folderChildrenListEl   = document.getElementById('folder-children-list');
+const folderChildrenSection  = document.getElementById('folder-children-section');
+const folderChildrenHead     = document.getElementById('folder-children-head');
+const folderNotesListEl      = document.getElementById('folder-notes-list');
+const folderNotesEmpty       = document.getElementById('folder-notes-empty');
+const folderNotesHead        = document.getElementById('folder-notes-head');
+
+function setViewMode(mode) {
+  viewMode = mode === 'folders' ? 'folders' : 'all';
+  try { localStorage.setItem(VIEW_MODE_KEY, viewMode); } catch (_) {}
+  viewModeTabsEl.querySelectorAll('.view-mode-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === viewMode);
+  });
+  viewAllEl.style.display     = viewMode === 'all'     ? '' : 'none';
+  viewFoldersEl.style.display = viewMode === 'folders' ? '' : 'none';
+  if (viewMode === 'folders') renderFolderBrowser();
+  else renderNotes();
+}
+
+viewModeTabsEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('.view-mode-tab');
+  if (!btn) return;
+  setViewMode(btn.dataset.view);
+});
+
+function enterFolder(folderId) {
+  currentFolderId = folderId || null;
+  renderFolderBrowser();
+}
+
+function renderFolderBrowser() {
+  // Breadcrumb
+  const trail = [];
+  let cur = currentFolderId ? folderById.get(currentFolderId) : null;
+  while (cur) {
+    trail.unshift(cur);
+    cur = cur.parentId ? folderById.get(cur.parentId) : null;
+  }
+  let crumbsHtml = `<a class="folder-crumb" href="#" data-folder-nav="">All folders</a>`;
+  trail.forEach((node, i) => {
+    crumbsHtml += `<span class="folder-crumb-sep">›</span>`;
+    if (i === trail.length - 1) {
+      crumbsHtml += `<span class="folder-crumb current">${escapeHtml(node.name)}</span>`;
+    } else {
+      crumbsHtml += `<a class="folder-crumb" href="#" data-folder-nav="${escapeHtml(node.id)}">${escapeHtml(node.name)}</a>`;
+    }
+  });
+  folderBreadcrumbEl.innerHTML = crumbsHtml;
+
+  // Subfolders at this level
+  const children = currentFolderId
+    ? (folderById.get(currentFolderId) || { children: [] }).children.map(id => folderById.get(id)).filter(Boolean)
+    : folderLinear.filter(n => !n.parentId || !folderById.has(n.parentId));
+
+  if (children.length === 0) {
+    folderChildrenSection.style.display = 'none';
+  } else {
+    folderChildrenSection.style.display = '';
+    folderChildrenHead.textContent = currentFolderId ? 'Subfolders' : 'Folders';
+    folderChildrenListEl.innerHTML = children.map(node => {
+      const noteCount = countNotesInFolderTree(node.id);
+      const subCount = node.children.length;
+      return `
+        <button class="folder-card" data-folder-nav="${escapeHtml(node.id)}">
+          <div class="folder-card-icon">📁</div>
+          <div class="folder-card-body">
+            <div class="folder-card-name">${escapeHtml(node.name)}</div>
+            <div class="folder-card-meta">
+              ${noteCount} note${noteCount === 1 ? '' : 's'}${subCount ? ` · ${subCount} subfolder${subCount === 1 ? '' : 's'}` : ''}
+            </div>
+          </div>
+          <div class="folder-card-arrow">→</div>
+        </button>
+      `;
+    }).join('');
+  }
+
+  // Notes directly in this folder (or, at root, notes with no folder at all)
+  const notesHere = currentFolderId
+    ? allNotes.filter(n => n.folderId === currentFolderId)
+    : allNotes.filter(n => !n.folderId);
+
+  folderNotesHead.textContent = currentFolderId
+    ? 'Notes in this folder'
+    : 'Notes without a folder';
+
+  if (notesHere.length === 0) {
+    folderNotesListEl.innerHTML = '';
+    folderNotesEmpty.style.display = 'block';
+    folderNotesEmpty.textContent = currentFolderId
+      ? 'No notes in this folder yet.'
+      : 'No uncategorised notes.';
+    folderNotesListEl.appendChild(folderNotesEmpty);
+  } else {
+    folderNotesEmpty.style.display = 'none';
+    folderNotesListEl.innerHTML = notesHere.map(n => noteCardHTML(n, { showFolder: false })).join('');
+  }
+}
+
+function countNotesInFolderTree(folderId) {
+  // Count notes in this folder plus any descendant folder.
+  const ids = new Set([folderId]);
+  function gather(id) {
+    const node = folderById.get(id);
+    if (!node) return;
+    node.children.forEach(cid => { ids.add(cid); gather(cid); });
+  }
+  gather(folderId);
+  let total = 0;
+  allNotes.forEach(n => { if (n.folderId && ids.has(n.folderId)) total++; });
+  return total;
+}
+
+// Click breadcrumb or folder card to navigate; or View button on a note card.
+viewFoldersEl.addEventListener('click', (e) => {
+  const viewBtn = e.target.closest('button[data-action="view"]');
+  if (viewBtn) {
+    const card = viewBtn.closest('.note-card');
+    if (card) {
+      const note = allNotes.find(n => n.id === card.dataset.id);
+      if (note) openViewer(note);
+    }
+    return;
+  }
+  const navTarget = e.target.closest('[data-folder-nav]');
+  if (!navTarget) return;
+  e.preventDefault();
+  enterFolder(navTarget.dataset.folderNav || null);
+});
+
+// Initial render reflects the persisted view mode.
+setViewMode(viewMode);
 
 // Populate subject filter from upload-form options once.
 (function seedSubjectFilter() {
@@ -534,7 +664,8 @@ onSnapshot(
     snap.forEach(d => allFolders.push({ id: d.id, ...d.data() }));
     const linear = rebuildFolderTree();
     populateFolderSelects(linear);
-    renderNotes();
+    if (viewMode === 'folders') renderFolderBrowser();
+    else renderNotes();
   },
   (err) => console.warn('folders listener offline:', err.message)
 );
@@ -544,7 +675,8 @@ onSnapshot(
   (snap) => {
     allNotes = [];
     snap.forEach(d => allNotes.push({ id: d.id, ...d.data() }));
-    renderNotes();
+    if (viewMode === 'folders') renderFolderBrowser();
+    else renderNotes();
   },
   (err) => {
     console.warn('notes listener offline:', err.message);
