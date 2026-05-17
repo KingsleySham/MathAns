@@ -8,6 +8,7 @@
     }
   ],
   "rewrites": [
+        { "has": [{ "type": "host", "value": "finals.mathans.app" }], "source": "/(.*)", "destination": "/finals/$1" },
     { "source": "/admin",        "destination": "/finals/admin.html" },
     { "source": "/admin/",       "destination": "/finals/admin.html" },
     { "source": "/3062470030624770",        "destination": "/3062470030624770/index.html" },
