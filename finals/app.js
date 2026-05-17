@@ -7,6 +7,7 @@ import {
   onSnapshot, query, orderBy, serverTimestamp,
   doc
 } from './firebase-init.js';
+import { TIMETABLE, COVERAGE } from './exam-data.js';
 
 /* ==========================================================================
    Countdown to finals
@@ -1497,5 +1498,178 @@ viewerModal.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && viewerModal.style.display === 'flex') closeViewer();
+});
+
+/* ==========================================================================
+   Timetable modal — vertical timeline of every exam day.
+   Each day card shows date, weekday, "in X days / today / past" badge, and
+   each paper inside with time + subject + meta. Clicking a paper jumps to
+   that subject in the coverage modal.
+   ========================================================================== */
+const timetableModal = document.getElementById('timetable-modal');
+const timetableBody = document.getElementById('timetable-body');
+const coverageModal = document.getElementById('coverage-modal');
+const coverageBody = document.getElementById('coverage-body');
+
+function escapeHtmlInfo(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// HKT-naive: render the calendar day of the exam as the school sees it.
+function dayMs(d) {
+  // Treat the date string as a local-HKT date by parsing "YYYY-MM-DD"
+  // against UTC midnight (so day arithmetic is timezone-independent).
+  const [y, mo, da] = d.split('-').map(Number);
+  return Date.UTC(y, mo - 1, da);
+}
+function todayMsUtc() {
+  const now = new Date();
+  return Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function formatDayStatus(dateStr) {
+  const target = dayMs(dateStr);
+  const today = todayMsUtc();
+  const diff = Math.round((target - today) / 86_400_000);
+  if (diff === 0) return { label: 'Today', cls: 'today' };
+  if (diff === 1) return { label: 'Tomorrow', cls: 'tomorrow' };
+  if (diff > 1)   return { label: `in ${diff} days`, cls: 'future' };
+  if (diff === -1) return { label: 'Yesterday', cls: 'past' };
+  return { label: `${-diff} days ago`, cls: 'past' };
+}
+
+function formatDateLabel(dateStr) {
+  const [y, mo, da] = dateStr.split('-').map(Number);
+  const d = new Date(Date.UTC(y, mo - 1, da));
+  // "1 Jun · Mon" — concise
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${d.getUTCDate()} ${months[d.getUTCMonth()]}`;
+}
+
+function renderTimetable() {
+  const html = TIMETABLE.map((day, idx) => {
+    const status = formatDayStatus(day.date);
+    const dateLabel = formatDateLabel(day.date);
+    const isTSA = !!day.isTSA;
+    return `
+      <div class="day-card day-${status.cls}${isTSA ? ' day-tsa' : ''}" style="animation-delay:${Math.min(idx * 40, 600)}ms;">
+        <div class="day-card-head">
+          <div class="day-card-date">
+            <div class="day-card-date-main">${escapeHtmlInfo(dateLabel)}</div>
+            <div class="day-card-date-day">${escapeHtmlInfo(day.day)}</div>
+          </div>
+          <div class="day-card-status status-${status.cls}">${escapeHtmlInfo(status.label)}${isTSA ? ' · TSA' : ''}</div>
+        </div>
+        <ul class="paper-list">
+          ${day.papers.map(p => `
+            <li class="paper-row ${p.subjectKey ? 'paper-row-clickable' : ''}"${p.subjectKey ? ` data-subject="${escapeHtmlInfo(p.subjectKey)}"` : ''}>
+              <div class="paper-time">${escapeHtmlInfo(p.time)}</div>
+              <div class="paper-body">
+                <div class="paper-subject">${escapeHtmlInfo(p.subject)}</div>
+                ${p.meta ? `<div class="paper-meta">${escapeHtmlInfo(p.meta)}</div>` : ''}
+              </div>
+              ${p.subjectKey ? '<div class="paper-arrow" title="View coverage">📚</div>' : ''}
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  }).join('');
+  timetableBody.innerHTML = html;
+}
+
+function renderCoverage(focusKey) {
+  const html = COVERAGE.map((sub, idx) => {
+    const expanded = sub.subject === focusKey;
+    return `
+      <details class="subj-card" data-subject="${escapeHtmlInfo(sub.subject)}"${expanded ? ' open' : ''} style="animation-delay:${Math.min(idx * 30, 600)}ms;">
+        <summary class="subj-card-summary">
+          <span class="subj-icon">${sub.icon || '📘'}</span>
+          <div class="subj-summary-text">
+            <div class="subj-name">${escapeHtmlInfo(sub.subject)}</div>
+            ${sub.classes && sub.classes !== 'all' ? `<div class="subj-classes">${escapeHtmlInfo(sub.classes)}</div>` : ''}
+          </div>
+          <span class="subj-chevron" aria-hidden="true">▾</span>
+        </summary>
+        <div class="subj-card-body">
+          ${sub.chapters && sub.chapters.length ? `
+            <div class="subj-section">
+              <div class="subj-section-head">Chapters / topics</div>
+              <ul class="subj-list">${sub.chapters.map(c => `<li>${escapeHtmlInfo(c)}</li>`).join('')}</ul>
+            </div>` : ''}
+          ${sub.workbooks && sub.workbooks.length ? `
+            <div class="subj-section">
+              <div class="subj-section-head">Workbooks</div>
+              <ul class="subj-list">${sub.workbooks.map(w => `<li>${escapeHtmlInfo(w)}</li>`).join('')}</ul>
+            </div>` : ''}
+          ${sub.worksheets && sub.worksheets.length ? `
+            <div class="subj-section">
+              <div class="subj-section-head">Worksheets</div>
+              <ul class="subj-list">${sub.worksheets.map(w => `<li>${escapeHtmlInfo(w)}</li>`).join('')}</ul>
+            </div>` : ''}
+          ${sub.others && sub.others.length ? `
+            <div class="subj-section">
+              <div class="subj-section-head">Others</div>
+              <ul class="subj-list">${sub.others.map(o => `<li>${escapeHtmlInfo(o)}</li>`).join('')}</ul>
+            </div>` : ''}
+        </div>
+      </details>
+    `;
+  }).join('');
+  coverageBody.innerHTML = html;
+
+  // Scroll the focused subject into view.
+  if (focusKey) {
+    const target = coverageBody.querySelector(`[data-subject="${CSS.escape(focusKey)}"]`);
+    if (target) setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  }
+}
+
+function openInfoModal(modal, renderFn) {
+  renderFn();
+  modal.style.display = 'flex';
+  // Force reflow so the animation kicks in even when reopened.
+  modal.offsetHeight;  // eslint-disable-line no-unused-expressions
+  modal.classList.add('open');
+}
+
+function closeInfoModal(modal) {
+  modal.classList.remove('open');
+  modal.style.display = 'none';
+}
+
+document.getElementById('open-timetable').addEventListener('click', () => {
+  openInfoModal(timetableModal, renderTimetable);
+});
+document.getElementById('open-coverage').addEventListener('click', () => {
+  openInfoModal(coverageModal, () => renderCoverage(null));
+});
+
+// Click a clickable paper row → open coverage modal on that subject.
+timetableBody.addEventListener('click', (e) => {
+  const row = e.target.closest('.paper-row-clickable');
+  if (!row) return;
+  const key = row.dataset.subject;
+  if (!key) return;
+  closeInfoModal(timetableModal);
+  // Open coverage immediately on the focused subject.
+  openInfoModal(coverageModal, () => renderCoverage(key));
+});
+
+// Close handlers (overlay click / × button / Escape)
+[timetableModal, coverageModal].forEach(modal => {
+  modal.addEventListener('click', (e) => {
+    const role = e.target.dataset.close;
+    if (!role) return;
+    if (role === 'overlay' && e.target !== modal) return;
+    closeInfoModal(modal);
+  });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (timetableModal.classList.contains('open')) closeInfoModal(timetableModal);
+  if (coverageModal.classList.contains('open'))  closeInfoModal(coverageModal);
 });
 
