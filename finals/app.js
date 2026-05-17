@@ -8,6 +8,7 @@ import {
   doc
 } from './firebase-init.js';
 import { TIMETABLE, COVERAGE } from './exam-data.js';
+import { PASSAGE, QUOTES } from './sba-data.js';
 
 /* ==========================================================================
    Countdown to finals
@@ -80,6 +81,7 @@ document.getElementById('main-tabs').addEventListener('click', (e) => {
     p.classList.toggle('active', p.id === 'panel-' + target);
   });
   if (target === 'maths') ensureMathsInitialized();
+  if (target === 'sba') ensureSbaInitialized();
 });
 
 /* ==========================================================================
@@ -771,8 +773,9 @@ document.getElementById('timer-sub-tabs').addEventListener('click', (e) => {
   const btn = e.target.closest('.sub-tab');
   if (!btn) return;
   const target = btn.dataset.sub;
-  document.querySelectorAll('.sub-tab').forEach(b => b.classList.toggle('active', b === btn));
-  document.querySelectorAll('.sub-panel').forEach(p => {
+  const panel = document.getElementById('panel-timer');
+  panel.querySelectorAll('.sub-tab').forEach(b => b.classList.toggle('active', b === btn));
+  panel.querySelectorAll('.sub-panel').forEach(p => {
     p.classList.toggle('active', p.id === 'sub-' + target);
   });
 });
@@ -1824,4 +1827,175 @@ gdocsWarnModal.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && gdocsWarnModal.classList.contains('open')) closeGdocsModal();
 });
+
+/* ==========================================================================
+   SBA — passage reader + quote bank
+   ========================================================================== */
+const SBA_FONTSIZE_KEY = 'finals.sbaFontSize';
+let sbaInitialized = false;
+
+function ensureSbaInitialized() {
+  if (sbaInitialized) return;
+  sbaInitialized = true;
+
+  const titleEl = document.getElementById('sba-title');
+  const subtitleEl = document.getElementById('sba-subtitle');
+  if (PASSAGE && PASSAGE.title) titleEl.textContent = PASSAGE.title;
+  if (PASSAGE && (PASSAGE.author || PASSAGE.tagline)) {
+    const parts = [];
+    if (PASSAGE.author) parts.push(PASSAGE.author);
+    if (PASSAGE.tagline) parts.push(PASSAGE.tagline);
+    subtitleEl.textContent = parts.join(' · ');
+  }
+
+  renderPassage();
+  applySavedPassageFontSize();
+  wireFontSizeButtons();
+
+  populateQuoteFilters();
+  renderQuotes();
+  wireQuoteFilters();
+
+  // Sub-tab switcher, scoped to this panel only.
+  document.getElementById('sba-sub-tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.sub-tab');
+    if (!btn) return;
+    const target = btn.dataset.sub;
+    const panel = document.getElementById('panel-sba');
+    panel.querySelectorAll('.sub-tab').forEach(b => b.classList.toggle('active', b === btn));
+    panel.querySelectorAll('.sub-panel').forEach(p => {
+      p.classList.toggle('active', p.id === 'sba-sub-' + target);
+    });
+  });
+}
+
+function renderPassage() {
+  const body = document.getElementById('passage-body');
+  body.innerHTML = '';
+  if (!PASSAGE || !Array.isArray(PASSAGE.sections) || PASSAGE.sections.length === 0) {
+    body.innerHTML = '<div class="empty-state">Passage not available yet.</div>';
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  PASSAGE.sections.forEach((section) => {
+    const sec = document.createElement('section');
+    sec.className = 'passage-section';
+    if (section.heading) {
+      const h = document.createElement('h3');
+      h.className = 'passage-section-heading';
+      h.textContent = section.heading;
+      sec.appendChild(h);
+    }
+    (section.paragraphs || []).forEach((p) => {
+      const para = document.createElement('p');
+      para.className = 'passage-paragraph';
+      para.textContent = p;
+      sec.appendChild(para);
+    });
+    frag.appendChild(sec);
+  });
+  body.appendChild(frag);
+}
+
+function applySavedPassageFontSize() {
+  let size = 'm';
+  try { size = localStorage.getItem(SBA_FONTSIZE_KEY) || 'm'; } catch (_) {}
+  if (!['s', 'm', 'l'].includes(size)) size = 'm';
+  setPassageFontSize(size);
+}
+
+function setPassageFontSize(size) {
+  const body = document.getElementById('passage-body');
+  body.classList.remove('size-s', 'size-m', 'size-l');
+  body.classList.add('size-' + size);
+  document.querySelectorAll('.passage-fontsize-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.size === size);
+  });
+  try { localStorage.setItem(SBA_FONTSIZE_KEY, size); } catch (_) {}
+}
+
+function wireFontSizeButtons() {
+  document.querySelectorAll('.passage-fontsize-btn').forEach(btn => {
+    btn.addEventListener('click', () => setPassageFontSize(btn.dataset.size));
+  });
+}
+
+function populateQuoteFilters() {
+  const speakerSel = document.getElementById('quote-filter-speaker');
+  const themeSel = document.getElementById('quote-filter-theme');
+  const speakers = Array.from(new Set(QUOTES.map(q => q.speaker).filter(Boolean))).sort();
+  const themes = Array.from(new Set(QUOTES.map(q => q.theme).filter(Boolean))).sort();
+  speakers.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    speakerSel.appendChild(opt);
+  });
+  themes.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t;
+    themeSel.appendChild(opt);
+  });
+}
+
+function wireQuoteFilters() {
+  document.getElementById('quote-filter-speaker').addEventListener('change', renderQuotes);
+  document.getElementById('quote-filter-theme').addEventListener('change', renderQuotes);
+  document.getElementById('quote-search').addEventListener('input', renderQuotes);
+}
+
+function renderQuotes() {
+  const list = document.getElementById('quote-list');
+  const speaker = document.getElementById('quote-filter-speaker').value;
+  const theme = document.getElementById('quote-filter-theme').value;
+  const search = document.getElementById('quote-search').value.trim().toLowerCase();
+
+  const filtered = QUOTES.filter(q => {
+    if (speaker && q.speaker !== speaker) return false;
+    if (theme && q.theme !== theme) return false;
+    if (search) {
+      const hay = (q.text + ' ' + (q.context || '')).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  list.innerHTML = '';
+  if (filtered.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'No quotes match these filters.';
+    list.appendChild(empty);
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  filtered.forEach(q => {
+    const card = document.createElement('div');
+    card.className = 'quote-card';
+
+    const text = document.createElement('div');
+    text.className = 'quote-text';
+    text.textContent = '“' + q.text + '”';
+    card.appendChild(text);
+
+    const meta = document.createElement('div');
+    meta.className = 'quote-meta';
+    const metaParts = [];
+    if (q.speaker) metaParts.push(q.speaker);
+    if (q.theme) metaParts.push(q.theme);
+    meta.textContent = metaParts.join(' · ');
+    card.appendChild(meta);
+
+    if (q.context) {
+      const ctx = document.createElement('div');
+      ctx.className = 'quote-context';
+      ctx.textContent = q.context;
+      card.appendChild(ctx);
+    }
+
+    frag.appendChild(card);
+  });
+  list.appendChild(frag);
+}
 
