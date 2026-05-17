@@ -481,7 +481,7 @@ function gdocsButtonHTML(compact) {
           <path fill="#ea4335" d="M12 5.977c1.47 0 2.788.505 3.826 1.498l2.866-2.866C16.96 2.99 14.696 2 12 2 8.087 2 4.705 4.244 3.07 7.508l3.34 2.59C7.194 7.734 9.397 5.977 12 5.977z"/>
         </svg>
       </span>
-      <span class="gdocs-btn-label">Google Docs view</span>
+      <span class="gdocs-btn-label">View via Google Workspace</span>
     </button>
   `;
 }
