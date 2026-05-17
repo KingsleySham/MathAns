@@ -1851,12 +1851,68 @@ function openGdocs(note) {
   gdocsWarnModal.classList.add('open');
 }
 
-// Quizlet: open the set in a new browser tab — no embed, no modal.
-// (We used to render Quizlet inside the in-app viewer, but Quizlet's
-// own page is a better study experience and lots of sets disallow
-// embedding anyway.)
+/* Quizlet redirect: shows a 2-second animated popup ("off to Quizlet
+   — stickers pop, progress fills), then opens the set in a new tab.
+   Persists a "skip" preference to localStorage so a returning student
+   can short-circuit the popup entirely. */
+const QUIZLET_SKIP_KEY = 'finals.quizletRedirectSkipped';
+const qrModal       = document.getElementById('quizlet-redirect-modal');
+const qrSkipInput   = document.getElementById('qr-skip-input');
+
+function getQuizletSkipped() {
+  try { return localStorage.getItem(QUIZLET_SKIP_KEY) === '1'; }
+  catch (_) { return false; }
+}
+function setQuizletSkipped(on) {
+  try { localStorage.setItem(QUIZLET_SKIP_KEY, on ? '1' : '0'); }
+  catch (_) {}
+}
+
+let qrTimer = null;
+
 function openQuizlet(note) {
-  openInNewTab(note.quizletUrl || '#');
+  const url = note.quizletUrl || '#';
+  if (getQuizletSkipped() || !qrModal) {
+    openInNewTab(url);
+    return;
+  }
+
+  // Open the new tab IMMEDIATELY inside the click handler so popup
+  // blockers don't intervene. The popup that follows is just for
+  // celebration — by the time the 2-second animation runs the tab is
+  // already open in the background.
+  openInNewTab(url);
+
+  qrSkipInput.checked = false;
+  qrModal.style.display = 'flex';
+  qrModal.offsetHeight;         // reflow so the open-transition fires
+  qrModal.classList.add('open');
+
+  if (qrTimer) clearTimeout(qrTimer);
+  qrTimer = setTimeout(() => {
+    if (qrSkipInput.checked) setQuizletSkipped(true);
+    closeQuizletRedirect();
+  }, 2000);
+}
+
+function closeQuizletRedirect() {
+  if (!qrModal) return;
+  qrModal.classList.remove('open');
+  if (qrTimer) { clearTimeout(qrTimer); qrTimer = null; }
+  setTimeout(() => { qrModal.style.display = 'none'; }, 220);
+}
+
+if (qrModal) {
+  qrModal.addEventListener('click', (e) => {
+    const role = e.target.dataset.close;
+    if (!role) return;
+    if (role === 'overlay' && e.target !== qrModal) return;
+    // Closing the popup early also cancels the pending redirect.
+    closeQuizletRedirect();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && qrModal.classList.contains('open')) closeQuizletRedirect();
+  });
 }
 
 function closeGdocsModal() {

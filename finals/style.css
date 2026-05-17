@@ -699,6 +699,148 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
 }
 .quizlet-btn-label { white-space: nowrap; }
 
+/* ---------- "Off to Quizlet" redirect popup ---------- */
+.quizlet-redirect-modal {
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.quizlet-redirect-modal.open { opacity: 1; }
+.qr-card {
+  max-width: 400px;
+  width: 100%;
+  margin: auto;
+  padding: 32px 28px 22px;
+  text-align: center;
+  border-radius: 22px;
+  position: relative;
+  overflow: hidden;
+  transform: scale(0.8) translateY(20px);
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(180deg, #ffffff 0%, #f4f5ff 100%);
+}
+.quizlet-redirect-modal.open .qr-card {
+  transform: scale(1) translateY(0);
+}
+
+/* Floating sticker grid — emojis pop in from below with a stagger
+   then gently bob. Eight stickers spread around the card edges so
+   the popup feels celebratory without crowding the content. */
+.qr-stickers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.qr-sticker {
+  position: absolute;
+  font-size: 24px;
+  opacity: 0;
+  transform: translateY(20px) scale(0.4);
+  animation:
+    qrStickerIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    qrStickerBob 2.5s ease-in-out infinite;
+}
+.qr-s1 { top: 12px;  left: 14px;  --d: 0.08s; }
+.qr-s2 { top: 24px;  right: 18px; --d: 0.18s; }
+.qr-s3 { top: 80px;  left: -2px;  --d: 0.28s; }
+.qr-s4 { top: 70px;  right: -4px; --d: 0.12s; }
+.qr-s5 { bottom: 100px; left: 8px;  --d: 0.22s; }
+.qr-s6 { bottom: 110px; right: 6px; --d: 0.34s; }
+.qr-s7 { bottom: 30px; left: 30px;  --d: 0.40s; }
+.qr-s8 { bottom: 14px; right: 28px; --d: 0.46s; }
+.qr-sticker {
+  animation-delay: var(--d, 0.1s), calc(var(--d, 0.1s) + 0.5s);
+}
+@keyframes qrStickerIn {
+  to { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+@keyframes qrStickerBob {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50%      { transform: translateY(-4px) rotate(8deg); }
+}
+
+.qr-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 14px;
+  animation: qrLogoIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s both,
+             qrLogoPulse 1.6s ease-in-out 0.6s infinite;
+  filter: drop-shadow(0 6px 16px rgba(66, 85, 255, 0.30));
+}
+@keyframes qrLogoIn {
+  from { transform: scale(0) rotate(-30deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes qrLogoPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+.qr-title {
+  position: relative;
+  z-index: 2;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 6px;
+  letter-spacing: -0.015em;
+  animation: qrFadeUp 0.4s ease 0.2s both;
+}
+.qr-sub {
+  position: relative;
+  z-index: 2;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 18px;
+  animation: qrFadeUp 0.4s ease 0.3s both;
+}
+@keyframes qrFadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Progress bar that fills exactly over 2 seconds. */
+.qr-progress {
+  position: relative;
+  z-index: 2;
+  height: 6px;
+  background: rgba(66, 85, 255, 0.14);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  animation: qrFadeUp 0.4s ease 0.35s both;
+}
+.qr-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #4255ff 0%, #8b5cf6 100%);
+  border-radius: 999px;
+  animation: qrFill 2s cubic-bezier(0.4, 0, 0.2, 1) 0.05s forwards;
+}
+@keyframes qrFill { to { width: 100%; } }
+
+.qr-skip {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #6b7280;
+  cursor: pointer;
+  user-select: none;
+  animation: qrFadeUp 0.4s ease 0.45s both;
+}
+.qr-skip input {
+  width: 14px;
+  height: 14px;
+  accent-color: #4255ff;
+  cursor: pointer;
+}
+
 /* Mode picker — two big abstract-colored cards */
 .view-mode-tabs {
   display: grid;
