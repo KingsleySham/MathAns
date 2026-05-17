@@ -1877,12 +1877,10 @@ function openQuizlet(note) {
     return;
   }
 
-  // Open the new tab IMMEDIATELY inside the click handler so popup
-  // blockers don't intervene. The popup that follows is just for
-  // celebration — by the time the 2-second animation runs the tab is
-  // already open in the background.
-  openInNewTab(url);
-
+  // Show the popup first; open the tab AFTER the animation finishes.
+  // Browsers' "transient user activation" lasts a few seconds, so
+  // calling openInNewTab() 2 s after the click still satisfies popup
+  // blockers in every current browser.
   qrSkipInput.checked = false;
   qrModal.style.display = 'flex';
   qrModal.offsetHeight;         // reflow so the open-transition fires
@@ -1891,6 +1889,7 @@ function openQuizlet(note) {
   if (qrTimer) clearTimeout(qrTimer);
   qrTimer = setTimeout(() => {
     if (qrSkipInput.checked) setQuizletSkipped(true);
+    openInNewTab(url);
     closeQuizletRedirect();
   }, 2000);
 }
