@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Study Streak Story</title>
+  <meta name="theme-color" content="#fff8e8" />
+  <style>
+    :root {
+      --bg: #fff8e8;
+      --dark: #2f363d;
+      --green: #58c72f;
+      --yellow: #ffd233;
+      --orange: #ff8a00;
+      --red: #ff4d2d;
+      --blue: #23a8f2;
+      --purple: #8e54e9;
+      --card: rgba(255,255,255,0.72);
+      --font: "Arial Rounded MT Bold", "Nunito", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100vh;
+      background: #222;
+      font-family: var(--font);
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      display: grid;
+      place-items: center;
+      padding: 12px;
+    }
+
+    .story {
+      position: relative;
+      width: 390px;
+      height: 844px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 36%, rgba(255, 221, 80, 0.35), transparent 32%),
+        linear-gradient(180deg, var(--bg), #fffdf4);
+      border-radius: 26px;
+      padding: 34px 26px 24px;
+      text-align: center;
+      color: var(--dark);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+    }
+
+    .ray {
+      position: absolute;
+      inset: 180px -80px auto;
+      height: 270px;
+      background: repeating-conic-gradient(
+        from -12deg,
+        rgba(255, 207, 65, 0.23) 0deg 13deg,
+        transparent 13deg 28deg
+      );
+      opacity: 0.7;
+      z-index: 0;
+    }
+
+    .sparkle, .dot, .confetti { position: absolute; z-index: 2; }
+    .sparkle { color: var(--yellow); font-size: 30px; }
+    .s1 { top: 70px; left: 42px; }
+    .s2 { top: 52px; right: 54px; }
+    .dot { width: 7px; height: 7px; background: #9bd65a; border-radius: 50%; }
+    .d1 { left: 36px; top: 560px; } .d2 { right: 46px; top: 610px; }
+    .confetti { width: 25px; height: 7px; border-radius: 999px; transform: rotate(-25deg); }
+
+    .top-fire { font-size: 50px; line-height: 1; }
+    h1 { margin: 10px 0 0; font-size: 43px; letter-spacing: -1px; }
+    h2 { margin: -2px 0 18px; font-size: 60px; color: var(--green); letter-spacing: -2px; }
+
+    .trophy-wrap { position: relative; z-index: 1; margin: 0 auto 24px; width: 250px; height: 250px; }
+    .trophy {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 170px; height: 145px;
+      transform: translate(-50%, -60%);
+      background: linear-gradient(135deg, #ffe35a, var(--yellow) 45%, #ffae00 100%);
+      border: 5px solid #f0a000;
+      border-radius: 25px 25px 70px 70px;
+      box-shadow: inset 18px 12px 0 rgba(255,255,255,.32), 0 12px 0 rgba(216,124,0,.22);
+    }
+    .trophy::before, .trophy::after {
+      content: "";
+      position: absolute;
+      top: 30px;
+      width: 58px; height: 70px;
+      border: 10px solid #f4af00;
+      border-radius: 50%;
+      z-index: -1;
+    }
+    .trophy::before { left: -45px; }
+    .trophy::after { right: -45px; }
+    .flame {
+      position: absolute;
+      inset: 55px 0 auto;
+      margin: auto;
+      width: 55px; height: 65px;
+      background: var(--red);
+      clip-path: path("M28 0 C48 22 53 36 43 55 C34 72 12 67 8 50 C4 35 17 26 16 10 C20 17 24 19 28 0Z");
+    }
+    .flame::after {
+      content: "";
+      position: absolute;
+      left: 15px; top: 27px;
+      width: 26px; height: 30px;
+      background: var(--yellow);
+      border-radius: 60% 60% 50% 50%;
+    }
+    .stem { position: absolute; left: 50%; top: 150px; width: 52px; height: 80px; transform: translateX(-50%); background: linear-gradient(#ffc928,#f2a000); border: 5px solid #dd9300; border-radius: 20px; }
+    .base { position: absolute; left: 50%; bottom: 10px; width: 155px; height: 40px; transform: translateX(-50%); background: linear-gradient(#ffb52b,#e88900); border: 5px solid #d98200; border-radius: 18px; }
+
+    .message { position: relative; z-index: 2; margin: 6px 0 18px; font-size: 23px; line-height: 1.25; }
+    .message strong { color: var(--green); }
+
+    .card {
+      position: relative;
+      z-index: 2;
+      height: 80px;
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      align-items: center;
+      gap: 14px;
+      margin: 13px 0;
+      padding: 12px 18px;
+      border-radius: 21px;
+      background: var(--card);
+      text-align: left;
+      box-shadow: 0 8px 18px rgba(67, 45, 0, 0.05);
+    }
+    .icon {
+      width: 52px; height: 52px;
+      display: grid; place-items: center;
+      border-radius: 14px;
+      font-size: 29px;
+      color: #fff;
+    }
+    .time .icon { background: linear-gradient(135deg, var(--green), #86dc34); }
+    .subject .icon { background: linear-gradient(135deg, var(--blue), #008ee8); }
+    .countdown .icon { background: linear-gradient(135deg, var(--purple), #6e39d7); }
+    .label { font-size: 17px; font-weight: 800; }
+    .value { font-size: 33px; font-weight: 900; line-height: 1; }
+    /* Long subject names need to shrink so they don't overflow. */
+    .subject .value { font-size: 26px; word-break: break-word; }
+    .time .value { color: var(--green); }
+    .subject .value { color: var(--blue); }
+    .countdown .value { color: var(--purple); }
+
+    .site {
+      position: absolute;
+      left: 50%; bottom: 35px;
+      transform: translateX(-50%);
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 280px; height: 52px;
+      border: 3px solid rgba(92, 196, 46, 0.45);
+      border-radius: 999px;
+      color: #58b936;
+      font-size: 23px;
+      font-weight: 900;
+      background: rgba(255,255,255,.45);
+      z-index: 3;
+    }
+
+    .bush { position: absolute; bottom: -5px; width: 95px; height: 50px; background: var(--green); border-radius: 60px 60px 0 0; }
+    .bush.left { left: -18px; }
+    .bush.right { right: -18px; }
+
+    /* Phone — fill the viewport so a screenshot crops cleanly. */
+    @media (max-width: 420px) {
+      body { padding: 0; background: var(--bg); }
+      .story {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* Tap-to-hide UI: a tiny floating hint that screenshots itself away. */
+    .hint {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.85);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 14px;
+      border-radius: 999px;
+      letter-spacing: 0.02em;
+      font-family: var(--font);
+      z-index: 9999;
+      pointer-events: auto;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .hint.gone { display: none; }
+  </style>
+</head>
+<body>
+  <main class="story">
+    <div class="ray"></div>
+    <div class="sparkle s1">✦</div>
+    <div class="sparkle s2">✦</div>
+    <div class="dot d1"></div><div class="dot d2"></div>
+    <div class="confetti" style="left:82px;top:292px;background:var(--red)"></div>
+    <div class="confetti" style="right:78px;top:332px;background:var(--red)"></div>
+    <div class="confetti" style="left:99px;top:368px;background:var(--orange)"></div>
+
+    <div class="top-fire">🔥</div>
+    <h1>study streak</h1>
+    <h2 id="streak-heading">keep it up!</h2>
+
+    <section class="trophy-wrap" aria-label="Study streak trophy">
+      <div class="trophy"><div class="flame"></div></div>
+      <div class="stem"></div>
+      <div class="base"></div>
+    </section>
+
+    <p class="message" id="streak-message">you showed up today.<br><strong>your future self is proud.</strong></p>
+
+    <section class="card time">
+      <div class="icon">◷</div>
+      <div><div class="label">time of your study today</div><div class="value" id="time-val">0m</div></div>
+    </section>
+
+    <section class="card subject">
+      <div class="icon">📖</div>
+      <div><div class="label">subject</div><div class="value" id="subject-val">Mathematics</div></div>
+    </section>
+
+    <section class="card countdown">
+      <div class="icon">▦</div>
+      <div><div class="label">countdown to exam</div><div class="value" id="countdown-val">— days</div></div>
+    </section>
+
+    <div class="site">🌐 finals.mathans.app</div>
+    <div class="bush left"></div><div class="bush right"></div>
+  </main>
+
+  <div class="hint" id="hint">Tap to hide · screenshot this page to post</div>
+
+  <script>
+    // Standalone — does not import from app.js. Mirror the exam window
+    // constants from there so this page works in a fresh tab without
+    // pulling in the module graph.
+    (function () {
+      var EXAM_START_MS = Date.UTC(2026, 5, 1, 0, 30);  // 1 Jun 08:30 HKT
+      var EXAM_END_MS   = Date.UTC(2026, 5, 12, 4, 30); // 12 Jun 12:30 HKT
+
+      var params = new URLSearchParams(location.search);
+      var minutes = parseInt(params.get('min') || '0', 10);
+      if (!isFinite(minutes) || minutes < 0) minutes = 0;
+      var subject = (params.get('subject') || 'Self study').slice(0, 60);
+
+      function fmtMinutes(m) {
+        if (m <= 0) return '0m';
+        var h = Math.floor(m / 60);
+        var rem = m % 60;
+        if (h === 0) return rem + 'm';
+        if (rem === 0) return h + 'h';
+        return h + 'h ' + rem + 'm';
+      }
+
+      function fmtCountdown() {
+        var now = Date.now();
+        if (now < EXAM_START_MS) {
+          var days = Math.ceil((EXAM_START_MS - now) / 86400000);
+          return days + (days === 1 ? ' day left' : ' days left');
+        }
+        if (now < EXAM_END_MS) return 'in progress';
+        return 'finals done!';
+      }
+
+      // Tone the heading + message to the minutes studied today.
+      function pickHeading(m) {
+        if (m === 0)   return 'just start.';
+        if (m < 30)    return 'good start!';
+        if (m < 120)   return 'keep it up!';
+        if (m < 240)   return 'beast mode.';
+        return 'absolute legend.';
+      }
+      function pickMessage(m) {
+        if (m === 0) {
+          return 'one page is a start.<br><strong>your future self is watching.</strong>';
+        }
+        return 'you showed up today.<br><strong>your future self is proud.</strong>';
+      }
+
+      document.getElementById('time-val').textContent = fmtMinutes(minutes);
+      document.getElementById('subject-val').textContent = subject;
+      document.getElementById('countdown-val').textContent = fmtCountdown();
+      document.getElementById('streak-heading').textContent = pickHeading(minutes);
+      document.getElementById('streak-message').innerHTML = pickMessage(minutes);
+
+      var hint = document.getElementById('hint');
+      hint.addEventListener('click', function () { hint.classList.add('gone'); });
+      // Auto-hide so the hint isn't in the screenshot if the user is quick.
+      setTimeout(function () { hint.classList.add('gone'); }, 4000);
+    })();
+  </script>
+</body>
+</html>

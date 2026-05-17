@@ -1028,6 +1028,65 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
 .lap-list li .lap-n { font-weight: 700; color: #6b7280; }
 .lap-list li .lap-t { color: #111827; }
 
+/* ---------- Share study streak ---------- */
+.story-share {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #f3f4f6;
+}
+.story-share-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.story-share-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.story-share-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+.story-share-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #1a56db;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.story-share-subject .select-wrap,
+.story-share-subject {
+  margin: 0;
+  width: 100%;
+}
+.story-share-subject select {
+  padding: 8px 28px 8px 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a56db;
+  background-color: #f8fafc;
+}
+.story-share-btn {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  font-size: 0.95rem;
+}
+.story-share-hint {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.4;
+}
+
 /* ---------- Admin ---------- */
 .admin-wrap {
   max-width: 1100px;
