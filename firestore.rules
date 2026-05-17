@@ -40,10 +40,16 @@ service cloud.firestore {
     // this project).
     //
     // type can be 'notes' | 'mock_paper' | 'flashcards'.
-    //   'notes' / 'mock_paper' uploads live as GitHub commits — they
-    //     require fileName, filePath, fileSize, downloadUrl.
+    //   'notes' / 'mock_paper' must have a file (fileName/filePath/
+    //     fileSize/downloadUrl) AND/OR a Google Docs link (gdocsUrl).
+    //     At least one is required; both is fine.
     //   'flashcards' uploads are Quizlet links — they require quizletUrl
     //     and quizletSetId instead of file fields.
+    //
+    // The legacy type 'gdocs' (from an earlier version) is still accepted
+    // for backward compatibility: existing docs with that type continue
+    // to read/update normally; new uploads should use 'notes' or
+    // 'mock_paper' with an optional gdocsUrl instead.
     match /notes/{noteId} {
       allow read: if true;
       allow create: if
@@ -58,16 +64,27 @@ service cloud.firestore {
         request.resource.data.uploaderName.size() < 80 &&
         request.resource.data.type in ['notes', 'mock_paper', 'flashcards', 'gdocs'] &&
         (
-          // File-backed types must include the file fields and be small enough.
-          (request.resource.data.type in ['notes', 'mock_paper'] &&
-            request.resource.data.keys().hasAll(['fileName', 'filePath', 'fileSize', 'downloadUrl']) &&
-            request.resource.data.fileName is string &&
-            request.resource.data.fileName.size() < 200 &&
-            request.resource.data.filePath is string &&
-            request.resource.data.filePath.size() < 300 &&
-            request.resource.data.fileSize is number &&
-            request.resource.data.fileSize < 50 * 1024 * 1024 &&
-            request.resource.data.downloadUrl is string)
+          // notes / mock_paper: needs a file OR a gdocs URL (or both).
+          (request.resource.data.type in ['notes', 'mock_paper'] && (
+            (
+              // File fields validated together when present.
+              request.resource.data.keys().hasAll(['fileName', 'filePath', 'fileSize', 'downloadUrl']) &&
+              request.resource.data.fileName is string &&
+              request.resource.data.fileName.size() < 200 &&
+              request.resource.data.filePath is string &&
+              request.resource.data.filePath.size() < 300 &&
+              request.resource.data.fileSize is number &&
+              request.resource.data.fileSize < 50 * 1024 * 1024 &&
+              request.resource.data.downloadUrl is string
+            )
+            ||
+            (
+              // Google Docs URL on its own (no file).
+              request.resource.data.keys().hasAll(['gdocsUrl']) &&
+              request.resource.data.gdocsUrl is string &&
+              request.resource.data.gdocsUrl.size() < 600
+            )
+          ))
           ||
           // Flashcards must include the parsed Quizlet URL + set ID.
           (request.resource.data.type == 'flashcards' &&
@@ -77,7 +94,7 @@ service cloud.firestore {
             request.resource.data.quizletSetId is string &&
             request.resource.data.quizletSetId.size() < 60)
           ||
-          // Google Docs / Drive links — just the URL.
+          // Legacy: standalone gdocs-typed entries created before the rework.
           (request.resource.data.type == 'gdocs' &&
             request.resource.data.keys().hasAll(['gdocsUrl']) &&
             request.resource.data.gdocsUrl is string &&
