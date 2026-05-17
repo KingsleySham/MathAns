@@ -55,7 +55,6 @@
       <button class="main-tab active" data-tab="notes" role="tab">Notes &amp; Papers</button>
       <button class="main-tab" data-tab="maths" role="tab">Maths Answers</button>
       <button class="main-tab" data-tab="timer" role="tab">Study Timer</button>
-      <button class="main-tab" data-tab="sba" role="tab">SBA</button>
     </nav>
 
     <!-- ===== Notes & Papers tab ===== -->
@@ -339,50 +338,6 @@
             <button class="btn-secondary" id="sw-reset">Reset</button>
           </div>
           <ol class="lap-list" id="sw-laps"></ol>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== SBA tab ===== -->
-    <section class="tab-panel" id="panel-sba">
-      <div class="card sba-card">
-        <h2 class="section-title" id="sba-title">Lamb to the Slaughter</h2>
-        <p class="section-desc" id="sba-subtitle">Roald Dahl · SBA reference</p>
-
-        <nav class="sub-tabs" id="sba-sub-tabs">
-          <button class="sub-tab active" data-sub="passage">Passage</button>
-          <button class="sub-tab" data-sub="quotes">Quote bank</button>
-        </nav>
-
-        <!-- Passage subtool -->
-        <div class="sub-panel active" id="sba-sub-passage">
-          <div class="passage-toolbar">
-            <span class="passage-toolbar-label">Text size</span>
-            <button type="button" class="passage-fontsize-btn" data-size="s" aria-label="Small text">Aa</button>
-            <button type="button" class="passage-fontsize-btn active" data-size="m" aria-label="Medium text">Aa</button>
-            <button type="button" class="passage-fontsize-btn" data-size="l" aria-label="Large text">Aa</button>
-          </div>
-          <div class="passage-body" id="passage-body"></div>
-        </div>
-
-        <!-- Quote bank subtool -->
-        <div class="sub-panel" id="sba-sub-quotes">
-          <div class="quote-filters">
-            <div class="select-wrap">
-              <select id="quote-filter-speaker">
-                <option value="">All characters</option>
-              </select>
-            </div>
-            <div class="select-wrap">
-              <select id="quote-filter-theme">
-                <option value="">All themes</option>
-              </select>
-            </div>
-            <input type="search" id="quote-search" class="quote-search" placeholder="Search quotes…" />
-          </div>
-          <div class="quote-list" id="quote-list">
-            <div class="empty-state" id="quote-empty">Loading…</div>
-          </div>
         </div>
       </div>
     </section>
