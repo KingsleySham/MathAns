@@ -56,7 +56,7 @@ service cloud.firestore {
         request.resource.data.uploaderName is string &&
         request.resource.data.uploaderName.size() > 0 &&
         request.resource.data.uploaderName.size() < 80 &&
-        request.resource.data.type in ['notes', 'mock_paper', 'flashcards'] &&
+        request.resource.data.type in ['notes', 'mock_paper', 'flashcards', 'gdocs'] &&
         (
           // File-backed types must include the file fields and be small enough.
           (request.resource.data.type in ['notes', 'mock_paper'] &&
@@ -76,6 +76,12 @@ service cloud.firestore {
             request.resource.data.quizletUrl.size() < 500 &&
             request.resource.data.quizletSetId is string &&
             request.resource.data.quizletSetId.size() < 60)
+          ||
+          // Google Docs / Drive links — just the URL.
+          (request.resource.data.type == 'gdocs' &&
+            request.resource.data.keys().hasAll(['gdocsUrl']) &&
+            request.resource.data.gdocsUrl is string &&
+            request.resource.data.gdocsUrl.size() < 600)
         );
       allow update: if
         request.resource.data.title is string &&

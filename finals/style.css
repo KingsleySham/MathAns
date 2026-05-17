@@ -17,6 +17,124 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ---------- Google Docs sign-in warning modal ---------- */
+.gdocs-modal {
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.gdocs-modal.open { opacity: 1; }
+.gdocs-warn-card {
+  max-width: 400px;
+  width: 100%;
+  margin: auto;
+  padding: 28px 26px 22px;
+  text-align: center;
+  border-radius: 22px;
+  transform: scale(0.85) translateY(20px);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.gdocs-modal.open .gdocs-warn-card { transform: scale(1) translateY(0); }
+.gdocs-warn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 14px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 8px 24px rgba(66, 133, 244, 0.22);
+  animation: gdocsIconIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both,
+             gdocsIconBob 2.6s ease-in-out 0.8s infinite;
+}
+@keyframes gdocsIconIn {
+  from { transform: scale(0) rotate(-90deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0);      opacity: 1; }
+}
+@keyframes gdocsIconBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+.gdocs-warn-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+  animation: gdocsFadeUp 0.4s ease 0.3s both;
+}
+.gdocs-warn-body {
+  font-size: 0.88rem;
+  color: #4b5563;
+  line-height: 1.55;
+  margin-bottom: 18px;
+  animation: gdocsFadeUp 0.4s ease 0.4s both;
+}
+.gdocs-warn-body strong {
+  color: #1a56db;
+  font-weight: 700;
+  background: linear-gradient(120deg, transparent 0%, transparent 50%, #fef9c3 50%, #fef9c3 100%);
+  background-size: 220% 100%;
+  background-position: 100% 0;
+  animation: gdocsHighlight 1s ease 0.7s both;
+  padding: 0 3px;
+  border-radius: 2px;
+}
+@keyframes gdocsHighlight {
+  to { background-position: 0 0; }
+}
+@keyframes gdocsFadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.gdocs-warn-skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #6b7280;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 18px;
+  animation: gdocsFadeUp 0.4s ease 0.5s both;
+}
+.gdocs-warn-skip input {
+  width: 16px;
+  height: 16px;
+  accent-color: #4285f4;
+  cursor: pointer;
+}
+.gdocs-warn-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: stretch;
+  animation: gdocsFadeUp 0.4s ease 0.55s both;
+}
+.gdocs-warn-actions > * {
+  flex: 1;
+  padding: 11px 14px;
+  font-size: 0.9rem;
+  text-align: center;
+  text-decoration: none;
+}
+.gdocs-warn-open {
+  background: linear-gradient(135deg, #4285f4 0%, #1a56db 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.15s, transform 0.1s;
+}
+.gdocs-warn-open:hover {
+  box-shadow: 0 8px 20px rgba(26, 86, 219, 0.30);
+  transform: translateY(-1px);
+}
+.gdocs-warn-open:active { transform: translateY(0) scale(0.99); }
+
 /* ---------- Peek mode (triple-tap site title) ----------
    Locks the page into the bottom half of the viewport so a student
    peeking at their iPad from a drawer doesn't have to crane their
@@ -498,6 +616,64 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
 .note-type.notes { background: #dbeafe; color: #1e40af; }
 .note-type.mock_paper { background: #fef3c7; color: #92400e; }
 .note-type.flashcards { background: #ede9fe; color: #5b21b6; }
+.note-type.gdocs      { background: #dbeafe; color: #1e3a8a; }
+.note-card-gdocs {
+  border-color: #c7d2fe;
+}
+.note-card-gdocs:hover {
+  border-color: #4285f4;
+  box-shadow: 0 4px 14px rgba(66, 133, 244, 0.18);
+}
+
+/* Big Google Docs action button (in place of standard View / Download) */
+.gdocs-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+.gdocs-btn:hover {
+  border-color: #4285f4;
+  box-shadow: 0 6px 18px rgba(66, 133, 244, 0.20);
+  transform: translateY(-1px);
+}
+.gdocs-btn:active { transform: translateY(0) scale(0.99); }
+.gdocs-btn-logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.gdocs-btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.gdocs-btn-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1f1f1f;
+  letter-spacing: -0.01em;
+}
+.gdocs-btn-sub {
+  font-size: 0.72rem;
+  color: #6b7280;
+  font-weight: 500;
+}
 
 /* Mode picker — two big abstract-colored cards */
 .view-mode-tabs {

@@ -105,6 +105,7 @@
                   <option value="notes">Notes</option>
                   <option value="mock_paper">Mock Paper</option>
                   <option value="flashcards">Flashcards (Quizlet)</option>
+                  <option value="gdocs">Google Docs link</option>
                 </select>
               </div>
             </div>
@@ -133,6 +134,12 @@
               <label class="form-label" for="note-quizlet-url">Quizlet URL <span class="req">*</span></label>
               <input type="url" id="note-quizlet-url" placeholder="https://quizlet.com/123456789/..." />
               <div class="file-hint">Paste the full URL of a Quizlet study set (e.g. https://quizlet.com/123456789/s4-physics-flash-cards/).</div>
+            </div>
+
+            <div class="form-row" id="note-gdocs-row" style="display:none;">
+              <label class="form-label" for="note-gdocs-url">Google Docs URL <span class="req">*</span></label>
+              <input type="url" id="note-gdocs-url" placeholder="https://docs.google.com/document/d/..." />
+              <div class="file-hint">A Google Docs, Sheets, Slides, or Drive link. Make sure sharing is set so anyone in <strong>@smcesps.edu.hk</strong> can view.</div>
             </div>
 
             <button type="submit" class="btn-primary" id="upload-btn">Upload</button>
@@ -176,6 +183,7 @@
               <option value="notes">Notes</option>
               <option value="mock_paper">Mock Papers</option>
               <option value="flashcards">Flashcards</option>
+              <option value="gdocs">Google Docs</option>
             </select>
           </div>
         </div>
@@ -385,6 +393,35 @@
         <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
       </div>
       <div class="modal-card-body viewer-body" id="viewer-body"></div>
+    </div>
+  </div>
+
+  <!-- ===== Google Docs sign-in warning modal ===== -->
+  <div class="modal-overlay gdocs-modal" id="gdocs-warn-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card gdocs-warn-card">
+      <div class="gdocs-warn-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="60" height="60">
+          <!-- Four-colour Google "G" mark -->
+          <path fill="#4285f4" d="M21.6 12.227c0-.708-.058-1.39-.166-2.045H12v3.87h5.385a4.6 4.6 0 0 1-1.996 3.016v2.508h3.227c1.886-1.737 2.984-4.295 2.984-7.349z"/>
+          <path fill="#34a853" d="M12 22c2.7 0 4.964-.895 6.616-2.424l-3.227-2.508c-.895.6-2.037.953-3.389.953-2.603 0-4.806-1.756-5.59-4.12H3.07v2.59A9.997 9.997 0 0 0 12 22z"/>
+          <path fill="#fbbc05" d="M6.41 13.901A6.013 6.013 0 0 1 6.09 12c0-.66.114-1.302.32-1.901V7.508H3.07A9.997 9.997 0 0 0 2 12c0 1.614.386 3.14 1.07 4.49l3.34-2.589z"/>
+          <path fill="#ea4335" d="M12 5.977c1.47 0 2.788.505 3.826 1.498l2.866-2.866C16.96 2.99 14.696 2 12 2 8.087 2 4.705 4.244 3.07 7.508l3.34 2.59C7.194 7.734 9.397 5.977 12 5.977z"/>
+        </svg>
+      </div>
+      <div class="gdocs-warn-title">Sign in with your school account</div>
+      <div class="gdocs-warn-body">
+        Use your <strong>@smcesps.edu.hk</strong> Google account when this doc opens, or you'll get a "you need access" page.
+      </div>
+      <label class="gdocs-warn-skip">
+        <input type="checkbox" id="gdocs-warn-skip" />
+        <span>Don't show this again</span>
+      </label>
+      <div class="gdocs-warn-actions">
+        <button class="btn-secondary" data-close="cancel">Cancel</button>
+        <a class="btn-primary gdocs-warn-open" id="gdocs-warn-open" href="#" target="_blank" rel="noopener">
+          Open in new tab
+        </a>
+      </div>
     </div>
   </div>
 

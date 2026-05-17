@@ -160,13 +160,28 @@ function parseQuizletUrl(url) {
   return m ? m[1] : null;
 }
 
+/* Google Docs / Drive URL validation. */
+function isGdocsUrl(url) {
+  return /^https?:\/\/(?:docs|drive)\.google\.com\//i.test(String(url || '').trim());
+}
+function gdocsKind(url) {
+  const u = String(url || '');
+  if (u.includes('docs.google.com/document'))     return 'document';
+  if (u.includes('docs.google.com/spreadsheets')) return 'spreadsheet';
+  if (u.includes('docs.google.com/presentation')) return 'presentation';
+  if (u.includes('drive.google.com'))             return 'drive';
+  return 'gdocs';
+}
+
 const typeSelect = document.getElementById('note-type');
 const fileRow = document.getElementById('note-file-row');
 const quizletRow = document.getElementById('note-quizlet-row');
+const gdocsRow = document.getElementById('note-gdocs-row');
 function syncTypeUI() {
-  const isFc = typeSelect.value === 'flashcards';
-  fileRow.style.display = isFc ? 'none' : '';
-  quizletRow.style.display = isFc ? '' : 'none';
+  const t = typeSelect.value;
+  fileRow.style.display    = (t === 'notes' || t === 'mock_paper') ? '' : 'none';
+  quizletRow.style.display = (t === 'flashcards') ? '' : 'none';
+  gdocsRow.style.display   = (t === 'gdocs')      ? '' : 'none';
 }
 typeSelect.addEventListener('change', syncTypeUI);
 syncTypeUI();
@@ -188,8 +203,59 @@ uploadForm.addEventListener('submit', async (e) => {
   if (type === 'flashcards') {
     return submitFlashcards({ name, title, subject, description, folderId });
   }
+  if (type === 'gdocs') {
+    return submitGdocs({ name, title, subject, description, folderId });
+  }
   return submitFile({ name, title, subject, type, description, folderId });
 });
+
+async function submitGdocs({ name, title, subject, description, folderId }) {
+  const url = document.getElementById('note-gdocs-url').value.trim();
+  if (!url) { setStatus('Please paste a Google Docs URL.', 'err'); return; }
+  if (!isGdocsUrl(url)) {
+    setStatus('That doesn\'t look like a Google Docs URL. It should start with https://docs.google.com/ or https://drive.google.com/.', 'err');
+    return;
+  }
+
+  uploadBtn.disabled = true;
+  progressBox.style.display = 'flex';
+  progressFill.style.width = '50%';
+  progressText.textContent = '50%';
+  setStatus('Saving…');
+
+  try {
+    await addDoc(collection(db, 'notes'), {
+      title,
+      description,
+      uploaderName: name,
+      subject,
+      type: 'gdocs',
+      folderId,
+      gdocsUrl: url,
+      gdocsKind: gdocsKind(url),
+      createdAt: serverTimestamp()
+    });
+    progressFill.style.width = '100%';
+    progressText.textContent = '100%';
+    setStatus('Saved! Thanks for sharing.', 'ok');
+    uploadForm.reset();
+    nameInput.value = name;
+    document.getElementById('note-subject').value = subject;
+    typeSelect.value = 'gdocs';
+    syncTypeUI();
+    setTimeout(() => {
+      progressBox.style.display = 'none';
+      setUploadOpen(false);
+      setStatus('');
+    }, 1600);
+  } catch (err) {
+    console.error(err);
+    setStatus('Save failed: ' + (err && err.message ? err.message : err), 'err');
+    progressBox.style.display = 'none';
+  } finally {
+    uploadBtn.disabled = false;
+  }
+}
 
 async function submitFlashcards({ name, title, subject, description, folderId }) {
   const url = document.getElementById('note-quizlet-url').value.trim();
@@ -430,11 +496,41 @@ function noteCardHTML(n, opts) {
   const typeMeta = noteTypeMeta(n.type);
   const folderNode = n.folderId ? folderById.get(n.folderId) : null;
   const isFlash = n.type === 'flashcards';
+  const isGdocs = n.type === 'gdocs';
   const canPreview = isFlash || isPreviewable(n.fileName);
-  const sizeOrSetId = isFlash ? `Quizlet · #${escapeHtml(n.quizletSetId || '')}` : fmtBytes(n.fileSize);
   const showFolder = opts && opts.showFolder !== false;
+
+  const sizeOrId = isFlash
+    ? `Quizlet · #${escapeHtml(n.quizletSetId || '')}`
+    : isGdocs
+      ? `Google ${escapeHtml(({document:'Doc',spreadsheet:'Sheet',presentation:'Slides',drive:'Drive'})[n.gdocsKind] || 'Docs')}`
+      : fmtBytes(n.fileSize);
+
+  // Google Docs cards get a big branded action button instead of the
+  // standard View/Download pair.
+  const gdocsButton = `
+    <button class="gdocs-btn" data-action="gdocs-open">
+      <span class="gdocs-btn-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22">
+          <path fill="#4285f4" d="M21.6 12.227c0-.708-.058-1.39-.166-2.045H12v3.87h5.385a4.6 4.6 0 0 1-1.996 3.016v2.508h3.227c1.886-1.737 2.984-4.295 2.984-7.349z"/>
+          <path fill="#34a853" d="M12 22c2.7 0 4.964-.895 6.616-2.424l-3.227-2.508c-.895.6-2.037.953-3.389.953-2.603 0-4.806-1.756-5.59-4.12H3.07v2.59A9.997 9.997 0 0 0 12 22z"/>
+          <path fill="#fbbc05" d="M6.41 13.901A6.013 6.013 0 0 1 6.09 12c0-.66.114-1.302.32-1.901V7.508H3.07A9.997 9.997 0 0 0 2 12c0 1.614.386 3.14 1.07 4.49l3.34-2.589z"/>
+          <path fill="#ea4335" d="M12 5.977c1.47 0 2.788.505 3.826 1.498l2.866-2.866C16.96 2.99 14.696 2 12 2 8.087 2 4.705 4.244 3.07 7.508l3.34 2.59C7.194 7.734 9.397 5.977 12 5.977z"/>
+        </svg>
+      </span>
+      <span class="gdocs-btn-text">
+        <span class="gdocs-btn-title">Google Docs view</span>
+        <span class="gdocs-btn-sub">Opens in a new tab · sign in with @smcesps.edu.hk</span>
+      </span>
+    </button>
+  `;
+
+  const standardActions = isFlash
+    ? `<a class="btn-secondary" href="${escapeHtml(n.quizletUrl)}" target="_blank" rel="noopener">Open in Quizlet</a>`
+    : `<a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`;
+
   return `
-    <div class="note-card ${isFlash ? 'note-card-flashcards' : ''}" data-id="${escapeHtml(n.id)}">
+    <div class="note-card ${isFlash ? 'note-card-flashcards' : ''} ${isGdocs ? 'note-card-gdocs' : ''}" data-id="${escapeHtml(n.id)}">
       <div class="note-card-top">
         <div class="note-title">${escapeHtml(n.title)}</div>
         <div class="note-type ${typeMeta.cls}">${typeMeta.label}</div>
@@ -444,17 +540,16 @@ function noteCardHTML(n, opts) {
         <span>·</span>
         <span>by ${escapeHtml(n.uploaderName || 'Anonymous')}</span>
         <span>·</span>
-        <span>${sizeOrSetId}</span>
+        <span>${sizeOrId}</span>
         <span>·</span>
         <span>${escapeHtml(fmtDate(n.createdAt))}</span>
       </div>
       ${showFolder && folderNode ? `<div class="note-folder">📁 ${escapeHtml(folderNode.path)}</div>` : ''}
       ${n.description ? `<div class="note-desc">${escapeHtml(n.description)}</div>` : ''}
       <div class="note-actions">
-        ${canPreview ? `<button class="btn-primary" data-action="view">${isFlash ? 'Study' : 'View'}</button>` : ''}
-        ${isFlash
-          ? `<a class="btn-secondary" href="${escapeHtml(n.quizletUrl)}" target="_blank" rel="noopener">Open in Quizlet</a>`
-          : `<a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`}
+        ${isGdocs
+          ? gdocsButton
+          : `${canPreview ? `<button class="btn-primary" data-action="view">${isFlash ? 'Study' : 'View'}</button>` : ''}${standardActions}`}
       </div>
     </div>
   `;
@@ -487,6 +582,7 @@ function renderNotes() {
 function noteTypeMeta(type) {
   if (type === 'mock_paper') return { label: 'Mock Paper', cls: 'mock_paper' };
   if (type === 'flashcards') return { label: 'Flashcards', cls: 'flashcards' };
+  if (type === 'gdocs')      return { label: 'Google Docs', cls: 'gdocs' };
   return { label: 'Notes', cls: 'notes' };
 }
 
@@ -496,12 +592,12 @@ function isPreviewable(fileName) {
 }
 
 notesListEl.addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-action="view"]');
-  if (!btn) return;
-  const card = btn.closest('.note-card');
+  const card = e.target.closest('.note-card');
   if (!card) return;
   const note = allNotes.find(n => n.id === card.dataset.id);
-  if (note) openViewer(note);
+  if (!note) return;
+  if (e.target.closest('button[data-action="gdocs-open"]')) return openGdocs(note);
+  if (e.target.closest('button[data-action="view"]'))      return openViewer(note);
 });
 
 filterSubjectEl.addEventListener('change', renderNotes);
@@ -629,14 +725,17 @@ function countNotesInFolderTree(folderId) {
   return total;
 }
 
-// Click breadcrumb or folder card to navigate; or View button on a note card.
+// Click breadcrumb or folder card to navigate; or any action button on a note card.
 viewFoldersEl.addEventListener('click', (e) => {
-  const viewBtn = e.target.closest('button[data-action="view"]');
-  if (viewBtn) {
-    const card = viewBtn.closest('.note-card');
+  const actionBtn = e.target.closest('button[data-action]');
+  if (actionBtn) {
+    const card = actionBtn.closest('.note-card');
     if (card) {
       const note = allNotes.find(n => n.id === card.dataset.id);
-      if (note) openViewer(note);
+      if (note) {
+        if (actionBtn.dataset.action === 'gdocs-open') openGdocs(note);
+        else if (actionBtn.dataset.action === 'view')  openViewer(note);
+      }
     }
     return;
   }
@@ -1673,5 +1772,78 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (timetableModal.classList.contains('open')) closeInfoModal(timetableModal);
   if (coverageModal.classList.contains('open'))  closeInfoModal(coverageModal);
+});
+
+/* ==========================================================================
+   Google Docs warning modal — reminds students to use their @smcesps.edu.hk
+   account before the doc opens in a new tab. Persists "don't show again"
+   to localStorage. Opens via a synthetic <a target="_blank"> click so we
+   stay inside the user-gesture context that browsers require for popup
+   permission.
+   ========================================================================== */
+const GDOCS_SKIP_KEY = 'finals.gdocsWarnSkipped';
+const gdocsWarnModal = document.getElementById('gdocs-warn-modal');
+const gdocsWarnSkip  = document.getElementById('gdocs-warn-skip');
+const gdocsWarnOpen  = document.getElementById('gdocs-warn-open');
+
+function getGdocsSkipped() {
+  try { return localStorage.getItem(GDOCS_SKIP_KEY) === '1'; }
+  catch (_) { return false; }
+}
+function setGdocsSkipped(on) {
+  try { localStorage.setItem(GDOCS_SKIP_KEY, on ? '1' : '0'); }
+  catch (_) {}
+}
+
+function openInNewTab(url) {
+  // Programmatic anchor click — survives popup blockers because we're
+  // still inside the user's click handler call stack.
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function openGdocs(note) {
+  const url = note.gdocsUrl || '#';
+  if (getGdocsSkipped()) {
+    openInNewTab(url);
+    return;
+  }
+  // Configure modal for THIS note.
+  gdocsWarnSkip.checked = false;
+  gdocsWarnOpen.href = url;
+  gdocsWarnOpen.dataset.url = url;
+  gdocsWarnModal.style.display = 'flex';
+  gdocsWarnModal.offsetHeight;            // reflow for transition
+  gdocsWarnModal.classList.add('open');
+}
+
+function closeGdocsModal() {
+  gdocsWarnModal.classList.remove('open');
+  setTimeout(() => { gdocsWarnModal.style.display = 'none'; }, 220);
+}
+
+// The "Open in new tab" anchor handles the open via its native target.
+// We piggy-back on its click to record the "don't show again" preference
+// and close the modal. Because it's an anchor with target=_blank, the
+// new tab opens correctly.
+gdocsWarnOpen.addEventListener('click', () => {
+  if (gdocsWarnSkip.checked) setGdocsSkipped(true);
+  setTimeout(closeGdocsModal, 50);
+});
+
+// Cancel / overlay / × → just close.
+gdocsWarnModal.addEventListener('click', (e) => {
+  const role = e.target.dataset.close;
+  if (!role) return;
+  if (role === 'overlay' && e.target !== gdocsWarnModal) return;
+  closeGdocsModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && gdocsWarnModal.classList.contains('open')) closeGdocsModal();
 });
 
