@@ -7,16 +7,18 @@
       ]
     }
   ],
+  "redirects": [
+    { "has": [{ "type": "host", "value": "finals.mathans.app" }], "source": "/", "destination": "/finals/", "permanent": false }
+  ],
   "rewrites": [
-        { "has": [{ "type": "host", "value": "finals.mathans.app" }], "source": "/(.*)", "destination": "/finals/$1" },
     { "source": "/admin",        "destination": "/finals/admin.html" },
     { "source": "/admin/",       "destination": "/finals/admin.html" },
-    { "source": "/3062470030624770",        "destination": "/3062470030624770/index.html" },
+    { "source": "/3062470030624770",   "destination": "/3062470030624770/index.html" },
     { "source": "/3062470030624770/setup", "destination": "/3062470030624770/setup.html" },
     { "source": "/edit1125",  "destination": "/editor/index.html" },
     { "source": "/edit1125/", "destination": "/editor/index.html" },
-    { "source": "/ces",  "destination": "/cesindex.html" },
-    { "source": "/ces/", "destination": "/cesindex.html" },
+    { "source": "/ces",   "destination": "/cesindex.html" },
+    { "source": "/ces/",  "destination": "/cesindex.html" },
     { "source": "/relativeclauses.html",  "destination": "/relativeclauses.html" },
     { "source": "/relativeclauses.html/", "destination": "/relativeclauses.html" },
     { "source": "/ths/revision",  "destination": "/thsrevision.html" },
