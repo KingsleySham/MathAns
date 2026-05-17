@@ -121,7 +121,7 @@ const progressText = document.getElementById('upload-progress-text');
 const statusEl = document.getElementById('upload-status');
 
 const MAX_BYTES = 3 * 1024 * 1024;   // Vercel serverless body cap (4.5 MB) + base64 overhead
-const ALLOWED_EXT = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'webp', 'txt'];
+const ALLOWED_EXT = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'webp', 'txt', 'html', 'htm'];
 
 function setStatus(msg, kind) {
   statusEl.textContent = msg || '';
@@ -566,7 +566,7 @@ function noteTypeMeta(type) {
 
 function isPreviewable(fileName) {
   const ext = (String(fileName || '').split('.').pop() || '').toLowerCase();
-  return ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'txt', 'doc', 'docx'].includes(ext);
+  return ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'txt', 'doc', 'docx', 'html', 'htm'].includes(ext);
 }
 
 notesListEl.addEventListener('click', (e) => {
@@ -1499,8 +1499,30 @@ function openViewer(note) {
     renderTextViewer(note);
   } else if (['doc', 'docx'].includes(ext)) {
     renderOfficeViewer(note);
+  } else if (['html', 'htm'].includes(ext)) {
+    renderHtmlViewer(note);
   } else {
     viewerBody.innerHTML = '<div class="viewer-error">Preview not available for this file type. Use Download instead.</div>';
+  }
+}
+
+// Render an uploaded .html page inside a sandboxed iframe. The raw
+// GitHub URL serves the file as text/plain, so we fetch it ourselves
+// and wrap the body in a text/html Blob to get the browser to render
+// it. Scripts inside the page are allowed (sandbox="allow-scripts")
+// so interactive HTML notes like flashcard pages work, but the iframe
+// has an opaque origin so it can't touch the parent page's storage.
+async function renderHtmlViewer(note) {
+  try {
+    const resp = await fetch(note.downloadUrl);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const html = await resp.text();
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    viewerBody.dataset.blobUrl = url;
+    viewerBody.innerHTML = `<iframe src="${url}" class="viewer-iframe" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" title="${escapeHtml(note.title || '')}"></iframe>`;
+  } catch (err) {
+    viewerBody.innerHTML = `<div class="viewer-error">Couldn't load HTML: ${escapeHtml(err.message || String(err))}.</div>`;
   }
 }
 
