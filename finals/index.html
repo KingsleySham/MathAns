@@ -38,6 +38,16 @@
         <div class="countdown-unit"><div class="num" id="cd-secs">--</div><div class="lab">secs</div></div>
       </div>
       <div class="countdown-sub" id="countdown-sub"></div>
+      <div class="countdown-actions">
+        <button class="countdown-btn" id="open-timetable" type="button">
+          <span class="countdown-btn-icon" aria-hidden="true">📅</span>
+          <span class="countdown-btn-label">Timetable</span>
+        </button>
+        <button class="countdown-btn" id="open-coverage" type="button">
+          <span class="countdown-btn-icon" aria-hidden="true">📚</span>
+          <span class="countdown-btn-label">Coverage</span>
+        </button>
+      </div>
     </section>
 
     <!-- ===== Top-level tabs ===== -->
@@ -322,6 +332,34 @@
       <a href="/admin">Admin</a>
     </div>
   </footer>
+
+  <!-- ===== Timetable modal ===== -->
+  <div class="modal-overlay info-modal" id="timetable-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card info-card">
+      <div class="modal-card-header info-header info-header-timetable">
+        <div class="info-header-text">
+          <div class="info-title">📅 Exam timetable</div>
+          <div class="info-sub">S.3 Final Examination · 1–12 June 2026 · TSA · 17–18 June 2026</div>
+        </div>
+        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-card-body info-body" id="timetable-body"></div>
+    </div>
+  </div>
+
+  <!-- ===== Coverage modal ===== -->
+  <div class="modal-overlay info-modal" id="coverage-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card info-card">
+      <div class="modal-card-header info-header info-header-coverage">
+        <div class="info-header-text">
+          <div class="info-title">📚 Exam coverage</div>
+          <div class="info-sub">What each paper actually tests — tap a subject to expand</div>
+        </div>
+        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-card-body info-body" id="coverage-body"></div>
+    </div>
+  </div>
 
   <!-- ===== In-browser viewer modal ===== -->
   <div class="modal-overlay viewer-modal" id="viewer-modal" style="display:none;" data-close="overlay">
