@@ -498,11 +498,13 @@ function gdocsButtonHTML(compact) {
   `;
 }
 
-function quizletButtonHTML() {
-  // Simple Quizlet-purple "Q" roundel — recognisable without infringing on
-  // their exact wordmark.
+function quizletButtonHTML(url) {
+  // Real anchor with target=_blank — opens via native user-click
+  // navigation, never trips popup blockers. Same styling as the
+  // button version (data-action attribute is also on the anchor so
+  // the click handler can still record the tap for tracking).
   return `
-    <button class="quizlet-btn" data-action="quizlet-open">
+    <a class="quizlet-btn" data-action="quizlet-open" href="${escapeHtml(url || '#')}" target="_blank" rel="noopener">
       <span class="quizlet-btn-logo" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="18" height="18">
           <rect x="2" y="2" width="20" height="20" rx="5" fill="#4255ff"/>
@@ -510,7 +512,7 @@ function quizletButtonHTML() {
         </svg>
       </span>
       <span class="quizlet-btn-label">Flashcards</span>
-    </button>
+    </a>
   `;
 }
 
@@ -534,7 +536,7 @@ function noteCardHTML(n, opts) {
   if (canPreview)  actions.push(`<button class="btn-primary" data-action="view">View</button>`);
   if (hasFile)     actions.push(`<a class="btn-secondary" data-action="download" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`);
   if (hasGdocs)    actions.push(gdocsButtonHTML(actions.length > 0));
-  if (hasQuizlet)  actions.push(quizletButtonHTML());
+  if (hasQuizlet)  actions.push(quizletButtonHTML(n.quizletUrl));
 
   return `
     <div class="note-card${hasQuizlet ? ' note-card-flashcards' : ''}" data-id="${escapeHtml(n.id)}">
@@ -1888,115 +1890,17 @@ function openGdocs(note) {
   gdocsWarnModal.classList.add('open');
 }
 
-/* Quizlet redirect:
-   1. Open the set in a new tab IMMEDIATELY (keeps the click inside
-      the user-gesture window, so no popup-blocker drama).
-   2. Then play a 2-second animated popup on the original tab — Q
-      logo pulse, eight stickers popping in with stagger, progress
-      bar filling. The popup is informational; the new tab is
-      already open in the background by the time it appears.
-   "Skip this next time" persists the preference to localStorage so
-   subsequent clicks go straight to the new tab without the popup. */
-const QUIZLET_SKIP_KEY = 'finals.quizletRedirectSkipped';
-const qrModal     = document.getElementById('quizlet-redirect-modal');
-const qrSkipInput = document.getElementById('qr-skip-input');
-let qrTimer = null;
-let qrPreTab = null;   // the pre-opened destination tab (so close handlers can dispose it)
-
-function getQuizletSkipped() {
-  try { return localStorage.getItem(QUIZLET_SKIP_KEY) === '1'; }
-  catch (_) { return false; }
-}
-function setQuizletSkipped(on) {
-  try { localStorage.setItem(QUIZLET_SKIP_KEY, on ? '1' : '0'); }
-  catch (_) {}
-}
-
-function openQuizlet(note) {
-  const url = note.quizletUrl || '#';
-  // Skip toggle: open immediately, no popup.
-  if (getQuizletSkipped() || !qrModal) {
-    openInNewTab(url);
-    return;
-  }
-
-  // Pre-open the destination tab INSIDE the click handler (popup
-  // blockers always allow window.open here) and paint a quick
-  // "Loading Quizlet…" splash into it. Then redirect that same tab
-  // to the real URL after the 2-second animation finishes on the
-  // original tab. Avoids the popup-blocker swallowing a delayed
-  // window.open / anchor-click after setTimeout.
-  qrPreTab = null;
-  try { qrPreTab = window.open('', '_blank'); } catch (_) {}
-  if (qrPreTab) {
-    try {
-      qrPreTab.document.write(
-        '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8" />' +
-        '<title>Opening Quizlet…</title>' +
-        '<meta name="viewport" content="width=device-width,initial-scale=1" />' +
-        '<style>' +
-        'html,body{margin:0;height:100%;background:linear-gradient(135deg,#4255ff 0%,#8b5cf6 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}' +
-        'body{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;}' +
-        '.q{width:88px;height:88px;background:#fff;color:#4255ff;border-radius:20px;display:grid;place-items:center;font-size:48px;font-weight:800;box-shadow:0 16px 40px rgba(0,0,0,.22);animation:p 1.1s ease-in-out infinite;}' +
-        '@keyframes p{50%{transform:scale(1.08);}}' +
-        'h1{font-size:22px;margin:28px 0 6px;font-weight:700;}' +
-        'p{opacity:.85;margin:0;font-size:14px;}' +
-        '</style></head><body>' +
-        '<div class="q">Q</div>' +
-        '<h1>Opening Quizlet…</h1>' +
-        '<p>You\'ll be redirected in a moment.</p>' +
-        '</body></html>'
-      );
-      qrPreTab.document.close();
-    } catch (_) {}
-  }
-
-  qrSkipInput.checked = false;
-  qrModal.style.display = 'flex';
-  qrModal.offsetHeight;         // reflow so the open-transition fires
-  qrModal.classList.add('open');
-
-  if (qrTimer) clearTimeout(qrTimer);
-  qrTimer = setTimeout(() => {
-    if (qrSkipInput.checked) setQuizletSkipped(true);
-    if (qrPreTab && !qrPreTab.closed) {
-      try { qrPreTab.location.href = url; }
-      catch (_) { openInNewTab(url); }
-    } else {
-      // Pre-open failed (popup blocker): try the anchor-click
-      // fallback — works in most browsers within ~5 s of a click.
-      openInNewTab(url);
-    }
-    qrPreTab = null;
-    closeQuizletRedirect();
-  }, 2000);
-}
-
-function closeQuizletRedirect(opts) {
-  if (!qrModal) return;
-  qrModal.classList.remove('open');
-  if (qrTimer) { clearTimeout(qrTimer); qrTimer = null; }
-  // If we're closing because the user cancelled (not because the
-  // 2 s ran out and the redirect already happened), kill the
-  // pre-opened tab too so a stale 'Loading…' page isn't left behind.
-  if (opts && opts.cancelPreTab && qrPreTab && !qrPreTab.closed) {
-    try { qrPreTab.close(); } catch (_) {}
-  }
-  qrPreTab = null;
-  setTimeout(() => { qrModal.style.display = 'none'; }, 220);
-}
-
-if (qrModal) {
-  qrModal.addEventListener('click', (e) => {
-    const role = e.target.dataset.close;
-    if (!role) return;
-    if (role === 'overlay' && e.target !== qrModal) return;
-    if (qrSkipInput.checked) setQuizletSkipped(true);
-    closeQuizletRedirect({ cancelPreTab: true });
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && qrModal.classList.contains('open')) closeQuizletRedirect({ cancelPreTab: true });
-  });
+/* Quizlet redirect: nothing JS-driven — the Flashcards button is a
+   real <a target="_blank"> rendered by quizletButtonHTML(), so the
+   browser handles the navigation as a regular user-initiated link
+   click. The previous popup / pre-tab logic was popup-blocker bait
+   and has been removed. The click handler in notesListEl still fires
+   for `data-action="quizlet-open"` so the click counter is recorded;
+   it doesn't preventDefault, so the anchor's native target=_blank
+   navigation runs untouched. */
+function openQuizlet(_note) {
+  // No-op — see comment above. Kept as a stub so existing call sites
+  // in the click-dispatch switches don't need to be edited.
 }
 
 function closeGdocsModal() {
