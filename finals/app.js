@@ -3,9 +3,9 @@
 // custom countdown, stopwatch).
 import {
   db,
-  collection, addDoc,
+  collection, addDoc, updateDoc,
   onSnapshot, query, orderBy, serverTimestamp,
-  doc
+  doc, increment
 } from './firebase-init.js';
 import { TIMETABLE, COVERAGE } from './exam-data.js';
 
@@ -532,7 +532,7 @@ function noteCardHTML(n, opts) {
   // Actions in a consistent order: View, Download, Google, Quizlet.
   const actions = [];
   if (canPreview)  actions.push(`<button class="btn-primary" data-action="view">View</button>`);
-  if (hasFile)     actions.push(`<a class="btn-secondary" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`);
+  if (hasFile)     actions.push(`<a class="btn-secondary" data-action="download" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`);
   if (hasGdocs)    actions.push(gdocsButtonHTML(actions.length > 0));
   if (hasQuizlet)  actions.push(quizletButtonHTML());
 
@@ -594,14 +594,40 @@ function isPreviewable(fileName) {
   return ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'txt', 'doc', 'docx', 'html', 'htm'].includes(ext);
 }
 
+/* Click tracking — every action click increments a per-note Firestore
+   counter. Admin sessions are skipped so my own clicks don't pollute
+   the numbers. */
+const CLICK_FIELDS = {
+  'view':         'clicksView',
+  'download':     'clicksDownload',
+  'gdocs-open':   'clicksGdocs',
+  'quizlet-open': 'clicksQuizlet',
+};
+function isAdminSignedIn() {
+  try { return !!sessionStorage.getItem('finals.adminPasscode'); }
+  catch (_) { return false; }
+}
+function trackClick(noteId, action) {
+  if (isAdminSignedIn()) return;
+  const field = CLICK_FIELDS[action];
+  if (!field || !noteId) return;
+  updateDoc(doc(db, 'notes', noteId), { [field]: increment(1) })
+    .catch(err => console.warn('[clicks] track failed:', err));
+}
+
 notesListEl.addEventListener('click', (e) => {
   const card = e.target.closest('.note-card');
   if (!card) return;
   const note = allNotes.find(n => n.id === card.dataset.id);
   if (!note) return;
-  if (e.target.closest('button[data-action="gdocs-open"]'))   return openGdocs(note);
-  if (e.target.closest('button[data-action="quizlet-open"]')) return openQuizlet(note);
-  if (e.target.closest('button[data-action="view"]'))         return openViewer(note);
+  const actionEl = e.target.closest('[data-action]');
+  if (!actionEl) return;
+  const action = actionEl.dataset.action;
+  trackClick(note.id, action);
+  if (action === 'gdocs-open')   return openGdocs(note);
+  if (action === 'quizlet-open') return openQuizlet(note);
+  if (action === 'view')         return openViewer(note);
+  // 'download' is a real <a> that navigates natively — nothing else to do here.
 });
 
 filterSubjectEl.addEventListener('change', renderNotes);
@@ -731,15 +757,18 @@ function countNotesInFolderTree(folderId) {
 
 // Click breadcrumb or folder card to navigate; or any action button on a note card.
 viewFoldersEl.addEventListener('click', (e) => {
-  const actionBtn = e.target.closest('button[data-action]');
-  if (actionBtn) {
-    const card = actionBtn.closest('.note-card');
+  const actionEl = e.target.closest('[data-action]');
+  if (actionEl) {
+    const card = actionEl.closest('.note-card');
     if (card) {
       const note = allNotes.find(n => n.id === card.dataset.id);
       if (note) {
-        if (actionBtn.dataset.action === 'gdocs-open')        openGdocs(note);
-        else if (actionBtn.dataset.action === 'quizlet-open') openQuizlet(note);
-        else if (actionBtn.dataset.action === 'view')         openViewer(note);
+        const action = actionEl.dataset.action;
+        trackClick(note.id, action);
+        if (action === 'gdocs-open')        openGdocs(note);
+        else if (action === 'quizlet-open') openQuizlet(note);
+        else if (action === 'view')         openViewer(note);
+        // 'download' is an anchor — navigates natively.
       }
     }
     return;
@@ -1851,67 +1880,10 @@ function openGdocs(note) {
   gdocsWarnModal.classList.add('open');
 }
 
-/* Quizlet redirect: shows a 2-second animated popup ("off to Quizlet
-   — stickers pop, progress fills), then opens the set in a new tab.
-   Persists a "skip" preference to localStorage so a returning student
-   can short-circuit the popup entirely. */
-const QUIZLET_SKIP_KEY = 'finals.quizletRedirectSkipped';
-const qrModal       = document.getElementById('quizlet-redirect-modal');
-const qrSkipInput   = document.getElementById('qr-skip-input');
-
-function getQuizletSkipped() {
-  try { return localStorage.getItem(QUIZLET_SKIP_KEY) === '1'; }
-  catch (_) { return false; }
-}
-function setQuizletSkipped(on) {
-  try { localStorage.setItem(QUIZLET_SKIP_KEY, on ? '1' : '0'); }
-  catch (_) {}
-}
-
-let qrTimer = null;
-
+/* Quizlet redirect: open the set in a new tab immediately on click.
+   (The previous 2-second animated popup was removed per feedback.) */
 function openQuizlet(note) {
-  const url = note.quizletUrl || '#';
-  if (getQuizletSkipped() || !qrModal) {
-    openInNewTab(url);
-    return;
-  }
-
-  // Show the popup first; open the tab AFTER the animation finishes.
-  // Browsers' "transient user activation" lasts a few seconds, so
-  // calling openInNewTab() 2 s after the click still satisfies popup
-  // blockers in every current browser.
-  qrSkipInput.checked = false;
-  qrModal.style.display = 'flex';
-  qrModal.offsetHeight;         // reflow so the open-transition fires
-  qrModal.classList.add('open');
-
-  if (qrTimer) clearTimeout(qrTimer);
-  qrTimer = setTimeout(() => {
-    if (qrSkipInput.checked) setQuizletSkipped(true);
-    openInNewTab(url);
-    closeQuizletRedirect();
-  }, 2000);
-}
-
-function closeQuizletRedirect() {
-  if (!qrModal) return;
-  qrModal.classList.remove('open');
-  if (qrTimer) { clearTimeout(qrTimer); qrTimer = null; }
-  setTimeout(() => { qrModal.style.display = 'none'; }, 220);
-}
-
-if (qrModal) {
-  qrModal.addEventListener('click', (e) => {
-    const role = e.target.dataset.close;
-    if (!role) return;
-    if (role === 'overlay' && e.target !== qrModal) return;
-    // Closing the popup early also cancels the pending redirect.
-    closeQuizletRedirect();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && qrModal.classList.contains('open')) closeQuizletRedirect();
-  });
+  openInNewTab(note.quizletUrl || '#');
 }
 
 function closeGdocsModal() {

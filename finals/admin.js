@@ -323,6 +323,20 @@ function startAdmin(fb) {
       const folderNode = n.folderId ? folderById.get(n.folderId) : null;
       const sizeOrSetId = isFlash ? `Quizlet · #${escapeHtmlSimple(n.quizletSetId || '')}` : fmtBytes(n.fileSize);
       const openHref = isFlash ? (n.quizletUrl || '#') : (n.downloadUrl || '#');
+      // Click stats — counts populated by the public hub via
+      // updateDoc({clicksX: increment(1)}). Admin signed-in sessions
+      // are excluded from the counters (see app.js trackClick()).
+      const cView     = n.clicksView     || 0;
+      const cDownload = n.clicksDownload || 0;
+      const cGdocs    = n.clicksGdocs    || 0;
+      const cQuizlet  = n.clicksQuizlet  || 0;
+      const cTotal    = cView + cDownload + cGdocs + cQuizlet;
+      const statsBits = [];
+      if (cView)     statsBits.push(`<span class="cstat cstat-view">👁 ${cView}</span>`);
+      if (cDownload) statsBits.push(`<span class="cstat cstat-dl">⬇ ${cDownload}</span>`);
+      if (cGdocs)    statsBits.push(`<span class="cstat cstat-gdocs">G ${cGdocs}</span>`);
+      if (cQuizlet)  statsBits.push(`<span class="cstat cstat-quizlet">Q ${cQuizlet}</span>`);
+
       return `
         <div class="admin-card ${isFlash ? 'note-card-flashcards' : ''}" data-id="${escapeHtmlSimple(n.id)}">
           <div class="admin-card-top">
@@ -340,6 +354,10 @@ function startAdmin(fb) {
           </div>
           ${folderNode ? `<div class="admin-card-folder">📁 ${escapeHtmlSimple(folderNode.path)}</div>` : ''}
           ${n.description ? `<div class="admin-card-desc">${escapeHtmlSimple(n.description)}</div>` : ''}
+          <div class="admin-card-clicks" title="${cTotal} non-admin click${cTotal === 1 ? '' : 's'}">
+            <span class="cstat-label">Clicks:</span>
+            ${statsBits.length ? statsBits.join('') : '<span class="cstat-empty">none yet</span>'}
+          </div>
           <div class="admin-card-actions">
             <a class="btn-secondary" href="${escapeHtmlSimple(openHref)}" target="_blank" rel="noopener">Open</a>
             <button class="btn-primary" data-action="edit">Edit</button>

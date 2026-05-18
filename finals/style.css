@@ -1030,6 +1030,40 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   border-color: #7c3aed;
   box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12);
 }
+.admin-card-clicks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+.cstat-label {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  color: #9ca3af;
+  margin-right: 2px;
+}
+.cstat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.76rem;
+  border: 1px solid;
+}
+.cstat-view    { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+.cstat-dl      { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
+.cstat-gdocs   { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.cstat-quizlet { background: #ede9fe; color: #5b21b6; border-color: #ddd6fe; }
+.cstat-empty   { font-style: italic; color: #9ca3af; }
+
 .note-folder, .admin-card-folder {
   font-size: 0.78rem;
   color: #6b7280;
