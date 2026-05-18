@@ -607,6 +607,14 @@ function isAdminSignedIn() {
   try { return !!sessionStorage.getItem('finals.adminPasscode'); }
   catch (_) { return false; }
 }
+
+// Reveal the floating "🛡 Admin" badge in the header when an admin
+// session is active. Clicking the badge navigates to /admin.
+(function showAdminBadgeIfSignedIn() {
+  if (!isAdminSignedIn()) return;
+  const badge = document.getElementById('admin-badge');
+  if (badge) badge.hidden = false;
+})();
 function trackClick(noteId, action) {
   if (isAdminSignedIn()) return;
   const field = CLICK_FIELDS[action];
