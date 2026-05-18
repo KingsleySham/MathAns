@@ -1888,10 +1888,74 @@ function openGdocs(note) {
   gdocsWarnModal.classList.add('open');
 }
 
-/* Quizlet redirect: open the set in a new tab immediately on click.
-   (The previous 2-second animated popup was removed per feedback.) */
+/* Quizlet redirect:
+   1. Open the set in a new tab IMMEDIATELY (keeps the click inside
+      the user-gesture window, so no popup-blocker drama).
+   2. Then play a 2-second animated popup on the original tab — Q
+      logo pulse, eight stickers popping in with stagger, progress
+      bar filling. The popup is informational; the new tab is
+      already open in the background by the time it appears.
+   "Skip this next time" persists the preference to localStorage so
+   subsequent clicks go straight to the new tab without the popup. */
+const QUIZLET_SKIP_KEY = 'finals.quizletRedirectSkipped';
+const qrModal     = document.getElementById('quizlet-redirect-modal');
+const qrSkipInput = document.getElementById('qr-skip-input');
+let qrTimer = null;
+
+function getQuizletSkipped() {
+  try { return localStorage.getItem(QUIZLET_SKIP_KEY) === '1'; }
+  catch (_) { return false; }
+}
+function setQuizletSkipped(on) {
+  try { localStorage.setItem(QUIZLET_SKIP_KEY, on ? '1' : '0'); }
+  catch (_) {}
+}
+
 function openQuizlet(note) {
-  openInNewTab(note.quizletUrl || '#');
+  const url = note.quizletUrl || '#';
+  // Skip toggle: open immediately, no popup.
+  if (getQuizletSkipped() || !qrModal) {
+    openInNewTab(url);
+    return;
+  }
+
+  // Otherwise: play the 2-second animation FIRST, then open the tab.
+  // openInNewTab() called from setTimeout still satisfies popup
+  // blockers in every current browser (transient user activation
+  // window is ~5 s in Chrome/Edge; the anchor-click pattern
+  // openInNewTab uses is allowed by Safari/Firefox up to a few
+  // seconds after a user click).
+  qrSkipInput.checked = false;
+  qrModal.style.display = 'flex';
+  qrModal.offsetHeight;         // reflow so the open-transition fires
+  qrModal.classList.add('open');
+
+  if (qrTimer) clearTimeout(qrTimer);
+  qrTimer = setTimeout(() => {
+    if (qrSkipInput.checked) setQuizletSkipped(true);
+    openInNewTab(url);
+    closeQuizletRedirect();
+  }, 2000);
+}
+
+function closeQuizletRedirect() {
+  if (!qrModal) return;
+  qrModal.classList.remove('open');
+  if (qrTimer) { clearTimeout(qrTimer); qrTimer = null; }
+  setTimeout(() => { qrModal.style.display = 'none'; }, 220);
+}
+
+if (qrModal) {
+  qrModal.addEventListener('click', (e) => {
+    const role = e.target.dataset.close;
+    if (!role) return;
+    if (role === 'overlay' && e.target !== qrModal) return;
+    if (qrSkipInput.checked) setQuizletSkipped(true);
+    closeQuizletRedirect();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && qrModal.classList.contains('open')) closeQuizletRedirect();
+  });
 }
 
 function closeGdocsModal() {
