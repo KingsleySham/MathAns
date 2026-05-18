@@ -2409,3 +2409,117 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   .countdown-actions { gap: 8px; }
   .countdown-btn { padding: 8px 12px; font-size: 0.78rem; }
 }
+
+/* ---------- Mobile phone polish (≤480 px) ----------
+   Tightens up chrome, padding, and grid layouts specifically for
+   phone widths. Tablets (≥481 px portrait) are unaffected. */
+@media (max-width: 480px) {
+  body { padding: 16px 12px 32px; }
+
+  /* Header */
+  .site-header { padding: 16px 12px 20px; }
+  .site-title { font-size: 1.15rem; }
+  .site-tagline { font-size: 0.74rem; margin-top: 1px; }
+  .admin-badge { top: 9px; right: 9px; padding: 4px 9px; font-size: 0.68rem; gap: 4px; }
+  .admin-badge-icon { font-size: 0.8rem; }
+
+  /* Wrapper + cards */
+  .page-wrap { padding: 14px 12px 32px; }
+  .card { padding: 16px 14px 18px; margin-bottom: 12px; }
+
+  /* Countdown */
+  .countdown-card { padding: 16px 12px 18px; }
+  .countdown-label { font-size: 0.72rem; margin-bottom: 10px; }
+  .countdown-grid { gap: 5px; }
+  .countdown-unit { padding: 7px 2px 5px; border-radius: 9px; }
+  .countdown-unit .num { font-size: 1.35rem; }
+  .countdown-unit .lab { font-size: 0.6rem; margin-top: 2px; }
+  .countdown-sub { font-size: 0.72rem; margin-top: 10px; }
+  .countdown-actions { flex-direction: column; gap: 8px; margin-top: 12px; }
+  .countdown-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 14px;
+    font-size: 0.82rem;
+  }
+
+  /* Top-level tabs (Notes / Maths / Timer) */
+  .main-tabs { padding: 4px; gap: 4px; margin-bottom: 14px; }
+  .main-tab { padding: 8px 8px; font-size: 0.8rem; }
+
+  /* View-mode picker — already 1 col under 520; tighten further */
+  .view-mode-tabs { gap: 8px; margin-bottom: 14px; }
+  .view-mode-tab { padding: 14px 16px; gap: 12px; }
+  .view-mode-tab-icon { font-size: 1.5rem; }
+  .view-mode-tab-title { font-size: 0.95rem; }
+  .view-mode-tab-sub { font-size: 0.72rem; }
+
+  /* Upload toggle */
+  .upload-toggle { padding: 12px 14px; gap: 8px; font-size: 0.88rem; }
+  .upload-toggle-icon { width: 26px; height: 26px; font-size: 1.1rem; }
+  .upload-collapse { padding: 4px 14px 18px; }
+
+  /* Browse filters — stack vertically; selects fill width */
+  .browse-header { flex-direction: column; align-items: stretch; gap: 10px; }
+  .browse-filters { flex-direction: column; gap: 6px; width: 100%; }
+  .browse-filters select { width: 100%; padding: 9px 12px; }
+
+  /* Note cards */
+  .note-card { padding: 12px 14px; gap: 6px; border-radius: 10px; }
+  .note-card-top { gap: 8px; }
+  .note-title { font-size: 0.92rem; }
+  .note-meta { font-size: 0.72rem; gap: 3px 8px; }
+  .note-desc { font-size: 0.8rem; }
+  .note-actions { gap: 6px; }
+  .note-actions .btn-primary,
+  .note-actions .btn-secondary,
+  .gdocs-btn,
+  .quizlet-btn {
+    padding: 7px 11px;
+    font-size: 0.78rem;
+  }
+
+  /* Folder browser — always 1 col; tighter folder cards */
+  .folder-children { grid-template-columns: 1fr; gap: 8px; }
+  .folder-card { padding: 12px 12px 12px 10px; gap: 10px; }
+  .folder-card-name { font-size: 0.9rem; }
+  .folder-card-meta { font-size: 0.72rem; }
+  .folder-breadcrumb { font-size: 0.78rem; gap: 4px; }
+  .folder-subhead { margin: 14px 0 8px; font-size: 0.7rem; }
+
+  /* Timer panels */
+  .sub-tabs { gap: 4px; margin-bottom: 14px; }
+  .sub-tab { padding: 7px 10px; font-size: 0.82rem; }
+  .timer-phase-label { font-size: 0.78rem; }
+  .timer-display { font-size: 2.8rem; margin: 4px 0 12px; }
+  .timer-cycles { font-size: 0.78rem; margin-bottom: 14px; }
+  .timer-controls { gap: 8px; margin-bottom: 12px; }
+  .timer-controls .btn-primary,
+  .timer-controls .btn-secondary {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+  .cd-input-row input { width: 60px; }
+
+  /* Maths finder */
+  .maths-finder { padding: 16px 14px 14px; }
+  .maths-finder .section-tabs { gap: 6px; }
+  .maths-finder .tab { padding: 7px 12px; font-size: 0.78rem; }
+  .maths-finder .btn-check { padding: 12px 16px; font-size: 0.92rem; }
+
+  /* Admin */
+  .admin-wrap { padding: 14px 12px 32px; }
+  .admin-card { padding: 12px 14px; border-radius: 12px; }
+  .admin-card-title { font-size: 0.95rem; }
+  .admin-card-meta { font-size: 0.74rem; }
+  .admin-card-clicks { font-size: 0.72rem; }
+  .admin-card-clicks .cstat { font-size: 0.7rem; padding: 1px 6px; }
+  .stats-dashboard { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-tile { padding: 10px 12px; }
+  .stat-tile-num { font-size: 1.35rem; }
+  .stat-tile-label { font-size: 0.66rem; }
+  .folder-row { padding: 9px 10px 9px 6px; gap: 6px; }
+  .folder-row-name { font-size: 0.85rem; max-width: 100%; }
+  .folder-row-actions { width: 100%; padding-left: 24px; }
+  .folder-row-actions button { padding: 5px 9px; font-size: 0.72rem; }
+}
