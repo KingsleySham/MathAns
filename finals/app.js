@@ -1901,6 +1901,7 @@ const QUIZLET_SKIP_KEY = 'finals.quizletRedirectSkipped';
 const qrModal     = document.getElementById('quizlet-redirect-modal');
 const qrSkipInput = document.getElementById('qr-skip-input');
 let qrTimer = null;
+let qrPreTab = null;   // the pre-opened destination tab (so close handlers can dispose it)
 
 function getQuizletSkipped() {
   try { return localStorage.getItem(QUIZLET_SKIP_KEY) === '1'; }
@@ -1919,12 +1920,37 @@ function openQuizlet(note) {
     return;
   }
 
-  // Otherwise: play the 2-second animation FIRST, then open the tab.
-  // openInNewTab() called from setTimeout still satisfies popup
-  // blockers in every current browser (transient user activation
-  // window is ~5 s in Chrome/Edge; the anchor-click pattern
-  // openInNewTab uses is allowed by Safari/Firefox up to a few
-  // seconds after a user click).
+  // Pre-open the destination tab INSIDE the click handler (popup
+  // blockers always allow window.open here) and paint a quick
+  // "Loading Quizlet…" splash into it. Then redirect that same tab
+  // to the real URL after the 2-second animation finishes on the
+  // original tab. Avoids the popup-blocker swallowing a delayed
+  // window.open / anchor-click after setTimeout.
+  qrPreTab = null;
+  try { qrPreTab = window.open('', '_blank'); } catch (_) {}
+  if (qrPreTab) {
+    try {
+      qrPreTab.document.write(
+        '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8" />' +
+        '<title>Opening Quizlet…</title>' +
+        '<meta name="viewport" content="width=device-width,initial-scale=1" />' +
+        '<style>' +
+        'html,body{margin:0;height:100%;background:linear-gradient(135deg,#4255ff 0%,#8b5cf6 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}' +
+        'body{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;}' +
+        '.q{width:88px;height:88px;background:#fff;color:#4255ff;border-radius:20px;display:grid;place-items:center;font-size:48px;font-weight:800;box-shadow:0 16px 40px rgba(0,0,0,.22);animation:p 1.1s ease-in-out infinite;}' +
+        '@keyframes p{50%{transform:scale(1.08);}}' +
+        'h1{font-size:22px;margin:28px 0 6px;font-weight:700;}' +
+        'p{opacity:.85;margin:0;font-size:14px;}' +
+        '</style></head><body>' +
+        '<div class="q">Q</div>' +
+        '<h1>Opening Quizlet…</h1>' +
+        '<p>You\'ll be redirected in a moment.</p>' +
+        '</body></html>'
+      );
+      qrPreTab.document.close();
+    } catch (_) {}
+  }
+
   qrSkipInput.checked = false;
   qrModal.style.display = 'flex';
   qrModal.offsetHeight;         // reflow so the open-transition fires
@@ -1933,15 +1959,30 @@ function openQuizlet(note) {
   if (qrTimer) clearTimeout(qrTimer);
   qrTimer = setTimeout(() => {
     if (qrSkipInput.checked) setQuizletSkipped(true);
-    openInNewTab(url);
+    if (qrPreTab && !qrPreTab.closed) {
+      try { qrPreTab.location.href = url; }
+      catch (_) { openInNewTab(url); }
+    } else {
+      // Pre-open failed (popup blocker): try the anchor-click
+      // fallback — works in most browsers within ~5 s of a click.
+      openInNewTab(url);
+    }
+    qrPreTab = null;
     closeQuizletRedirect();
   }, 2000);
 }
 
-function closeQuizletRedirect() {
+function closeQuizletRedirect(opts) {
   if (!qrModal) return;
   qrModal.classList.remove('open');
   if (qrTimer) { clearTimeout(qrTimer); qrTimer = null; }
+  // If we're closing because the user cancelled (not because the
+  // 2 s ran out and the redirect already happened), kill the
+  // pre-opened tab too so a stale 'Loading…' page isn't left behind.
+  if (opts && opts.cancelPreTab && qrPreTab && !qrPreTab.closed) {
+    try { qrPreTab.close(); } catch (_) {}
+  }
+  qrPreTab = null;
   setTimeout(() => { qrModal.style.display = 'none'; }, 220);
 }
 
@@ -1951,10 +1992,10 @@ if (qrModal) {
     if (!role) return;
     if (role === 'overlay' && e.target !== qrModal) return;
     if (qrSkipInput.checked) setQuizletSkipped(true);
-    closeQuizletRedirect();
+    closeQuizletRedirect({ cancelPreTab: true });
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && qrModal.classList.contains('open')) closeQuizletRedirect();
+    if (e.key === 'Escape' && qrModal.classList.contains('open')) closeQuizletRedirect({ cancelPreTab: true });
   });
 }
 
