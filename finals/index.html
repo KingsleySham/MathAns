@@ -1,461 +1,587 @@
 <!DOCTYPE html>
+<!--
+   ─────────────────────────────────────────────────────────────
+     finals.mathans.app — Coming Soon
+     "The lock is the door. The door is the question."
+                                — somewhere in the static
+   ─────────────────────────────────────────────────────────────
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Finals Study Hub</title>
-  <meta name="description" content="Finals study hub — countdown to school finals, upload and download notes and mock papers, Pomodoro timer." />
-  <meta name="theme-color" content="#0d9488" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Finals" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
-  <link rel="apple-touch-icon" href="/icon-192x192.png" />
-  <meta property="og:title" content="Finals Study Hub" />
-  <meta property="og:description" content="Countdown, notes sharing, and study timer for school finals." />
-  <meta property="og:type" content="website" />
-  <link rel="stylesheet" href="style.css" />
+  <title>Coming Soon · Finals</title>
+  <meta name="description" content="Something is being built at finals.mathans.app. Early-access only." />
+  <meta name="theme-color" content="#0a0014" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2322e7ff%22%2F%3E%3Cstop%20offset%3D%2255%25%22%20stop-color%3D%22%237a5cff%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23ff2bd6%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2307000f%22%2F%3E%3Cpath%20d%3D%22M20%2032V24a12%2012%200%200%201%2024%200v8%22%20fill%3D%22none%22%20stroke%3D%22url(%23g)%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%3Crect%20x%3D%2214%22%20y%3D%2232%22%20width%3D%2236%22%20height%3D%2222%22%20rx%3D%225%22%20fill%3D%22none%22%20stroke%3D%22url(%23g)%22%20stroke-width%3D%224%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2243%22%20r%3D%223%22%20fill%3D%22%2322e7ff%22%2F%3E%3C%2Fsvg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2322e7ff%22%2F%3E%3Cstop%20offset%3D%2255%25%22%20stop-color%3D%22%237a5cff%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23ff2bd6%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2307000f%22%2F%3E%3Cpath%20d%3D%22M20%2032V24a12%2012%200%200%201%2024%200v8%22%20fill%3D%22none%22%20stroke%3D%22url(%23g)%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%3Crect%20x%3D%2214%22%20y%3D%2232%22%20width%3D%2236%22%20height%3D%2222%22%20rx%3D%225%22%20fill%3D%22none%22%20stroke%3D%22url(%23g)%22%20stroke-width%3D%224%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2243%22%20r%3D%223%22%20fill%3D%22%2322e7ff%22%2F%3E%3C%2Fsvg%3E" />
+  <style>
+    :root{
+      --bg-0:#07000f;
+      --bg-1:#11002a;
+      --ink:#f4e9ff;
+      --ink-dim:#b9a6d6;
+      --neon-1:#ff2bd6;
+      --neon-2:#7a5cff;
+      --neon-3:#22e7ff;
+      --neon-4:#fffd5a;
+      --bad:#ff5577;
+      --good:#5cffb1;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;height:100%}
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(60% 60% at 15% 10%,  rgba(255,43,214,.35), transparent 60%),
+        radial-gradient(55% 55% at 90% 15%,  rgba(34,231,255,.28), transparent 60%),
+        radial-gradient(65% 65% at 80% 95%,  rgba(122,92,255,.32), transparent 60%),
+        radial-gradient(50% 50% at 10% 100%, rgba(255,253,90,.10), transparent 65%),
+        linear-gradient(180deg, var(--bg-0), var(--bg-1));
+      background-attachment: fixed;
+      overflow-x:hidden;
+      min-height:100vh;
+      position:relative;
+    }
+
+    body::before{
+      content:"";
+      position:fixed; inset:-2px;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%);
+      animation: drift 40s linear infinite;
+      pointer-events:none;
+      z-index:0;
+    }
+    @keyframes drift{
+      0%{transform:translate3d(0,0,0)}
+      100%{transform:translate3d(42px,42px,0)}
+    }
+
+    .float{
+      position:fixed; pointer-events:none; opacity:.55;
+      filter: blur(.3px) drop-shadow(0 0 14px currentColor);
+      z-index:0;
+    }
+    .float.tri  { color:var(--neon-1); top:14%; left:8%;  animation: bob 11s ease-in-out infinite; }
+    .float.ring { color:var(--neon-3); top:22%; right:9%; animation: bob 13s ease-in-out -3s infinite; }
+    .float.sq   { color:var(--neon-2); bottom:18%; left:14%; animation: bob 15s ease-in-out -6s infinite; }
+    .float.dot  { color:var(--neon-1); bottom:9%;  right:18%; animation: bob 9s  ease-in-out -2s infinite; }
+    .float.plus { color:var(--neon-3); top:55%; left:48%; animation: bob 17s ease-in-out -8s infinite; opacity:.25; }
+    @keyframes bob{
+      0%,100%{ transform: translateY(0) rotate(0deg) }
+      50%    { transform: translateY(-22px) rotate(8deg) }
+    }
+
+    .wrap{
+      position:relative; z-index:2;
+      min-height:100vh;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding: 48px 22px 80px;
+      text-align:center;
+    }
+
+    .eyebrow{
+      letter-spacing:.4em;
+      font-size:.72rem;
+      text-transform:uppercase;
+      color:var(--ink-dim);
+      margin-bottom:14px;
+      user-select:none;
+    }
+    .eyebrow .pulse{
+      display:inline-block; width:8px; height:8px; border-radius:50%;
+      background:var(--neon-3);
+      box-shadow:0 0 12px var(--neon-3);
+      margin-right:10px; vertical-align:middle;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{ transform:scale(1); opacity:1 }
+      50%    { transform:scale(1.6); opacity:.4 }
+    }
+
+    h1.title{
+      font-size: clamp(2.4rem, 8vw, 5.2rem);
+      line-height:1;
+      margin:0;
+      font-weight:900;
+      letter-spacing:-.02em;
+      background: linear-gradient(120deg, var(--neon-3) 0%, var(--neon-2) 35%, var(--neon-1) 70%, var(--neon-4) 100%);
+      -webkit-background-clip: text;
+              background-clip: text;
+      color: transparent;
+      background-size: 220% 220%;
+      animation: shimmer 8s ease-in-out infinite;
+      cursor: default;
+      user-select:none;
+      position:relative;
+    }
+    @keyframes shimmer{
+      0%,100%{ background-position: 0% 50% }
+      50%    { background-position: 100% 50% }
+    }
+
+    .subtitle{
+      margin: 18px auto 6px;
+      max-width: 640px;
+      color:var(--ink-dim);
+      font-size: clamp(.95rem, 2.2vw, 1.1rem);
+      line-height:1.55;
+    }
+    .subtitle .kw{ color: var(--neon-3); }
+    .subtitle .kw2{ color: var(--neon-1); }
+
+    .lock-stage{
+      margin: 36px auto 18px;
+      width: 168px; height: 200px;
+      position: relative;
+      perspective: 800px;
+    }
+    .lock-svg{
+      width: 100%; height: 100%;
+      display:block;
+      filter: drop-shadow(0 12px 40px rgba(255,43,214,.35))
+              drop-shadow(0 6px 26px rgba(34,231,255,.25));
+    }
+    .lock-body{
+      fill: #1a0833;
+      stroke: url(#lockEdge);
+      stroke-width: 3;
+    }
+    .lock-keyhole{
+      fill: var(--neon-3);
+      transition: fill .4s ease;
+    }
+    .lock-shackle{
+      fill: none;
+      stroke: url(#lockEdge);
+      stroke-width: 10;
+      stroke-linecap: round;
+      transform-origin: 84px 92px;
+      transition: transform .55s cubic-bezier(.2,1.3,.4,1);
+    }
+    .lock-stage.shake{ animation: shake .45s cubic-bezier(.36,.07,.19,.97); }
+    @keyframes shake{
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-7px, 0, 0); }
+      40%, 60% { transform: translate3d(7px, 0, 0); }
+    }
+    .lock-stage.wrong .lock-keyhole{ fill: var(--bad); }
+    .lock-stage.unlocked .lock-shackle{
+      transform: rotate(28deg) translate(40px, -10px);
+    }
+    .lock-stage.unlocked .lock-keyhole{
+      fill: var(--good);
+      filter: drop-shadow(0 0 14px var(--good));
+    }
+    .lock-stage.unlocked .lock-body{
+      animation: bodyGlow 1.2s ease forwards;
+    }
+    @keyframes bodyGlow{
+      0%{   filter: none }
+      100%{ filter: drop-shadow(0 0 26px var(--good)) }
+    }
+    .lock-ring{
+      position:absolute; inset:-10px;
+      border-radius:50%;
+      border: 1px dashed rgba(255,255,255,.18);
+      animation: spin 28s linear infinite;
+      pointer-events:none;
+    }
+    .lock-ring.r2{ inset:-26px; animation-duration: 60s; animation-direction:reverse; }
+    @keyframes spin{ to { transform: rotate(360deg) } }
+
+    .gate{
+      margin: 8px auto 0;
+      width: min(420px, 92vw);
+      background: rgba(20, 4, 44, .55);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 20px 18px 18px;
+      box-shadow:
+        0 30px 80px -30px rgba(122,92,255,.45),
+        inset 0 1px 0 rgba(255,255,255,.06);
+      position:relative;
+    }
+    .gate-label{
+      font-size:.78rem;
+      color:var(--ink-dim);
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+    .gate-row{
+      display:flex; gap:8px; align-items:stretch;
+    }
+    .gate-input{
+      flex:1;
+      appearance:none; -webkit-appearance:none;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.1);
+      color: var(--ink);
+      font: inherit;
+      font-size: 1.05rem;
+      letter-spacing:.3em;
+      text-align:center;
+      padding: 13px 14px;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s;
+    }
+    .gate-input::placeholder{ color: rgba(185,166,214,.6); letter-spacing:.18em; }
+    .gate-input:focus{
+      border-color: var(--neon-3);
+      box-shadow: 0 0 0 3px rgba(34,231,255,.18);
+      background: rgba(0,0,0,.55);
+    }
+    .gate-input.wrong{
+      border-color: var(--bad);
+      box-shadow: 0 0 0 3px rgba(255,85,119,.18);
+    }
+    .gate-btn{
+      appearance:none; border:none; cursor:pointer;
+      font: inherit; font-weight:700;
+      color:#0a0014;
+      padding: 0 18px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--neon-3), var(--neon-1));
+      box-shadow: 0 8px 22px -8px rgba(255,43,214,.7);
+      transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .gate-btn:hover{ transform: translateY(-1px); filter:brightness(1.08); }
+    .gate-btn:active{ transform: translateY(0); }
+    .gate-btn:disabled{ opacity:.6; cursor:default; transform:none; }
+
+    .gate-help{
+      margin-top:10px;
+      font-size:.78rem;
+      color:var(--ink-dim);
+      min-height: 1.2em;
+      transition: color .2s ease;
+    }
+    .gate-help.bad { color: var(--bad); }
+    .gate-help.ok  { color: var(--good); }
+
+    .foot{
+      position:relative; z-index:2;
+      text-align:center;
+      color: var(--ink-dim);
+      font-size:.78rem;
+      padding: 18px 12px 26px;
+      letter-spacing:.04em;
+    }
+    .foot a{ color: var(--neon-3); text-decoration: none; }
+    .foot a:hover{ text-decoration: underline; }
+
+    .secret-star{
+      position: fixed;
+      top: 14px; right: 16px;
+      width: 14px; height: 14px;
+      color: var(--neon-4);
+      opacity: .25;
+      z-index: 3;
+      cursor: help;
+      transition: opacity .25s ease, transform .25s ease;
+      user-select:none;
+    }
+    .secret-star:hover{ opacity: 1; transform: rotate(180deg) scale(1.4); }
+    .secret-star::after{
+      content: "you found one of three.";
+      position:absolute; right: 22px; top: 0;
+      white-space: nowrap;
+      background: rgba(0,0,0,.7);
+      color: var(--neon-4);
+      font-size:.7rem; padding: 4px 8px; border-radius: 6px;
+      opacity:0; pointer-events:none;
+      transform: translateX(6px);
+      transition: opacity .2s, transform .2s;
+    }
+    .secret-star:hover::after{ opacity:1; transform: translateX(0); }
+
+    .morse{
+      display:inline-block;
+      letter-spacing:.4em;
+      color: rgba(255,255,255,.18);
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size:.7rem;
+      margin-top: 26px;
+      user-select: all;
+      cursor: help;
+      transition: color .3s ease;
+    }
+    .morse:hover{ color: var(--neon-4); }
+
+    .toast{
+      position: fixed;
+      left: 50%; bottom: 28px;
+      transform: translateX(-50%) translateY(120%);
+      background: rgba(10, 0, 20, .9);
+      border: 1px solid var(--neon-4);
+      color: var(--neon-4);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size:.85rem;
+      letter-spacing:.04em;
+      box-shadow: 0 10px 30px -10px rgba(255,253,90,.5);
+      z-index: 50;
+      transition: transform .35s cubic-bezier(.2,1.3,.4,1), opacity .35s;
+      opacity: 0;
+    }
+    .toast.show{ transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    .overlay{
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, rgba(92,255,177,.18), transparent 70%);
+      opacity: 0; pointer-events: none;
+      transition: opacity .6s ease;
+      z-index: 4;
+    }
+    .overlay.show{ opacity: 1; }
+
+    @media (max-width: 480px){
+      .lock-stage{ width: 140px; height: 168px; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      body::before, .float, .lock-ring{ animation: none !important; }
+      h1.title{ animation: none; background-position: 0% 50%; }
+    }
+  </style>
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <h1 class="site-title">Finals Study Hub</h1>
-      <div class="site-tagline">期末考溫習中心</div>
+  <svg class="float tri"  width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><polygon points="28,4 52,50 4,50" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+  <svg class="float ring" width="72" height="72" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="30" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+  <svg class="float sq"   width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="6" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" transform="rotate(15 24 24)"/></svg>
+  <svg class="float dot"  width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="6" fill="currentColor"/></svg>
+  <svg class="float plus" width="80" height="80" viewBox="0 0 80 80" aria-hidden="true"><path d="M40 12v56M12 40h56" stroke="currentColor" stroke-width="2"/></svg>
+
+  <span class="secret-star" id="secretStar" title="✶" aria-hidden="true">✶</span>
+
+  <main class="wrap">
+
+    <div class="eyebrow"><span class="pulse"></span> finals.mathans.app · early-access build</div>
+
+    <h1 class="title" id="title">Coming&nbsp;Soon</h1>
+
+    <p class="subtitle">
+      Something is being <span class="kw">built</span> here — a smarter
+      <span class="kw2">finals hub</span> for countdowns, mock papers, notes and focused study.
+      <br/>Got a key? Use it below.
+    </p>
+
+    <div class="lock-stage" id="lockStage" aria-hidden="true">
+      <div class="lock-ring"></div>
+      <div class="lock-ring r2"></div>
+      <svg class="lock-svg" viewBox="0 0 168 200" aria-hidden="true">
+        <defs>
+          <linearGradient id="lockEdge" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%"  stop-color="#22e7ff"/>
+            <stop offset="55%" stop-color="#7a5cff"/>
+            <stop offset="100%" stop-color="#ff2bd6"/>
+          </linearGradient>
+        </defs>
+        <path class="lock-shackle"
+              d="M44 92 V64 a40 40 0 0 1 80 0 V92" />
+        <rect class="lock-body" x="28" y="92" width="112" height="92" rx="18" ry="18"/>
+        <circle class="lock-keyhole" cx="84" cy="130" r="9"/>
+        <rect   class="lock-keyhole" x="80" y="135" width="8" height="22" rx="2"/>
+      </svg>
     </div>
-    <a class="admin-badge" id="admin-badge" href="/admin" hidden title="You're signed in as admin — click to open the admin dashboard">
-      <span class="admin-badge-icon" aria-hidden="true">🛡</span>
-      <span class="admin-badge-label">Admin</span>
-    </a>
-  </header>
 
-  <main class="page-wrap">
-
-    <!-- ===== Countdown banner ===== -->
-    <section class="card countdown-card" id="countdown-card">
-      <div class="countdown-label" id="countdown-label">Loading…</div>
-      <div class="countdown-grid" id="countdown-grid">
-        <div class="countdown-unit"><div class="num" id="cd-days">--</div><div class="lab">days</div></div>
-        <div class="countdown-unit"><div class="num" id="cd-hours">--</div><div class="lab">hours</div></div>
-        <div class="countdown-unit"><div class="num" id="cd-mins">--</div><div class="lab">mins</div></div>
-        <div class="countdown-unit"><div class="num" id="cd-secs">--</div><div class="lab">secs</div></div>
+    <form class="gate" id="gateForm" autocomplete="off" novalidate>
+      <div class="gate-label">Early-access key</div>
+      <div class="gate-row">
+        <input
+          class="gate-input"
+          id="gateInput"
+          type="password"
+          inputmode="numeric"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          maxlength="16"
+          placeholder="••••••••"
+          aria-label="Early-access key"
+        />
+        <button class="gate-btn" id="gateBtn" type="submit">Unlock</button>
       </div>
-      <div class="countdown-sub" id="countdown-sub"></div>
-      <div class="countdown-actions">
-        <button class="countdown-btn" id="open-timetable" type="button">
-          <span class="countdown-btn-icon" aria-hidden="true">📅</span>
-          <span class="countdown-btn-label">Timetable</span>
-        </button>
-        <button class="countdown-btn" id="open-coverage" type="button">
-          <span class="countdown-btn-icon" aria-hidden="true">📚</span>
-          <span class="countdown-btn-label">Coverage</span>
-        </button>
-      </div>
-    </section>
+      <div class="gate-help" id="gateHelp">8 digits. The page shakes if it's wrong.</div>
+    </form>
 
-    <!-- ===== Top-level tabs ===== -->
-    <nav class="main-tabs" id="main-tabs" role="tablist">
-      <button class="main-tab active" data-tab="notes" role="tab">Notes &amp; Papers</button>
-      <button class="main-tab" data-tab="maths" role="tab">Maths Answers</button>
-      <button class="main-tab" data-tab="timer" role="tab">Study Timer</button>
-    </nav>
-
-    <!-- ===== Notes & Papers tab ===== -->
-    <section class="tab-panel active" id="panel-notes">
-
-      <!-- Upload card (collapsed by default — click to expand) -->
-      <div class="card upload-card">
-        <button type="button" class="upload-toggle" id="upload-toggle" aria-expanded="false" aria-controls="upload-collapse">
-          <span class="upload-toggle-icon" aria-hidden="true">+</span>
-          <span class="upload-toggle-text">Share notes or a mock paper</span>
-          <span class="upload-toggle-hint">PDF / Word / image / text · up to 3 MB</span>
-        </button>
-
-        <div class="upload-collapse" id="upload-collapse" hidden>
-          <form id="upload-form" class="upload-form" autocomplete="off">
-            <div class="form-row">
-              <label class="form-label" for="uploader-name">Your name <span class="req">*</span></label>
-              <input type="text" id="uploader-name" maxlength="60" required placeholder="e.g. Chris Wong" />
-            </div>
-
-            <div class="form-row">
-              <label class="form-label" for="note-title">Title <span class="req">*</span></label>
-              <input type="text" id="note-title" maxlength="150" required placeholder="e.g. S.4 Maths Ch.5 Summary" />
-            </div>
-
-            <div class="form-row-2col">
-              <div>
-                <label class="form-label" for="note-subject">Subject</label>
-                <select id="note-subject">
-                  <option value="Mathematics">Mathematics</option>
-                  <option value="English">English</option>
-                  <option value="Chinese">Chinese</option>
-                  <option value="Physics">Physics</option>
-                  <option value="Chemistry">Chemistry</option>
-                  <option value="Biology">Biology</option>
-                  <option value="Economics">Economics</option>
-                  <option value="Geography">Geography</option>
-                  <option value="History">History</option>
-                  <option value="ICT">ICT</option>
-                  <option value="THS">THS</option>
-                  <option value="CES">CES</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div>
-                <label class="form-label" for="note-type">Type</label>
-                <select id="note-type">
-                  <option value="notes">Notes</option>
-                  <option value="mock_paper">Mock Paper</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <label class="form-label" for="note-folder">Folder (optional)</label>
-              <div class="select-wrap">
-                <select id="note-folder">
-                  <option value="">— No folder —</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <label class="form-label" for="note-desc">Description (optional)</label>
-              <textarea id="note-desc" maxlength="500" rows="2" placeholder="A quick note about what this covers."></textarea>
-            </div>
-
-            <!-- File OR Google Docs URL (at least one) for notes / mock_paper -->
-            <div class="form-row" id="note-file-row">
-              <label class="form-label" for="note-file">File <span class="opt">(optional)</span></label>
-              <input type="file" id="note-file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.txt,.html,.htm" />
-              <div class="file-hint">Max 3 MB. PDF, Word, images, plain text, or HTML.</div>
-            </div>
-
-            <div class="form-row" id="note-gdocs-row">
-              <label class="form-label" for="note-gdocs-url">Google Docs link <span class="opt">(optional)</span></label>
-              <input type="url" id="note-gdocs-url" placeholder="https://docs.google.com/document/d/..." />
-              <div class="file-hint">A Google Docs, Sheets, Slides, or Drive link. Viewers will be prompted to sign in with <strong>@smcesps.edu.hk</strong>.</div>
-            </div>
-
-            <div class="form-row" id="note-quizlet-row">
-              <label class="form-label" for="note-quizlet-url">Quizlet flashcards link <span class="opt">(optional)</span></label>
-              <input type="url" id="note-quizlet-url" placeholder="https://quizlet.com/123456789/..." />
-              <div class="file-hint">A Quizlet study-set URL. Provide a file, any link, or any combination — at least one is required.</div>
-            </div>
-
-            <button type="submit" class="btn-primary" id="upload-btn">Upload</button>
-
-            <div class="upload-progress" id="upload-progress" style="display:none;">
-              <div class="upload-progress-bar"><div class="upload-progress-fill" id="upload-progress-fill"></div></div>
-              <div class="upload-progress-text" id="upload-progress-text">0%</div>
-            </div>
-
-            <div class="upload-status" id="upload-status"></div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Mode picker: two big abstract-colored cards -->
-      <nav class="view-mode-tabs" id="view-mode-tabs" role="tablist">
-        <button class="view-mode-tab view-mode-tab-all" data-view="all" role="tab" aria-selected="false">
-          <span class="view-mode-tab-icon" aria-hidden="true">✨</span>
-          <span class="view-mode-tab-text">
-            <span class="view-mode-tab-title">View all</span>
-            <span class="view-mode-tab-sub">Every note in one big list</span>
-          </span>
-        </button>
-        <button class="view-mode-tab view-mode-tab-folders" data-view="folders" role="tab" aria-selected="false">
-          <span class="view-mode-tab-icon" aria-hidden="true">📁</span>
-          <span class="view-mode-tab-text">
-            <span class="view-mode-tab-title">Browse by folder</span>
-            <span class="view-mode-tab-sub">Navigate the tree of subjects</span>
-          </span>
-        </button>
-      </nav>
-
-      <!-- View: All notes (filterable flat list) -->
-      <div class="card" id="view-all">
-        <div class="browse-header">
-          <h2 class="section-title">All community notes</h2>
-          <div class="browse-filters">
-            <select id="filter-subject"><option value="">All subjects</option></select>
-            <select id="filter-type">
-              <option value="">All types</option>
-              <option value="notes">Notes</option>
-              <option value="mock_paper">Mock Papers</option>
-            </select>
-          </div>
-        </div>
-        <div id="notes-list" class="notes-list">
-          <div class="empty-state" id="notes-empty">Loading…</div>
-        </div>
-      </div>
-
-      <!-- View: Browse by folder (tree navigation) -->
-      <div class="card" id="view-folders" style="display:none;">
-        <div class="folder-nav-header">
-          <h2 class="section-title" id="folder-nav-title">Folders</h2>
-          <nav class="folder-breadcrumb" id="folder-breadcrumb" aria-label="Folder path"></nav>
-        </div>
-        <div class="folder-children-section" id="folder-children-section">
-          <h3 class="folder-subhead" id="folder-children-head">Subfolders</h3>
-          <div class="folder-children" id="folder-children-list"></div>
-        </div>
-        <div class="folder-notes-section" id="folder-notes-section">
-          <h3 class="folder-subhead" id="folder-notes-head">Notes here</h3>
-          <div class="notes-list" id="folder-notes-list">
-            <div class="empty-state" id="folder-notes-empty">Loading…</div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- ===== Maths Answers tab ===== -->
-    <section class="tab-panel" id="panel-maths">
-      <div class="card maths-finder">
-        <h2 class="section-title">S.3 Maths Answer Finder</h2>
-        <p class="section-desc">按章節及題號查看中三數學參考答案。Look up S.3 maths answers by section and question number.</p>
-
-        <div id="maths-loader" class="maths-loader" style="display:none;">Loading answer database…</div>
-
-        <div id="maths-app" style="display:none;">
-          <div class="form-group">
-            <div class="step-label">1. 選擇章節 (Section)</div>
-            <div class="section-tabs" id="m-section-tabs">
-              <button class="tab active" data-section="4.1">4.1</button>
-              <button class="tab" data-section="4.2">4.2</button>
-              <button class="tab" data-section="4.3">4.3</button>
-              <button class="tab" data-section="5.1">5.1</button>
-              <button class="tab" data-section="5.2">5.2</button>
-              <button class="tab" data-section="6.1">6.1</button>
-              <button class="tab" data-section="6.3">6.3</button>
-              <button class="tab" data-section="7.1">7.1</button>
-              <button class="tab tab-ut" data-section="UT">UT</button>
-            </div>
-          </div>
-
-          <div class="form-group" id="m-ut-chapter-group" style="display:none;">
-            <div class="step-label">2. 選擇章節 (Chapter)</div>
-            <div class="select-wrap">
-              <select id="m-ut-chapter-select">
-                <option value="">— 請選擇 / Select —</option>
-                <option value="Ch4">Chapter 4</option>
-                <option value="Ch5">Chapter 5</option>
-                <option value="Ch6">Chapter 6</option>
-                <option value="Ch7">Chapter 7</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group" id="m-question-group">
-            <div class="step-label" id="m-q-step-label">2. 選擇題號 (Question)</div>
-            <div class="select-wrap">
-              <select id="m-question-select">
-                <option value="">— 請選擇 / Select —</option>
-              </select>
-            </div>
-          </div>
-
-          <button class="btn-check" id="m-btn-check">查看答案 (View Answer)</button>
-
-          <div class="answer-panel" id="m-answer-panel" style="display:none;">
-            <div class="answer-header" id="m-answer-header"></div>
-            <div id="m-steps-container"></div>
-            <div class="final-answer" id="m-final-answer"></div>
-          </div>
-        </div>
-
-        <p class="maths-foot">For reference only. 只供參考。</p>
-      </div>
-    </section>
-
-    <!-- ===== Timer tab ===== -->
-    <section class="tab-panel" id="panel-timer">
-
-      <!-- Sub-tabs -->
-      <div class="card">
-        <nav class="sub-tabs" id="timer-sub-tabs">
-          <button class="sub-tab active" data-sub="pomo">Pomodoro</button>
-          <button class="sub-tab" data-sub="countdown">Countdown</button>
-          <button class="sub-tab" data-sub="stopwatch">Stopwatch</button>
-        </nav>
-
-        <!-- Pomodoro -->
-        <div class="sub-panel active" id="sub-pomo">
-          <div class="timer-phase-label" id="pomo-phase">Focus</div>
-          <div class="timer-display" id="pomo-display">25:00</div>
-          <div class="timer-cycles">Completed focus sessions: <span id="pomo-cycles">0</span></div>
-          <div class="timer-controls">
-            <button class="btn-primary" id="pomo-start">Start</button>
-            <button class="btn-secondary" id="pomo-skip">Skip</button>
-            <button class="btn-secondary" id="pomo-reset">Reset</button>
-          </div>
-          <details class="timer-settings">
-            <summary>Settings</summary>
-            <div class="settings-grid">
-              <label>
-                Focus (min)
-                <input type="number" id="pomo-focus-min" min="1" max="120" value="25" />
-              </label>
-              <label>
-                Short break (min)
-                <input type="number" id="pomo-break-min" min="1" max="60" value="5" />
-              </label>
-              <label>
-                Long break (min)
-                <input type="number" id="pomo-long-min" min="1" max="60" value="15" />
-              </label>
-              <label>
-                Sessions before long break
-                <input type="number" id="pomo-long-every" min="2" max="10" value="4" />
-              </label>
-            </div>
-          </details>
-        </div>
-
-        <!-- Custom countdown -->
-        <div class="sub-panel" id="sub-countdown">
-          <div class="timer-display" id="cd-timer-display">00:25:00</div>
-          <div class="cd-input-row">
-            <label>H<input type="number" id="cd-input-h" min="0" max="23" value="0" /></label>
-            <label>M<input type="number" id="cd-input-m" min="0" max="59" value="25" /></label>
-            <label>S<input type="number" id="cd-input-s" min="0" max="59" value="0" /></label>
-          </div>
-          <div class="timer-controls">
-            <button class="btn-primary" id="cd-start">Start</button>
-            <button class="btn-secondary" id="cd-reset">Reset</button>
-          </div>
-        </div>
-
-        <!-- Stopwatch -->
-        <div class="sub-panel" id="sub-stopwatch">
-          <div class="timer-display" id="sw-display">00:00:00.00</div>
-          <div class="timer-controls">
-            <button class="btn-primary" id="sw-start">Start</button>
-            <button class="btn-secondary" id="sw-lap">Lap</button>
-            <button class="btn-secondary" id="sw-reset">Reset</button>
-          </div>
-          <ol class="lap-list" id="sw-laps"></ol>
-        </div>
-      </div>
-    </section>
+    <div class="morse" title="not just dashes">--- .--. . -.</div>
 
   </main>
 
-  <footer class="site-footer">
-    <div>Good luck with finals! 加油！</div>
-    <div class="footer-links">
-      <a href="https://www.mathans.app/">mathans.app</a>
-      <span>·</span>
-      <a href="/admin">Admin</a>
-    </div>
+  <footer class="foot">
+    © <span id="yr"></span> mathans.app · <a href="https://www.mathans.app/">back to S.3 Maths Answers</a>
   </footer>
 
-  <!-- ===== Timetable modal ===== -->
-  <div class="modal-overlay info-modal" id="timetable-modal" style="display:none;" data-close="overlay">
-    <div class="modal-card info-card">
-      <div class="modal-card-header info-header info-header-timetable">
-        <div class="info-header-text">
-          <div class="info-title">📅 Exam timetable</div>
-          <div class="info-sub">S.3 Final Examination · 1–12 June 2026 · TSA · 17–18 June 2026</div>
-        </div>
-        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
-      </div>
-      <div class="modal-card-body info-body" id="timetable-body"></div>
-    </div>
-  </div>
+  <div class="overlay" id="overlay" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <!-- ===== Coverage modal ===== -->
-  <div class="modal-overlay info-modal" id="coverage-modal" style="display:none;" data-close="overlay">
-    <div class="modal-card info-card">
-      <div class="modal-card-header info-header info-header-coverage">
-        <div class="info-header-text">
-          <div class="info-title">📚 Exam coverage</div>
-          <div class="info-sub">What each paper actually tests — tap a subject to expand</div>
-        </div>
-        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
-      </div>
-      <div class="modal-card-body info-body" id="coverage-body"></div>
-    </div>
-  </div>
-
-  <!-- ===== In-browser viewer modal ===== -->
-  <div class="modal-overlay viewer-modal" id="viewer-modal" style="display:none;" data-close="overlay">
-    <div class="modal-card viewer-card">
-      <div class="modal-card-header viewer-header">
-        <div class="viewer-header-text">
-          <div class="viewer-title" id="viewer-title">Note</div>
-          <div class="viewer-meta" id="viewer-meta"></div>
-        </div>
-        <a class="viewer-download" id="viewer-download" href="#" target="_blank" rel="noopener" download>Download</a>
-        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
-      </div>
-      <div class="modal-card-body viewer-body" id="viewer-body"></div>
-    </div>
-  </div>
-
-  <!-- ===== Google Docs sign-in warning modal ===== -->
-  <div class="modal-overlay gdocs-modal" id="gdocs-warn-modal" style="display:none;" data-close="overlay">
-    <div class="modal-card gdocs-warn-card">
-      <div class="gdocs-warn-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="60" height="60">
-          <!-- Four-colour Google "G" mark -->
-          <path fill="#4285f4" d="M21.6 12.227c0-.708-.058-1.39-.166-2.045H12v3.87h5.385a4.6 4.6 0 0 1-1.996 3.016v2.508h3.227c1.886-1.737 2.984-4.295 2.984-7.349z"/>
-          <path fill="#34a853" d="M12 22c2.7 0 4.964-.895 6.616-2.424l-3.227-2.508c-.895.6-2.037.953-3.389.953-2.603 0-4.806-1.756-5.59-4.12H3.07v2.59A9.997 9.997 0 0 0 12 22z"/>
-          <path fill="#fbbc05" d="M6.41 13.901A6.013 6.013 0 0 1 6.09 12c0-.66.114-1.302.32-1.901V7.508H3.07A9.997 9.997 0 0 0 2 12c0 1.614.386 3.14 1.07 4.49l3.34-2.589z"/>
-          <path fill="#ea4335" d="M12 5.977c1.47 0 2.788.505 3.826 1.498l2.866-2.866C16.96 2.99 14.696 2 12 2 8.087 2 4.705 4.244 3.07 7.508l3.34 2.59C7.194 7.734 9.397 5.977 12 5.977z"/>
-        </svg>
-      </div>
-      <div class="gdocs-warn-title">Sign in with your school account</div>
-      <div class="gdocs-warn-body">
-        Use your <strong>@smcesps.edu.hk</strong> Google account when this doc opens, or you'll get a "you need access" page.
-      </div>
-      <label class="gdocs-warn-skip">
-        <input type="checkbox" id="gdocs-warn-skip" />
-        <span>Don't show this again</span>
-      </label>
-      <div class="gdocs-warn-actions">
-        <button class="btn-secondary" data-close="cancel">Cancel</button>
-        <a class="btn-primary gdocs-warn-open" id="gdocs-warn-open" href="#" target="_blank" rel="noopener">
-          Open in new tab
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Peek mode (triple-tap the title to lock the page to the
-       bottom half of the viewport — for peeking from a drawer). -->
   <script>
-    (function () {
-      var KEY = 'finals.peekMode';
-      var title = document.querySelector('.site-title');
-      if (!title) return;
-      function apply(on) {
-        document.documentElement.classList.toggle('peek-mode', on);
-        document.body.classList.toggle('peek-mode', on);
-      }
-      try { if (localStorage.getItem(KEY) === '1') apply(true); } catch (e) {}
-      var count = 0, timer = null;
-      title.addEventListener('click', function () {
-        title.classList.remove('peek-pulse');
-        void title.offsetWidth;
-        title.classList.add('peek-pulse');
-        count++;
-        clearTimeout(timer);
-        timer = setTimeout(function () { count = 0; }, 800);
-        if (count >= 3) {
-          count = 0;
-          var on = !document.body.classList.contains('peek-mode');
-          apply(on);
-          try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) {}
-        }
-      });
-    })();
-  </script>
+  (function(){
+    'use strict';
 
-  <script type="module" src="app.js"></script>
+    var EARLY_ACCESS_PASSWORD = '20260601';
+    var EARLY_ACCESS_PATH     = 'hub.html';
+    var FLAG_KEY              = 'finals_early_access';
+
+    var $ = function(id){ return document.getElementById(id); };
+    var form   = $('gateForm');
+    var input  = $('gateInput');
+    var btn    = $('gateBtn');
+    var help   = $('gateHelp');
+    var stage  = $('lockStage');
+    var overlay= $('overlay');
+    var toast  = $('toast');
+    var title  = $('title');
+
+    $('yr').textContent = new Date().getFullYear();
+
+    try {
+      if (sessionStorage.getItem(FLAG_KEY) === '1' || localStorage.getItem(FLAG_KEY) === '1') {
+        location.replace(EARLY_ACCESS_PATH);
+        return;
+      }
+    } catch(e){}
+
+    function showToast(msg, ms){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(function(){ toast.classList.remove('show'); }, ms || 2400);
+    }
+
+    function rejectAttempt(){
+      stage.classList.remove('unlocked');
+      stage.classList.add('shake', 'wrong');
+      input.classList.add('wrong');
+      help.classList.remove('ok');
+      help.classList.add('bad');
+      help.textContent = 'Wrong key. Try again.';
+      setTimeout(function(){
+        stage.classList.remove('shake');
+      }, 500);
+      setTimeout(function(){
+        stage.classList.remove('wrong');
+        input.classList.remove('wrong');
+      }, 1100);
+    }
+
+    function acceptAttempt(){
+      try { sessionStorage.setItem(FLAG_KEY, '1'); } catch(e){}
+      try { localStorage.setItem(FLAG_KEY, '1'); } catch(e){}
+      stage.classList.remove('shake', 'wrong');
+      input.classList.remove('wrong');
+      input.blur();
+      btn.disabled = true;
+      help.classList.remove('bad');
+      help.classList.add('ok');
+      help.textContent = 'Unlocked. Taking you in…';
+      stage.classList.add('unlocked');
+      overlay.classList.add('show');
+      setTimeout(function(){
+        location.assign(EARLY_ACCESS_PATH);
+      }, 1500);
+    }
+
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var v = (input.value || '').trim();
+      if (!v) {
+        rejectAttempt();
+        return;
+      }
+      if (v === EARLY_ACCESS_PASSWORD) {
+        acceptAttempt();
+      } else {
+        rejectAttempt();
+      }
+    });
+
+    input.addEventListener('input', function(){
+      input.classList.remove('wrong');
+      if (help.classList.contains('bad')) {
+        help.classList.remove('bad');
+        help.textContent = '8 digits. The page shakes if it’s wrong.';
+      }
+    });
+
+    try {
+      var css1 = 'color:#22e7ff;font-weight:700;font-size:14px';
+      var css2 = 'color:#ff2bd6;font-size:12px';
+      console.log('%cfinals.mathans.app%c — early-access build', css1, css2);
+      console.log('%cHint:%c the key is 8 digits. Looks like a date.', 'color:#fffd5a', 'color:#b9a6d6');
+    } catch(e){}
+
+    var clicks = 0;
+    title.addEventListener('click', function(){
+      clicks++;
+      if (clicks === 3) {
+        showToast('keep going…', 1400);
+      } else if (clicks === 5) {
+        showToast('a date in 2026 opens the lock', 3200);
+      } else if (clicks >= 8) {
+        title.style.transform = 'rotate(' + ((clicks % 2) ? -2 : 2) + 'deg)';
+        setTimeout(function(){ title.style.transform=''; }, 180);
+      }
+    });
+
+    $('secretStar').addEventListener('click', function(){
+      showToast('try a date in 2026', 2400);
+    });
+
+    var KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+    var pos = 0;
+    document.addEventListener('keydown', function(e){
+      var k = e.key;
+      if (k && k.length === 1) k = k.toLowerCase();
+      if (k === KONAMI[pos]) {
+        pos++;
+        if (pos === KONAMI.length) {
+          pos = 0;
+          partyMode();
+        }
+      } else {
+        pos = (k === KONAMI[0]) ? 1 : 0;
+      }
+    });
+
+    function partyMode(){
+      document.body.style.transition = 'filter .4s ease';
+      document.body.style.filter = 'hue-rotate(40deg) saturate(1.3)';
+      showToast('★ secret mode unlocked — still need the key though ★', 3200);
+      setTimeout(function(){ document.body.style.filter = ''; }, 4000);
+    }
+
+    var morseEl = document.querySelector('.morse');
+    var taps = 0, lastTap = 0;
+    morseEl.addEventListener('click', function(){
+      var now = Date.now();
+      taps = (now - lastTap < 600) ? taps + 1 : 1;
+      lastTap = now;
+      if (taps >= 3) {
+        taps = 0;
+        showToast('· − · ·   it spells OPEN', 2600);
+      }
+    });
+
+    if (matchMedia('(hover:hover)').matches) {
+      setTimeout(function(){ input.focus(); }, 200);
+    }
+  })();
+  </script>
 </body>
 </html>
