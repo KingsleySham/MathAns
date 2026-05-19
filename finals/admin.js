@@ -815,13 +815,26 @@ function startAdmin(fb) {
      Renders the same .subj-card layout as the hub, with every text node
      made contenteditable so admins can change wording in place.
      ========================================================================== */
-  const covListEl   = $('coverage-list');
-  const covNewBtn   = $('coverage-new-btn');
-  const covResetBtn = $('coverage-reset-btn');
+  const covListEl    = $('coverage-list');
+  const covNewBtn    = $('coverage-new-btn');
+  const covResetBtn  = $('coverage-reset-btn');
+  const covSaveBadge = $('cov-save-indicator');
 
   let coverageItems = [];
-  // Tracks which card index is unsaved so the Save button can light up.
-  const dirtySet = new Set();
+
+  function setSaveStatus(text, kind) {
+    if (!covSaveBadge) return;
+    covSaveBadge.textContent = text || '';
+    covSaveBadge.classList.remove('is-saving', 'is-saved', 'is-error');
+    if (kind) covSaveBadge.classList.add('is-' + kind);
+    if (kind === 'saved') {
+      clearTimeout(setSaveStatus._t);
+      setSaveStatus._t = setTimeout(() => {
+        covSaveBadge.textContent = '';
+        covSaveBadge.classList.remove('is-saved');
+      }, 1800);
+    }
+  }
 
   const COV_SECTIONS = [
     { field: 'chapters',   head: 'Chapters / topics' },
@@ -829,8 +842,6 @@ function startAdmin(fb) {
     { field: 'worksheets', head: 'Worksheets' },
     { field: 'others',     head: 'Others' }
   ];
-
-  function escAttr(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
 
   function renderCoverageEditor() {
     if (!covListEl) return;
@@ -844,20 +855,16 @@ function startAdmin(fb) {
     }
     covListEl.innerHTML = coverageItems.map((sub, i) => {
       const sections = COV_SECTIONS.map(({ field, head }) => {
-        // Workbooks is the only optional one. Render its container always so
-        // admins can add bullets from scratch.
         const lines = Array.isArray(sub[field]) ? sub[field] : [];
         const lis = lines.map(line => `
           <li>
             <span class="cov-li-text" contenteditable="true" spellcheck="false">${escapeHtmlSimple(line)}</span>
-            <button type="button" class="cov-li-x" data-cov-action="remove-line" aria-label="Remove line">×</button>
           </li>`).join('');
+        const empty = !lines.length;
         return `
-          <div class="subj-section" data-field="${field}">
+          <div class="subj-section${empty ? ' subj-section-empty' : ''}" data-field="${field}">
             <div class="subj-section-head">${head}</div>
-            <ul class="subj-list">
-              ${lis}
-            </ul>
+            <ul class="subj-list">${lis}</ul>
             <button type="button" class="cov-add-line" data-cov-action="add-line">+ Add line</button>
           </div>`;
       }).join('');
@@ -870,31 +877,14 @@ function startAdmin(fb) {
               <div class="subj-name" contenteditable="true" spellcheck="false">${escapeHtmlSimple(sub.subject || '(no name)')}</div>
               <div class="subj-classes" contenteditable="true" spellcheck="false">${escapeHtmlSimple(sub.classes || 'all')}</div>
             </div>
-            <span class="cov-card-actions">
-              <button type="button" class="btn-secondary btn-sm" data-cov-action="save">Save</button>
-              <button type="button" class="btn-secondary btn-sm btn-danger-outline" data-cov-action="delete-subject">Delete</button>
-            </span>
             <span class="subj-chevron" aria-hidden="true">▾</span>
+            <button type="button" class="cov-card-delete" data-cov-action="delete-subject" title="Delete this subject" aria-label="Delete subject">×</button>
           </summary>
           <div class="subj-card-body">
             ${sections}
           </div>
         </details>`;
     }).join('');
-    dirtySet.clear();
-    updateSaveButtons();
-  }
-
-  function updateSaveButtons() {
-    if (!covListEl) return;
-    covListEl.querySelectorAll('.cov-edit-card').forEach(card => {
-      const i = parseInt(card.dataset.i, 10);
-      const btn = card.querySelector('button[data-cov-action="save"]');
-      if (!btn) return;
-      const isDirty = dirtySet.has(i);
-      btn.disabled = !isDirty;
-      btn.textContent = isDirty ? 'Save *' : 'Saved';
-    });
   }
 
   function readCardEntry(card) {
@@ -928,6 +918,29 @@ function startAdmin(fb) {
     });
   }
 
+  function readAllCards() {
+    if (!covListEl) return coverageItems.slice();
+    return Array.from(covListEl.querySelectorAll('.cov-edit-card')).map(readCardEntry);
+  }
+
+  // Debounced autosave: read the DOM, push to Firestore. The snapshot
+  // listener below skips re-rendering while focus is inside the editor,
+  // so the caret doesn't jump while the admin is mid-edit.
+  let autosaveTimer = null;
+  function scheduleAutosave() {
+    if (autosaveTimer) clearTimeout(autosaveTimer);
+    setSaveStatus('Saving…', 'saving');
+    autosaveTimer = setTimeout(async () => {
+      autosaveTimer = null;
+      try {
+        await persistCoverage(readAllCards());
+        setSaveStatus('All changes saved', 'saved');
+      } catch (err) {
+        setSaveStatus('Save failed — ' + (err.message || err), 'error');
+      }
+    }, 600);
+  }
+
   if (covNewBtn) covNewBtn.addEventListener('click', async () => {
     const next = coverageItems.slice();
     next.push({
@@ -938,66 +951,87 @@ function startAdmin(fb) {
       worksheets: [],
       others: []
     });
+    setSaveStatus('Saving…', 'saving');
     try {
       await persistCoverage(next);
+      setSaveStatus('All changes saved', 'saved');
     } catch (err) {
-      alert('Could not create: ' + (err.message || err));
+      setSaveStatus('Save failed — ' + (err.message || err), 'error');
     }
   });
 
   if (covResetBtn) covResetBtn.addEventListener('click', async () => {
     if (!confirm('Reset coverage to the built-in defaults? Any custom edits will be lost.')) return;
+    setSaveStatus('Saving…', 'saving');
     try {
       await persistCoverage([]);
+      setSaveStatus('All changes saved', 'saved');
     } catch (err) {
-      alert('Reset failed: ' + (err.message || err));
+      setSaveStatus('Reset failed — ' + (err.message || err), 'error');
     }
   });
 
   if (covListEl) {
-    // Mark a card dirty on any text edit.
+    // Any text edit triggers a debounced save.
     covListEl.addEventListener('input', (e) => {
-      const card = e.target.closest('.cov-edit-card');
-      if (!card) return;
-      const i = parseInt(card.dataset.i, 10);
-      if (!isNaN(i)) {
-        dirtySet.add(i);
-        updateSaveButtons();
-      }
+      if (!e.target.closest('[contenteditable="true"]')) return;
+      scheduleAutosave();
     });
 
-    // Keep the summary's editable bits from collapsing the <details>.
+    // Keep clicks on editable fields from collapsing the <details>.
     covListEl.addEventListener('click', (e) => {
-      if (e.target.matches('[contenteditable="true"]')) {
-        // Clicking inside an editable field shouldn't toggle the summary.
-        e.stopPropagation();
-      }
+      if (e.target.matches('[contenteditable="true"]')) e.stopPropagation();
     });
 
-    // Enter should not insert a line-break inside a single-line cell;
-    // commit the change and blur instead. Inside list items, Enter
-    // splits into a new bullet.
+    // Keyboard: Enter inside a bullet adds a new bullet; Backspace at
+    // the start of an empty bullet removes it (moving focus back).
+    // Enter elsewhere just blurs.
     covListEl.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter') return;
       const el = e.target;
       if (!el.matches('[contenteditable="true"]')) return;
-      if (el.classList.contains('cov-li-text')) {
-        e.preventDefault();
-        // Add a sibling <li> after this one.
-        const li = el.closest('li');
-        if (!li) return;
-        const card = li.closest('.cov-edit-card');
-        const newLi = document.createElement('li');
-        newLi.innerHTML = `<span class="cov-li-text" contenteditable="true" spellcheck="false"></span><button type="button" class="cov-li-x" data-cov-action="remove-line" aria-label="Remove line">×</button>`;
-        li.after(newLi);
-        if (card) {
-          const i = parseInt(card.dataset.i, 10);
-          if (!isNaN(i)) { dirtySet.add(i); updateSaveButtons(); }
+
+      if (e.key === 'Enter') {
+        if (el.classList.contains('cov-li-text')) {
+          e.preventDefault();
+          const li = el.closest('li');
+          if (!li) return;
+          const newLi = document.createElement('li');
+          newLi.innerHTML = `<span class="cov-li-text" contenteditable="true" spellcheck="false"></span>`;
+          li.after(newLi);
+          newLi.querySelector('.cov-li-text').focus();
+          scheduleAutosave();
+        } else {
+          e.preventDefault();
+          el.blur();
         }
-        newLi.querySelector('.cov-li-text').focus();
-      } else {
+        return;
+      }
+
+      if (e.key === 'Backspace' &&
+          el.classList.contains('cov-li-text') &&
+          el.textContent === '') {
         e.preventDefault();
-        el.blur();
+        const li  = el.closest('li');
+        const ul  = li && li.parentElement;
+        const prevLi = li && li.previousElementSibling;
+        if (li) li.remove();
+        if (prevLi) {
+          const prevText = prevLi.querySelector('.cov-li-text');
+          if (prevText) {
+            prevText.focus();
+            const range = document.createRange();
+            range.selectNodeContents(prevText);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
+        if (ul) {
+          const section = ul.closest('.subj-section');
+          if (section && !ul.children.length) section.classList.add('subj-section-empty');
+        }
+        scheduleAutosave();
       }
     });
 
@@ -1012,52 +1046,30 @@ function startAdmin(fb) {
       e.preventDefault();
       e.stopPropagation();
 
-      if (action === 'remove-line') {
-        const li = btn.closest('li');
-        if (li) {
-          li.remove();
-          dirtySet.add(i);
-          updateSaveButtons();
-        }
-        return;
-      }
       if (action === 'add-line') {
         const section = btn.closest('.subj-section');
         const ul = section && section.querySelector('.subj-list');
         if (!ul) return;
         const newLi = document.createElement('li');
-        newLi.innerHTML = `<span class="cov-li-text" contenteditable="true" spellcheck="false"></span><button type="button" class="cov-li-x" data-cov-action="remove-line" aria-label="Remove line">×</button>`;
+        newLi.innerHTML = `<span class="cov-li-text" contenteditable="true" spellcheck="false"></span>`;
         ul.appendChild(newLi);
-        dirtySet.add(i);
-        updateSaveButtons();
+        if (section) section.classList.remove('subj-section-empty');
         newLi.querySelector('.cov-li-text').focus();
+        scheduleAutosave();
         return;
       }
-      if (action === 'save') {
-        const entry = readCardEntry(card);
-        const next = coverageItems.slice();
-        next[i] = entry;
-        btn.disabled = true;
-        btn.textContent = 'Saving…';
-        try {
-          await persistCoverage(next);
-          // The snapshot listener will re-render and clear dirtySet.
-        } catch (err) {
-          btn.disabled = false;
-          btn.textContent = 'Save *';
-          alert('Save failed: ' + (err.message || err));
-        }
-        return;
-      }
+
       if (action === 'delete-subject') {
         const item = coverageItems[i] || {};
         if (!confirm(`Delete coverage entry for "${item.subject || 'this subject'}"?`)) return;
         const next = coverageItems.slice();
         next.splice(i, 1);
+        setSaveStatus('Saving…', 'saving');
         try {
           await persistCoverage(next);
+          setSaveStatus('All changes saved', 'saved');
         } catch (err) {
-          alert('Delete failed: ' + (err.message || err));
+          setSaveStatus('Delete failed — ' + (err.message || err), 'error');
         }
       }
     });
@@ -1068,7 +1080,11 @@ function startAdmin(fb) {
     (snap) => {
       const data = snap.exists() ? snap.data() : null;
       coverageItems = (data && Array.isArray(data.items)) ? data.items : [];
-      renderCoverageEditor();
+      // If the admin is mid-edit (caret somewhere inside the editor) the
+      // DOM already reflects what we just wrote. Skip the re-render so
+      // the caret position and selection survive.
+      const focusedInside = covListEl && covListEl.contains(document.activeElement);
+      if (!focusedInside) renderCoverageEditor();
     },
     (err) => console.error('[admin] coverage listener:', err)
   );

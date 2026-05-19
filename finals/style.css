@@ -2893,3 +2893,71 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   border-radius: 4px;
   word-break: break-all;
 }
+
+/* ---------- Coverage editor: doc-like polish ---------- */
+.cov-edit-card { position: relative; }
+.cov-edit-card .cov-card-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  z-index: 2;
+}
+.cov-edit-card:hover .cov-card-delete,
+.cov-edit-card:focus-within .cov-card-delete {
+  opacity: 0.7;
+}
+.cov-edit-card .cov-card-delete:hover {
+  opacity: 1;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.cov-edit-card .cov-add-line {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.cov-edit-card:hover .cov-add-line,
+.cov-edit-card:focus-within .cov-add-line,
+.subj-section-empty .cov-add-line {
+  opacity: 1;
+}
+/* No need to leave room for the deleted per-bullet × control. */
+.cov-edit-card .subj-list li { padding-right: 0; }
+/* Hide the (now unused) per-bullet remove button. */
+.cov-edit-card .cov-li-x { display: none; }
+
+/* Floating save-status pill */
+.cov-save-indicator {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  font-size: 0.82rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: #4b5563;
+  box-shadow: 0 8px 24px -8px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  z-index: 60;
+}
+.cov-save-indicator:not(:empty) {
+  opacity: 1;
+  transform: translateY(0);
+}
+.cov-save-indicator.is-saving { color: #6b7280; }
+.cov-save-indicator.is-saved  { color: #047857; }
+.cov-save-indicator.is-error  { color: #b91c1c; }
