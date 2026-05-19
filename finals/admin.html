@@ -107,6 +107,24 @@
       </ul>
     </section>
 
+    <!-- Exam Coverage -->
+    <section class="card">
+      <div class="admin-controls">
+        <h2 class="section-title" style="margin-bottom:0;">Exam Coverage</h2>
+        <div class="admin-bar">
+          <button class="btn-secondary btn-sm" id="coverage-reset-btn" type="button" title="Discard the Firestore copy and revert the hub to the built-in defaults">Reset to defaults</button>
+          <button class="btn-primary btn-sm" id="coverage-new-btn" type="button">+ New subject</button>
+        </div>
+      </div>
+      <p class="section-desc" style="margin-bottom:14px;">
+        Edit what each subject covers on finals. Changes appear in the hub's
+        Coverage modal as soon as you save.
+      </p>
+      <ul class="coverage-list" id="coverage-list">
+        <li class="empty-state-small">Loading…</li>
+      </ul>
+    </section>
+
     <!-- Subjects & Types -->
     <section class="card">
       <h2 class="section-title">Subjects &amp; Types</h2>
@@ -173,6 +191,48 @@
       <div class="modal-card-footer">
         <button class="btn-secondary" data-close="cancel">Cancel</button>
         <button class="btn-primary" id="folder-save-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Coverage modal (edit a subject's exam coverage) ===== -->
+  <div class="modal-overlay" id="coverage-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-card-header">
+        <span id="coverage-modal-title">New subject</span>
+        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-card-body">
+        <div class="form-row-2col">
+          <div>
+            <label class="form-label" for="cov-subject">Subject</label>
+            <input type="text" id="cov-subject" maxlength="120" placeholder="e.g. Mathematics" />
+          </div>
+          <div>
+            <label class="form-label" for="cov-icon">Icon (emoji)</label>
+            <input type="text" id="cov-icon" maxlength="4" placeholder="📘" />
+          </div>
+        </div>
+        <label class="form-label" for="cov-classes" style="margin-top:14px;">Classes</label>
+        <input type="text" id="cov-classes" maxlength="120" placeholder="all  ·  or  S.3A, S.3B" />
+        <div class="file-hint">Use <code>all</code> for every class, or list specific ones.</div>
+
+        <label class="form-label" for="cov-chapters" style="margin-top:14px;">Chapters / topics <span class="opt">(one per line)</span></label>
+        <textarea id="cov-chapters" rows="4" placeholder="Textbook 3A &amp; 3B Ch. 1–11&#10;Previous Knowledge"></textarea>
+
+        <label class="form-label" for="cov-workbooks" style="margin-top:14px;">Workbooks <span class="opt">(optional · one per line)</span></label>
+        <textarea id="cov-workbooks" rows="2" placeholder="Studio 3 Unit 1–5"></textarea>
+
+        <label class="form-label" for="cov-worksheets" style="margin-top:14px;">Worksheets <span class="opt">(one per line)</span></label>
+        <textarea id="cov-worksheets" rows="2" placeholder="All worksheets and notes"></textarea>
+
+        <label class="form-label" for="cov-others" style="margin-top:14px;">Others <span class="opt">(one per line)</span></label>
+        <textarea id="cov-others" rows="2" placeholder="All quizzes, homework &amp; tests"></textarea>
+      </div>
+      <div class="modal-card-footer">
+        <button class="btn-secondary" data-close="cancel">Cancel</button>
+        <button class="btn-primary btn-danger" id="cov-delete-btn" style="display:none;">Delete</button>
+        <button class="btn-primary" id="cov-save-btn">Save</button>
       </div>
     </div>
   </div>
