@@ -168,6 +168,30 @@ service cloud.firestore {
       allow delete: if true;
     }
 
+    // Anonymous error / difficulty reports submitted from the hub. No
+    // personal info is collected — message is free-form, plus a category
+    // tag, the current path, and a truncated user-agent string. Admin
+    // toggles resolved / deletes via /admin.
+    match /reports/{id} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasAll(['message', 'createdAt']) &&
+        request.resource.data.message is string &&
+        request.resource.data.message.size() > 0 &&
+        request.resource.data.message.size() < 1000 &&
+        (!('category' in request.resource.data) ||
+          (request.resource.data.category is string &&
+           request.resource.data.category.size() < 40)) &&
+        (!('path' in request.resource.data) ||
+          (request.resource.data.path is string &&
+           request.resource.data.path.size() < 300)) &&
+        (!('userAgent' in request.resource.data) ||
+          (request.resource.data.userAgent is string &&
+           request.resource.data.userAgent.size() < 280));
+      allow update: if request.resource.data.message.size() < 1000;
+      allow delete: if true;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

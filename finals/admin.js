@@ -812,70 +812,113 @@ function startAdmin(fb) {
 
   /* ==========================================================================
      Exam Coverage (admin-managed via /state/coverage)
+     Renders the same .subj-card layout as the hub, with every text node
+     made contenteditable so admins can change wording in place.
      ========================================================================== */
-  const covListEl    = $('coverage-list');
-  const covNewBtn    = $('coverage-new-btn');
-  const covResetBtn  = $('coverage-reset-btn');
-  const covModal     = $('coverage-modal');
-  const covTitle     = $('coverage-modal-title');
-  const covSubject   = $('cov-subject');
-  const covIcon      = $('cov-icon');
-  const covClasses   = $('cov-classes');
-  const covChapters  = $('cov-chapters');
-  const covWorkbooks = $('cov-workbooks');
-  const covWorksheets= $('cov-worksheets');
-  const covOthers    = $('cov-others');
-  const covSaveBtn   = $('cov-save-btn');
-  const covDeleteBtn = $('cov-delete-btn');
+  const covListEl   = $('coverage-list');
+  const covNewBtn   = $('coverage-new-btn');
+  const covResetBtn = $('coverage-reset-btn');
 
-  let coverageItems = [];       // current array of subject entries
-  let coverageEditIndex = -1;   // -1 = new; else index into coverageItems
+  let coverageItems = [];
+  // Tracks which card index is unsaved so the Save button can light up.
+  const dirtySet = new Set();
 
-  function linesToList(text) {
-    return String(text || '')
-      .split('\n')
-      .map(s => s.trim())
-      .filter(Boolean);
-  }
-  function listToLines(arr) {
-    return Array.isArray(arr) ? arr.join('\n') : '';
-  }
+  const COV_SECTIONS = [
+    { field: 'chapters',   head: 'Chapters / topics' },
+    { field: 'workbooks',  head: 'Workbooks' },
+    { field: 'worksheets', head: 'Worksheets' },
+    { field: 'others',     head: 'Others' }
+  ];
 
-  function renderCoverageList() {
+  function escAttr(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
+
+  function renderCoverageEditor() {
     if (!covListEl) return;
     if (!coverageItems.length) {
-      covListEl.innerHTML = '<li class="empty-state-small">No coverage entries yet — using the built-in defaults on the hub. Click "+ New subject" to start, or reset to defaults to populate Firestore with the current static list.</li>';
+      covListEl.innerHTML = `
+        <div class="empty-state-small">
+          No coverage entries yet — the hub is showing the built-in defaults.
+          Click <strong>+ New subject</strong> above to start, or <strong>Reset to defaults</strong> to load the built-in list as the editable copy.
+        </div>`;
       return;
     }
-    covListEl.innerHTML = coverageItems.map((sub, i) => `
-      <li class="coverage-row" data-i="${i}">
-        <span class="coverage-icon" aria-hidden="true">${escapeHtmlSimple(sub.icon || '📘')}</span>
-        <div class="coverage-text">
-          <div class="coverage-subject">${escapeHtmlSimple(sub.subject || '(no name)')}</div>
-          <div class="coverage-classes">${escapeHtmlSimple(sub.classes && sub.classes !== 'all' ? sub.classes : 'all classes')}</div>
-        </div>
-        <button class="btn-secondary btn-sm" data-cov-action="edit">Edit</button>
-      </li>
-    `).join('');
+    covListEl.innerHTML = coverageItems.map((sub, i) => {
+      const sections = COV_SECTIONS.map(({ field, head }) => {
+        // Workbooks is the only optional one. Render its container always so
+        // admins can add bullets from scratch.
+        const lines = Array.isArray(sub[field]) ? sub[field] : [];
+        const lis = lines.map(line => `
+          <li>
+            <span class="cov-li-text" contenteditable="true" spellcheck="false">${escapeHtmlSimple(line)}</span>
+            <button type="button" class="cov-li-x" data-cov-action="remove-line" aria-label="Remove line">×</button>
+          </li>`).join('');
+        return `
+          <div class="subj-section" data-field="${field}">
+            <div class="subj-section-head">${head}</div>
+            <ul class="subj-list">
+              ${lis}
+            </ul>
+            <button type="button" class="cov-add-line" data-cov-action="add-line">+ Add line</button>
+          </div>`;
+      }).join('');
+
+      return `
+        <details class="subj-card cov-edit-card" data-i="${i}" open>
+          <summary class="subj-card-summary">
+            <span class="subj-icon cov-edit-icon" contenteditable="true" spellcheck="false" aria-label="Icon">${escapeHtmlSimple(sub.icon || '📘')}</span>
+            <div class="subj-summary-text">
+              <div class="subj-name" contenteditable="true" spellcheck="false">${escapeHtmlSimple(sub.subject || '(no name)')}</div>
+              <div class="subj-classes" contenteditable="true" spellcheck="false">${escapeHtmlSimple(sub.classes || 'all')}</div>
+            </div>
+            <span class="cov-card-actions">
+              <button type="button" class="btn-secondary btn-sm" data-cov-action="save">Save</button>
+              <button type="button" class="btn-secondary btn-sm btn-danger-outline" data-cov-action="delete-subject">Delete</button>
+            </span>
+            <span class="subj-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="subj-card-body">
+            ${sections}
+          </div>
+        </details>`;
+    }).join('');
+    dirtySet.clear();
+    updateSaveButtons();
   }
 
-  function openCoverageModal(index) {
-    coverageEditIndex = (typeof index === 'number') ? index : -1;
-    const isNew = coverageEditIndex < 0;
-    const item = isNew ? {} : (coverageItems[coverageEditIndex] || {});
-    covTitle.textContent = isNew ? 'New subject' : `Edit · ${item.subject || ''}`;
-    covSubject.value    = item.subject || '';
-    covIcon.value       = item.icon || '';
-    covClasses.value    = item.classes || 'all';
-    covChapters.value   = listToLines(item.chapters);
-    covWorkbooks.value  = listToLines(item.workbooks);
-    covWorksheets.value = listToLines(item.worksheets);
-    covOthers.value     = listToLines(item.others);
-    covDeleteBtn.style.display = isNew ? 'none' : '';
-    covSaveBtn.disabled = false;
-    covSaveBtn.textContent = 'Save';
-    covModal.style.display = 'flex';
-    setTimeout(() => covSubject.focus(), 0);
+  function updateSaveButtons() {
+    if (!covListEl) return;
+    covListEl.querySelectorAll('.cov-edit-card').forEach(card => {
+      const i = parseInt(card.dataset.i, 10);
+      const btn = card.querySelector('button[data-cov-action="save"]');
+      if (!btn) return;
+      const isDirty = dirtySet.has(i);
+      btn.disabled = !isDirty;
+      btn.textContent = isDirty ? 'Save *' : 'Saved';
+    });
+  }
+
+  function readCardEntry(card) {
+    const iconEl    = card.querySelector('.cov-edit-icon');
+    const nameEl    = card.querySelector('.subj-name');
+    const classesEl = card.querySelector('.subj-classes');
+    const entry = {
+      subject: (nameEl ? nameEl.textContent.trim() : '') || '(untitled)',
+      icon:    (iconEl ? iconEl.textContent.trim() : '') || '📘',
+      classes: (classesEl ? classesEl.textContent.trim() : '') || 'all'
+    };
+    COV_SECTIONS.forEach(({ field }) => {
+      const sec = card.querySelector(`.subj-section[data-field="${field}"]`);
+      if (!sec) return;
+      const items = Array.from(sec.querySelectorAll('.cov-li-text'))
+        .map(el => el.textContent.replace(/ /g, ' ').trim())
+        .filter(Boolean);
+      if (field === 'workbooks') {
+        if (items.length) entry.workbooks = items;
+      } else {
+        entry[field] = items;
+      }
+    });
+    return entry;
   }
 
   async function persistCoverage(nextItems) {
@@ -885,7 +928,22 @@ function startAdmin(fb) {
     });
   }
 
-  if (covNewBtn)   covNewBtn.addEventListener('click', () => openCoverageModal(-1));
+  if (covNewBtn) covNewBtn.addEventListener('click', async () => {
+    const next = coverageItems.slice();
+    next.push({
+      subject: 'New subject',
+      icon: '📘',
+      classes: 'all',
+      chapters: [],
+      worksheets: [],
+      others: []
+    });
+    try {
+      await persistCoverage(next);
+    } catch (err) {
+      alert('Could not create: ' + (err.message || err));
+    }
+  });
 
   if (covResetBtn) covResetBtn.addEventListener('click', async () => {
     if (!confirm('Reset coverage to the built-in defaults? Any custom edits will be lost.')) return;
@@ -896,61 +954,112 @@ function startAdmin(fb) {
     }
   });
 
-  if (covSaveBtn) covSaveBtn.addEventListener('click', async () => {
-    const subject = covSubject.value.trim();
-    if (!subject) { covSubject.focus(); return; }
-    const entry = {
-      subject,
-      icon: covIcon.value.trim() || '📘',
-      classes: covClasses.value.trim() || 'all',
-      chapters:   linesToList(covChapters.value),
-      worksheets: linesToList(covWorksheets.value),
-      others:     linesToList(covOthers.value)
-    };
-    const wb = linesToList(covWorkbooks.value);
-    if (wb.length) entry.workbooks = wb;
-
-    const next = coverageItems.slice();
-    if (coverageEditIndex < 0) next.push(entry);
-    else next[coverageEditIndex] = entry;
-
-    covSaveBtn.disabled = true;
-    covSaveBtn.textContent = 'Saving…';
-    try {
-      await persistCoverage(next);
-      closeModal(covModal);
-    } catch (err) {
-      covSaveBtn.disabled = false;
-      covSaveBtn.textContent = 'Save';
-      alert('Save failed: ' + (err.message || err));
-    }
-  });
-
-  if (covDeleteBtn) covDeleteBtn.addEventListener('click', async () => {
-    if (coverageEditIndex < 0) return;
-    const item = coverageItems[coverageEditIndex];
-    if (!confirm(`Delete coverage entry for "${item.subject}"?`)) return;
-    const next = coverageItems.slice();
-    next.splice(coverageEditIndex, 1);
-    covDeleteBtn.disabled = true;
-    try {
-      await persistCoverage(next);
-      closeModal(covModal);
-    } catch (err) {
-      alert('Delete failed: ' + (err.message || err));
-    } finally {
-      covDeleteBtn.disabled = false;
-    }
-  });
-
   if (covListEl) {
+    // Mark a card dirty on any text edit.
+    covListEl.addEventListener('input', (e) => {
+      const card = e.target.closest('.cov-edit-card');
+      if (!card) return;
+      const i = parseInt(card.dataset.i, 10);
+      if (!isNaN(i)) {
+        dirtySet.add(i);
+        updateSaveButtons();
+      }
+    });
+
+    // Keep the summary's editable bits from collapsing the <details>.
     covListEl.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-cov-action="edit"]');
+      if (e.target.matches('[contenteditable="true"]')) {
+        // Clicking inside an editable field shouldn't toggle the summary.
+        e.stopPropagation();
+      }
+    });
+
+    // Enter should not insert a line-break inside a single-line cell;
+    // commit the change and blur instead. Inside list items, Enter
+    // splits into a new bullet.
+    covListEl.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const el = e.target;
+      if (!el.matches('[contenteditable="true"]')) return;
+      if (el.classList.contains('cov-li-text')) {
+        e.preventDefault();
+        // Add a sibling <li> after this one.
+        const li = el.closest('li');
+        if (!li) return;
+        const card = li.closest('.cov-edit-card');
+        const newLi = document.createElement('li');
+        newLi.innerHTML = `<span class="cov-li-text" contenteditable="true" spellcheck="false"></span><button type="button" class="cov-li-x" data-cov-action="remove-line" aria-label="Remove line">×</button>`;
+        li.after(newLi);
+        if (card) {
+          const i = parseInt(card.dataset.i, 10);
+          if (!isNaN(i)) { dirtySet.add(i); updateSaveButtons(); }
+        }
+        newLi.querySelector('.cov-li-text').focus();
+      } else {
+        e.preventDefault();
+        el.blur();
+      }
+    });
+
+    covListEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-cov-action]');
       if (!btn) return;
-      const row = btn.closest('.coverage-row');
-      if (!row) return;
-      const i = parseInt(row.dataset.i, 10);
-      if (!isNaN(i)) openCoverageModal(i);
+      const card = btn.closest('.cov-edit-card');
+      if (!card) return;
+      const i = parseInt(card.dataset.i, 10);
+      if (isNaN(i)) return;
+      const action = btn.dataset.covAction;
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (action === 'remove-line') {
+        const li = btn.closest('li');
+        if (li) {
+          li.remove();
+          dirtySet.add(i);
+          updateSaveButtons();
+        }
+        return;
+      }
+      if (action === 'add-line') {
+        const section = btn.closest('.subj-section');
+        const ul = section && section.querySelector('.subj-list');
+        if (!ul) return;
+        const newLi = document.createElement('li');
+        newLi.innerHTML = `<span class="cov-li-text" contenteditable="true" spellcheck="false"></span><button type="button" class="cov-li-x" data-cov-action="remove-line" aria-label="Remove line">×</button>`;
+        ul.appendChild(newLi);
+        dirtySet.add(i);
+        updateSaveButtons();
+        newLi.querySelector('.cov-li-text').focus();
+        return;
+      }
+      if (action === 'save') {
+        const entry = readCardEntry(card);
+        const next = coverageItems.slice();
+        next[i] = entry;
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+        try {
+          await persistCoverage(next);
+          // The snapshot listener will re-render and clear dirtySet.
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = 'Save *';
+          alert('Save failed: ' + (err.message || err));
+        }
+        return;
+      }
+      if (action === 'delete-subject') {
+        const item = coverageItems[i] || {};
+        if (!confirm(`Delete coverage entry for "${item.subject || 'this subject'}"?`)) return;
+        const next = coverageItems.slice();
+        next.splice(i, 1);
+        try {
+          await persistCoverage(next);
+        } catch (err) {
+          alert('Delete failed: ' + (err.message || err));
+        }
+      }
     });
   }
 
@@ -959,9 +1068,109 @@ function startAdmin(fb) {
     (snap) => {
       const data = snap.exists() ? snap.data() : null;
       coverageItems = (data && Array.isArray(data.items)) ? data.items : [];
-      renderCoverageList();
+      renderCoverageEditor();
     },
     (err) => console.error('[admin] coverage listener:', err)
+  );
+
+  /* ==========================================================================
+     Reports — anonymous error reports submitted from the hub
+     ========================================================================== */
+  const reportsListEl  = $('reports-list');
+  const reportsFilter  = $('reports-hide-resolved');
+  let allReports = [];
+
+  const REPORT_CATEGORIES = {
+    'access':   { label: 'Access error',     cls: 'rep-access'   },
+    'download': { label: 'Download failed',  cls: 'rep-download' },
+    'view':     { label: "Preview wouldn't open", cls: 'rep-view' },
+    'load':     { label: "Page won't load",  cls: 'rep-load'     },
+    'other':    { label: 'Other',            cls: 'rep-other'    }
+  };
+
+  function categoryMeta(c) {
+    return REPORT_CATEGORIES[c] || REPORT_CATEGORIES['other'];
+  }
+
+  function shortUA(ua) {
+    if (!ua) return '';
+    // Try to pull the OS/browser hints; otherwise show first 80 chars.
+    return ua.length > 80 ? ua.slice(0, 80) + '…' : ua;
+  }
+
+  function renderReports() {
+    if (!reportsListEl) return;
+    const hideResolved = !!(reportsFilter && reportsFilter.checked);
+    const list = hideResolved ? allReports.filter(r => !r.resolved) : allReports;
+    if (!list.length) {
+      reportsListEl.innerHTML = `<li class="empty-state-small">${hideResolved ? 'No unresolved reports — nice. ✓' : 'No reports yet.'}</li>`;
+      return;
+    }
+    reportsListEl.innerHTML = list.map(r => {
+      const meta = categoryMeta(r.category);
+      const when = fmtDate(r.createdAt);
+      const rel  = fmtRelative(r.createdAt);
+      const path = escapeHtmlSimple(r.path || '/');
+      const ua   = escapeHtmlSimple(shortUA(r.userAgent || ''));
+      const msg  = escapeHtmlSimple(r.message || '').replace(/\n/g, '<br>');
+      return `
+        <li class="report-row${r.resolved ? ' is-resolved' : ''}" data-id="${escapeAttr(r.id)}">
+          <div class="report-row-top">
+            <span class="report-cat ${meta.cls}">${escapeHtmlSimple(meta.label)}</span>
+            <span class="report-when" title="${escapeHtmlSimple(when)}">${escapeHtmlSimple(rel)}</span>
+            <div class="report-row-actions">
+              <button class="btn-secondary btn-sm" data-rep-action="toggle">${r.resolved ? 'Reopen' : 'Mark resolved'}</button>
+              <button class="btn-secondary btn-sm btn-danger-outline" data-rep-action="delete">Delete</button>
+            </div>
+          </div>
+          <div class="report-msg">${msg || '<em class="report-empty">(no message)</em>'}</div>
+          <div class="report-meta">
+            <span class="report-meta-label">Page</span><code>${path}</code>
+            ${ua ? `<span class="report-meta-label">UA</span><code>${ua}</code>` : ''}
+          </div>
+        </li>`;
+    }).join('');
+  }
+
+  if (reportsFilter) reportsFilter.addEventListener('change', renderReports);
+
+  if (reportsListEl) {
+    reportsListEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-rep-action]');
+      if (!btn) return;
+      const row = btn.closest('.report-row');
+      if (!row) return;
+      const id = row.dataset.id;
+      const item = allReports.find(r => r.id === id);
+      if (!item) return;
+      const action = btn.dataset.repAction;
+      btn.disabled = true;
+      try {
+        if (action === 'toggle') {
+          await updateDoc(doc(db, 'reports', id), { resolved: !item.resolved });
+        } else if (action === 'delete') {
+          if (!confirm('Delete this report?')) { btn.disabled = false; return; }
+          await deleteDoc(doc(db, 'reports', id));
+        }
+      } catch (err) {
+        alert('Action failed: ' + (err.message || err));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  onSnapshot(
+    query(collection(db, 'reports'), orderBy('createdAt', 'desc')),
+    (snap) => {
+      allReports = [];
+      snap.forEach(d => allReports.push({ id: d.id, ...d.data() }));
+      renderReports();
+    },
+    (err) => {
+      console.error('[admin] reports listener:', err);
+      if (reportsListEl) reportsListEl.innerHTML = `<li class="empty-state-small" style="color:#b91c1c;">Failed to load reports: ${escapeHtmlSimple(err.message || String(err))}</li>`;
+    }
   );
 
   onSnapshot(
@@ -1085,7 +1294,7 @@ function startAdmin(fb) {
     activeNoteId = null;
   }
 
-  [editModal, deleteModal, folderModal, taxonomyModal, covModal].forEach(modal => {
+  [editModal, deleteModal, folderModal, taxonomyModal].forEach(modal => {
     if (!modal) return;
     modal.addEventListener('click', (e) => {
       const closeRole = e.target.dataset.close;
@@ -1100,7 +1309,6 @@ function startAdmin(fb) {
     if (deleteModal && deleteModal.style.display === 'flex') closeModal(deleteModal);
     if (folderModal && folderModal.style.display === 'flex') closeModal(folderModal);
     if (taxonomyModal && taxonomyModal.style.display === 'flex') closeModal(taxonomyModal);
-    if (covModal && covModal.style.display === 'flex') closeModal(covModal);
   });
   if (taxonomyInput) {
     taxonomyInput.addEventListener('keydown', (e) => {

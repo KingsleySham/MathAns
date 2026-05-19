@@ -342,6 +342,37 @@
 
   </main>
 
+  <!-- ===== Report a problem ===== -->
+  <section class="report-card" id="report-card">
+    <button type="button" class="report-toggle" id="report-toggle" aria-expanded="false" aria-controls="report-collapse">
+      <span class="report-toggle-icon" aria-hidden="true">⚠️</span>
+      <span class="report-toggle-text">Something not working? Report a problem</span>
+      <span class="report-toggle-hint">access errors · failed downloads · broken links</span>
+    </button>
+    <div class="report-collapse" id="report-collapse" hidden>
+      <form id="report-form" autocomplete="off">
+        <p class="report-privacy">No personal info is collected — your name, email, and IP are not stored. Please don't include them in the message either.</p>
+        <label class="form-label" for="report-category">Category</label>
+        <div class="select-wrap">
+          <select id="report-category">
+            <option value="">Pick a category…</option>
+            <option value="access">Can't access · sign-in error</option>
+            <option value="download">Download failed (PDF / Word / image)</option>
+            <option value="view">Preview won't open</option>
+            <option value="load">Page won't load or freezes</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <label class="form-label" for="report-message" style="margin-top:12px;">What went wrong?</label>
+        <textarea id="report-message" rows="3" maxlength="500" placeholder="e.g. Clicked View on S.3 Maths Ch.5 — got a Google sign-in loop."></textarea>
+        <div class="report-actions">
+          <button type="submit" class="btn-primary" id="report-submit">Send report</button>
+          <span class="report-status" id="report-status" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </div>
+  </section>
+
   <footer class="site-footer">
     <div>Good luck with finals! 加油！</div>
     <div class="footer-links">

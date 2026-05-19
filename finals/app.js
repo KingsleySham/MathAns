@@ -2018,3 +2018,79 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && gdocsWarnModal.classList.contains('open')) closeGdocsModal();
 });
 
+
+/* ==========================================================================
+   Report a problem — anonymous error reports written to Firestore
+   /reports. No personal info is collected; user agent and current path
+   are stored to help reproduce. Admin reviews these in /admin.
+   ========================================================================== */
+(function setupReportForm() {
+  const card     = document.getElementById('report-card');
+  if (!card) return;
+  const toggle   = document.getElementById('report-toggle');
+  const collapse = document.getElementById('report-collapse');
+  const form     = document.getElementById('report-form');
+  const catSel   = document.getElementById('report-category');
+  const msgEl    = document.getElementById('report-message');
+  const btn      = document.getElementById('report-submit');
+  const statusEl = document.getElementById('report-status');
+
+  toggle.addEventListener('click', () => {
+    const open = !collapse.hidden;
+    if (open) {
+      collapse.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+    } else {
+      collapse.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      setTimeout(() => msgEl.focus(), 50);
+    }
+  });
+
+  function setStatus(text, kind) {
+    statusEl.textContent = text || '';
+    statusEl.classList.remove('ok', 'err');
+    if (kind) statusEl.classList.add(kind);
+  }
+
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const message = msgEl.value.trim();
+    const category = catSel.value;
+    if (!message) { setStatus('Please describe the issue first.', 'err'); msgEl.focus(); return; }
+    // Light throttle so the same person can't spam reports.
+    try {
+      const last = parseInt(sessionStorage.getItem('finals.lastReportAt') || '0', 10);
+      if (Date.now() - last < 8000) { setStatus('Just a moment — try again in a few seconds.', 'err'); return; }
+    } catch (e) {}
+
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    setStatus('');
+    try {
+      await addDoc(collection(db, 'reports'), {
+        message: message.slice(0, 500),
+        category: category || 'other',
+        path: (location && location.pathname) || '',
+        userAgent: (navigator && navigator.userAgent ? navigator.userAgent.slice(0, 240) : ''),
+        resolved: false,
+        createdAt: serverTimestamp()
+      });
+      try { sessionStorage.setItem('finals.lastReportAt', String(Date.now())); } catch (e) {}
+      form.reset();
+      setStatus('Thanks — your report was sent. ✓', 'ok');
+      // Auto-collapse after a moment so the panel doesn't stay sitting open.
+      setTimeout(() => {
+        collapse.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+        setStatus('');
+      }, 3500);
+    } catch (err) {
+      console.error('[report] write failed:', err);
+      setStatus('Could not send: ' + (err.message || err), 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send report';
+    }
+  });
+})();
