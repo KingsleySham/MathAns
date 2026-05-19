@@ -28,7 +28,7 @@
 
   <div class="page-wrap">
 
-    <a class="hub-banner" href="https://finals.mathans.app/">
+    <a class="hub-banner" href="https://finals.mathans.app/" target="_top" rel="noopener external">
       <span class="hub-banner-text">📚 Finals Study Hub — countdown, mock papers, notes &amp; timer</span>
       <span class="hub-banner-arrow">→</span>
     </a>
@@ -114,6 +114,21 @@
 
   </div><script src="data.js"></script>
   <script src="app.js"></script>
+  <script>
+    // Finals banner: if we're running as an installed PWA, cross-origin
+    // same-tab navigation can get trapped in the PWA window. Force the
+    // link to open in the system browser in that case.
+    (function(){
+      var banner = document.querySelector('a.hub-banner');
+      if (!banner) return;
+      var isStandalone =
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        window.navigator.standalone === true;
+      if (!isStandalone) return;
+      banner.setAttribute('target', '_blank');
+      banner.setAttribute('rel', 'noopener noreferrer external');
+    })();
+  </script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js').catch(err => {
