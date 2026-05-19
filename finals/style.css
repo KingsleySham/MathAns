@@ -628,6 +628,7 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .note-card:hover {
@@ -1131,8 +1132,10 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
 }
 .note-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
+  min-width: 0;
 }
 .note-actions .btn-secondary,
 .note-actions .btn-primary {
