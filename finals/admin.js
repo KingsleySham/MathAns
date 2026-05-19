@@ -248,7 +248,7 @@ if (getPasscode()) {
    Admin app — runs after unlock, with Firebase module passed in.
    ========================================================================== */
 function startAdmin(fb) {
-  const { db, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp } = fb;
+  const { db, collection, addDoc, doc, setDoc, deleteDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp } = fb;
 
   const cardsEl       = $('admin-cards');
   const emptyEl       = $('admin-empty');
@@ -810,6 +810,160 @@ function startAdmin(fb) {
     (err) => console.error('[admin] noteTypes listener:', err)
   );
 
+  /* ==========================================================================
+     Exam Coverage (admin-managed via /state/coverage)
+     ========================================================================== */
+  const covListEl    = $('coverage-list');
+  const covNewBtn    = $('coverage-new-btn');
+  const covResetBtn  = $('coverage-reset-btn');
+  const covModal     = $('coverage-modal');
+  const covTitle     = $('coverage-modal-title');
+  const covSubject   = $('cov-subject');
+  const covIcon      = $('cov-icon');
+  const covClasses   = $('cov-classes');
+  const covChapters  = $('cov-chapters');
+  const covWorkbooks = $('cov-workbooks');
+  const covWorksheets= $('cov-worksheets');
+  const covOthers    = $('cov-others');
+  const covSaveBtn   = $('cov-save-btn');
+  const covDeleteBtn = $('cov-delete-btn');
+
+  let coverageItems = [];       // current array of subject entries
+  let coverageEditIndex = -1;   // -1 = new; else index into coverageItems
+
+  function linesToList(text) {
+    return String(text || '')
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+  function listToLines(arr) {
+    return Array.isArray(arr) ? arr.join('\n') : '';
+  }
+
+  function renderCoverageList() {
+    if (!covListEl) return;
+    if (!coverageItems.length) {
+      covListEl.innerHTML = '<li class="empty-state-small">No coverage entries yet — using the built-in defaults on the hub. Click "+ New subject" to start, or reset to defaults to populate Firestore with the current static list.</li>';
+      return;
+    }
+    covListEl.innerHTML = coverageItems.map((sub, i) => `
+      <li class="coverage-row" data-i="${i}">
+        <span class="coverage-icon" aria-hidden="true">${escapeHtmlSimple(sub.icon || '📘')}</span>
+        <div class="coverage-text">
+          <div class="coverage-subject">${escapeHtmlSimple(sub.subject || '(no name)')}</div>
+          <div class="coverage-classes">${escapeHtmlSimple(sub.classes && sub.classes !== 'all' ? sub.classes : 'all classes')}</div>
+        </div>
+        <button class="btn-secondary btn-sm" data-cov-action="edit">Edit</button>
+      </li>
+    `).join('');
+  }
+
+  function openCoverageModal(index) {
+    coverageEditIndex = (typeof index === 'number') ? index : -1;
+    const isNew = coverageEditIndex < 0;
+    const item = isNew ? {} : (coverageItems[coverageEditIndex] || {});
+    covTitle.textContent = isNew ? 'New subject' : `Edit · ${item.subject || ''}`;
+    covSubject.value    = item.subject || '';
+    covIcon.value       = item.icon || '';
+    covClasses.value    = item.classes || 'all';
+    covChapters.value   = listToLines(item.chapters);
+    covWorkbooks.value  = listToLines(item.workbooks);
+    covWorksheets.value = listToLines(item.worksheets);
+    covOthers.value     = listToLines(item.others);
+    covDeleteBtn.style.display = isNew ? 'none' : '';
+    covSaveBtn.disabled = false;
+    covSaveBtn.textContent = 'Save';
+    covModal.style.display = 'flex';
+    setTimeout(() => covSubject.focus(), 0);
+  }
+
+  async function persistCoverage(nextItems) {
+    await setDoc(doc(db, 'state', 'coverage'), {
+      items: nextItems,
+      updatedAt: serverTimestamp()
+    });
+  }
+
+  if (covNewBtn)   covNewBtn.addEventListener('click', () => openCoverageModal(-1));
+
+  if (covResetBtn) covResetBtn.addEventListener('click', async () => {
+    if (!confirm('Reset coverage to the built-in defaults? Any custom edits will be lost.')) return;
+    try {
+      await persistCoverage([]);
+    } catch (err) {
+      alert('Reset failed: ' + (err.message || err));
+    }
+  });
+
+  if (covSaveBtn) covSaveBtn.addEventListener('click', async () => {
+    const subject = covSubject.value.trim();
+    if (!subject) { covSubject.focus(); return; }
+    const entry = {
+      subject,
+      icon: covIcon.value.trim() || '📘',
+      classes: covClasses.value.trim() || 'all',
+      chapters:   linesToList(covChapters.value),
+      worksheets: linesToList(covWorksheets.value),
+      others:     linesToList(covOthers.value)
+    };
+    const wb = linesToList(covWorkbooks.value);
+    if (wb.length) entry.workbooks = wb;
+
+    const next = coverageItems.slice();
+    if (coverageEditIndex < 0) next.push(entry);
+    else next[coverageEditIndex] = entry;
+
+    covSaveBtn.disabled = true;
+    covSaveBtn.textContent = 'Saving…';
+    try {
+      await persistCoverage(next);
+      closeModal(covModal);
+    } catch (err) {
+      covSaveBtn.disabled = false;
+      covSaveBtn.textContent = 'Save';
+      alert('Save failed: ' + (err.message || err));
+    }
+  });
+
+  if (covDeleteBtn) covDeleteBtn.addEventListener('click', async () => {
+    if (coverageEditIndex < 0) return;
+    const item = coverageItems[coverageEditIndex];
+    if (!confirm(`Delete coverage entry for "${item.subject}"?`)) return;
+    const next = coverageItems.slice();
+    next.splice(coverageEditIndex, 1);
+    covDeleteBtn.disabled = true;
+    try {
+      await persistCoverage(next);
+      closeModal(covModal);
+    } catch (err) {
+      alert('Delete failed: ' + (err.message || err));
+    } finally {
+      covDeleteBtn.disabled = false;
+    }
+  });
+
+  if (covListEl) {
+    covListEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-cov-action="edit"]');
+      if (!btn) return;
+      const row = btn.closest('.coverage-row');
+      if (!row) return;
+      const i = parseInt(row.dataset.i, 10);
+      if (!isNaN(i)) openCoverageModal(i);
+    });
+  }
+
+  onSnapshot(
+    doc(db, 'state', 'coverage'),
+    (snap) => {
+      const data = snap.exists() ? snap.data() : null;
+      coverageItems = (data && Array.isArray(data.items)) ? data.items : [];
+      renderCoverageList();
+    },
+    (err) => console.error('[admin] coverage listener:', err)
+  );
+
   onSnapshot(
     query(collection(db, 'notes'), orderBy('createdAt', 'desc')),
     (snap) => {
@@ -931,7 +1085,7 @@ function startAdmin(fb) {
     activeNoteId = null;
   }
 
-  [editModal, deleteModal, folderModal, taxonomyModal].forEach(modal => {
+  [editModal, deleteModal, folderModal, taxonomyModal, covModal].forEach(modal => {
     if (!modal) return;
     modal.addEventListener('click', (e) => {
       const closeRole = e.target.dataset.close;
@@ -946,6 +1100,7 @@ function startAdmin(fb) {
     if (deleteModal && deleteModal.style.display === 'flex') closeModal(deleteModal);
     if (folderModal && folderModal.style.display === 'flex') closeModal(folderModal);
     if (taxonomyModal && taxonomyModal.style.display === 'flex') closeModal(taxonomyModal);
+    if (covModal && covModal.style.display === 'flex') closeModal(covModal);
   });
   if (taxonomyInput) {
     taxonomyInput.addEventListener('keydown', (e) => {

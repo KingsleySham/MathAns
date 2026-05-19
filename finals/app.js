@@ -7,7 +7,11 @@ import {
   onSnapshot, query, orderBy, serverTimestamp,
   doc, increment
 } from './firebase-init.js';
-import { TIMETABLE, COVERAGE } from './exam-data.js';
+import { TIMETABLE, COVERAGE as DEFAULT_COVERAGE } from './exam-data.js';
+
+// Coverage starts from the static default and gets replaced by the
+// admin-managed copy in /state/coverage once it loads.
+let COVERAGE = DEFAULT_COVERAGE;
 
 /* ==========================================================================
    Countdown to finals
@@ -868,6 +872,25 @@ onSnapshot(
     renderNotes();
   },
   (err) => console.warn('[hub] noteTypes listener:', err)
+);
+
+// Admin-editable exam coverage. Falls back to the static default if the
+// doc doesn't exist yet or has no items array.
+onSnapshot(
+  doc(db, 'state', 'coverage'),
+  (snap) => {
+    const data = snap.exists() ? snap.data() : null;
+    if (data && Array.isArray(data.items) && data.items.length) {
+      COVERAGE = data.items;
+    } else {
+      COVERAGE = DEFAULT_COVERAGE;
+    }
+    // Refresh the coverage modal in place if it's open right now.
+    if (coverageModal && coverageModal.classList.contains('open')) {
+      renderCoverage(null);
+    }
+  },
+  (err) => console.warn('[hub] coverage listener:', err)
 );
 
 onSnapshot(

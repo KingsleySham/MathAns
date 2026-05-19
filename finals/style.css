@@ -2601,3 +2601,51 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   .taxonomy-row-item { flex-wrap: wrap; }
   .taxonomy-actions { width: 100%; justify-content: flex-end; }
 }
+
+/* ---------- Exam Coverage (admin) ---------- */
+.coverage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.coverage-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  min-width: 0;
+}
+.coverage-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.coverage-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.coverage-subject {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.coverage-classes {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+.coverage-row .btn-sm { flex-shrink: 0; }
+@media (min-width: 760px) {
+  .coverage-list { grid-template-columns: 1fr 1fr; }
+}
