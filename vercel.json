@@ -8,9 +8,11 @@
     }
   ],
   "redirects": [
-    { "has": [{ "type": "host", "value": "finals.mathans.app" }], "source": "/", "destination": "/finals/", "permanent": false }
+    { "has": [{ "type": "host", "value": "www.mathans.app" }], "source": "/finals", "destination": "https://finals.mathans.app/", "permanent": false },
+    { "has": [{ "type": "host", "value": "www.mathans.app" }], "source": "/finals/", "destination": "https://finals.mathans.app/", "permanent": false }
   ],
   "rewrites": [
+    { "has": [{ "type": "host", "value": "finals.mathans.app" }], "source": "/", "destination": "/finals-landing.html" },
     { "source": "/admin",        "destination": "/finals/admin.html" },
     { "source": "/admin/",       "destination": "/finals/admin.html" },
     { "source": "/3062470030624770",   "destination": "/3062470030624770/index.html" },
