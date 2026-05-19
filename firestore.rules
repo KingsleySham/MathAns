@@ -60,11 +60,13 @@ service cloud.firestore {
         request.resource.data.uploaderName is string &&
         request.resource.data.uploaderName.size() > 0 &&
         request.resource.data.uploaderName.size() < 80 &&
-        request.resource.data.type in ['notes', 'mock_paper', 'flashcards', 'gdocs'] &&
+        request.resource.data.type is string &&
+        request.resource.data.type.size() > 0 &&
+        request.resource.data.type.size() < 60 &&
         (
-          // notes / mock_paper: file fields OR a gdocs link OR a
-          // quizlet link (or any combination of those).
-          (request.resource.data.type in ['notes', 'mock_paper'] && (
+          // notes / mock_paper / admin-defined types: file fields OR a
+          // gdocs link OR a quizlet link (or any combination).
+          (!(request.resource.data.type in ['flashcards', 'gdocs']) && (
             (
               request.resource.data.keys().hasAll(['fileName', 'filePath', 'fileSize', 'downloadUrl']) &&
               request.resource.data.fileName is string &&
@@ -129,6 +131,40 @@ service cloud.firestore {
         request.resource.data.name is string &&
         request.resource.data.name.size() > 0 &&
         request.resource.data.name.size() < 80;
+      allow delete: if true;
+    }
+
+    // Admin-managed taxonomy lists. Same trust model as /notes and /folders:
+    // open writes with shape validation, gated by the admin passcode in the
+    // client.
+    match /subjects/{id} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasAll(['name', 'createdAt']) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() < 80;
+      allow update: if
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() < 80;
+      allow delete: if true;
+    }
+
+    match /noteTypes/{id} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasAll(['value', 'label', 'createdAt']) &&
+        request.resource.data.value is string &&
+        request.resource.data.value.size() > 0 &&
+        request.resource.data.value.size() < 60 &&
+        request.resource.data.label is string &&
+        request.resource.data.label.size() > 0 &&
+        request.resource.data.label.size() < 80;
+      allow update: if
+        request.resource.data.label is string &&
+        request.resource.data.label.size() > 0 &&
+        request.resource.data.label.size() < 80;
       allow delete: if true;
     }
 

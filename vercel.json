@@ -7,9 +7,7 @@
       ]
     }
   ],
-  "redirects": [
-    { "has": [{ "type": "host", "value": "finals.mathans.app" }], "source": "/", "destination": "/finals/", "permanent": false }
-  ],
+  "redirects": [],
   "rewrites": [
     { "source": "/admin",        "destination": "/finals/admin.html" },
     { "source": "/admin/",       "destination": "/finals/admin.html" },

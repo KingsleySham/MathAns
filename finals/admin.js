@@ -629,6 +629,187 @@ function startAdmin(fb) {
     });
   }
 
+  /* ==========================================================================
+     Subjects & Types (admin-managed taxonomy)
+     ========================================================================== */
+  const subjectListEl2  = $('subject-list');
+  const typeListEl      = $('type-list');
+  const subjectNewBtn   = $('subject-new-btn');
+  const typeNewBtn      = $('type-new-btn');
+  const taxonomyModal   = $('taxonomy-modal');
+  const taxonomyTitle   = $('taxonomy-modal-title');
+  const taxonomyLabel   = $('taxonomy-name-label');
+  const taxonomyHint    = $('taxonomy-hint');
+  const taxonomyInput   = $('taxonomy-name-input');
+  const taxonomySaveBtn = $('taxonomy-save-btn');
+
+  let customSubjects = [];   // [{ id, name }]
+  let customTypes    = [];   // [{ id, value, label }]
+  let taxonomyState  = { kind: 'subject', editingId: null };
+
+  function renderTaxonomy() {
+    if (subjectListEl2) {
+      if (!customSubjects.length) {
+        subjectListEl2.innerHTML = '<li class="empty-state-small">No custom subjects yet.</li>';
+      } else {
+        subjectListEl2.innerHTML = customSubjects.map(s => `
+          <li class="taxonomy-row-item" data-id="${escapeAttr(s.id)}">
+            <span class="taxonomy-name">${escapeHtmlSimple(s.name)}</span>
+            <span class="taxonomy-actions">
+              <button class="btn-secondary btn-sm" data-tax-action="rename-subject">Rename</button>
+              <button class="btn-secondary btn-sm btn-danger-outline" data-tax-action="delete-subject">Delete</button>
+            </span>
+          </li>
+        `).join('');
+      }
+    }
+    if (typeListEl) {
+      if (!customTypes.length) {
+        typeListEl.innerHTML = '<li class="empty-state-small">No custom types yet.</li>';
+      } else {
+        typeListEl.innerHTML = customTypes.map(t => `
+          <li class="taxonomy-row-item" data-id="${escapeAttr(t.id)}">
+            <span class="taxonomy-name">${escapeHtmlSimple(t.label)}</span>
+            <span class="taxonomy-actions">
+              <button class="btn-secondary btn-sm" data-tax-action="rename-type">Rename</button>
+              <button class="btn-secondary btn-sm btn-danger-outline" data-tax-action="delete-type">Delete</button>
+            </span>
+          </li>
+        `).join('');
+      }
+    }
+  }
+
+  function escapeAttr(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
+
+  function openTaxonomyModal(kind, item) {
+    taxonomyState = { kind, editingId: item ? item.id : null };
+    if (kind === 'subject') {
+      taxonomyTitle.textContent = item ? 'Rename subject' : 'New subject';
+      taxonomyLabel.textContent = 'Subject name';
+      taxonomyHint.textContent  = 'Appears in the upload form and filter on the hub.';
+      taxonomyInput.placeholder = 'e.g. Visual Arts';
+      taxonomyInput.value = item ? (item.name || '') : '';
+    } else {
+      taxonomyTitle.textContent = item ? 'Rename type' : 'New type';
+      taxonomyLabel.textContent = 'Type name';
+      taxonomyHint.textContent  = 'Shown as a pill on each note (e.g. "Assignment", "Worksheet").';
+      taxonomyInput.placeholder = 'e.g. Worksheet';
+      taxonomyInput.value = item ? (item.label || '') : '';
+    }
+    taxonomySaveBtn.disabled = false;
+    taxonomySaveBtn.textContent = 'Save';
+    taxonomyModal.style.display = 'flex';
+    setTimeout(() => taxonomyInput.focus(), 0);
+  }
+
+  if (subjectNewBtn) subjectNewBtn.addEventListener('click', () => openTaxonomyModal('subject', null));
+  if (typeNewBtn)    typeNewBtn.addEventListener('click',    () => openTaxonomyModal('type', null));
+
+  taxonomySaveBtn.addEventListener('click', async () => {
+    const value = taxonomyInput.value.trim();
+    if (!value) { taxonomyInput.focus(); return; }
+    taxonomySaveBtn.disabled = true;
+    taxonomySaveBtn.textContent = 'Saving…';
+    try {
+      if (taxonomyState.kind === 'subject') {
+        if (taxonomyState.editingId) {
+          await updateDoc(doc(db, 'subjects', taxonomyState.editingId), { name: value });
+        } else {
+          await addDoc(collection(db, 'subjects'), { name: value, createdAt: serverTimestamp() });
+        }
+      } else {
+        // Type value is the slug used in note docs; for renames keep the
+        // original value so existing notes still resolve to this label.
+        if (taxonomyState.editingId) {
+          await updateDoc(doc(db, 'noteTypes', taxonomyState.editingId), { label: value });
+        } else {
+          const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || ('type_' + Date.now());
+          await addDoc(collection(db, 'noteTypes'), {
+            value: slug,
+            label: value,
+            createdAt: serverTimestamp()
+          });
+        }
+      }
+      closeModal(taxonomyModal);
+    } catch (err) {
+      taxonomySaveBtn.disabled = false;
+      taxonomySaveBtn.textContent = 'Save';
+      alert('Save failed: ' + (err.message || err));
+    }
+  });
+
+  function attachTaxonomyHandlers(listEl) {
+    if (!listEl) return;
+    listEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-tax-action]');
+      if (!btn) return;
+      const row = btn.closest('.taxonomy-row-item');
+      if (!row) return;
+      const id = row.dataset.id;
+      const action = btn.dataset.taxAction;
+
+      if (action === 'rename-subject') {
+        const item = customSubjects.find(s => s.id === id);
+        if (item) openTaxonomyModal('subject', item);
+        return;
+      }
+      if (action === 'rename-type') {
+        const item = customTypes.find(t => t.id === id);
+        if (item) openTaxonomyModal('type', item);
+        return;
+      }
+      if (action === 'delete-subject') {
+        const item = customSubjects.find(s => s.id === id);
+        if (!item) return;
+        const used = allNotes.filter(n => n.subject === item.name).length;
+        if (used > 0) {
+          alert(`"${item.name}" is used by ${used} note${used === 1 ? '' : 's'}. Reassign or delete those first.`);
+          return;
+        }
+        if (!confirm(`Delete subject "${item.name}"?`)) return;
+        try { await deleteDoc(doc(db, 'subjects', id)); }
+        catch (err) { alert('Delete failed: ' + (err.message || err)); }
+        return;
+      }
+      if (action === 'delete-type') {
+        const item = customTypes.find(t => t.id === id);
+        if (!item) return;
+        const used = allNotes.filter(n => n.type === item.value).length;
+        if (used > 0) {
+          alert(`"${item.label}" is used by ${used} note${used === 1 ? '' : 's'}. Change or delete those first.`);
+          return;
+        }
+        if (!confirm(`Delete type "${item.label}"?`)) return;
+        try { await deleteDoc(doc(db, 'noteTypes', id)); }
+        catch (err) { alert('Delete failed: ' + (err.message || err)); }
+      }
+    });
+  }
+  attachTaxonomyHandlers(subjectListEl2);
+  attachTaxonomyHandlers(typeListEl);
+
+  onSnapshot(
+    query(collection(db, 'subjects'), orderBy('createdAt', 'asc')),
+    (snap) => {
+      customSubjects = [];
+      snap.forEach(d => customSubjects.push({ id: d.id, ...d.data() }));
+      renderTaxonomy();
+    },
+    (err) => console.error('[admin] subjects listener:', err)
+  );
+
+  onSnapshot(
+    query(collection(db, 'noteTypes'), orderBy('createdAt', 'asc')),
+    (snap) => {
+      customTypes = [];
+      snap.forEach(d => customTypes.push({ id: d.id, ...d.data() }));
+      renderTaxonomy();
+    },
+    (err) => console.error('[admin] noteTypes listener:', err)
+  );
+
   onSnapshot(
     query(collection(db, 'notes'), orderBy('createdAt', 'desc')),
     (snap) => {
@@ -750,7 +931,7 @@ function startAdmin(fb) {
     activeNoteId = null;
   }
 
-  [editModal, deleteModal, folderModal].forEach(modal => {
+  [editModal, deleteModal, folderModal, taxonomyModal].forEach(modal => {
     if (!modal) return;
     modal.addEventListener('click', (e) => {
       const closeRole = e.target.dataset.close;
@@ -764,7 +945,13 @@ function startAdmin(fb) {
     if (editModal && editModal.style.display === 'flex') closeModal(editModal);
     if (deleteModal && deleteModal.style.display === 'flex') closeModal(deleteModal);
     if (folderModal && folderModal.style.display === 'flex') closeModal(folderModal);
+    if (taxonomyModal && taxonomyModal.style.display === 'flex') closeModal(taxonomyModal);
   });
+  if (taxonomyInput) {
+    taxonomyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); taxonomySaveBtn.click(); }
+    });
+  }
 
   if (editSaveBtn) {
     editSaveBtn.addEventListener('click', async () => {
