@@ -583,8 +583,14 @@ function renderNotes() {
   notesListEl.innerHTML = filtered.map(n => noteCardHTML(n)).join('');
 }
 
+// Admin-added types from the noteTypes Firestore collection. Keyed by the
+// value used on note docs. Updated via subscription below.
+const customTypeMap = new Map();
+
 function noteTypeMeta(type) {
   if (type === 'mock_paper') return { label: 'Mock Paper', cls: 'mock_paper' };
+  const custom = customTypeMap.get(type);
+  if (custom) return { label: custom, cls: 'custom' };
   // Legacy 'flashcards' / 'gdocs' types from earlier versions still
   // read — display them as Notes since they're no longer creation
   // categories.
@@ -802,6 +808,67 @@ setViewMode(viewMode);
     filterSubjectEl.appendChild(opt);
   }
 })();
+
+/* Admin-managed subjects/types — sync into the upload form and filters as
+   they're added/removed in Firestore. Built-in <option>s in the HTML remain
+   so the form still works if Firestore is unreachable. */
+const noteSubjectSelect = document.getElementById('note-subject');
+const noteTypeSelect    = document.getElementById('note-type');
+
+function mergeCustomOptions(selectEl, items, getValue, getLabel) {
+  if (!selectEl) return;
+  // Drop anything previously injected.
+  Array.from(selectEl.querySelectorAll('option[data-custom="1"]')).forEach(o => o.remove());
+  // Re-add from the current list, inserted at the end (or before a trailing
+  // "Other" entry on the subject select, so "Other" stays last).
+  const otherOpt = Array.from(selectEl.options).find(o => o.value === 'Other');
+  items.forEach(item => {
+    const o = document.createElement('option');
+    o.value = getValue(item);
+    o.textContent = getLabel(item);
+    o.dataset.custom = '1';
+    if (otherOpt) selectEl.insertBefore(o, otherOpt);
+    else selectEl.appendChild(o);
+  });
+}
+
+onSnapshot(
+  query(collection(db, 'subjects'), orderBy('createdAt', 'asc')),
+  (snap) => {
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    // Keep ones the built-in HTML already covers from being duplicated.
+    const builtIn = new Set(
+      Array.from(noteSubjectSelect.options)
+        .filter(o => o.dataset.custom !== '1')
+        .map(o => o.value)
+    );
+    const fresh = items.filter(s => s.name && !builtIn.has(s.name));
+    mergeCustomOptions(noteSubjectSelect, fresh, s => s.name, s => s.name);
+    mergeCustomOptions(filterSubjectEl,   fresh, s => s.name, s => s.name);
+  },
+  (err) => console.warn('[hub] subjects listener:', err)
+);
+
+onSnapshot(
+  query(collection(db, 'noteTypes'), orderBy('createdAt', 'asc')),
+  (snap) => {
+    const items = [];
+    snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+    customTypeMap.clear();
+    items.forEach(t => { if (t.value && t.label) customTypeMap.set(t.value, t.label); });
+    const builtIn = new Set(
+      Array.from(noteTypeSelect.options)
+        .filter(o => o.dataset.custom !== '1')
+        .map(o => o.value)
+    );
+    const fresh = items.filter(t => t.value && !builtIn.has(t.value));
+    mergeCustomOptions(noteTypeSelect, fresh, t => t.value, t => t.label);
+    mergeCustomOptions(filterTypeEl,   fresh, t => t.value, t => t.label);
+    renderNotes();
+  },
+  (err) => console.warn('[hub] noteTypes listener:', err)
+);
 
 onSnapshot(
   query(collection(db, 'folders'), orderBy('createdAt', 'asc')),

@@ -107,6 +107,35 @@
       </ul>
     </section>
 
+    <!-- Subjects & Types -->
+    <section class="card">
+      <h2 class="section-title">Subjects &amp; Types</h2>
+      <p class="section-desc" style="margin-bottom:14px;">
+        Extra subjects and note types you add here appear in the upload form
+        and filters on the hub. The built-in entries stay available either way.
+      </p>
+      <div class="taxonomy-row">
+        <div class="taxonomy-col">
+          <div class="taxonomy-head">
+            <h3 class="taxonomy-h">Subjects</h3>
+            <button class="btn-primary btn-sm" id="subject-new-btn" type="button">+ New subject</button>
+          </div>
+          <ul class="taxonomy-list" id="subject-list">
+            <li class="empty-state-small">No custom subjects yet.</li>
+          </ul>
+        </div>
+        <div class="taxonomy-col">
+          <div class="taxonomy-head">
+            <h3 class="taxonomy-h">Types</h3>
+            <button class="btn-primary btn-sm" id="type-new-btn" type="button">+ New type</button>
+          </div>
+          <ul class="taxonomy-list" id="type-list">
+            <li class="empty-state-small">No custom types yet.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- Controls + cards -->
     <section class="card">
       <div class="admin-controls">
@@ -144,6 +173,25 @@
       <div class="modal-card-footer">
         <button class="btn-secondary" data-close="cancel">Cancel</button>
         <button class="btn-primary" id="folder-save-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Taxonomy modal (create / rename subjects + types) ===== -->
+  <div class="modal-overlay" id="taxonomy-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card">
+      <div class="modal-card-header">
+        <span id="taxonomy-modal-title">New subject</span>
+        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-card-body">
+        <label class="form-label" for="taxonomy-name-input" id="taxonomy-name-label">Subject name</label>
+        <input type="text" id="taxonomy-name-input" maxlength="80" placeholder="e.g. Visual Arts" />
+        <div class="file-hint" id="taxonomy-hint" style="margin-top:6px;">Appears in the upload form and filter on the hub.</div>
+      </div>
+      <div class="modal-card-footer">
+        <button class="btn-secondary" data-close="cancel">Cancel</button>
+        <button class="btn-primary" id="taxonomy-save-btn">Save</button>
       </div>
     </div>
   </div>
