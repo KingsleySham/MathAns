@@ -4,6 +4,8 @@
 // submit / status pill still work. Firebase is lazy-loaded only when the
 // admin is unlocked.
 
+import { COVERAGE as DEFAULT_COVERAGE } from './exam-data.js';
+
 console.log('[admin] script start');
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -816,7 +818,6 @@ function startAdmin(fb) {
      made contenteditable so admins can change wording in place.
      ========================================================================== */
   const covListEl    = $('coverage-list');
-  const covNewBtn    = $('coverage-new-btn');
   const covResetBtn  = $('coverage-reset-btn');
   const covSaveBadge = $('cov-save-indicator');
 
@@ -845,15 +846,15 @@ function startAdmin(fb) {
 
   function renderCoverageEditor() {
     if (!covListEl) return;
-    if (!coverageItems.length) {
-      covListEl.innerHTML = `
-        <div class="empty-state-small">
-          No coverage entries yet — the hub is showing the built-in defaults.
-          Click <strong>+ New subject</strong> above to start, or <strong>Reset to defaults</strong> to load the built-in list as the editable copy.
-        </div>`;
+    // When Firestore has no override yet, render the built-in defaults so
+    // the admin can edit the wording directly. The first autosave will
+    // persist the whole list (defaults + their edits) into Firestore.
+    const renderItems = coverageItems.length ? coverageItems : DEFAULT_COVERAGE;
+    if (!renderItems.length) {
+      covListEl.innerHTML = `<div class="empty-state-small">No coverage data available.</div>`;
       return;
     }
-    covListEl.innerHTML = coverageItems.map((sub, i) => {
+    covListEl.innerHTML = renderItems.map((sub, i) => {
       const sections = COV_SECTIONS.map(({ field, head }) => {
         const lines = Array.isArray(sub[field]) ? sub[field] : [];
         const lis = lines.map(line => `
@@ -878,7 +879,6 @@ function startAdmin(fb) {
               <div class="subj-classes" contenteditable="true" spellcheck="false">${escapeHtmlSimple(sub.classes || 'all')}</div>
             </div>
             <span class="subj-chevron" aria-hidden="true">▾</span>
-            <button type="button" class="cov-card-delete" data-cov-action="delete-subject" title="Delete this subject" aria-label="Delete subject">×</button>
           </summary>
           <div class="subj-card-body">
             ${sections}
@@ -941,27 +941,8 @@ function startAdmin(fb) {
     }, 600);
   }
 
-  if (covNewBtn) covNewBtn.addEventListener('click', async () => {
-    const next = coverageItems.slice();
-    next.push({
-      subject: 'New subject',
-      icon: '📘',
-      classes: 'all',
-      chapters: [],
-      worksheets: [],
-      others: []
-    });
-    setSaveStatus('Saving…', 'saving');
-    try {
-      await persistCoverage(next);
-      setSaveStatus('All changes saved', 'saved');
-    } catch (err) {
-      setSaveStatus('Save failed — ' + (err.message || err), 'error');
-    }
-  });
-
   if (covResetBtn) covResetBtn.addEventListener('click', async () => {
-    if (!confirm('Reset coverage to the built-in defaults? Any custom edits will be lost.')) return;
+    if (!confirm('Discard your edits and go back to the built-in coverage list?')) return;
     setSaveStatus('Saving…', 'saving');
     try {
       await persistCoverage([]);
@@ -1056,21 +1037,6 @@ function startAdmin(fb) {
         if (section) section.classList.remove('subj-section-empty');
         newLi.querySelector('.cov-li-text').focus();
         scheduleAutosave();
-        return;
-      }
-
-      if (action === 'delete-subject') {
-        const item = coverageItems[i] || {};
-        if (!confirm(`Delete coverage entry for "${item.subject || 'this subject'}"?`)) return;
-        const next = coverageItems.slice();
-        next.splice(i, 1);
-        setSaveStatus('Saving…', 'saving');
-        try {
-          await persistCoverage(next);
-          setSaveStatus('All changes saved', 'saved');
-        } catch (err) {
-          setSaveStatus('Delete failed — ' + (err.message || err), 'error');
-        }
       }
     });
   }
