@@ -493,6 +493,25 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
 .btn-secondary:hover { background: #e5e7eb; border-color: #d1d5db; }
 .btn-secondary:active { transform: scale(0.98); }
 
+.btn-fullscreen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  width: 38px;
+  height: 38px;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.btn-fullscreen:hover { background: #e5e7eb; border-color: #d1d5db; color: #111827; }
+.btn-fullscreen:active { transform: scale(0.98); }
+.btn-fullscreen svg { display: block; }
+
 .btn-danger {
   background: #dc2626;
   color: #fff;
@@ -1142,6 +1161,11 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
 .note-actions .btn-primary {
   padding: 8px 14px;
   font-size: 0.82rem;
+}
+.note-actions .btn-fullscreen {
+  width: 34px;
+  height: 34px;
+  padding: 6px;
 }
 
 /* ---------- Timer ---------- */
@@ -2481,6 +2505,11 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   .quizlet-btn {
     padding: 7px 11px;
     font-size: 0.78rem;
+  }
+  .note-actions .btn-fullscreen {
+    width: 30px;
+    height: 30px;
+    padding: 5px;
   }
 
   /* Folder browser — always 1 col; tighter folder cards */
