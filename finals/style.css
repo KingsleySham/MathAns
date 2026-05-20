@@ -1643,6 +1643,17 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   padding: 8px 14px;
   font-size: 0.82rem;
 }
+.admin-card-actions .reorder-group {
+  display: inline-flex;
+  gap: 2px;
+  margin-right: 4px;
+}
+.admin-card-actions .btn-reorder {
+  padding: 6px 10px;
+  font-size: 1rem;
+  line-height: 1;
+  min-width: 36px;
+}
 
 /* Themed modal */
 .modal-overlay {
