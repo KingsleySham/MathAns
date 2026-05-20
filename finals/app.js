@@ -535,10 +535,13 @@ function noteCardHTML(n, opts) {
   else if (hasGdocs)        sizeOrId = `Google ${({document:'Doc',spreadsheet:'Sheet',presentation:'Slides',drive:'Drive'})[n.gdocsKind] || 'Docs'}`;
   else if (hasQuizlet)      sizeOrId = `Quizlet · #${escapeHtml(n.quizletSetId || '')}`;
 
-  // Actions in a consistent order: View, Download, Google, Quizlet.
+  // Actions in a consistent order: View, Download, Fullscreen, Google, Quizlet.
   const actions = [];
   if (canPreview)  actions.push(`<button class="btn-primary" data-action="view">View</button>`);
   if (hasFile)     actions.push(`<a class="btn-secondary" data-action="download" href="${escapeHtml(n.downloadUrl)}" target="_blank" rel="noopener" download="${escapeHtml(n.fileName)}">Download</a>`);
+  if (hasFile && isHtmlFile(n.fileName)) {
+    actions.push(`<a class="btn-fullscreen" data-action="fullscreen-open" href="/view/${encodeURIComponent(n.id)}" target="_blank" rel="noopener" aria-label="Open in fullscreen" title="Open in fullscreen"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z" fill="currentColor"/></svg></a>`);
+  }
   if (hasGdocs)    actions.push(gdocsButtonHTML(actions.length > 0));
   if (hasQuizlet)  actions.push(quizletButtonHTML(n.quizletUrl));
 
@@ -606,14 +609,20 @@ function isPreviewable(fileName) {
   return ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'txt', 'doc', 'docx', 'html', 'htm'].includes(ext);
 }
 
+function isHtmlFile(fileName) {
+  const ext = (String(fileName || '').split('.').pop() || '').toLowerCase();
+  return ext === 'html' || ext === 'htm';
+}
+
 /* Click tracking — every action click increments a per-note Firestore
    counter. Admin sessions are skipped so my own clicks don't pollute
    the numbers. */
 const CLICK_FIELDS = {
-  'view':         'clicksView',
-  'download':     'clicksDownload',
-  'gdocs-open':   'clicksGdocs',
-  'quizlet-open': 'clicksQuizlet',
+  'view':            'clicksView',
+  'download':        'clicksDownload',
+  'gdocs-open':      'clicksGdocs',
+  'quizlet-open':    'clicksQuizlet',
+  'fullscreen-open': 'clicksFullscreen',
 };
 function isAdminSignedIn() {
   try { return !!sessionStorage.getItem('finals.adminPasscode'); }

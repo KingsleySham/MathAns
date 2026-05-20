@@ -24,6 +24,8 @@
     { "source": "/ths/revision",  "destination": "/thsrevision.html" },
     { "source": "/ths/revision/", "destination": "/thsrevision.html" },
     { "source": "/ths",  "destination": "/thsindex.html" },
-    { "source": "/ths/", "destination": "/thsindex.html" }
+    { "source": "/ths/", "destination": "/thsindex.html" },
+    { "source": "/view/:id",  "destination": "/finals/view.html" },
+    { "source": "/view/:id/", "destination": "/finals/view.html" }
   ]
 }
