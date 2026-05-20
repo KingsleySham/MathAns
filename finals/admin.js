@@ -813,6 +813,134 @@ function startAdmin(fb) {
   );
 
   /* ==========================================================================
+     Popups (admin-authored hub welcome popups shown to visitors)
+     One active popup at a time. Activating one deactivates the others.
+     Users dismiss locally via localStorage; the doc stays in Firestore.
+     ========================================================================== */
+  const popupListEl     = $('popup-list');
+  const popupNewBtn     = $('popup-new-btn');
+  const popupModal      = $('popup-modal');
+  const popupModalTitle = $('popup-modal-title');
+  const popupEmojiInput = $('popup-emoji-input');
+  const popupTitleInput = $('popup-title-input');
+  const popupDescInput  = $('popup-desc-input');
+  const popupButtonInput= $('popup-button-input');
+  const popupFolderSel  = $('popup-folder-select');
+  const popupActiveInput= $('popup-active-input');
+  const popupSaveBtn    = $('popup-save-btn');
+
+  let allPopups = [];
+  let popupEditingId = null;
+
+  function renderPopups() {
+    if (!popupListEl) return;
+    if (!allPopups.length) {
+      popupListEl.innerHTML = '<li class="empty-state-small">No popups yet.</li>';
+      return;
+    }
+    popupListEl.innerHTML = allPopups.map(p => {
+      const folder = p.folderId ? folderById.get(p.folderId) : null;
+      const folderLabel = folder ? folder.path : (p.folderId ? '(missing folder)' : '— no folder —');
+      const titleLine = `${p.emoji ? escapeHtmlSimple(p.emoji) + ' ' : ''}${escapeHtmlSimple(p.title || '(untitled)')}`;
+      return `
+        <li class="taxonomy-row-item" data-id="${escapeAttr(p.id)}">
+          <span class="taxonomy-name">
+            ${titleLine}
+            ${p.active ? '<span class="popup-active-badge" style="margin-left:8px;padding:2px 8px;background:#dcfce7;color:#15803d;border-radius:999px;font-size:0.72rem;font-weight:700;">ACTIVE</span>' : ''}
+            <div style="font-weight:500;color:#6b7280;font-size:0.78rem;margin-top:2px;">→ ${escapeHtmlSimple(folderLabel)}</div>
+          </span>
+          <span class="taxonomy-actions">
+            <button class="btn-secondary btn-sm" data-popup-action="edit">Edit</button>
+            <button class="btn-secondary btn-sm btn-danger-outline" data-popup-action="delete">Delete</button>
+          </span>
+        </li>
+      `;
+    }).join('');
+  }
+
+  function openPopupModal(popup) {
+    popupEditingId = popup ? popup.id : null;
+    popupModalTitle.textContent = popup ? 'Edit popup' : 'New popup';
+    popupEmojiInput.value  = popup ? (popup.emoji || '')       : '';
+    popupTitleInput.value  = popup ? (popup.title || '')       : '';
+    popupDescInput.value   = popup ? (popup.description || '') : '';
+    popupButtonInput.value = popup ? (popup.buttonText || '')  : 'Click here to know more!';
+    populateFolderSelect(popupFolderSel, { placeholder: '(no folder — button hidden)' });
+    popupFolderSel.value   = popup && popup.folderId ? popup.folderId : '';
+    popupActiveInput.checked = popup ? !!popup.active : false;
+    popupSaveBtn.disabled = false;
+    popupSaveBtn.textContent = 'Save';
+    popupModal.style.display = 'flex';
+    setTimeout(() => popupTitleInput.focus(), 0);
+  }
+
+  if (popupNewBtn) popupNewBtn.addEventListener('click', () => openPopupModal(null));
+
+  popupSaveBtn.addEventListener('click', async () => {
+    const title = popupTitleInput.value.trim();
+    if (!title) { popupTitleInput.focus(); return; }
+    popupSaveBtn.disabled = true;
+    popupSaveBtn.textContent = 'Saving…';
+    const data = {
+      emoji:       popupEmojiInput.value.trim().slice(0, 8),
+      title:       title.slice(0, 180),
+      description: popupDescInput.value.trim().slice(0, 1800),
+      buttonText:  popupButtonInput.value.trim().slice(0, 100),
+      folderId:    popupFolderSel.value || null,
+      active:      !!popupActiveInput.checked,
+    };
+    try {
+      let savedId;
+      if (popupEditingId) {
+        await updateDoc(doc(db, 'popups', popupEditingId), data);
+        savedId = popupEditingId;
+      } else {
+        const ref = await addDoc(collection(db, 'popups'), { ...data, createdAt: serverTimestamp() });
+        savedId = ref.id;
+      }
+      if (data.active) {
+        // Deactivate all other popups so only this one shows.
+        const others = allPopups.filter(p => p.id !== savedId && p.active);
+        await Promise.all(others.map(p => updateDoc(doc(db, 'popups', p.id), { active: false })));
+      }
+      closeModal(popupModal);
+    } catch (err) {
+      popupSaveBtn.disabled = false;
+      popupSaveBtn.textContent = 'Save';
+      alert('Save failed: ' + (err.message || err));
+    }
+  });
+
+  if (popupListEl) {
+    popupListEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-popup-action]');
+      if (!btn) return;
+      const row = btn.closest('.taxonomy-row-item');
+      if (!row) return;
+      const id = row.dataset.id;
+      const popup = allPopups.find(p => p.id === id);
+      if (!popup) return;
+      const action = btn.dataset.popupAction;
+      if (action === 'edit') return openPopupModal(popup);
+      if (action === 'delete') {
+        if (!confirm(`Delete popup "${popup.title}"?`)) return;
+        try { await deleteDoc(doc(db, 'popups', id)); }
+        catch (err) { alert('Delete failed: ' + (err.message || err)); }
+      }
+    });
+  }
+
+  onSnapshot(
+    query(collection(db, 'popups'), orderBy('createdAt', 'desc')),
+    (snap) => {
+      allPopups = [];
+      snap.forEach(d => allPopups.push({ id: d.id, ...d.data() }));
+      renderPopups();
+    },
+    (err) => console.error('[admin] popups listener:', err)
+  );
+
+  /* ==========================================================================
      Exam Coverage (admin-managed via /state/coverage)
      Renders the same .subj-card layout as the hub, with every text node
      made contenteditable so admins can change wording in place.
@@ -1276,7 +1404,7 @@ function startAdmin(fb) {
     activeNoteId = null;
   }
 
-  [editModal, deleteModal, folderModal, taxonomyModal].forEach(modal => {
+  [editModal, deleteModal, folderModal, taxonomyModal, popupModal].forEach(modal => {
     if (!modal) return;
     modal.addEventListener('click', (e) => {
       const closeRole = e.target.dataset.close;
@@ -1291,6 +1419,7 @@ function startAdmin(fb) {
     if (deleteModal && deleteModal.style.display === 'flex') closeModal(deleteModal);
     if (folderModal && folderModal.style.display === 'flex') closeModal(folderModal);
     if (taxonomyModal && taxonomyModal.style.display === 'flex') closeModal(taxonomyModal);
+    if (popupModal && popupModal.style.display === 'flex') closeModal(popupModal);
   });
   if (taxonomyInput) {
     taxonomyInput.addEventListener('keydown', (e) => {

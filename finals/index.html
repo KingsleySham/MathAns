@@ -454,6 +454,22 @@
     </div>
   </div>
 
+  <!-- ===== Welcome popup (admin-authored, shown on hub entry) ===== -->
+  <div class="modal-overlay welcome-popup-modal" id="welcome-popup-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card welcome-popup-card">
+      <button class="modal-close welcome-popup-close" data-close="x" aria-label="Close">&times;</button>
+      <div class="welcome-popup-emoji" id="welcome-popup-emoji" aria-hidden="true"></div>
+      <h2 class="welcome-popup-title" id="welcome-popup-title"></h2>
+      <hr class="welcome-popup-rule" />
+      <div class="welcome-popup-desc" id="welcome-popup-desc"></div>
+      <button class="btn-primary welcome-popup-cta" id="welcome-popup-cta" type="button"></button>
+      <label class="welcome-popup-skip">
+        <input type="checkbox" id="welcome-popup-skip" />
+        <span>Don't show again</span>
+      </label>
+    </div>
+  </div>
+
   <!-- Peek mode (triple-tap the title to lock the page to the
        bottom half of the viewport — for peeking from a drawer). -->
   <script>

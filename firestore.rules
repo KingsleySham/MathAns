@@ -168,6 +168,39 @@ service cloud.firestore {
       allow delete: if true;
     }
 
+    // Admin-authored welcome popups shown on hub entry. Same trust model as
+    // /notes and /folders: open writes with shape validation, gated by the
+    // admin passcode in the client. Users dismiss locally via localStorage,
+    // so writes happen from admin sessions only.
+    match /popups/{id} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasAll(['title', 'createdAt']) &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() < 200 &&
+        (!('emoji' in request.resource.data) ||
+          (request.resource.data.emoji is string &&
+           request.resource.data.emoji.size() < 16)) &&
+        (!('description' in request.resource.data) ||
+          (request.resource.data.description is string &&
+           request.resource.data.description.size() < 2000)) &&
+        (!('buttonText' in request.resource.data) ||
+          (request.resource.data.buttonText is string &&
+           request.resource.data.buttonText.size() < 120)) &&
+        (!('folderId' in request.resource.data) ||
+          request.resource.data.folderId == null ||
+          (request.resource.data.folderId is string &&
+           request.resource.data.folderId.size() < 60)) &&
+        (!('active' in request.resource.data) ||
+          request.resource.data.active is bool);
+      allow update: if
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() < 200;
+      allow delete: if true;
+    }
+
     // Anonymous error / difficulty reports submitted from the hub. No
     // personal info is collected — message is free-form, plus a category
     // tag, the current path, and a truncated user-agent string. Admin
