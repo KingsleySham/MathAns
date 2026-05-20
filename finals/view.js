@@ -1,4 +1,4 @@
-import { db, doc, getDoc } from './firebase-init.js';
+import { db, doc, getDoc } from '/finals/firebase-init.js';
 
 const rootEl = document.getElementById('root');
 const errEl  = document.getElementById('err');
