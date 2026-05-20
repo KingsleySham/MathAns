@@ -268,6 +268,15 @@ function startAdmin(fb) {
   let folderById = new Map();   // id → { id, name, parentId, children, depth, path }
   let folderLinear = [];        // depth-first ordered list
 
+  // Sort key: lower = earlier in the list. Admin-set `order` wins; otherwise
+  // fall back to -createdAtMillis so newest items still come first by default.
+  function noteSortKey(n) {
+    if (typeof n.order === 'number') return n.order;
+    const ms = n.createdAt && typeof n.createdAt.toMillis === 'function' ? n.createdAt.toMillis() : 0;
+    return -ms;
+  }
+  function sortNotes(arr) { arr.sort((a, b) => noteSortKey(a) - noteSortKey(b)); return arr; }
+
   function fmtBytes(n) {
     if (n == null) return '';
     if (n < 1024) return n + ' B';
@@ -361,6 +370,10 @@ function startAdmin(fb) {
             ${statsBits.length ? statsBits.join('') : '<span class="cstat-empty">none yet</span>'}
           </div>
           <div class="admin-card-actions">
+            <div class="reorder-group" role="group" aria-label="Reorder">
+              <button class="btn-secondary btn-reorder" data-action="move-up"   aria-label="Move up"   title="Move up">↑</button>
+              <button class="btn-secondary btn-reorder" data-action="move-down" aria-label="Move down" title="Move down">↓</button>
+            </div>
             <a class="btn-secondary" href="${escapeHtmlSimple(openHref)}" target="_blank" rel="noopener">Open</a>
             <button class="btn-primary" data-action="edit">Edit</button>
             <button class="btn-primary btn-danger" data-action="delete">Delete</button>
@@ -368,6 +381,46 @@ function startAdmin(fb) {
         </div>
       `;
     }).join('');
+  }
+
+  function currentlyVisibleNotes() {
+    const q = ((searchEl && searchEl.value) || '').trim().toLowerCase();
+    if (!q) return allNotes;
+    return allNotes.filter(n =>
+      (n.title || '').toLowerCase().includes(q) ||
+      (n.uploaderName || '').toLowerCase().includes(q) ||
+      (n.subject || '').toLowerCase().includes(q));
+  }
+
+  // Swap the effective sort keys between `note` and the note immediately above
+  // (dir=-1) or below (dir=+1) it in the visible (filtered) list, so the move
+  // matches what the admin actually sees. Two writes per move.
+  async function moveNote(noteId, dir) {
+    const visible = currentlyVisibleNotes();
+    const idx = visible.findIndex(n => n.id === noteId);
+    if (idx < 0) return;
+    const neighborIdx = idx + dir;
+    if (neighborIdx < 0 || neighborIdx >= visible.length) return;
+    const me = visible[idx];
+    const neighbor = visible[neighborIdx];
+    const myKey = noteSortKey(me);
+    const neighborKey = noteSortKey(neighbor);
+    if (myKey === neighborKey) {
+      // Two notes with identical effective keys — bump by a tiny offset.
+      const offset = dir < 0 ? -1 : 1;
+      try {
+        await updateDoc(doc(db, 'notes', me.id), { order: neighborKey + offset });
+      } catch (err) { alert('Reorder failed: ' + (err.message || err)); }
+      return;
+    }
+    try {
+      await Promise.all([
+        updateDoc(doc(db, 'notes', me.id),       { order: neighborKey }),
+        updateDoc(doc(db, 'notes', neighbor.id), { order: myKey }),
+      ]);
+    } catch (err) {
+      alert('Reorder failed: ' + (err.message || err));
+    }
   }
 
   function renderStats() {
@@ -403,7 +456,11 @@ function startAdmin(fb) {
     }
 
     if (recentListEl) {
-      const recent = allNotes.slice(0, 5);
+      const recent = [...allNotes].sort((a, b) => {
+        const am = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+        const bm = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+        return bm - am;
+      }).slice(0, 5);
       if (recent.length === 0) {
         recentListEl.innerHTML = '<li class="empty-state-small">No recent uploads.</li>';
       } else {
@@ -1288,6 +1345,7 @@ function startAdmin(fb) {
     (snap) => {
       allNotes = [];
       snap.forEach(d => allNotes.push({ id: d.id, ...d.data() }));
+      sortNotes(allNotes);
       renderStats();
       renderCards();
       renderFolderTree();      // refresh note counts in tree
@@ -1597,6 +1655,8 @@ function startAdmin(fb) {
       const action = btn.dataset.action;
       if (action === 'edit') openEditModal(note);
       else if (action === 'delete') openDeleteModal(note);
+      else if (action === 'move-up')   moveNote(id, -1);
+      else if (action === 'move-down') moveNote(id, +1);
     });
   }
 }

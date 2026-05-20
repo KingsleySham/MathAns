@@ -389,6 +389,15 @@ const filterTypeEl = document.getElementById('filter-type');
 
 let allNotes = [];
 
+// Sort key: lower = earlier in the list. Admin-set `order` wins; otherwise
+// fall back to -createdAtMillis so newest items still come first by default.
+function noteSortKey(n) {
+  if (typeof n.order === 'number') return n.order;
+  const ms = n.createdAt && typeof n.createdAt.toMillis === 'function' ? n.createdAt.toMillis() : 0;
+  return -ms;
+}
+function sortNotes(arr) { arr.sort((a, b) => noteSortKey(a) - noteSortKey(b)); return arr; }
+
 function fmtBytes(n) {
   if (n == null) return '';
   if (n < 1024) return n + ' B';
@@ -920,6 +929,7 @@ onSnapshot(
   (snap) => {
     allNotes = [];
     snap.forEach(d => allNotes.push({ id: d.id, ...d.data() }));
+    sortNotes(allNotes);
     if (viewMode === 'folders') renderFolderBrowser();
     else renderNotes();
   },
