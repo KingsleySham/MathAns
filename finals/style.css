@@ -1656,6 +1656,65 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   padding: 20px;
   animation: fadeIn 0.15s ease;
 }
+
+/* Welcome popup (admin-authored, shown on hub entry) */
+.welcome-popup-card {
+  position: relative;
+  padding: 28px 28px 22px;
+  text-align: center;
+  max-width: 440px;
+}
+.welcome-popup-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.welcome-popup-close:hover { color: #475569; }
+.welcome-popup-emoji {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.welcome-popup-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 14px;
+}
+.welcome-popup-rule {
+  border: 0;
+  border-top: 1.5px solid #e5e7eb;
+  margin: 0 0 16px;
+}
+.welcome-popup-desc {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #374151;
+  white-space: pre-wrap;
+  margin-bottom: 20px;
+}
+.welcome-popup-cta {
+  display: inline-block;
+  margin-bottom: 18px;
+}
+.welcome-popup-skip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #6b7280;
+  cursor: pointer;
+  user-select: none;
+}
+.welcome-popup-skip input { cursor: pointer; }
 .modal-card {
   background: #fff;
   border-radius: 16px;

@@ -930,6 +930,107 @@ onSnapshot(
 );
 
 /* ==========================================================================
+   Welcome popup — admin-authored, shown once per visitor per popup id.
+   Dismissals stored in localStorage under `finals.dismissedPopups`.
+   ========================================================================== */
+const DISMISSED_POPUPS_KEY = 'finals.dismissedPopups';
+const welcomePopupModal   = document.getElementById('welcome-popup-modal');
+const welcomePopupEmoji   = document.getElementById('welcome-popup-emoji');
+const welcomePopupTitle   = document.getElementById('welcome-popup-title');
+const welcomePopupDesc    = document.getElementById('welcome-popup-desc');
+const welcomePopupCta     = document.getElementById('welcome-popup-cta');
+const welcomePopupSkip    = document.getElementById('welcome-popup-skip');
+let activeWelcomePopup    = null;
+let welcomePopupShown     = false;
+
+function getDismissedPopups() {
+  try { return JSON.parse(localStorage.getItem(DISMISSED_POPUPS_KEY) || '{}') || {}; }
+  catch (_) { return {}; }
+}
+function markPopupDismissed(id) {
+  if (!id) return;
+  try {
+    const map = getDismissedPopups();
+    map[id] = Date.now();
+    localStorage.setItem(DISMISSED_POPUPS_KEY, JSON.stringify(map));
+  } catch (_) {}
+}
+function maybeMarkSkipped(id) {
+  if (welcomePopupSkip && welcomePopupSkip.checked) markPopupDismissed(id);
+}
+function closeWelcomePopup() {
+  if (!welcomePopupModal) return;
+  welcomePopupModal.style.display = 'none';
+}
+function showWelcomePopup(popup) {
+  if (!welcomePopupModal || welcomePopupShown) return;
+  if (!popup || !popup.active) return;
+  if (getDismissedPopups()[popup.id]) return;
+  welcomePopupShown = true;
+  activeWelcomePopup = popup;
+
+  welcomePopupEmoji.textContent = popup.emoji || '';
+  welcomePopupEmoji.style.display = popup.emoji ? '' : 'none';
+  welcomePopupTitle.textContent = popup.title || '';
+  welcomePopupDesc.textContent  = popup.description || '';
+
+  if (popup.folderId) {
+    welcomePopupCta.style.display = '';
+    welcomePopupCta.textContent = popup.buttonText || 'Click here to know more!';
+  } else {
+    welcomePopupCta.style.display = 'none';
+  }
+  welcomePopupSkip.checked = false;
+  welcomePopupModal.style.display = 'flex';
+}
+
+if (welcomePopupModal) {
+  welcomePopupModal.addEventListener('click', (e) => {
+    const role = e.target.dataset.close;
+    if (!role) return;
+    if (role === 'overlay' && e.target !== welcomePopupModal) return;
+    if (activeWelcomePopup) maybeMarkSkipped(activeWelcomePopup.id);
+    closeWelcomePopup();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (welcomePopupModal.style.display !== 'flex') return;
+    if (activeWelcomePopup) maybeMarkSkipped(activeWelcomePopup.id);
+    closeWelcomePopup();
+  });
+}
+if (welcomePopupCta) {
+  welcomePopupCta.addEventListener('click', () => {
+    if (!activeWelcomePopup) return;
+    maybeMarkSkipped(activeWelcomePopup.id);
+    const folderId = activeWelcomePopup.folderId;
+    closeWelcomePopup();
+    if (folderId && folderById.has(folderId)) {
+      const notesTabBtn = document.querySelector('.main-tab[data-tab="notes"]');
+      if (notesTabBtn && !notesTabBtn.classList.contains('active')) notesTabBtn.click();
+      setViewMode('folders');
+      enterFolder(folderId);
+      const notesPanel = document.getElementById('panel-notes');
+      if (notesPanel) notesPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+}
+
+onSnapshot(
+  query(collection(db, 'popups'), orderBy('createdAt', 'desc')),
+  (snap) => {
+    let next = null;
+    snap.forEach(d => {
+      if (next) return;
+      const data = d.data();
+      if (data && data.active) next = { id: d.id, ...data };
+    });
+    if (next) showWelcomePopup(next);
+  },
+  (err) => console.warn('popups listener offline:', err.message)
+);
+
+/* ==========================================================================
    Timer — sub-tabs
    ========================================================================== */
 document.getElementById('timer-sub-tabs').addEventListener('click', (e) => {
