@@ -225,6 +225,33 @@ service cloud.firestore {
       allow delete: if true;
     }
 
+    // Student requests — anyone with a name can send one in; admin
+    // reviews them on the /admin dashboard and marks done or deletes.
+    match /requests/{requestId} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasAll(['requesterName', 'title', 'status', 'createdAt']) &&
+        request.resource.data.requesterName is string &&
+        request.resource.data.requesterName.size() > 0 &&
+        request.resource.data.requesterName.size() < 80 &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() < 240 &&
+        request.resource.data.status == 'pending' &&
+        (!('description' in request.resource.data.keys()) ||
+          (request.resource.data.description is string &&
+           request.resource.data.description.size() < 800)) &&
+        (!('subject' in request.resource.data.keys()) ||
+          (request.resource.data.subject is string &&
+           request.resource.data.subject.size() < 80)) &&
+        (!('link' in request.resource.data.keys()) ||
+          (request.resource.data.link is string &&
+           request.resource.data.link.size() < 600));
+      allow update: if
+        request.resource.data.status in ['pending', 'done'];
+      allow delete: if true;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

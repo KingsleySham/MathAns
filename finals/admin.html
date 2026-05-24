@@ -93,6 +93,24 @@
       </div>
     </section>
 
+    <!-- Student requests -->
+    <section class="card">
+      <div class="admin-controls">
+        <h2 class="section-title" style="margin-bottom:0;">Student requests <span id="requests-count-badge" class="req-count-badge"></span></h2>
+        <div class="admin-bar">
+          <label class="taxonomy-h" style="font-weight:600;color:#6b7280;display:inline-flex;align-items:center;gap:6px;">
+            <input type="checkbox" id="requests-show-done" /> Show done
+          </label>
+        </div>
+      </div>
+      <p class="section-desc" style="margin-bottom:14px;">
+        Notes and papers students want added. Mark a request done after you've uploaded what they asked for, or delete if it doesn't apply.
+      </p>
+      <ul class="requests-list" id="requests-list">
+        <li class="empty-state-small">Loading…</li>
+      </ul>
+    </section>
+
     <!-- Folders management -->
     <section class="card">
       <div class="admin-controls">
