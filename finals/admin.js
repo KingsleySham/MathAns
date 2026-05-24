@@ -1659,6 +1659,113 @@ function startAdmin(fb) {
       else if (action === 'move-down') moveNote(id, +1);
     });
   }
+
+  /* ────────────────────────────────────────────────────────────────────
+     Student requests — read /requests, render in the requests-list,
+     allow mark-done / delete. Pending count shown in the section
+     header as a red badge.
+     ──────────────────────────────────────────────────────────────────── */
+  const requestsListEl = $('requests-list');
+  const requestsCountBadge = $('requests-count-badge');
+  const requestsShowDone = $('requests-show-done');
+  let allRequests = [];
+
+  function fmtRequestDate(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    if (isNaN(d.getTime())) return '';
+    const diff = Date.now() - d.getTime();
+    if (diff < 60_000) return 'just now';
+    if (diff < 3_600_000) return Math.floor(diff / 60_000) + ' min ago';
+    if (diff < 86_400_000) return Math.floor(diff / 3_600_000) + ' h ago';
+    if (diff < 7 * 86_400_000) return Math.floor(diff / 86_400_000) + ' d ago';
+    return d.toLocaleDateString();
+  }
+
+  function renderRequests() {
+    if (!requestsListEl) return;
+    const showDone = requestsShowDone && requestsShowDone.checked;
+    const shown = showDone ? allRequests : allRequests.filter(r => r.status !== 'done');
+    const pendingCount = allRequests.filter(r => r.status !== 'done').length;
+    if (requestsCountBadge) requestsCountBadge.textContent = pendingCount > 0 ? String(pendingCount) : '';
+
+    if (shown.length === 0) {
+      requestsListEl.innerHTML = `<li class="empty-state-small">${
+        allRequests.length === 0
+          ? 'No requests yet.'
+          : 'No pending requests — tick "Show done" to see resolved ones.'
+      }</li>`;
+      return;
+    }
+
+    requestsListEl.innerHTML = shown.map(r => {
+      const isDone = r.status === 'done';
+      return `
+        <li class="req-card ${isDone ? 'is-done' : ''}" data-id="${escapeHtmlSimple(r.id)}">
+          <div class="req-card-top">
+            <div class="req-title">${escapeHtmlSimple(r.title || '(no title)')}</div>
+            <div class="req-status ${isDone ? 'req-status-done' : 'req-status-pending'}">${isDone ? 'Done' : 'Pending'}</div>
+          </div>
+          <div class="req-meta">
+            <span>by ${escapeHtmlSimple(r.requesterName || 'Anonymous')}</span>
+            ${r.subject ? `<span>·</span><span>${escapeHtmlSimple(r.subject)}</span>` : ''}
+            <span>·</span>
+            <span>${escapeHtmlSimple(fmtRequestDate(r.createdAt))}</span>
+          </div>
+          ${r.description ? `<div class="req-desc">${escapeHtmlSimple(r.description)}</div>` : ''}
+          ${r.link ? `<a class="req-link" href="${escapeHtmlSimple(r.link)}" target="_blank" rel="noopener">${escapeHtmlSimple(r.link)}</a>` : ''}
+          <div class="req-actions">
+            ${isDone
+              ? `<button class="btn-secondary" data-req-action="reopen">Mark pending</button>`
+              : `<button class="btn-primary" data-req-action="done">Mark done</button>`}
+            <button class="btn-primary btn-danger" data-req-action="delete">Delete</button>
+          </div>
+        </li>
+      `;
+    }).join('');
+  }
+
+  if (requestsShowDone) requestsShowDone.addEventListener('change', renderRequests);
+
+  if (requestsListEl) {
+    requestsListEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-req-action]');
+      if (!btn) return;
+      const card = btn.closest('.req-card');
+      if (!card) return;
+      const id = card.dataset.id;
+      const action = btn.dataset.reqAction;
+      btn.disabled = true;
+      try {
+        if (action === 'done') {
+          await updateDoc(doc(db, 'requests', id), { status: 'done' });
+        } else if (action === 'reopen') {
+          await updateDoc(doc(db, 'requests', id), { status: 'pending' });
+        } else if (action === 'delete') {
+          if (!confirm('Delete this request?')) { btn.disabled = false; return; }
+          await deleteDoc(doc(db, 'requests', id));
+        }
+      } catch (err) {
+        alert('Request action failed: ' + (err.message || err));
+        btn.disabled = false;
+      }
+    });
+  }
+
+  onSnapshot(
+    query(collection(db, 'requests'), orderBy('createdAt', 'desc')),
+    (snap) => {
+      allRequests = [];
+      snap.forEach(d => allRequests.push({ id: d.id, ...d.data() }));
+      renderRequests();
+    },
+    (err) => {
+      console.error('[admin] requests listener:', err);
+      if (requestsListEl) {
+        requestsListEl.innerHTML = `<li class="empty-state-small" style="color:#b91c1c;">Failed to load requests: ${escapeHtmlSimple(err.message || String(err))}</li>`;
+      }
+    }
+  );
 }
 
 console.log('[admin] gate wired up — ready');

@@ -61,8 +61,18 @@
     <!-- ===== Notes & Papers tab ===== -->
     <section class="tab-panel active" id="panel-notes">
 
+      <!-- Request card (visible to NON-admins). Admin shares everything;
+           students request additions via this button. -->
+      <div class="card request-card" id="request-card">
+        <button type="button" class="request-toggle" id="request-toggle">
+          <span class="request-toggle-icon" aria-hidden="true">✉️</span>
+          <span class="request-toggle-text">Request a note or paper from admin</span>
+          <span class="request-toggle-hint">Suggest something for the library</span>
+        </button>
+      </div>
+
       <!-- Upload card (collapsed by default — click to expand) -->
-      <div class="card upload-card">
+      <div class="card upload-card" id="upload-card" data-admin-only hidden>
         <button type="button" class="upload-toggle" id="upload-toggle" aria-expanded="false" aria-controls="upload-collapse">
           <span class="upload-toggle-icon" aria-hidden="true">+</span>
           <span class="upload-toggle-text">Share notes or a mock paper</span>
@@ -450,6 +460,66 @@
         <a class="btn-primary gdocs-warn-open" id="gdocs-warn-open" href="#" target="_blank" rel="noopener">
           Open in new tab
         </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Request modal (non-admin students suggest something) ===== -->
+  <div class="modal-overlay info-modal" id="request-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card info-card request-modal-card">
+      <div class="modal-card-header info-header info-header-coverage">
+        <div class="info-header-text">
+          <div class="info-title">✉️ Request from admin</div>
+          <div class="info-sub">Tell the admin what you'd like added to the hub</div>
+        </div>
+        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-card-body info-body">
+        <form id="request-form" class="upload-form" autocomplete="off">
+          <div class="form-row">
+            <label class="form-label" for="req-name">Your name <span class="req">*</span></label>
+            <input type="text" id="req-name" maxlength="60" required placeholder="e.g. Chris Wong" />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label" for="req-title">What are you asking for? <span class="req">*</span></label>
+            <input type="text" id="req-title" maxlength="200" required placeholder="e.g. S.3 Maths Ch.5 worked solutions" />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label" for="req-subject">Subject</label>
+            <select id="req-subject">
+              <option value="">— Any / not sure —</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="English">English</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+              <option value="Economics">Economics</option>
+              <option value="Geography">Geography</option>
+              <option value="History">History</option>
+              <option value="ICT">ICT</option>
+              <option value="THS">THS</option>
+              <option value="CES">CES</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label" for="req-desc">Extra detail <span class="opt">(optional)</span></label>
+            <textarea id="req-desc" maxlength="600" rows="3" placeholder="Anything that helps the admin find or make the resource."></textarea>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label" for="req-link">Link <span class="opt">(optional)</span></label>
+            <input type="url" id="req-link" placeholder="https://… (Google Docs / Quizlet / anywhere)" />
+            <div class="file-hint">If you already know where it lives, paste the link to save the admin time.</div>
+          </div>
+
+          <button type="submit" class="btn-primary" id="request-submit-btn" style="width:100%;margin-top:6px;">Send request</button>
+          <div class="upload-status" id="request-status"></div>
+        </form>
       </div>
     </div>
   </div>

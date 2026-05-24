@@ -639,11 +639,22 @@ function isAdminSignedIn() {
 }
 
 // Reveal the floating "🛡 Admin" badge in the header when an admin
-// session is active. Clicking the badge navigates to /admin.
-(function showAdminBadgeIfSignedIn() {
-  if (!isAdminSignedIn()) return;
+// session is active. Clicking the badge navigates to /admin. Also
+// toggle which "share" affordance is shown: admin sees the full
+// upload card; everyone else sees a 'Request from admin' button.
+(function applyAdminUI() {
+  const admin = isAdminSignedIn();
   const badge = document.getElementById('admin-badge');
-  if (badge) badge.hidden = false;
+  if (admin && badge) badge.hidden = false;
+
+  // Upload form is admin-only now (students can't add notes/papers).
+  const uploadCard = document.getElementById('upload-card');
+  if (uploadCard) uploadCard.hidden = !admin;
+
+  // Request card is the opposite — visible to everyone EXCEPT admin
+  // (admin uses the upload form directly).
+  const requestCard = document.getElementById('request-card');
+  if (requestCard) requestCard.hidden = admin;
 })();
 function trackClick(noteId, action) {
   if (isAdminSignedIn()) return;
@@ -2211,6 +2222,106 @@ document.addEventListener('keydown', (e) => {
     } finally {
       btn.disabled = false;
       btn.textContent = 'Send report';
+    }
+  });
+})();
+
+/* ==========================================================================
+   Request from admin — non-admin students suggest something they want
+   added. Writes to /requests Firestore collection. Admin sees pending
+   requests in the /admin dashboard.
+   ========================================================================== */
+(function setupRequestForm() {
+  const REQ_NAME_KEY = 'finals.uploaderName';   // reuse name cache from upload
+  const toggle    = document.getElementById('request-toggle');
+  const modal     = document.getElementById('request-modal');
+  const form      = document.getElementById('request-form');
+  const nameEl    = document.getElementById('req-name');
+  const titleEl   = document.getElementById('req-title');
+  const subjectEl = document.getElementById('req-subject');
+  const descEl    = document.getElementById('req-desc');
+  const linkEl    = document.getElementById('req-link');
+  const submitBtn = document.getElementById('request-submit-btn');
+  const statusEl  = document.getElementById('request-status');
+  if (!toggle || !modal || !form) return;
+
+  function setStatus(msg, kind) {
+    if (!statusEl) return;
+    statusEl.textContent = msg || '';
+    statusEl.className = 'upload-status' + (kind ? ' ' + kind : '');
+  }
+
+  function openModal() {
+    try {
+      const cached = localStorage.getItem(REQ_NAME_KEY);
+      if (cached && !nameEl.value) nameEl.value = cached;
+    } catch (_) {}
+    setStatus('', '');
+    modal.style.display = 'flex';
+    modal.offsetHeight;
+    modal.classList.add('open');
+    setTimeout(() => {
+      (nameEl.value ? titleEl : nameEl).focus();
+    }, 60);
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    setTimeout(() => { modal.style.display = 'none'; }, 200);
+  }
+
+  toggle.addEventListener('click', openModal);
+  modal.addEventListener('click', (e) => {
+    const role = e.target.dataset.close;
+    if (!role) return;
+    if (role === 'overlay' && e.target !== modal) return;
+    closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name    = nameEl.value.trim();
+    const title   = titleEl.value.trim();
+    const subject = subjectEl.value || '';
+    const desc    = descEl.value.trim();
+    const link    = linkEl.value.trim();
+
+    if (!name)  { setStatus('Please enter your name.', 'err'); return; }
+    if (!title) { setStatus('Please describe what you\'re asking for.', 'err'); return; }
+    if (link && !/^https?:\/\//i.test(link)) {
+      setStatus('Link must start with http:// or https://', 'err');
+      return;
+    }
+
+    try { localStorage.setItem(REQ_NAME_KEY, name); } catch (_) {}
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    setStatus('Sending…', 'info');
+
+    try {
+      await addDoc(collection(db, 'requests'), {
+        requesterName: name,
+        title,
+        subject,
+        description: desc,
+        link,
+        status: 'pending',
+        createdAt: serverTimestamp()
+      });
+      setStatus('✓ Sent — thanks! The admin will see it on the dashboard.', 'ok');
+      form.reset();
+      nameEl.value = name;   // keep the name cached in the form
+      setTimeout(closeModal, 1200);
+    } catch (err) {
+      console.error('[request] write failed:', err);
+      setStatus('Could not send: ' + (err.message || err), 'err');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send request';
     }
   });
 })();
