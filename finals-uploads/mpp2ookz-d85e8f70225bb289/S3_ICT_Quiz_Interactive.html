@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S3 ICT Quiz Revision — St. Margaret's</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f4f6f9;
+  color: #222;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.site-header {
+  background: #1F4E79;
+  color: #fff;
+  padding: 16px 24px 12px;
+  text-align: center;
+}
+.site-header h1 { font-size: 1.25rem; font-weight: 700; }
+.site-header p  { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+
+/* ── TABS ── */
+.tab-bar { display: flex; background: #163d60; padding: 0 16px; }
+.tab-btn {
+  background: transparent; border: none; color: #aac8e8;
+  padding: 11px 22px; font-size: 0.93rem; cursor: pointer;
+  border-bottom: 3px solid transparent; font-weight: 600;
+  transition: color .2s, border-color .2s;
+}
+.tab-btn:hover { color: #fff; }
+.tab-btn.active { color: #fff; border-bottom-color: #f9a825; }
+
+/* ── PANELS ── */
+.tab-panel { display: none; padding: 18px 14px 50px; max-width: 1180px; margin: 0 auto; }
+.tab-panel.active { display: block; }
+
+/* ── PROGRESS ── */
+.progress-box {
+  background: #fff; border: 1px solid #d0dce8; border-radius: 8px;
+  padding: 11px 16px; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 12px;
+}
+.progress-label { font-size: 0.88rem; font-weight: 700; color: #1F4E79; white-space: nowrap; }
+.progress-track { flex: 1; height: 9px; background: #dce6f0; border-radius: 10px; overflow: hidden; }
+.progress-fill  { height: 100%; background: #1F4E79; border-radius: 10px; transition: width .3s; width: 0%; }
+.progress-count { font-size: 0.85rem; color: #555; min-width: 100px; text-align: right; white-space: nowrap; }
+
+/* ── INSTRUCTION ── */
+.instruction {
+  background: #e8f0fe; border-left: 4px solid #1F4E79;
+  padding: 11px 15px; border-radius: 4px;
+  font-size: 0.87rem; color: #1a3a5c; margin-bottom: 18px; line-height: 1.55;
+}
+
+/* ════════════════════════════
+   PART A — MATCHING LAYOUT
+════════════════════════════ */
+.matching-layout {
+  display: grid;
+  grid-template-columns: 1fr 370px;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 820px) {
+  .matching-layout { grid-template-columns: 1fr; }
+  .desc-bank { position: static !important; max-height: 260px !important; }
+}
+
+/* ── Description Bank (right column) ── */
+.desc-bank {
+  position: sticky;
+  top: 8px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  background: #fff;
+  border: 2px solid #1F4E79;
+  border-radius: 8px;
+}
+.desc-bank-header {
+  background: #1F4E79; color: #fff;
+  padding: 10px 14px; font-weight: 700; font-size: 0.92rem;
+  position: sticky; top: 0; z-index: 1;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.desc-bank-subtitle { font-size: 0.75rem; opacity: 0.8; font-weight: 400; }
+.desc-row {
+  display: flex; gap: 0;
+  border-bottom: 1px solid #e4edf5;
+  padding: 7px 12px;
+  font-size: 0.84rem; line-height: 1.45;
+  transition: background .15s;
+}
+.desc-row:hover { background: #f0f6ff; }
+.desc-row:last-child { border-bottom: none; }
+.desc-letter {
+  font-weight: 800; color: #1F4E79;
+  min-width: 22px; padding-top: 1px;
+  font-size: 0.9rem;
+}
+.desc-text { color: #333; }
+
+/* ── Snippet cards (left column) ── */
+.snippet-card {
+  background: #fff; border: 2px solid #d0dce8;
+  border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;
+  transition: border-color .2s;
+}
+.snippet-card.correct  { border-color: #2e7d32; background: #f1fdf2; }
+.snippet-card.wrong    { border-color: #c62828; background: #fff5f5; }
+
+.snippet-top {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 8px;
+}
+.snippet-num {
+  font-size: 0.74rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: #1F4E79;
+}
+.snippet-feedback {
+  font-size: 0.8rem; font-weight: 700;
+  display: none;
+}
+.snippet-feedback.correct { display: inline; color: #2e7d32; }
+.snippet-feedback.wrong   { display: inline; color: #c62828; }
+
+.code-block {
+  background: #1E1E1E; color: #9CDBAA;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.88rem; padding: 10px 14px;
+  border-radius: 6px; margin-bottom: 10px;
+  overflow-x: auto; line-height: 1.5; white-space: pre;
+}
+
+.snippet-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.letter-label { font-size: 0.85rem; color: #555; }
+.letter-input {
+  width: 42px; height: 36px;
+  border: 2px solid #aac8e8; border-radius: 6px;
+  text-align: center; font-size: 1rem; font-weight: 700;
+  color: #1F4E79; text-transform: uppercase;
+  background: #f8fbff;
+  transition: border-color .2s;
+}
+.letter-input:focus { outline: none; border-color: #1F4E79; background: #fff; }
+.snippet-card.correct .letter-input { border-color: #2e7d32; background: #e8f5e9; }
+.snippet-card.wrong   .letter-input { border-color: #c62828; background: #fff0f0; }
+
+.check-btn {
+  background: #1F4E79; color: #fff; border: none;
+  padding: 6px 14px; border-radius: 5px;
+  font-size: 0.82rem; cursor: pointer; transition: background .2s;
+}
+.check-btn:hover { background: #163d60; }
+.check-btn:disabled { background: #aaa; cursor: default; }
+
+.correct-reveal {
+  font-size: 0.8rem; color: #2e7d32; display: none;
+  margin-top: 6px; font-style: italic;
+}
+.correct-reveal.visible { display: block; }
+.wrong-reveal {
+  font-size: 0.8rem; color: #c62828; display: none;
+  margin-top: 6px;
+}
+.wrong-reveal.visible { display: block; }
+
+/* ── Score bar ── */
+.score-bar {
+  background: #fff3cd; border: 1px solid #ffc107;
+  border-radius: 8px; padding: 12px 18px;
+  margin-bottom: 16px; font-size: 0.92rem;
+  display: none; text-align: center;
+}
+.score-bar.visible { display: block; }
+.score-bar strong { color: #1F4E79; font-size: 1.1rem; }
+
+/* ── Reveal All btn ── */
+.reveal-all-btn {
+  background: #E65100; color: #fff; border: none;
+  padding: 8px 20px; border-radius: 6px;
+  font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  margin-bottom: 14px; transition: background .2s;
+}
+.reveal-all-btn:hover { background: #bf360c; }
+
+/* ════════════════════════════
+   PART B — SHORT QUESTIONS
+════════════════════════════ */
+.topic-section { margin-bottom: 32px; }
+.topic-header {
+  padding: 10px 16px; border-radius: 6px 6px 0 0;
+  font-size: 0.97rem; font-weight: 700; color: #fff; letter-spacing: .02em;
+}
+.topic-python  { background: #E65100; }
+.topic-appinv  { background: #1B5E20; }
+.topic-ai      { background: #4A148C; }
+.topic-health  { background: #8B1A1A; }
+
+.q-card {
+  background: #fff; border: 1px solid #dce6f0;
+  border-top: none; padding: 14px 16px; margin-bottom: 2px;
+}
+.q-card:last-child { border-radius: 0 0 6px 6px; }
+
+.q-num {
+  font-size: 0.74rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; margin-bottom: 6px;
+}
+.q-num.orange { color: #E65100; }
+.q-num.green  { color: #1B5E20; }
+.q-num.purple { color: #4A148C; }
+.q-num.red    { color: #8B1A1A; }
+
+.q-text { font-size: 0.93rem; line-height: 1.55; margin-bottom: 10px; }
+
+.answer-input {
+  width: 100%; border: 2px solid #aac8e8; border-radius: 6px;
+  padding: 8px 11px; font-size: 0.88rem; font-family: inherit;
+  resize: vertical; min-height: 54px; background: #f8fbff;
+  transition: border-color .2s, min-height .2s; margin-bottom: 8px;
+}
+.answer-input:focus { outline: none; border-color: #1F4E79; min-height: 68px; background: #fff; }
+
+.show-btn {
+  background: #6c757d; color: #fff; border: none;
+  padding: 5px 13px; border-radius: 5px;
+  font-size: 0.8rem; cursor: pointer; transition: background .2s;
+}
+.show-btn:hover { background: #495057; }
+.show-btn.revealed { background: #2e7d32; }
+
+.model-answer {
+  display: none; background: #e8f5e9; border: 1px solid #81c784;
+  border-radius: 6px; padding: 9px 13px; margin-top: 9px;
+  font-size: 0.86rem; line-height: 1.6; color: #1b3a1e;
+}
+.model-answer.visible { display: block; }
+.model-answer strong { color: #1B5E20; }
+.model-answer code {
+  background: #1E1E1E; color: #9CDBAA;
+  font-family: 'Courier New', monospace;
+  padding: 1px 5px; border-radius: 3px; font-size: 0.85em;
+}
+
+/* ── Print ── */
+@media print {
+  .tab-bar, .show-btn, .check-btn, .reveal-all-btn,
+  .answer-input, .letter-input, .progress-box { display: none !important; }
+  .tab-panel { display: block !important; }
+  .model-answer, .correct-reveal { display: block !important; }
+  .site-header { background: #1F4E79 !important; -webkit-print-color-adjust: exact; }
+  body { background: #fff; }
+  .snippet-card, .q-card { break-inside: avoid; }
+  .matching-layout { display: block; }
+  .desc-bank { position: static; max-height: none; overflow: visible; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>St. Margaret's Co-educational English Secondary and Primary School</h1>
+  <p>S.3 Information &amp; Communication Technology &mdash; Interactive Quiz Revision</p>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('partA',this)">Part A &mdash; Matching</button>
+  <button class="tab-btn" onclick="switchTab('partB',this)">Part B &mdash; Short Questions</button>
+</div>
+
+<!-- ══════════════════════════════
+     PART A
+══════════════════════════════ -->
+<div id="partA" class="tab-panel active">
+
+  <div class="progress-box">
+    <span class="progress-label">Part A Progress</span>
+    <div class="progress-track"><div class="progress-fill" id="progA-fill"></div></div>
+    <span class="progress-count" id="progA-count">Checked: 0 / 10</span>
+  </div>
+
+  <div class="instruction">
+    <strong>Instructions:</strong> Match each code snippet in the left column to the correct description in the
+    <strong>Description Bank</strong> (right). Write the letter (A–J) in the box and press <strong>Check</strong>.
+    One description matches each snippet — there are no extras.
+    Press <strong>Reveal All Answers</strong> when you are ready to see the full answer key.
+  </div>
+
+  <div id="score-bar" class="score-bar"></div>
+  <button class="reveal-all-btn" onclick="revealAll()">Reveal All Answers</button>
+
+  <div class="matching-layout">
+    <!-- Left: snippet cards -->
+    <div id="snippets-col"></div>
+
+    <!-- Right: description bank -->
+    <div class="desc-bank">
+      <div class="desc-bank-header">
+        Description Bank
+        <span class="desc-bank-subtitle">A – J &nbsp;(10 descriptions)</span>
+      </div>
+      <div id="desc-bank-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PART B
+══════════════════════════════ -->
+<div id="partB" class="tab-panel">
+
+  <div class="progress-box">
+    <span class="progress-label">Part B Progress</span>
+    <div class="progress-track"><div class="progress-fill" id="progB-fill"></div></div>
+    <span class="progress-count" id="progB-count">Answered: 0 / 50</span>
+  </div>
+
+  <div class="topic-section">
+    <div class="topic-header topic-python">&#x1F40D;&nbsp; Section 1: Python Basics &nbsp;(Q1–Q12)</div>
+    <div id="sec-python"></div>
+  </div>
+  <div class="topic-section">
+    <div class="topic-header topic-appinv">&#x1F4F1;&nbsp; Section 2: MIT App Inventor &amp; Machine Learning &nbsp;(Q13–Q27)</div>
+    <div id="sec-appinv"></div>
+  </div>
+  <div class="topic-section">
+    <div class="topic-header topic-ai">&#x1F916;&nbsp; Section 3: Artificial Intelligence &nbsp;(Q28–Q39)</div>
+    <div id="sec-ai"></div>
+  </div>
+  <div class="topic-section">
+    <div class="topic-header topic-health">&#x1F6E1;&#xFE0F;&nbsp; Section 4: Health &amp; Ethical Issues &nbsp;(Q40–Q50)</div>
+    <div id="sec-health"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// PART A DATA
+// Source: Revision Notes — "Description of Python code snippet" table
+// ════════════════════════════════════════
+
+const snippets = [
+  { code: 'score = 100',      correct: 'H' },
+  { code: 'price = 19.99',    correct: 'D' },
+  { code: 'city = "London"',  correct: 'F' },
+  { code: 'type(x)',          correct: 'E' },
+  { code: 'print("Hello")',   correct: 'G' },
+  { code: 'int(n)',           correct: 'J' },
+  { code: 'total = a - b',    correct: 'B' },
+  { code: 'if not x == 5:',   correct: 'I' },
+  { code: 'ans = input("?")', correct: 'A' },
+  { code: 'if x <= y:',       correct: 'C' },
+];
+
+// Description bank — shuffled so letter A ≠ first snippet
+const descBank = [
+  { letter: 'A', text: 'Captures user input and assigns it to a variable as a string.' },
+  { letter: 'B', text: 'Performs subtraction and stores the result in a variable.' },
+  { letter: 'C', text: 'A conditional check for less than or equal to.' },
+  { letter: 'D', text: 'Assigns a float (decimal) value to a variable.' },
+  { letter: 'E', text: 'A function used to check the data type of a variable.' },
+  { letter: 'F', text: 'Assigns a string (text) value to a variable.' },
+  { letter: 'G', text: 'Outputs a literal string or variable to the console.' },
+  { letter: 'H', text: 'Assigns an integer value to a variable.' },
+  { letter: 'I', text: 'A conditional check to see if x is not equal to 5.' },
+  { letter: 'J', text: 'Converts a value (like a string or float) into an integer number.' },
+];
+
+// ════════════════════════════════════════
+// PART A — RENDER
+// ════════════════════════════════════════
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let checkedCount = 0;
+
+function renderDescBank() {
+  const list = document.getElementById('desc-bank-list');
+  descBank.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'desc-row';
+    row.id = `drow-${d.letter}`;
+    row.innerHTML = `<span class="desc-letter">${d.letter}</span><span class="desc-text">&nbsp;${esc(d.text)}</span>`;
+    list.appendChild(row);
+  });
+}
+
+function renderSnippets() {
+  const col = document.getElementById('snippets-col');
+  snippets.forEach((s, i) => {
+    const n = i + 1;
+    const card = document.createElement('div');
+    card.className = 'snippet-card';
+    card.id = `scard-${n}`;
+    card.innerHTML = `
+      <div class="snippet-top">
+        <span class="snippet-num">Snippet ${n}</span>
+        <span class="snippet-feedback" id="sfb-${n}"></span>
+      </div>
+      <div class="code-block">${esc(s.code)}</div>
+      <div class="snippet-row">
+        <span class="letter-label">Answer:</span>
+        <input class="letter-input" id="li-${n}" maxlength="1"
+               oninput="this.value=this.value.toUpperCase()"
+               onkeydown="if(event.key==='Enter')checkSnippet(${n})"
+               type="text" autocomplete="off" spellcheck="false"
+               aria-label="Enter matching letter for snippet ${n}">
+        <button class="check-btn" id="cbtn-${n}" onclick="checkSnippet(${n})">Check</button>
+      </div>
+      <div class="correct-reveal" id="crev-${n}"></div>
+      <div class="wrong-reveal"   id="wrev-${n}"></div>
+    `;
+    col.appendChild(card);
+  });
+}
+
+function checkSnippet(n) {
+  const card   = document.getElementById(`scard-${n}`);
+  const input  = document.getElementById(`li-${n}`);
+  const fb     = document.getElementById(`sfb-${n}`);
+  const crev   = document.getElementById(`crev-${n}`);
+  const wrev   = document.getElementById(`wrev-${n}`);
+  const btn    = document.getElementById(`cbtn-${n}`);
+
+  const typed  = input.value.trim().toUpperCase();
+  const correct = snippets[n - 1].correct;
+
+  if (!typed) return;
+
+  card.classList.remove('correct','wrong');
+  fb.classList.remove('correct','wrong');
+  crev.classList.remove('visible');
+  wrev.classList.remove('visible');
+
+  if (!btn.dataset.checked) {
+    checkedCount++;
+    btn.dataset.checked = '1';
+    updateProgress('partA');
+  }
+
+  if (typed === correct) {
+    card.classList.add('correct');
+    fb.textContent = '✓ Correct!';
+    fb.className = 'snippet-feedback correct';
+    crev.textContent = `✓ ${correct} — ${descBank.find(d=>d.letter===correct).text}`;
+    crev.classList.add('visible');
+    wrev.classList.remove('visible');
+  } else {
+    card.classList.add('wrong');
+    fb.textContent = `✗ Not quite (you wrote: ${typed})`;
+    fb.className = 'snippet-feedback wrong';
+    crev.classList.remove('visible');
+    wrev.innerHTML = `✗ The correct answer is <strong>${correct}</strong>: ${esc(descBank.find(d=>d.letter===correct).text)}`;
+    wrev.classList.add('visible');
+  }
+
+  document.querySelectorAll('.desc-row').forEach(r => r.style.background = '');
+  const drow = document.getElementById(`drow-${correct}`);
+  if (drow) drow.style.background = typed === correct ? '#e8f5e9' : '#fff8e1';
+
+  btn.disabled = true;
+  input.readOnly = true;
+
+  const score = snippets.filter((s,i)=>{
+    const inp = document.getElementById(`li-${i+1}`);
+    return inp && inp.value.trim().toUpperCase() === s.correct;
+  }).length;
+  const totalChecked = document.querySelectorAll('.check-btn[disabled]').length;
+  if (totalChecked === snippets.length) showScore(score);
+}
+
+function revealAll() {
+  let score = 0;
+  snippets.forEach((s, i) => {
+    const n = i + 1;
+    const card  = document.getElementById(`scard-${n}`);
+    const input = document.getElementById(`li-${n}`);
+    const fb    = document.getElementById(`sfb-${n}`);
+    const crev  = document.getElementById(`crev-${n}`);
+    const wrev  = document.getElementById(`wrev-${n}`);
+    const btn   = document.getElementById(`cbtn-${n}`);
+
+    const typed   = input.value.trim().toUpperCase();
+    const correct = s.correct;
+    const desc    = descBank.find(d=>d.letter===correct).text;
+
+    card.classList.remove('correct','wrong');
+    crev.classList.remove('visible');
+    wrev.classList.remove('visible');
+
+    if (!btn.dataset.checked) {
+      checkedCount++;
+      btn.dataset.checked = '1';
+    }
+    btn.disabled = true;
+    input.readOnly = true;
+    input.value = correct;
+
+    card.classList.add('correct');
+    fb.textContent = typed === correct ? '✓ Correct!' : `Answer: ${correct}`;
+    fb.className = 'snippet-feedback correct';
+    crev.textContent = `${correct} — ${desc}`;
+    crev.classList.add('visible');
+
+    if (typed === correct) score++;
+  });
+  updateProgress('partA');
+  showScore(score);
+}
+
+function showScore(score) {
+  const bar = document.getElementById('score-bar');
+  const pct = Math.round((score / snippets.length) * 100);
+  bar.innerHTML = `Part A Score: <strong>${score} / ${snippets.length}</strong> &nbsp;(${pct}%)`;
+  bar.classList.add('visible');
+}
+
+function updateProgress(part) {
+  if (part === 'partA') {
+    const total = snippets.length;
+    const done  = checkedCount;
+    document.getElementById('progA-count').textContent = `Checked: ${done} / ${total}`;
+    document.getElementById('progA-fill').style.width = (done/total*100) + '%';
+  } else {
+    const inputs = document.querySelectorAll('.partB-input');
+    let done = 0;
+    inputs.forEach(el => { if (el.value.trim().length > 0) done++; });
+    const total = inputs.length;
+    document.getElementById('progB-count').textContent = `Answered: ${done} / ${total}`;
+    document.getElementById('progB-fill').style.width = (total > 0 ? done/total*100 : 0) + '%';
+  }
+}
+
+// ════════════════════════════════════════
+// PART B DATA
+// ALL questions sourced from the revision notes PDF
+// ════════════════════════════════════════
+
+// ── Section 1: Python Basics (Q1–Q12) ──
+const pythonQs = [
+  { q: 'Name the FOUR common data types in Python. Give ONE example value for each.',
+    a: '<strong>int</strong> — e.g. 10 or -5 (whole numbers)<br><strong>float</strong> — e.g. 4.41 or -0.4 (numbers with decimal points)<br><strong>str</strong> — e.g. \'Hello world!\' (sequence of characters in quotes)<br><strong>bool</strong> — True or False' },
+
+  { q: 'State TWO naming rules for variables in Python.',
+    a: '&#9312; Must begin with a <strong>letter or an underscore (_)</strong>, not a number.<br>&#9313; Can only contain <strong>alphanumeric characters</strong> (a–z, A–Z, 0–9) and underscores.' },
+
+  { q: 'What is string immutability? What type of error does it cause if you try to modify a character by index?',
+    a: 'Strings <strong>cannot be modified or altered once declared</strong>. Attempting to change a character by index is not allowed and will cause a <strong>TypeError</strong>.' },
+
+  { q: 'A student writes: print("I study S" + B) where B = 3. What error occurs and why? Write TWO ways to fix it.',
+    a: '<strong>TypeError</strong> — you cannot concatenate a string with a non-string type (integer).<br>Fix 1: <code>print("I study S", B)</code><br>Fix 2: <code>print("I study S" + str(B))</code>' },
+
+  { q: 'What does int(n) do? Why is it often needed when using input()?',
+    a: '<code>int(n)</code> converts a value (such as a string or float) into an <strong>integer number</strong>.<br>It is needed after <code>input()</code> because <code>input()</code> always returns a <strong>string</strong> by default — you cannot use it directly for arithmetic.' },
+
+  { q: 'What does type(x) do? Give an example showing how it is used.',
+    a: '<code>type(x)</code> returns the <strong>data type</strong> of the variable x.<br>Example: <code>type(100)</code> → <code>&lt;class \'int\'&gt;</code>' },
+
+  { q: 'What does input() return by default? Why is this a problem when you need to do arithmetic?',
+    a: '<code>input()</code> always returns a <strong>string</strong>. If you try to multiply or add it as a number, Python will not calculate — it will either repeat the string or raise a TypeError.<br>Fix: wrap with <code>int(input())</code>.' },
+
+  { q: 'What does Python use to define code blocks? Give an example of where this is needed.',
+    a: 'Python uses <strong>indentation</strong> (spaces) to group statements that belong together. Example: the code inside an <code>if</code> statement must be indented.' },
+
+  { q: 'Identify the problem in this code and write the corrected version:<br><code>A = input()<br>B = 3 * A</code>',
+    a: '<strong>Problem:</strong> <code>input()</code> returns a string, so 3 * A repeats the string three times instead of multiplying.<br><strong>Fix:</strong> <code>A = int(input())</code>' },
+
+  { q: 'What is string concatenation? Which operator is used? What limitation does it have?',
+    a: 'String concatenation = combining multiple strings using the <strong>+</strong> operator.<br>Limitation: it <strong>only works with strings</strong>. Concatenating a string with an integer causes a <strong>TypeError</strong>.' },
+
+  { q: 'What is the difference between int and float in Python?',
+    a: '<strong>int</strong> = whole numbers with no decimal point (e.g. 10, -5).<br><strong>float</strong> = numbers that include a decimal point (e.g. 4.41, -0.4).' },
+
+  { q: 'What does print("Hello") do?',
+    a: 'It <strong>outputs</strong> the string "Hello" to the console (screen).' },
+];
+
+// ── Section 2: App Inventor & Machine Learning (Q13–Q27) ──
+const appinvQs = [
+  { q: 'What is machine learning? Give the definition from the revision notes.',
+    a: 'Machine learning is defined as <strong>"passing experiences to a machine"</strong> by training it. The objective is to create a training model that can classify objects.' },
+
+  { q: 'A model output shows: "Carrot Cake 0.97363" and "Siu Mai 0.02603". Which item is it classifying, and why?',
+    a: '<strong>Carrot Cake</strong> — a value near <strong>1</strong> signifies a <strong>higher chance</strong> of classifying as that item. A value near <strong>0</strong> indicates a lower chance.' },
+
+  { q: 'List the SIX steps to create a training model for image classification. Number each step.',
+    a: '&#9312; Access the Classifier Tool: go to https://classifier.appinventor.mit.edu/<br>&#9313; Create Labels: define the categories the model should identify<br>&#9314; Add Training Data: provide at least 10 images per label<br>&#9315; Training: let the model learn from the images<br>&#9316; Testing: provide additional images to test accuracy<br>&#9317; Download Trained Model: download for use in the App Inventor app' },
+
+  { q: 'What is the minimum number of images required per label when adding training data?',
+    a: 'At least <strong>10 images</strong> per label, either by uploading images or using a webcam.' },
+
+  { q: 'What is the purpose of the Testing step when creating a training model?',
+    a: 'To provide <strong>additional images</strong> (e.g. 3 per label) to <strong>test the accuracy</strong> of the trained model using images not seen during training.' },
+
+  { q: 'What is "Accuracy Optimization"? Name THREE methods to improve model accuracy.',
+    a: 'Accuracy Optimization = improving the model\'s reliability by modifying training data.<br>Methods (any three):<br>&#9312; Increasing the total number of images<br>&#9313; Including diverse variations<br>&#9314; Capturing images from different angles<br>&#9315; Ensuring consistent and improved lighting' },
+
+  { q: 'What does the WebViewer component do in the classifier app? Is it visible or non-visible?',
+    a: 'WebViewer is a <strong>visible</strong> component that displays the <strong>real-time camera feed</strong> so users can aim their phone at objects to be classified.' },
+
+  { q: 'What does the TextToSpeech component do? Is it visible or non-visible?',
+    a: 'TextToSpeech <strong>announces the classification results out loud</strong>. It is a <strong>non-visible</strong> component — it has no visual element on screen.' },
+
+  { q: 'What file must be downloaded and imported into App Inventor to use the trained model? Where is it found in App Inventor?',
+    a: 'The <strong>PersonalImageClassifier.aix</strong> extension must be downloaded and imported. It is found under <strong>"Extension"</strong> in App Inventor.' },
+
+  { q: 'Name FOUR required components for the App Inventor classifier project.',
+    a: 'Any four of: <strong>Buttons, Labels, WebViewer, HorizontalArrangement, Camera</strong> (under "Media"), <strong>PersonalImageClassifier</strong> (under "Extension")' },
+
+  { q: 'Where is the Camera component found in the App Inventor component palette?',
+    a: 'Under <strong>"Media"</strong>.' },
+
+  { q: 'Name the TWO main approaches for training AI models with simulations.',
+    a: '&#9312; <strong>Supervised Learning (SL)</strong><br>&#9313; <strong>Reinforcement Learning (RL)</strong>' },
+
+  { q: 'What is the URL used to access the Personal Image Classifier tool?',
+    a: '<strong>https://classifier.appinventor.mit.edu/</strong>' },
+
+  { q: 'What is the purpose of the "Download Trained Model" step?',
+    a: 'To save the trained model file so it can be <strong>imported into the App Inventor project</strong> and used inside the app.' },
+
+  { q: 'What is the difference between the Training step and the Testing step when building a model?',
+    a: '<strong>Training</strong> = the process of allowing the model to learn from the provided images.<br><strong>Testing</strong> = providing new images to check how accurately the model classifies them.' },
+];
+
+// ── Section 3: Artificial Intelligence (Q28–Q39) ──
+const aiQs = [
+  { q: 'What is "reasoning" as defined in the context of AI?',
+    a: 'Reasoning is defined as the <strong>process of deciding on an action to successfully complete a task</strong> based on available information.' },
+
+  { q: 'Name the THREE levels of human reasoning.',
+    a: '&#9312; <strong>Skill-based Reasoning</strong><br>&#9313; <strong>Rule-based Reasoning</strong><br>&#9314; <strong>Knowledge-based Reasoning</strong>' },
+
+  { q: 'What is Skill-based Reasoning? Why is it inefficient for complex tasks?',
+    a: 'Skill-based Reasoning involves <strong>fast, direct actions based on intuitive sensory-motor behaviour without conscious thought</strong> — like reflexes.<br>It is inefficient for complex tasks because it relies on automatic responses rather than analysis.' },
+
+  { q: 'What is Rule-based Reasoning? What type of task is it best suited for?',
+    a: 'Rule-based Reasoning = actions derived from <strong>instructions, rules, or patterns learned from prior experience</strong>.<br>It offers <strong>more efficient solutions for simple tasks</strong>.' },
+
+  { q: 'What is Knowledge-based Reasoning? What makes it the most sophisticated level?',
+    a: 'Knowledge-based Reasoning = actions that result from a <strong>detailed analysis of the current situation</strong>, integrating prior experience, specific process knowledge, and objectives.<br>It is most sophisticated because it combines multiple sources of knowledge to handle complex, dynamic situations.' },
+
+  { q: 'What type of reasoning do AI robots primarily use? Why?',
+    a: 'AI robots primarily use <strong>Knowledge-based Reasoning</strong>. They learn from past experiences and <strong>adapt to uncertain conditions</strong> to manage complex and dynamic tasks.' },
+
+  { q: 'What does the WEF "Future of Jobs Report 2020" predict about jobs by 2025?',
+    a: 'According to the <strong>World Economic Forum</strong>, AI automation will both <strong>replace and create millions of jobs</strong> by 2025.' },
+
+  { q: 'Name TWO job roles with INCREASING demand by 2025 according to the WEF report.',
+    a: 'Any two of: <strong>Data Analysts and Scientists, AI and Machine Learning Specialists, Big Data Specialists</strong>.' },
+
+  { q: 'Name TWO job roles with DECREASING demand by 2025 according to the WEF report.',
+    a: 'Any two of: <strong>Data Entry Clerks, Client Information and Customer Service Workers</strong>.' },
+
+  { q: 'What are the THREE skill classes highlighted by the OECD "Future of Education and Skills 2030" project?',
+    a: '&#9312; <strong>Social and Emotional Skills</strong><br>&#9313; <strong>Cognitive and Metacognitive Skills</strong><br>&#9314; <strong>Practical and Physical Skills</strong>' },
+
+  { q: 'Why must humans develop skills that AI cannot replicate, according to the notes?',
+    a: 'To <strong>thrive in the evolving job market</strong> — as AI automates many tasks, humans need skills AI cannot replace in order to remain employable and competitive.' },
+
+  { q: 'State THREE potential impacts of AI on the job market.',
+    a: '&#9312; AI can <strong>automate tasks</strong>, leading to job replacement.<br>&#9313; AI can <strong>change the nature of jobs</strong>.<br>&#9314; AI can <strong>create new job opportunities</strong>.' },
+];
+
+// ── Section 4: Health & Ethical Issues (Q40–Q50) ──
+const healthQs = [
+  { q: 'Name the THREE physical health hazards from prolonged ICT use mentioned in the revision notes.',
+    a: '&#9312; <strong>Repetitive Strain Injury (RSI)</strong><br>&#9313; <strong>Eye Strain</strong><br>&#9314; <strong>Text Neck</strong>' },
+
+  { q: 'What is Repetitive Strain Injury (RSI)? Give ONE example condition it can cause.',
+    a: 'RSI = damage to <strong>nerves and tendons</strong> caused by repeated movements.<br>Example: <strong>Carpal Tunnel Syndrome</strong>.' },
+
+  { q: 'What is Eye Strain? State TWO causes.',
+    a: 'Eye Strain = <strong>fatigue of the eyes</strong> caused by:<br>&#9312; <strong>Blue light</strong> emitted from screens<br>&#9313; <strong>Fixed focus distances</strong> — staring at the same distance for long periods' },
+
+  { q: 'What is Text Neck? What causes it?',
+    a: 'Text Neck = <strong>pain from improper head positioning</strong> while using mobile devices.<br>Cause: tilting the head <strong>downward</strong> for extended periods to look at a phone.' },
+
+  { q: 'What is "Equity of Access" in ICT?',
+    a: 'Equity of Access = ensuring <strong>everyone has an equal opportunity to benefit from ICT</strong>, regardless of their background.' },
+
+  { q: 'What is the Global Digital Divide?',
+    a: 'The Global Digital Divide = the <strong>gap between those with ICT access and those without</strong>.' },
+
+  { q: 'Name the THREE aspects of Netiquette listed in the revision notes.',
+    a: '&#9312; <strong>Be Respectful</strong><br>&#9313; <strong>Critical Thinking</strong><br>&#9314; <strong>Security First</strong>' },
+
+  { q: 'Name the THREE areas covered under "Health and Ethical Issues" in the revision notes.',
+    a: '&#9312; <strong>Area 1: ICT and Your Health</strong><br>&#9313; <strong>Area 2: Equity of Access</strong><br>&#9314; <strong>Area 3: Ethical Considerations</strong>' },
+
+  { q: 'What does "Protecting Privacy &amp; Property in the digital realm" refer to?',
+    a: 'Being careful with personal information and <strong>respecting others\' digital property</strong> — this falls under <strong>Ethical Considerations</strong> (Area 3).' },
+
+  { q: 'Explain the difference between Equity of Access and the Digital Divide.',
+    a: '<strong>Equity of Access</strong> is the <em>goal</em> — ensuring equal opportunity to benefit from ICT.<br><strong>Digital Divide</strong> is the <em>problem</em> — the gap that currently exists between those with and without ICT access.' },
+
+  { q: 'Which area of the Health and Ethical Issues section deals with RSI, Eye Strain, and Text Neck?',
+    a: '<strong>Area 1: ICT and Your Health</strong> — covering physical health hazards from prolonged ICT use.' },
+];
+
+// ════════════════════════════════════════
+// PART B — RENDER
+// ════════════════════════════════════════
+
+function renderSection(containerId, questions, startNum, colorClass) {
+  const container = document.getElementById(containerId);
+  questions.forEach((item, i) => {
+    const qNum = startNum + i;
+    const id   = `b-${qNum}`;
+    const div  = document.createElement('div');
+    div.className = 'q-card';
+    div.innerHTML = `
+      <div class="q-num ${colorClass}">Question ${qNum}</div>
+      <div class="q-text">${item.q}</div>
+      <textarea class="answer-input partB-input" rows="2"
+        placeholder="Type your answer here…"
+        oninput="updateProgress('partB')"
+        id="ta-${id}"></textarea>
+      <br>
+      <button class="show-btn" onclick="toggleAnswer(this,'ans-${id}')">Show Answer</button>
+      <div class="model-answer" id="ans-${id}">${item.a}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function toggleAnswer(btn, boxId) {
+  const box = document.getElementById(boxId);
+  if (box.classList.contains('visible')) {
+    box.classList.remove('visible');
+    btn.textContent = 'Show Answer';
+    btn.classList.remove('revealed');
+  } else {
+    box.classList.add('visible');
+    btn.textContent = 'Hide Answer';
+    btn.classList.add('revealed');
+  }
+}
+
+// ════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════
+function switchTab(panelId, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+renderDescBank();
+renderSnippets();
+renderSection('sec-python', pythonQs,  1,  'orange');
+renderSection('sec-appinv', appinvQs, 13, 'green');
+renderSection('sec-ai',     aiQs,     28, 'purple');
+renderSection('sec-health', healthQs, 40, 'red');
+updateProgress('partA');
+updateProgress('partB');
+</script>
+</body>
+</html>
