@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Alice",
+    "phone": "+85291234567",
+    "date": "2026-06-02",
+    "time": "07:45 AM – 08:10 AM",
+    "location": "Rear Gate",
+    "duty": "Morning Duty"
+  },
+  {
+    "name": "Bryan",
+    "phone": "+85298765432",
+    "date": "2026-06-02",
+    "time": "07:45 AM – 08:10 AM",
+    "location": "Main Hall",
+    "duty": "Assembly Duty"
+  }
+]
