@@ -305,13 +305,19 @@ function startAdmin(fb) {
 
   function renderCards() {
     if (!cardsEl) return;
+    const showArchived = $('admin-show-archived');
+    const showArchivedOn = showArchived && showArchived.checked;
+    const archivedCount = allNotes.filter(n => n.archived).length;
+    const archivedBadge = $('archived-count-badge');
+    if (archivedBadge) archivedBadge.textContent = archivedCount > 0 ? archivedCount + ' archived' : '';
     const q = ((searchEl && searchEl.value) || '').trim().toLowerCase();
+    const visible = showArchivedOn ? allNotes : allNotes.filter(n => !n.archived);
     const filtered = q
-      ? allNotes.filter(n =>
+      ? visible.filter(n =>
           (n.title || '').toLowerCase().includes(q) ||
           (n.uploaderName || '').toLowerCase().includes(q) ||
           (n.subject || '').toLowerCase().includes(q))
-      : allNotes;
+      : visible;
 
     if (filtered.length === 0) {
       cardsEl.innerHTML = '';
@@ -349,7 +355,7 @@ function startAdmin(fb) {
       if (cQuizlet)  statsBits.push(`<span class="cstat cstat-quizlet">Q ${cQuizlet}</span>`);
 
       return `
-        <div class="admin-card ${isFlash ? 'note-card-flashcards' : ''}" data-id="${escapeHtmlSimple(n.id)}">
+        <div class="admin-card ${isFlash ? 'note-card-flashcards' : ''} ${n.archived ? 'admin-card-archived' : ''}" data-id="${escapeHtmlSimple(n.id)}">
           <div class="admin-card-top">
             <div class="admin-card-title">${escapeHtmlSimple(n.title || '(untitled)')}</div>
             <div class="note-type ${meta.cls}">${meta.label}</div>
@@ -376,6 +382,7 @@ function startAdmin(fb) {
             </div>
             <a class="btn-secondary" href="${escapeHtmlSimple(openHref)}" target="_blank" rel="noopener">Open</a>
             <button class="btn-primary" data-action="edit">Edit</button>
+            <button class="btn-secondary" data-action="${n.archived ? 'unarchive' : 'archive'}">${n.archived ? 'Unarchive' : 'Archive'}</button>
             <button class="btn-primary btn-danger" data-action="delete">Delete</button>
           </div>
         </div>
@@ -1357,6 +1364,8 @@ function startAdmin(fb) {
   );
 
   if (searchEl) searchEl.addEventListener('input', renderCards);
+  const showArchivedEl = $('admin-show-archived');
+  if (showArchivedEl) showArchivedEl.addEventListener('change', renderCards);
 
   /* ────────────────────────────────────────────────────────────────────
      Modals — edit + delete
@@ -1657,6 +1666,13 @@ function startAdmin(fb) {
       else if (action === 'delete') openDeleteModal(note);
       else if (action === 'move-up')   moveNote(id, -1);
       else if (action === 'move-down') moveNote(id, +1);
+      else if (action === 'archive' || action === 'unarchive') {
+        const archive = action === 'archive';
+        btn.disabled = true;
+        updateDoc(doc(db, 'notes', id), { archived: archive })
+          .catch(err => alert('Archive failed: ' + (err.message || err)))
+          .finally(() => { btn.disabled = false; });
+      }
     });
   }
 
