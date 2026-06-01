@@ -189,9 +189,12 @@
     <!-- Controls + cards -->
     <section class="card">
       <div class="admin-controls">
-        <h2 class="section-title" style="margin-bottom:0;">All uploaded notes</h2>
+        <h2 class="section-title" style="margin-bottom:0;">All uploaded notes <span id="archived-count-badge" class="req-count-badge"></span></h2>
         <div class="admin-bar">
           <input type="text" id="admin-search" placeholder="Search title, uploader, subject…" />
+          <label class="taxonomy-h" style="font-weight:600;color:#6b7280;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="admin-show-archived" /> Show archived
+          </label>
           <button class="btn-secondary" id="admin-signout">Sign out</button>
         </div>
       </div>

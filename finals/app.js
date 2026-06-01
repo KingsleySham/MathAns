@@ -939,7 +939,13 @@ onSnapshot(
   query(collection(db, 'notes'), orderBy('createdAt', 'desc')),
   (snap) => {
     allNotes = [];
-    snap.forEach(d => allNotes.push({ id: d.id, ...d.data() }));
+    snap.forEach(d => {
+      const data = d.data();
+      // Hide archived notes from the public hub entirely. Admin can
+      // still see them via the "Show archived" toggle on /admin.
+      if (data.archived) return;
+      allNotes.push({ id: d.id, ...data });
+    });
     sortNotes(allNotes);
     if (viewMode === 'folders') renderFolderBrowser();
     else renderNotes();

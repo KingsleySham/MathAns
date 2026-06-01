@@ -19,6 +19,8 @@
     { "source": "/edit1125/", "destination": "/editor/index.html" },
     { "source": "/ces",   "destination": "/cesindex.html" },
     { "source": "/ces/",  "destination": "/cesindex.html" },
+    { "source": "/finals/ces",  "destination": "/finals/ces.html" },
+    { "source": "/finals/ces/", "destination": "/finals/ces.html" },
     { "source": "/relativeclauses.html",  "destination": "/relativeclauses.html" },
     { "source": "/relativeclauses.html/", "destination": "/relativeclauses.html" },
     { "source": "/ths/revision",  "destination": "/thsrevision.html" },

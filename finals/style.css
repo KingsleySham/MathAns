@@ -3196,3 +3196,23 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   vertical-align: 2px;
 }
 .req-count-badge:empty { display: none; }
+
+/* Archived admin card — dimmed, dashed border, faint badge. */
+.admin-card-archived {
+  opacity: 0.55;
+  border-style: dashed;
+  background: #f9fafb;
+}
+.admin-card-archived .admin-card-title::after {
+  content: 'ARCHIVED';
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #6b7280;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  vertical-align: 2px;
+}

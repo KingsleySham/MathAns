@@ -1,0 +1,390 @@
+/* ===== CES Study Hub — dedicated page ===== */
+
+.ces-body {
+  background: #0f172a;
+  color: #e2e8f0;
+  min-height: 100vh;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+}
+
+/* ---------- Hero ---------- */
+.ces-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 56px 24px 64px;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(250, 204, 21, 0.18) 0%, transparent 50%),
+    radial-gradient(circle at 15% 80%, rgba(99, 102, 241, 0.25) 0%, transparent 55%),
+    linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #312e81 100%);
+}
+
+.ces-back {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  z-index: 5;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: background 0.15s, color 0.15s;
+}
+.ces-back:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.ces-admin-badge {
+  background: rgba(250, 204, 21, 0.18) !important;
+  border-color: rgba(250, 204, 21, 0.35) !important;
+}
+
+/* Decorative blobs */
+.ces-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  animation: cesBlob 14s ease-in-out infinite;
+}
+.ces-blob-1 {
+  width: 320px; height: 320px;
+  background: rgba(250, 204, 21, 0.32);
+  top: -100px; right: -80px;
+}
+.ces-blob-2 {
+  width: 380px; height: 380px;
+  background: rgba(99, 102, 241, 0.36);
+  bottom: -140px; left: -100px;
+  animation-delay: -4s;
+}
+.ces-blob-3 {
+  width: 220px; height: 220px;
+  background: rgba(236, 72, 153, 0.22);
+  top: 40%; left: 50%;
+  animation-delay: -8s;
+}
+@keyframes cesBlob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(40px, -30px) scale(1.1); }
+  66%      { transform: translate(-30px, 40px) scale(0.95); }
+}
+
+/* Floating subject icons */
+.ces-float {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ces-float-i {
+  position: absolute;
+  font-size: 28px;
+  opacity: 0.18;
+  filter: saturate(0);
+  animation: cesFloat 18s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -2.2s);
+}
+.ces-float-i:nth-child(1) { top: 12%; left: 8%; }
+.ces-float-i:nth-child(2) { top: 22%; right: 12%; }
+.ces-float-i:nth-child(3) { top: 60%; left: 14%; font-size: 36px; }
+.ces-float-i:nth-child(4) { top: 75%; right: 8%; font-size: 32px; }
+.ces-float-i:nth-child(5) { top: 38%; left: 28%; }
+.ces-float-i:nth-child(6) { top: 18%; left: 55%; font-size: 36px; }
+.ces-float-i:nth-child(7) { top: 70%; left: 60%; }
+.ces-float-i:nth-child(8) { top: 50%; right: 30%; font-size: 30px; }
+@keyframes cesFloat {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50%      { transform: translateY(-20px) rotate(8deg); }
+}
+
+/* Hero content */
+.ces-hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+.ces-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #fde047;
+  background: rgba(250, 204, 21, 0.10);
+  border: 1px solid rgba(250, 204, 21, 0.30);
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+  animation: cesFadeUp 0.6s ease 0.05s both;
+}
+.ces-title {
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  margin: 0;
+  color: #fff;
+  animation: cesFadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+}
+.ces-title span {
+  background: linear-gradient(120deg, #fde047, #fb923c, #f472b6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  background-size: 200% 100%;
+  animation: cesGradient 5s ease-in-out infinite;
+}
+@keyframes cesGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+.ces-sub {
+  margin-top: 14px;
+  font-size: 1rem;
+  color: #cbd5e1;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.55;
+  animation: cesFadeUp 0.6s ease 0.3s both;
+}
+@keyframes cesFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ces-stat-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 26px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  animation: cesFadeUp 0.6s ease 0.45s both;
+}
+.ces-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 14px;
+}
+.ces-stat-num {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fde047;
+  font-variant-numeric: tabular-nums;
+}
+.ces-stat-lab {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+.ces-stat-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ---------- Main ---------- */
+.ces-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+/* Filter chips */
+.ces-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.ces-chip {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.ces-chip:hover {
+  background: rgba(255, 255, 255, 0.10);
+  color: #fff;
+}
+.ces-chip.active {
+  background: linear-gradient(135deg, #fde047 0%, #fb923c 100%);
+  color: #1e293b;
+  border-color: transparent;
+  box-shadow: 0 6px 16px rgba(251, 146, 60, 0.30);
+}
+.ces-search-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+.ces-search-wrap input {
+  width: 100%;
+  padding: 9px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  color: #e2e8f0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.ces-search-wrap input::placeholder { color: #64748b; }
+.ces-search-wrap input:focus {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: #fde047;
+}
+
+/* Grid */
+.ces-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.ces-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: cesFadeUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.ces-card:hover {
+  border-color: #fde047;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(250, 204, 21, 0.15);
+}
+.ces-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.ces-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+}
+.ces-card-type {
+  font-size: 0.66rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ces-card-type-notes      { background: rgba(96, 165, 250, 0.20); color: #93c5fd; }
+.ces-card-type-mock_paper { background: rgba(250, 204, 21, 0.20); color: #fde047; }
+.ces-card-type-links      { background: rgba(167, 139, 250, 0.20); color: #c4b5fd; }
+
+.ces-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 0.74rem;
+  color: #94a3b8;
+}
+.ces-card-desc {
+  font-size: 0.84rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+.ces-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ces-card-actions a,
+.ces-card-actions button {
+  padding: 7px 13px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 8px;
+  text-decoration: none;
+  border: 1px solid;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.ces-btn-view {
+  background: #fde047;
+  color: #1e293b;
+  border-color: transparent;
+}
+.ces-btn-view:hover { background: #fcd34d; }
+.ces-btn-download {
+  background: transparent;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+.ces-btn-download:hover { border-color: #94a3b8; color: #fff; }
+.ces-btn-gdocs,
+.ces-btn-quizlet {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-color: #334155;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ces-btn-gdocs:hover  { border-color: #4285f4; }
+.ces-btn-quizlet:hover { border-color: #4255ff; }
+
+.ces-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 16px;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* The shared modals (viewer + gdocs warn) inherit from style.css —
+   only tweak the body background and z-index here so they sit
+   cleanly on top of the dark CES page. */
+.ces-body .modal-overlay { z-index: 1100; }
+
+/* Mobile */
+@media (max-width: 480px) {
+  .ces-hero { padding: 48px 16px 48px; }
+  .ces-title { font-size: clamp(2rem, 8vw, 3rem); }
+  .ces-sub { font-size: 0.9rem; }
+  .ces-stat-row { gap: 4px; padding: 8px 12px; }
+  .ces-stat { padding: 4px 10px; gap: 4px; }
+  .ces-stat-num { font-size: 1.1rem; }
+  .ces-stat-lab { font-size: 0.62rem; }
+  .ces-main { padding: 20px 14px 48px; }
+  .ces-grid { grid-template-columns: 1fr; gap: 10px; }
+  .ces-card { padding: 14px 14px; }
+  .ces-card-title { font-size: 0.94rem; }
+}
