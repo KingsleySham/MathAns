@@ -80,16 +80,37 @@ filterChips.forEach(b => b.addEventListener('click', () => {
 }));
 if (searchEl) searchEl.addEventListener('input', render);
 
-/* Tracks — map a card click to a keyword regex that matches a note's
-   title / description / folder name. Counts are updated whenever the
-   notes list changes. */
+/* Tracks — each one accepts a list of `aliases` so a note tagged
+   'question-bank' OR 'bank' both land in the Question bank card,
+   etc. (Tag normalisation lowercases and hyphenates, so the admin
+   typing 'Question Bank' produces 'question-bank'.) Regex `re` is
+   used as the fallback only when a note has no tags at all. */
 const TRACKS = {
-  '100':      { label: 'Aim for 100% — Precise notes',      re: /precise|100|comprehensive|aiming/i },
-  'balanced': { label: 'Balanced — Best of both',            re: /balanced|standard|core/i },
-  'pass':     { label: 'Just to pass — Condensed notes',     re: /condensed|brief|pass|essential/i },
-  'bank':     { label: 'Question bank',                      re: /question bank|exercises?\b|practice/i, excludeMock: true },
-  'mock':     { label: 'Mock papers',                        re: /mock|exam practice|past paper/i, mockOnly: true },
-  'textbook': { label: 'E-Textbook',                          re: /textbook|e[- ]?book|chapter/i }
+  '100':        { label: 'Aim for 100% — Precise notes',
+                  aliases: ['100', 'aim-100', 'aim-for-100', 'precise', '100%'],
+                  re: /precise|100|comprehensive|aiming/i },
+  'balanced':   { label: 'Balanced — Best of both',
+                  aliases: ['balanced', 'balance'],
+                  re: /balanced|standard|core/i },
+  'pass':       { label: 'Just to pass — Condensed notes',
+                  aliases: ['pass', 'just-to-pass', 'condensed'],
+                  re: /condensed|brief|pass|essential/i },
+  'bank':       { label: 'Question bank',
+                  aliases: ['bank', 'question-bank', 'questionbank', 'knowledge-check',
+                            'exercises', 'exercise', 'practice', 'qbank'],
+                  re: /question[- ]?bank|knowledge[- ]?check|exercises?\b|practice/i,
+                  excludeMock: true },
+  'mock':       { label: 'Mock papers',
+                  aliases: ['mock', 'mock-paper', 'mock-papers', 'past-paper', 'past-papers'],
+                  re: /mock|exam practice|past paper/i,
+                  mockOnly: true },
+  'flashcards': { label: 'Flashcards',
+                  aliases: ['flashcards', 'flashcard', 'quizlet'],
+                  re: /flashcards?\b|quizlet/i,
+                  flashcardsOnly: true },
+  'textbook':   { label: 'E-Textbook',
+                  aliases: ['textbook', 'e-textbook', 'etextbook', 'ebook', 'book'],
+                  re: /textbook|e[- ]?book|chapter/i }
 };
 let activeTrack = null;
 const trackButtons = document.querySelectorAll('[data-ces-track]');
@@ -132,18 +153,25 @@ function matchesTrack(n, key) {
   if (!t) return true;
   if (t.mockOnly && n.type !== 'mock_paper') return false;
   if (t.excludeMock && n.type === 'mock_paper') return false;
+  // Flashcards track: requires a Quizlet link to be useful.
+  if (t.flashcardsOnly && !n.quizletUrl) return false;
 
-  // Tags are authoritative. If the admin has set ANY tags on this
-  // note, only the tags decide which section it appears in — the
-  // regex on title is ignored. So changing a note's tag from 'bank'
-  // to 'mock' moves it cleanly to the Mock papers section instead
-  // of showing up in both because the title still contains "bank".
-  if (Array.isArray(n.tags) && n.tags.length > 0) {
-    return n.tags.includes(key);
+  // Anything with a Quizlet link is, by definition, a flashcard set —
+  // surface it under the Flashcards track even if it has no explicit
+  // tag yet.
+  if (key === 'flashcards' && n.quizletUrl) return true;
+
+  // Tags are authoritative when present. Each track has a list of
+  // aliases (e.g. 'bank' / 'question-bank' / 'knowledge-check' all
+  // map to the Question bank track) so the admin can type whatever
+  // form they like and it still lands in the right section.
+  const tags = Array.isArray(n.tags) ? n.tags : [];
+  if (tags.length > 0) {
+    const aliases = t.aliases || [key];
+    return tags.some(tag => aliases.includes(tag));
   }
 
-  // Only completely-untagged notes fall back to regex on
-  // title + description so legacy uploads still get categorised.
+  // Untagged notes fall back to regex on title + description.
   const hay = `${n.title || ''} ${n.description || ''}`;
   return t.re.test(hay);
 }
