@@ -718,3 +718,16 @@
   .ces-textbook-title { font-size: 1.1rem; }
   .ces-textbook-arrow { display: none; }
 }
+
+/* CES page tags — dark-theme version */
+.ces-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+.ces-card .note-tag {
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}

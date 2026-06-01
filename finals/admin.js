@@ -370,6 +370,7 @@ function startAdmin(fb) {
             <span title="${escapeHtmlSimple(fmtDate(n.createdAt))}">${escapeHtmlSimple(fmtRelative(n.createdAt))}</span>
           </div>
           ${folderNode ? `<div class="admin-card-folder">📁 ${escapeHtmlSimple(folderNode.path)}</div>` : ''}
+          ${Array.isArray(n.tags) && n.tags.length ? `<div class="admin-card-tags">${n.tags.map(t => `<span class="note-tag">#${escapeHtmlSimple(t)}</span>`).join('')}</div>` : ''}
           ${n.description ? `<div class="admin-card-desc">${escapeHtmlSimple(n.description)}</div>` : ''}
           <div class="admin-card-clicks" title="${cTotal} non-admin click${cTotal === 1 ? '' : 's'}">
             <span class="cstat-label">Clicks:</span>
@@ -1424,6 +1425,69 @@ function startAdmin(fb) {
   const EDIT_MAX_BYTES = 3 * 1024 * 1024;
   const EDIT_ALLOWED_EXT = ['pdf','doc','docx','png','jpg','jpeg','webp','txt','html','htm'];
 
+  // ── Tag editor state (lives inside startAdmin so the closure can
+  // see updateDoc / doc / db). The current set of tags being edited
+  // is held in `editTagsState` and re-rendered to DOM after each
+  // add/remove. Saving happens in the existing save handler.
+  let editTagsState = [];
+  const editTagChips       = $('edit-tag-chips');
+  const editTagInput       = $('edit-tag-input');
+  const editTagSuggestions = $('edit-tag-suggestions');
+
+  function normalizeTag(s) {
+    return String(s || '').trim().toLowerCase().replace(/\s+/g, '-').slice(0, 32);
+  }
+  function renderEditTags() {
+    if (!editTagChips) return;
+    if (editTagsState.length === 0) {
+      editTagChips.innerHTML = '<span class="tag-chips-empty">No tags yet.</span>';
+      return;
+    }
+    editTagChips.innerHTML = editTagsState.map(t => `
+      <span class="tag-chip" data-tag="${escapeHtmlSimple(t)}">
+        ${escapeHtmlSimple(t)}
+        <button type="button" class="tag-chip-remove" aria-label="Remove ${escapeHtmlSimple(t)}">×</button>
+      </span>
+    `).join('');
+  }
+  function addEditTag(raw) {
+    const t = normalizeTag(raw);
+    if (!t) return;
+    if (editTagsState.includes(t)) return;
+    editTagsState.push(t);
+    renderEditTags();
+  }
+
+  if (editTagInput) {
+    editTagInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        addEditTag(editTagInput.value);
+        editTagInput.value = '';
+      } else if (e.key === 'Backspace' && !editTagInput.value && editTagsState.length > 0) {
+        editTagsState.pop();
+        renderEditTags();
+      }
+    });
+  }
+  if (editTagChips) {
+    editTagChips.addEventListener('click', (e) => {
+      const btn = e.target.closest('.tag-chip-remove');
+      if (!btn) return;
+      const chip = btn.closest('.tag-chip');
+      if (!chip) return;
+      editTagsState = editTagsState.filter(t => t !== chip.dataset.tag);
+      renderEditTags();
+    });
+  }
+  if (editTagSuggestions) {
+    editTagSuggestions.addEventListener('click', (e) => {
+      const btn = e.target.closest('.tag-suggestion');
+      if (!btn) return;
+      addEditTag(btn.dataset.tag);
+    });
+  }
+
   function openEditModal(note) {
     if (!editModal) return;
     activeNoteId = note.id;
@@ -1432,6 +1496,9 @@ function startAdmin(fb) {
     if (editGdocsInput)   editGdocsInput.value   = note.gdocsUrl || '';
     if (editQuizletInput) editQuizletInput.value = note.quizletUrl || '';
     if (editFileInput)    editFileInput.value    = '';
+    editTagsState = Array.isArray(note.tags) ? note.tags.slice() : [];
+    renderEditTags();
+    if (editTagInput) editTagInput.value = '';
     if (editCurrentFile) {
       if (note.fileName) {
         editCurrentFile.textContent = `Current: ${note.fileName} (${fmtBytes(note.fileSize)})`;
@@ -1537,8 +1604,11 @@ function startAdmin(fb) {
       const folderChanged  = newFolderId !== (note.folderId || null);
       const gdocsChanged   = newGdocs !== (note.gdocsUrl || '');
       const quizletChanged = newQuizlet !== (note.quizletUrl || '');
+      const existingTags   = Array.isArray(note.tags) ? note.tags : [];
+      const tagsChanged    = editTagsState.length !== existingTags.length ||
+                             editTagsState.some((t, i) => t !== existingTags[i]);
 
-      if (!titleChanged && !descChanged && !folderChanged && !gdocsChanged && !quizletChanged && !newFile) {
+      if (!titleChanged && !descChanged && !folderChanged && !gdocsChanged && !quizletChanged && !tagsChanged && !newFile) {
         closeModal(editModal);
         return;
       }
@@ -1552,6 +1622,7 @@ function startAdmin(fb) {
         if (titleChanged)  patch.title = newTitle;
         if (descChanged)   patch.description = newDesc;
         if (folderChanged) patch.folderId = newFolderId;
+        if (tagsChanged)   patch.tags = editTagsState.slice();
         if (gdocsChanged) {
           patch.gdocsUrl = newGdocs || null;
           if (newGdocs) patch.gdocsKind = gdocsKindFromUrl(newGdocs);
