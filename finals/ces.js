@@ -80,6 +80,68 @@ filterChips.forEach(b => b.addEventListener('click', () => {
 }));
 if (searchEl) searchEl.addEventListener('input', render);
 
+/* Tracks — map a card click to a keyword regex that matches a note's
+   title / description / folder name. Counts are updated whenever the
+   notes list changes. */
+const TRACKS = {
+  '100':      { label: 'Aim for 100% — Precise notes',      re: /precise|100|comprehensive|aiming/i },
+  'balanced': { label: 'Balanced — Best of both',            re: /balanced|standard|core/i },
+  'pass':     { label: 'Just to pass — Condensed notes',     re: /condensed|brief|pass|essential/i },
+  'bank':     { label: 'Question bank',                      re: /question bank|exercises?\b|practice/i, excludeMock: true },
+  'mock':     { label: 'Mock papers',                        re: /mock|exam practice|past paper/i, mockOnly: true },
+  'textbook': { label: 'E-Textbook',                          re: /textbook|e[- ]?book|chapter/i }
+};
+let activeTrack = null;
+const trackButtons = document.querySelectorAll('[data-ces-track]');
+const activeFilterEl = document.getElementById('ces-active-filter');
+const activeFilterLabelEl = document.getElementById('ces-active-filter-label');
+const clearFilterBtn = document.getElementById('ces-clear-filter');
+
+trackButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.cesTrack;
+    if (activeTrack === key) {
+      activeTrack = null;
+    } else {
+      activeTrack = key;
+    }
+    trackButtons.forEach(b => b.classList.toggle('is-active', b.dataset.cesTrack === activeTrack));
+    if (activeTrack && activeFilterEl) {
+      activeFilterEl.hidden = false;
+      activeFilterLabelEl.textContent = 'Showing: ' + (TRACKS[activeTrack].label || activeTrack);
+    } else if (activeFilterEl) {
+      activeFilterEl.hidden = true;
+    }
+    render();
+    // Smooth-scroll to the library so it's clear something happened.
+    if (activeTrack) {
+      const libEl = document.querySelector('.ces-section .ces-grid');
+      if (libEl) libEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+if (clearFilterBtn) clearFilterBtn.addEventListener('click', () => {
+  activeTrack = null;
+  trackButtons.forEach(b => b.classList.remove('is-active'));
+  if (activeFilterEl) activeFilterEl.hidden = true;
+  render();
+});
+
+function matchesTrack(n, key) {
+  const t = TRACKS[key];
+  if (!t) return true;
+  if (t.mockOnly && n.type !== 'mock_paper') return false;
+  if (t.excludeMock && n.type === 'mock_paper') return false;
+  const hay = `${n.title || ''} ${n.description || ''}`;
+  // Also look at the folder path the note lives in — admins often
+  // name folders like "Precise notes" or "Question Bank".
+  return t.re.test(hay);
+}
+
+function countTrack(key) {
+  return allNotes.filter(n => matchesTrack(n, key)).length;
+}
+
 /* ---------- Render ---------- */
 function passesFilter(n) {
   if (activeFilter === 'all') return true;
@@ -93,10 +155,19 @@ function render() {
   const q = (searchEl && searchEl.value || '').trim().toLowerCase();
   const filtered = allNotes.filter(n => {
     if (!passesFilter(n)) return false;
+    if (activeTrack && !matchesTrack(n, activeTrack)) return false;
     if (!q) return true;
     return (n.title || '').toLowerCase().includes(q) ||
            (n.description || '').toLowerCase().includes(q) ||
            (n.uploaderName || '').toLowerCase().includes(q);
+  });
+
+  // Update per-track counts wherever a [data-track-count] sits.
+  document.querySelectorAll('[data-track-count]').forEach(el => {
+    const k = el.dataset.trackCount;
+    const n = countTrack(k);
+    el.textContent = n > 0 ? (n + (n === 1 ? ' item' : ' items')) : 'Coming soon';
+    el.classList.toggle('is-empty', n === 0);
   });
 
   if (filtered.length === 0) {
