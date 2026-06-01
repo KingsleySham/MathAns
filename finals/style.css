@@ -3245,3 +3245,111 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   0%, 100% { transform: translateY(0) rotate(0); }
   50%      { transform: translateY(-3px) rotate(6deg); }
 }
+
+/* ---------- Note tags ----------
+   Tiny pill chips shown below the description on every public and
+   admin note card. */
+.note-tags, .admin-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+.note-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- Tag editor (in admin edit modal) ---------- */
+.tag-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 8px;
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  align-items: center;
+}
+.tag-chips-empty {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 0 4px;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 10px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+.tag-chip-remove {
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.tag-chip-remove:hover { background: #fee2e2; color: #b91c1c; }
+
+.tag-input-row input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-family: inherit;
+}
+.tag-input-row input:focus {
+  border-color: #1a56db;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.12);
+}
+
+.tag-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tag-suggestion {
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.tag-suggestion:hover { background: #dbeafe; border-color: #93c5fd; }

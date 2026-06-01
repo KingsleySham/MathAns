@@ -570,6 +570,7 @@ function noteCardHTML(n, opts) {
       </div>
       ${showFolder && folderNode ? `<div class="note-folder">📁 ${escapeHtml(folderNode.path)}</div>` : ''}
       ${n.description ? `<div class="note-desc">${escapeHtml(n.description)}</div>` : ''}
+      ${Array.isArray(n.tags) && n.tags.length ? `<div class="note-tags">${n.tags.map(t => `<span class="note-tag">#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
       <div class="note-actions">${actions.join('')}</div>
     </div>
   `;

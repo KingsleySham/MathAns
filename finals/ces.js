@@ -132,9 +132,12 @@ function matchesTrack(n, key) {
   if (!t) return true;
   if (t.mockOnly && n.type !== 'mock_paper') return false;
   if (t.excludeMock && n.type === 'mock_paper') return false;
+  // Explicit tags (set by admin in the edit modal) take priority —
+  // a note tagged 'mock' or 'balanced' matches that track regardless
+  // of what the title says.
+  if (Array.isArray(n.tags) && n.tags.includes(key)) return true;
+  // Regex fallback against title + description for untagged notes.
   const hay = `${n.title || ''} ${n.description || ''}`;
-  // Also look at the folder path the note lives in — admins often
-  // name folders like "Precise notes" or "Question Bank".
   return t.re.test(hay);
 }
 
@@ -208,6 +211,7 @@ function render() {
           <span>· ${esc(fmtRel(n.createdAt))}</span>
         </div>
         ${n.description ? `<div class="ces-card-desc">${esc(n.description)}</div>` : ''}
+        ${Array.isArray(n.tags) && n.tags.length ? `<div class="ces-card-tags">${n.tags.map(t => `<span class="note-tag">#${esc(t)}</span>`).join('')}</div>` : ''}
         <div class="ces-card-actions">${actions.join('')}</div>
       </div>
     `;

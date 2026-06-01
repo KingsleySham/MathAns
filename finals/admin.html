@@ -340,6 +340,22 @@
         <label class="form-label" for="edit-quizlet-input" style="margin-top:14px;">Quizlet flashcards link</label>
         <input type="url" id="edit-quizlet-input" placeholder="https://quizlet.com/123456789/..." />
 
+        <label class="form-label" style="margin-top:14px;">Tags</label>
+        <div class="tag-editor" id="edit-tags-editor">
+          <div class="tag-chips" id="edit-tag-chips" aria-live="polite"></div>
+          <div class="tag-input-row">
+            <input type="text" id="edit-tag-input" placeholder="Type a tag and press Enter (e.g. 100, balanced, pass, mock, bank, textbook)" autocomplete="off" />
+          </div>
+          <div class="tag-suggestions" id="edit-tag-suggestions" aria-label="Suggested tags">
+            <button type="button" class="tag-suggestion" data-tag="100">🎯 100%</button>
+            <button type="button" class="tag-suggestion" data-tag="balanced">⚖️ Balanced</button>
+            <button type="button" class="tag-suggestion" data-tag="pass">✅ Pass</button>
+            <button type="button" class="tag-suggestion" data-tag="bank">📚 Question bank</button>
+            <button type="button" class="tag-suggestion" data-tag="mock">📝 Mock paper</button>
+            <button type="button" class="tag-suggestion" data-tag="textbook">📖 Textbook</button>
+          </div>
+        </div>
+
         <div class="modal-meta" id="edit-modal-meta" style="margin-top:14px;"></div>
         <div class="upload-status" id="edit-status"></div>
       </div>
