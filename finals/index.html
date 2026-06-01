@@ -164,23 +164,8 @@
         </div>
       </div>
 
-      <!-- Mode picker: two big abstract-colored cards -->
-      <nav class="view-mode-tabs" id="view-mode-tabs" role="tablist">
-        <button class="view-mode-tab view-mode-tab-all" data-view="all" role="tab" aria-selected="false">
-          <span class="view-mode-tab-icon" aria-hidden="true">✨</span>
-          <span class="view-mode-tab-text">
-            <span class="view-mode-tab-title">View all</span>
-            <span class="view-mode-tab-sub">Every note in one big list</span>
-          </span>
-        </button>
-        <button class="view-mode-tab view-mode-tab-folders" data-view="folders" role="tab" aria-selected="false">
-          <span class="view-mode-tab-icon" aria-hidden="true">📁</span>
-          <span class="view-mode-tab-text">
-            <span class="view-mode-tab-title">Browse by folder</span>
-            <span class="view-mode-tab-sub">Navigate the tree of subjects</span>
-          </span>
-        </button>
-      </nav>
+      <!-- View-mode picker removed — the hub is folder-only now. -->
+      <nav class="view-mode-tabs" id="view-mode-tabs" role="tablist" hidden></nav>
 
       <!-- View: All notes (filterable flat list) -->
       <div class="card" id="view-all">

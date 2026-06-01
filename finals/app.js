@@ -435,10 +435,10 @@ const noteFolderEl = document.getElementById('note-folder');
 /* View mode (All vs Browse-by-folder) — persisted to localStorage so a
    returning visitor lands on whatever they last picked. */
 const VIEW_MODE_KEY = 'finals.viewMode';
-let viewMode = (function () {
-  try { return localStorage.getItem(VIEW_MODE_KEY) === 'folders' ? 'folders' : 'all'; }
-  catch (_) { return 'all'; }
-})();
+// Folder browsing is the only mode now — 'View all' was removed so
+// every note must live in a folder. Any previously persisted
+// preference is ignored.
+let viewMode = 'folders';
 let currentFolderId = null;   // null = root level in folder browser
 
 function rebuildFolderTree() {
@@ -696,18 +696,13 @@ const folderNotesListEl      = document.getElementById('folder-notes-list');
 const folderNotesEmpty       = document.getElementById('folder-notes-empty');
 const folderNotesHead        = document.getElementById('folder-notes-head');
 
-function setViewMode(mode) {
-  viewMode = mode === 'folders' ? 'folders' : 'all';
-  try { localStorage.setItem(VIEW_MODE_KEY, viewMode); } catch (_) {}
-  viewModeTabsEl.querySelectorAll('.view-mode-tab').forEach(b => {
-    const isActive = b.dataset.view === viewMode;
-    b.classList.toggle('active', isActive);
-    b.setAttribute('aria-selected', isActive ? 'true' : 'false');
-  });
-  viewAllEl.style.display     = viewMode === 'all'     ? '' : 'none';
-  viewFoldersEl.style.display = viewMode === 'folders' ? '' : 'none';
-  if (viewMode === 'folders') renderFolderBrowser();
-  else renderNotes();
+function setViewMode(_mode) {
+  // Folder-only — argument is ignored. Stays in place so any caller
+  // (notably the existing onSnapshot handler) keeps working.
+  viewMode = 'folders';
+  if (viewAllEl)     viewAllEl.style.display = 'none';
+  if (viewFoldersEl) viewFoldersEl.style.display = '';
+  renderFolderBrowser();
 }
 
 viewModeTabsEl.addEventListener('click', (e) => {
