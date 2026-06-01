@@ -151,27 +151,26 @@ if (clearFilterBtn) clearFilterBtn.addEventListener('click', () => {
 function matchesTrack(n, key) {
   const t = TRACKS[key];
   if (!t) return true;
-  if (t.mockOnly && n.type !== 'mock_paper') return false;
-  if (t.excludeMock && n.type === 'mock_paper') return false;
-  // Flashcards track: requires a Quizlet link to be useful.
-  if (t.flashcardsOnly && !n.quizletUrl) return false;
 
-  // Anything with a Quizlet link is, by definition, a flashcard set —
-  // surface it under the Flashcards track even if it has no explicit
-  // tag yet.
+  // Flashcards track requires a Quizlet link to be useful (no point
+  // showing a tagged-but-link-less note that students can't open).
+  if (t.flashcardsOnly && !n.quizletUrl) return false;
   if (key === 'flashcards' && n.quizletUrl) return true;
 
-  // Tags are authoritative when present. Each track has a list of
-  // aliases (e.g. 'bank' / 'question-bank' / 'knowledge-check' all
-  // map to the Question bank track) so the admin can type whatever
-  // form they like and it still lands in the right section.
+  // Tags first — they're the admin's explicit decision and override
+  // the type-based heuristics. So a question bank uploaded as
+  // type=mock_paper but tagged 'bank' still lands in Question bank.
   const tags = Array.isArray(n.tags) ? n.tags : [];
   if (tags.length > 0) {
     const aliases = t.aliases || [key];
     return tags.some(tag => aliases.includes(tag));
   }
 
-  // Untagged notes fall back to regex on title + description.
+  // Untagged: type-based filters + regex on title fall through.
+  // mockOnly: only count notes whose type is mock_paper.
+  // excludeMock: skip notes whose type is mock_paper.
+  if (t.mockOnly && n.type !== 'mock_paper') return false;
+  if (t.excludeMock && n.type === 'mock_paper') return false;
   const hay = `${n.title || ''} ${n.description || ''}`;
   return t.re.test(hay);
 }
