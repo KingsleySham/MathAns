@@ -53,21 +53,114 @@
 
   <main class="ces-main">
 
-    <!-- Filter chips -->
-    <div class="ces-filters">
-      <button class="ces-chip active" data-ces-filter="all">All</button>
-      <button class="ces-chip" data-ces-filter="notes">Notes</button>
-      <button class="ces-chip" data-ces-filter="mock_paper">Mock papers</button>
-      <button class="ces-chip" data-ces-filter="links">Links only</button>
-      <div class="ces-search-wrap">
-        <input type="search" id="ces-search" placeholder="Search title or description…" />
+    <!-- Three study tracks. Each card matches one of the folders the
+         admin creates under the "CES" folder (or by matching the note
+         title prefix). Clicking a card filters the notes grid below. -->
+    <section class="ces-section">
+      <div class="ces-section-head">
+        <div class="ces-section-eyebrow">Study tracks</div>
+        <h2 class="ces-section-title">Pick your battle</h2>
+        <p class="ces-section-sub">Same syllabus, three depths.</p>
       </div>
-    </div>
+      <div class="ces-tracks">
+        <button class="ces-track ces-track-100" data-ces-track="100">
+          <div class="ces-track-icon">🎯</div>
+          <div class="ces-track-pill">Aim for 100%</div>
+          <div class="ces-track-title">Precise notes</div>
+          <div class="ces-track-sub">Every detail, every term, every example.</div>
+          <div class="ces-track-count" data-track-count="100"></div>
+        </button>
+        <button class="ces-track ces-track-balanced" data-ces-track="balanced">
+          <div class="ces-track-icon">⚖️</div>
+          <div class="ces-track-pill">Balanced</div>
+          <div class="ces-track-title">Best of both</div>
+          <div class="ces-track-sub">Core concepts plus the bits that score.</div>
+          <div class="ces-track-count" data-track-count="balanced"></div>
+        </button>
+        <button class="ces-track ces-track-pass" data-ces-track="pass">
+          <div class="ces-track-icon">✅</div>
+          <div class="ces-track-pill">Just to pass</div>
+          <div class="ces-track-title">Condensed notes</div>
+          <div class="ces-track-sub">The bare minimum to clear the bar.</div>
+          <div class="ces-track-count" data-track-count="pass"></div>
+        </button>
+      </div>
+    </section>
 
-    <!-- Notes grid -->
-    <div class="ces-grid" id="ces-grid">
-      <div class="ces-empty" id="ces-empty">Loading CES library…</div>
-    </div>
+    <!-- Two practice formats -->
+    <section class="ces-section">
+      <div class="ces-section-head">
+        <div class="ces-section-eyebrow">Practice</div>
+        <h2 class="ces-section-title">Two ways to drill</h2>
+        <p class="ces-section-sub">Pick the format that suits today.</p>
+      </div>
+      <div class="ces-practice">
+        <button class="ces-pract ces-pract-bank" data-ces-track="bank">
+          <div class="ces-pract-icon">📚</div>
+          <div class="ces-pract-text">
+            <div class="ces-pract-title">Question bank</div>
+            <div class="ces-pract-sub">Topic-by-topic exercises. Hit weak spots.</div>
+          </div>
+          <div class="ces-pract-count" data-track-count="bank"></div>
+        </button>
+        <button class="ces-pract ces-pract-mock" data-ces-track="mock">
+          <div class="ces-pract-icon">📝</div>
+          <div class="ces-pract-text">
+            <div class="ces-pract-title">Mock papers</div>
+            <div class="ces-pract-sub">Full exam-style sets, timed and graded.</div>
+          </div>
+          <div class="ces-pract-count" data-track-count="mock"></div>
+        </button>
+      </div>
+    </section>
+
+    <!-- E-Textbook -->
+    <section class="ces-section">
+      <button class="ces-textbook" data-ces-track="textbook">
+        <div class="ces-textbook-illustration" aria-hidden="true">
+          <div class="ces-tb-book">
+            <div class="ces-tb-page ces-tb-p1"></div>
+            <div class="ces-tb-page ces-tb-p2"></div>
+            <div class="ces-tb-page ces-tb-p3"></div>
+            <div class="ces-tb-spine"></div>
+          </div>
+          <div class="ces-tb-sparkle ces-tb-s1">✨</div>
+          <div class="ces-tb-sparkle ces-tb-s2">📖</div>
+          <div class="ces-tb-sparkle ces-tb-s3">📑</div>
+        </div>
+        <div class="ces-textbook-text">
+          <div class="ces-textbook-eyebrow">📖 E-Textbook</div>
+          <div class="ces-textbook-title">The full digital textbook</div>
+          <div class="ces-textbook-sub">Every chapter, every diagram — searchable.</div>
+          <div class="ces-textbook-count" data-track-count="textbook"></div>
+        </div>
+        <div class="ces-textbook-arrow">→</div>
+      </button>
+    </section>
+
+    <!-- Filter chips + notes grid -->
+    <section class="ces-section">
+      <div class="ces-section-head">
+        <div class="ces-section-eyebrow">All items</div>
+        <h2 class="ces-section-title">Library</h2>
+      </div>
+      <div class="ces-filters">
+        <button class="ces-chip active" data-ces-filter="all">All</button>
+        <button class="ces-chip" data-ces-filter="notes">Notes</button>
+        <button class="ces-chip" data-ces-filter="mock_paper">Mock papers</button>
+        <button class="ces-chip" data-ces-filter="links">Links only</button>
+        <div class="ces-search-wrap">
+          <input type="search" id="ces-search" placeholder="Search title or description…" />
+        </div>
+      </div>
+      <div class="ces-active-filter" id="ces-active-filter" hidden>
+        <span id="ces-active-filter-label"></span>
+        <button class="ces-clear-filter" id="ces-clear-filter" type="button">Clear ×</button>
+      </div>
+      <div class="ces-grid" id="ces-grid">
+        <div class="ces-empty" id="ces-empty">Loading CES library…</div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">

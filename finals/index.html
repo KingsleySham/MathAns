@@ -449,6 +449,39 @@
     </div>
   </div>
 
+  <!-- ===== Quizlet "off to Quizlet" warning modal (light theme,
+       same shape as the Google Docs one) ===== -->
+  <div class="modal-overlay gdocs-modal" id="quizlet-warn-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card gdocs-warn-card">
+      <div class="gdocs-warn-icon quizlet-warn-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="60" height="60">
+          <rect x="2" y="2" width="44" height="44" rx="11" fill="#2563eb"/>
+          <text x="24" y="34" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="28" font-weight="800" fill="white" text-anchor="middle">Q</text>
+        </svg>
+        <!-- Floating mini-icons for a touch of celebration -->
+        <span class="qz-mini qz-mini-1" aria-hidden="true">📚</span>
+        <span class="qz-mini qz-mini-2" aria-hidden="true">✨</span>
+        <span class="qz-mini qz-mini-3" aria-hidden="true">🧠</span>
+        <span class="qz-mini qz-mini-4" aria-hidden="true">⚡</span>
+      </div>
+      <div class="gdocs-warn-title">Off to Quizlet</div>
+      <div class="gdocs-warn-body">
+        We're opening your flashcards in a <strong>new tab</strong>.
+        Make sure pop-ups are allowed for this site if nothing happens.
+      </div>
+      <label class="gdocs-warn-skip">
+        <input type="checkbox" id="quizlet-warn-skip" />
+        <span>Don't show this again</span>
+      </label>
+      <div class="gdocs-warn-actions">
+        <button class="btn-secondary" data-close="cancel">Cancel</button>
+        <a class="btn-primary gdocs-warn-open" id="quizlet-warn-open" href="#" target="_blank" rel="noopener">
+          Open Quizlet
+        </a>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== Request modal (non-admin students suggest something) ===== -->
   <div class="modal-overlay info-modal" id="request-modal" style="display:none;" data-close="overlay">
     <div class="modal-card info-card request-modal-card">

@@ -512,15 +512,15 @@ function gdocsButtonHTML(compact) {
 }
 
 function quizletButtonHTML(url) {
-  // Real anchor with target=_blank — opens via native user-click
-  // navigation, never trips popup blockers. Same styling as the
-  // button version (data-action attribute is also on the anchor so
-  // the click handler can still record the tap for tracking).
+  // Anchor with target=_blank — preserved so popup blockers never
+  // intervene; the click handler intercepts it and shows the
+  // warning popup, then opens the URL via openInNewTab(). Blue "Q"
+  // roundel (Quizlet brand blue).
   return `
     <a class="quizlet-btn" data-action="quizlet-open" href="${escapeHtml(url || '#')}" target="_blank" rel="noopener">
       <span class="quizlet-btn-logo" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="18" height="18">
-          <rect x="2" y="2" width="20" height="20" rx="5" fill="#4255ff"/>
+          <rect x="2" y="2" width="20" height="20" rx="5" fill="#2563eb"/>
           <text x="12" y="17.5" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="800" fill="white" text-anchor="middle">Q</text>
         </svg>
       </span>
@@ -673,10 +673,13 @@ notesListEl.addEventListener('click', (e) => {
   if (!actionEl) return;
   const action = actionEl.dataset.action;
   trackClick(note.id, action);
-  if (action === 'gdocs-open')   return openGdocs(note);
-  if (action === 'quizlet-open') return openQuizlet(note);
+  if (action === 'gdocs-open')   { e.preventDefault(); return openGdocs(note); }
+  if (action === 'quizlet-open' && !getQuizletWarnSkipped()) {
+    e.preventDefault();
+    return openQuizlet(note);
+  }
   if (action === 'view')         return openViewer(note);
-  // 'download' is a real <a> that navigates natively — nothing else to do here.
+  // 'download' and 'quizlet-open' (when warn skipped) navigate natively.
 });
 
 filterSubjectEl.addEventListener('change', renderNotes);
@@ -712,6 +715,16 @@ viewModeTabsEl.addEventListener('click', (e) => {
 });
 
 function enterFolder(folderId) {
+  // CES has its own dedicated page (/finals/ces) — clicking a folder
+  // named exactly "CES" at any level jumps there instead of opening
+  // it in the in-page browser.
+  if (folderId) {
+    const node = folderById.get(folderId);
+    if (node && /^ces$/i.test((node.name || '').trim())) {
+      window.location.href = '/finals/ces';
+      return;
+    }
+  }
   currentFolderId = folderId || null;
   renderFolderBrowser();
 }
@@ -809,10 +822,13 @@ viewFoldersEl.addEventListener('click', (e) => {
       if (note) {
         const action = actionEl.dataset.action;
         trackClick(note.id, action);
-        if (action === 'gdocs-open')        openGdocs(note);
-        else if (action === 'quizlet-open') openQuizlet(note);
+        if (action === 'gdocs-open')        { e.preventDefault(); openGdocs(note); }
+        else if (action === 'quizlet-open' && !getQuizletWarnSkipped()) {
+          e.preventDefault();
+          openQuizlet(note);
+        }
         else if (action === 'view')         openViewer(note);
-        // 'download' is an anchor — navigates natively.
+        // 'download' and skipped 'quizlet-open' navigate natively.
       }
     }
     return;
@@ -2112,17 +2128,71 @@ function openGdocs(note) {
   gdocsWarnModal.classList.add('open');
 }
 
-/* Quizlet redirect: nothing JS-driven — the Flashcards button is a
-   real <a target="_blank"> rendered by quizletButtonHTML(), so the
-   browser handles the navigation as a regular user-initiated link
-   click. The previous popup / pre-tab logic was popup-blocker bait
-   and has been removed. The click handler in notesListEl still fires
-   for `data-action="quizlet-open"` so the click counter is recorded;
-   it doesn't preventDefault, so the anchor's native target=_blank
-   navigation runs untouched. */
-function openQuizlet(_note) {
-  // No-op — see comment above. Kept as a stub so existing call sites
-  // in the click-dispatch switches don't need to be edited.
+/* Quizlet redirect: same pattern as the Google Docs warning.
+   - Anchor click is intercepted (preventDefault).
+   - Light-themed popup appears with the blue Quizlet "Q" logo,
+     a few celebratory icons, and a "Don't show again" toggle.
+   - Inside the popup an "Open Quizlet" anchor is wired with the
+     same target=_blank URL — clicking it (or letting the auto-open
+     fire ~1.5 s later) navigates via native user click, so popup
+     blockers never intervene.
+*/
+const QUIZLET_WARN_KEY = 'finals.quizletWarnSkipped';
+const qWarnModal = document.getElementById('quizlet-warn-modal');
+const qWarnSkip  = document.getElementById('quizlet-warn-skip');
+const qWarnOpen  = document.getElementById('quizlet-warn-open');
+let qWarnAutoTimer = null;
+
+function getQuizletWarnSkipped() {
+  try { return localStorage.getItem(QUIZLET_WARN_KEY) === '1'; }
+  catch (_) { return false; }
+}
+function setQuizletWarnSkipped(on) {
+  try { localStorage.setItem(QUIZLET_WARN_KEY, on ? '1' : '0'); }
+  catch (_) {}
+}
+
+function openQuizlet(note) {
+  const url = note && note.quizletUrl;
+  if (!url) return;
+  // If the student has chosen "don't show again", let the anchor's
+  // native navigation happen — we don't preventDefault and the
+  // browser opens the new tab as a user-initiated click.
+  if (getQuizletWarnSkipped() || !qWarnModal) {
+    openInNewTab(url);
+    return;
+  }
+  qWarnSkip.checked = false;
+  qWarnOpen.href = url;
+  qWarnModal.style.display = 'flex';
+  qWarnModal.offsetHeight;
+  qWarnModal.classList.add('open');
+}
+
+function closeQuizletWarn() {
+  if (!qWarnModal) return;
+  qWarnModal.classList.remove('open');
+  if (qWarnAutoTimer) { clearTimeout(qWarnAutoTimer); qWarnAutoTimer = null; }
+  setTimeout(() => { qWarnModal.style.display = 'none'; }, 200);
+}
+
+if (qWarnModal) {
+  // The "Open Quizlet" button is a real anchor — clicking it is a
+  // user gesture that opens the tab. Record the skip choice on
+  // click so future opens bypass the popup.
+  qWarnOpen.addEventListener('click', () => {
+    if (qWarnSkip.checked) setQuizletWarnSkipped(true);
+    setTimeout(closeQuizletWarn, 50);
+  });
+  qWarnModal.addEventListener('click', (e) => {
+    const role = e.target.dataset.close;
+    if (!role) return;
+    if (role === 'overlay' && e.target !== qWarnModal) return;
+    closeQuizletWarn();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && qWarnModal.classList.contains('open')) closeQuizletWarn();
+  });
 }
 
 function closeGdocsModal() {
