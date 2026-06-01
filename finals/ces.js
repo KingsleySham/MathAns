@@ -132,11 +132,18 @@ function matchesTrack(n, key) {
   if (!t) return true;
   if (t.mockOnly && n.type !== 'mock_paper') return false;
   if (t.excludeMock && n.type === 'mock_paper') return false;
-  // Explicit tags (set by admin in the edit modal) take priority —
-  // a note tagged 'mock' or 'balanced' matches that track regardless
-  // of what the title says.
-  if (Array.isArray(n.tags) && n.tags.includes(key)) return true;
-  // Regex fallback against title + description for untagged notes.
+
+  // Tags are authoritative. If the admin has set ANY tags on this
+  // note, only the tags decide which section it appears in — the
+  // regex on title is ignored. So changing a note's tag from 'bank'
+  // to 'mock' moves it cleanly to the Mock papers section instead
+  // of showing up in both because the title still contains "bank".
+  if (Array.isArray(n.tags) && n.tags.length > 0) {
+    return n.tags.includes(key);
+  }
+
+  // Only completely-untagged notes fall back to regex on
+  // title + description so legacy uploads still get categorised.
   const hay = `${n.title || ''} ${n.description || ''}`;
   return t.re.test(hay);
 }
