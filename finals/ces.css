@@ -731,3 +731,146 @@
   color: #cbd5e1;
   border: 1px solid rgba(255, 255, 255, 0.14);
 }
+
+/* ---------- Flashcards (Quizlet-themed hero card) ---------- */
+.ces-flashcards {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 22px 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(37, 99, 235, 0.45);
+  background: rgba(37, 99, 235, 0.06);
+  color: #e2e8f0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s, box-shadow 0.2s;
+}
+.ces-flashcards::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.55) 0%, transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(96, 165, 250, 0.35) 0%, transparent 60%),
+    linear-gradient(140deg, rgba(37, 99, 235, 0.20), rgba(14, 165, 233, 0.15) 100%);
+}
+.ces-flashcards:hover {
+  transform: translateY(-3px);
+  border-color: rgba(96, 165, 250, 0.80);
+  box-shadow: 0 16px 36px rgba(37, 99, 235, 0.30);
+}
+.ces-flashcards.is-active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.20) inset;
+}
+
+/* Flashcards illustration: a stack of three offset cards. The front
+   card holds the Quizlet "Q" mark, the back two drift slowly. */
+.ces-fc-stack {
+  position: relative;
+  width: 120px;
+  height: 100px;
+  flex-shrink: 0;
+}
+.ces-fc-card {
+  position: absolute;
+  width: 78px;
+  height: 78px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.40);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  animation: cesFcDrift 5s ease-in-out infinite;
+}
+.ces-fc-c1 {
+  /* Front card — the Quizlet logo card */
+  transform: translate(-50%, -50%) rotate(0deg);
+  background: linear-gradient(135deg, #ffffff 0%, #dbeafe 100%);
+  z-index: 3;
+  animation: cesFcFront 2.6s ease-in-out infinite;
+}
+.ces-fc-c2 {
+  transform: translate(-50%, -50%) translate(-14px, -6px) rotate(-8deg);
+  background: linear-gradient(135deg, #f0f9ff 0%, #bae6fd 100%);
+  z-index: 2;
+  color: #0369a1;
+  animation-delay: 0.4s;
+}
+.ces-fc-c3 {
+  transform: translate(-50%, -50%) translate(14px, 6px) rotate(7deg);
+  background: linear-gradient(135deg, #eff6ff 0%, #93c5fd 100%);
+  z-index: 1;
+  color: #1e40af;
+  animation-delay: 0.8s;
+}
+@keyframes cesFcFront {
+  0%, 100% { transform: translate(-50%, -50%) scale(1)    rotate(0deg); }
+  50%      { transform: translate(-50%, -50%) scale(1.06) rotate(2deg); }
+}
+@keyframes cesFcDrift {
+  0%, 100% { transform: translate(-50%, -50%) translate(var(--x, 0), var(--y, 0)) rotate(var(--r, 0deg)); }
+  50%      { transform: translate(-50%, -50%) translate(calc(var(--x, 0) + 3px), calc(var(--y, 0) - 4px)) rotate(calc(var(--r, 0deg) + 3deg)); }
+}
+.ces-fc-c2 { --x: -14px; --y: -6px; --r: -8deg; }
+.ces-fc-c3 { --x: 14px;  --y: 6px;  --r: 7deg; }
+.ces-fc-sparkle {
+  position: absolute;
+  font-size: 18px;
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.40));
+  animation: cesFcSparkle 3.4s ease-in-out infinite;
+}
+.ces-fc-sp1 { top: -2px;  right: 0;   animation-delay: 0s; }
+.ces-fc-sp2 { bottom: 2px; left: -2px; animation-delay: 1.7s; font-size: 22px; }
+@keyframes cesFcSparkle {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.75; }
+  50%      { transform: translateY(-6px) scale(1.15); opacity: 1; }
+}
+
+.ces-flashcards-text { flex: 1; min-width: 0; }
+.ces-flashcards-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  margin-bottom: 6px;
+}
+.ces-flashcards-title { font-size: 1.25rem; font-weight: 800; color: #fff; letter-spacing: -0.01em; }
+.ces-flashcards-sub   { font-size: 0.88rem; color: #cbd5e1; margin-top: 4px; }
+.ces-flashcards-count {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+}
+.ces-flashcards-count.is-empty { color: rgba(255, 255, 255, 0.45); font-style: italic; font-weight: 600; }
+.ces-flashcards-arrow {
+  font-size: 1.8rem;
+  color: #fff;
+  opacity: 0.6;
+  transition: transform 0.18s, opacity 0.18s;
+}
+.ces-flashcards:hover .ces-flashcards-arrow { opacity: 1; transform: translateX(4px); }
+@media (max-width: 480px) {
+  .ces-flashcards { padding: 18px 16px; gap: 14px; flex-wrap: wrap; }
+  .ces-fc-stack { width: 96px; height: 86px; }
+  .ces-fc-card { width: 64px; height: 64px; font-size: 22px; }
+  .ces-flashcards-title { font-size: 1.1rem; }
+  .ces-flashcards-arrow { display: none; }
+}
