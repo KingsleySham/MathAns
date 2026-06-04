@@ -57,6 +57,19 @@
   <!-- ===== Admin app ===== -->
   <main id="admin-app" class="admin-wrap" style="display:none;">
 
+    <!-- Live viewers banner — anonymous presence count for the CES study hub -->
+    <section class="live-viewers-card" id="live-viewers-card" hidden>
+      <div class="live-viewers-pulse" aria-hidden="true">
+        <span class="live-viewers-dot"></span>
+        <span class="live-viewers-ring"></span>
+      </div>
+      <div class="live-viewers-text">
+        <span class="live-viewers-num" id="live-viewers-count">0</span>
+        <span class="live-viewers-label" id="live-viewers-label">people viewing the CES Study Hub right now</span>
+      </div>
+      <div class="live-viewers-meta">live</div>
+    </section>
+
     <!-- Stats dashboard -->
     <section class="stats-dashboard">
       <div class="stat-tile stat-tile-primary">
@@ -126,20 +139,27 @@
     </section>
 
     <!-- Exam Coverage -->
-    <section class="card">
-      <div class="admin-controls">
-        <h2 class="section-title" style="margin-bottom:0;">Exam Coverage</h2>
+    <section class="card collapsible-card" id="coverage-section">
+      <div class="admin-controls collapsible-head" id="coverage-section-head">
+        <h2 class="section-title collapsible-title" style="margin-bottom:0;">
+          <button class="collapsible-toggle" id="coverage-collapse-btn" type="button" aria-expanded="false" aria-controls="coverage-section-body">
+            <span class="collapsible-chevron" aria-hidden="true">▾</span>
+            <span>Exam Coverage</span>
+          </button>
+        </h2>
         <div class="admin-bar">
           <button class="btn-secondary btn-sm" id="coverage-reset-btn" type="button" title="Throw away your edits and go back to the built-in coverage list">Discard my edits</button>
         </div>
       </div>
-      <p class="section-desc" style="margin-bottom:14px;">
-        This is the exact view students see. Click any text to edit — your changes save automatically and update the hub in real time. Press <strong>Enter</strong> in a bullet to add a new line, <strong>Backspace</strong> on an empty bullet to remove it.
-      </p>
-      <div class="coverage-edit-list" id="coverage-list">
-        <div class="empty-state-small">Loading…</div>
+      <div class="collapsible-body" id="coverage-section-body">
+        <p class="section-desc" style="margin-bottom:14px;">
+          This is the exact view students see. Click any text to edit — your changes save automatically and update the hub in real time. Press <strong>Enter</strong> in a bullet to add a new line, <strong>Backspace</strong> on an empty bullet to remove it.
+        </p>
+        <div class="coverage-edit-list" id="coverage-list">
+          <div class="empty-state-small">Loading…</div>
+        </div>
+        <div class="cov-save-indicator" id="cov-save-indicator" aria-live="polite"></div>
       </div>
-      <div class="cov-save-indicator" id="cov-save-indicator" aria-live="polite"></div>
     </section>
 
     <!-- Subjects & Types -->

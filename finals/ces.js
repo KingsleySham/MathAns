@@ -5,8 +5,8 @@
 // Firestore so the admin dashboard counts CES-page interactions too.
 
 import {
-  db, collection, doc, updateDoc,
-  onSnapshot, query, orderBy, increment
+  db, collection, doc, setDoc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy, increment, serverTimestamp
 } from './firebase-init.js';
 
 const CES_SUBJECT = 'CES';
@@ -411,6 +411,37 @@ coveragePill.addEventListener('click', () => openCoverageModal({ force: true }))
 if (!coverageSeen()) {
   setTimeout(() => openCoverageModal(), 350);
 }
+
+/* ---------- Live presence (so admin can see who's viewing) ---------- */
+const PRESENCE_HEARTBEAT_MS = 30_000;
+const presenceSessionId = (() => {
+  try {
+    let id = sessionStorage.getItem('finals.cesPresenceId');
+    if (!id) {
+      id = 'p_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      sessionStorage.setItem('finals.cesPresenceId', id);
+    }
+    return id;
+  } catch (_) {
+    return 'p_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  }
+})();
+const presenceRef = doc(db, 'presence', presenceSessionId);
+async function presenceHeartbeat() {
+  try { await setDoc(presenceRef, { page: 'ces', lastSeen: serverTimestamp() }); }
+  catch (_) {}
+}
+async function presenceClear() {
+  try { await deleteDoc(presenceRef); } catch (_) {}
+}
+presenceHeartbeat();
+setInterval(presenceHeartbeat, PRESENCE_HEARTBEAT_MS);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') presenceClear();
+  else presenceHeartbeat();
+});
+window.addEventListener('pagehide', presenceClear);
+window.addEventListener('beforeunload', presenceClear);
 
 /* ---------- Firestore subscription ---------- */
 onSnapshot(
