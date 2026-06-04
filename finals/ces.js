@@ -91,6 +91,30 @@ function trackClick(noteId, action) {
   recordAggregateClick(action);
 }
 
+/* Visitor tracking — one per device for the admin "Visitors" tile, plus a
+   raw page-view counter for the meta line. Skipped for admin sessions.
+   The visitorId is shared with /finals/ so a person visiting both pages
+   only counts once. */
+function recordCesVisit() {
+  if (isAdmin()) return;
+  let firstVisit = false;
+  try {
+    if (!localStorage.getItem('finals.visitorId')) {
+      const id = 'v_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      localStorage.setItem('finals.visitorId', id);
+      firstVisit = true;
+    }
+  } catch (_) {}
+  const patch = {
+    pageViews: increment(1),
+    updatedAt: serverTimestamp(),
+  };
+  if (firstVisit) patch.uniqueVisitors = increment(1);
+  setDoc(doc(db, 'state', 'clickStats'), patch, { merge: true })
+    .catch(err => console.warn('[ces] visit track failed:', err));
+}
+recordCesVisit();
+
 /* ---------- Filter chips ---------- */
 filterChips.forEach(b => b.addEventListener('click', () => {
   filterChips.forEach(x => x.classList.toggle('active', x === b));

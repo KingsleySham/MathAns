@@ -655,6 +655,28 @@ function recordAggregateClick(action) {
     updatedAt: serverTimestamp(),
   }, { merge: true }).catch(err => console.warn('[clicks] aggregate failed:', err));
 }
+
+/* Visitor tracking — one per device for the "Visitors" tile, plus a raw
+   page-view counter for the meta line. Skipped for admin sessions. */
+function recordVisit() {
+  if (isAdminSignedIn()) return;
+  let firstVisit = false;
+  try {
+    if (!localStorage.getItem('finals.visitorId')) {
+      const id = 'v_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      localStorage.setItem('finals.visitorId', id);
+      firstVisit = true;
+    }
+  } catch (_) { /* private mode — count as page view only */ }
+  const patch = {
+    pageViews: increment(1),
+    updatedAt: serverTimestamp(),
+  };
+  if (firstVisit) patch.uniqueVisitors = increment(1);
+  setDoc(doc(db, 'state', 'clickStats'), patch, { merge: true })
+    .catch(err => console.warn('[visit] track failed:', err));
+}
+recordVisit();
 function isAdminSignedIn() {
   try { return !!sessionStorage.getItem('finals.adminPasscode'); }
   catch (_) { return false; }
