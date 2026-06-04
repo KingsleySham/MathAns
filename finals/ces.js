@@ -369,6 +369,49 @@ gdocsWarnModal.addEventListener('click', (e) => {
   closeGdocsModal();
 });
 
+/* ---------- Exam coverage notice (shown once per device) ---------- */
+const COVERAGE_SEEN_KEY = 'finals.cesCoverageNoticeSeen';
+const coverageModal = document.getElementById('coverage-modal');
+const coverageSkip  = document.getElementById('coverage-skip');
+const coverageOk    = document.getElementById('coverage-ok');
+const coveragePill  = document.getElementById('ces-coverage-pill');
+
+function coverageSeen() {
+  try { return localStorage.getItem(COVERAGE_SEEN_KEY) === '1'; }
+  catch (_) { return false; }
+}
+function openCoverageModal({ force = false } = {}) {
+  coverageSkip.checked = force ? false : true;
+  coverageModal.style.display = 'flex';
+  coverageModal.offsetHeight;
+  coverageModal.classList.add('open');
+}
+function closeCoverageModal() {
+  coverageModal.classList.remove('open');
+  setTimeout(() => { coverageModal.style.display = 'none'; }, 220);
+}
+coverageOk.addEventListener('click', () => {
+  if (coverageSkip.checked) {
+    try { localStorage.setItem(COVERAGE_SEEN_KEY, '1'); } catch (_) {}
+  } else {
+    try { localStorage.removeItem(COVERAGE_SEEN_KEY); } catch (_) {}
+  }
+  closeCoverageModal();
+});
+coverageModal.addEventListener('click', (e) => {
+  const role = e.target.dataset.close;
+  if (!role) return;
+  if (role === 'overlay' && e.target !== coverageModal) return;
+  closeCoverageModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && coverageModal.style.display === 'flex') closeCoverageModal();
+});
+coveragePill.addEventListener('click', () => openCoverageModal({ force: true }));
+if (!coverageSeen()) {
+  setTimeout(() => openCoverageModal(), 350);
+}
+
 /* ---------- Firestore subscription ---------- */
 onSnapshot(
   query(collection(db, 'notes'), orderBy('createdAt', 'desc')),
