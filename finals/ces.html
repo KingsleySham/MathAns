@@ -243,28 +243,73 @@
   </div>
 
   <!-- ===== Exam coverage notice (shown once per device) ===== -->
-  <div class="modal-overlay gdocs-modal coverage-modal" id="coverage-modal" style="display:none;" data-close="overlay">
-    <div class="modal-card gdocs-warn-card coverage-card">
-      <div class="gdocs-warn-icon coverage-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="56" height="56">
-          <path fill="#1a56db" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/>
-        </svg>
+  <div class="modal-overlay coverage-modal" id="coverage-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card coverage-card">
+      <div class="coverage-header">
+        <div class="coverage-eyebrow">CES exam · what's in scope</div>
+        <h2 class="coverage-title">Before you study</h2>
+        <p class="coverage-lede">A quick heads-up so you focus on the right stuff.</p>
       </div>
-      <div class="gdocs-warn-title">Before you study — exam coverage</div>
-      <ul class="coverage-list">
-        <li><strong>Skip pages 150–154</strong> — not in the exam.</li>
-        <li>Coverage stops at <strong>The Belt and Road Initiative</strong> — anything beyond is out of scope.</li>
-        <li><strong>The Belt and Road Initiative</strong> itself has a lower chance of being tested.</li>
-        <li>No need to memorise <strong>years or dates</strong>.</li>
-        <li>No need to memorise <strong>examples from official sources</strong> (e.g. articles).</li>
-        <li><strong>Political parties (p.152)</strong> — just be able to identify them briefly.</li>
-      </ul>
-      <label class="gdocs-warn-skip coverage-skip">
-        <input type="checkbox" id="coverage-skip" checked />
-        <span>Don't show this again on this device</span>
-      </label>
-      <div class="gdocs-warn-actions coverage-actions">
-        <button class="btn-primary gdocs-warn-open coverage-ok" id="coverage-ok" type="button">Got it</button>
+
+      <div class="coverage-body">
+        <div class="coverage-group coverage-group-skip">
+          <div class="coverage-group-head">
+            <span class="coverage-group-badge">Skip</span>
+            <span class="coverage-group-label">Not in the exam</span>
+          </div>
+          <ul class="coverage-list">
+            <li>
+              <span class="coverage-item-key">Pages 150–154</span>
+              <span class="coverage-item-note">Not covered.</span>
+            </li>
+            <li>
+              <span class="coverage-item-key">Anything after <em>The Belt and Road Initiative</em></span>
+              <span class="coverage-item-note">Out of scope.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="coverage-group coverage-group-light">
+          <div class="coverage-group-head">
+            <span class="coverage-group-badge">Light</span>
+            <span class="coverage-group-label">Know it briefly</span>
+          </div>
+          <ul class="coverage-list">
+            <li>
+              <span class="coverage-item-key">The Belt and Road Initiative</span>
+              <span class="coverage-item-note">Lower chance of being tested.</span>
+            </li>
+            <li>
+              <span class="coverage-item-key">Political parties (p.152)</span>
+              <span class="coverage-item-note">Just be able to identify them.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="coverage-group coverage-group-free">
+          <div class="coverage-group-head">
+            <span class="coverage-group-badge">Free</span>
+            <span class="coverage-group-label">Don't bother memorising</span>
+          </div>
+          <ul class="coverage-list">
+            <li>
+              <span class="coverage-item-key">Years &amp; dates</span>
+              <span class="coverage-item-note">No need to memorise.</span>
+            </li>
+            <li>
+              <span class="coverage-item-key">Examples from official sources</span>
+              <span class="coverage-item-note">e.g. articles — no need to memorise.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="coverage-footer">
+        <label class="coverage-skip">
+          <input type="checkbox" id="coverage-skip" checked />
+          <span>Don't show this again on this device</span>
+        </label>
+        <button class="coverage-ok" id="coverage-ok" type="button">Got it</button>
       </div>
     </div>
   </div>
