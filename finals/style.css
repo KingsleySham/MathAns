@@ -3539,3 +3539,253 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   .finished-exams-summary { padding: 10px 12px; }
   .finished-exams-label { font-size: 0.85rem; }
 }
+
+/* ---------- Engagement analytics card (admin) ---------- */
+.engagement-card {
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+.engagement-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.engagement-total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.engagement-total-num {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1a56db;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.engagement-total-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+}
+
+.engagement-peaks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.engagement-peak {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.engagement-peak-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1e40af;
+  margin-bottom: 4px;
+}
+.engagement-peak-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.engagement-peak-meta {
+  font-size: 0.78rem;
+  color: #475569;
+  margin-top: 2px;
+}
+
+.engagement-section { margin-bottom: 16px; }
+.engagement-section:last-child { margin-bottom: 0; }
+.engagement-section-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.engagement-hours {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 8px 10px 4px;
+  border: 1px solid #e2e8f0;
+}
+.engagement-hour-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  height: 100%;
+  gap: 4px;
+  cursor: default;
+}
+.engagement-hour-bar {
+  width: 100%;
+  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+  transition: filter 0.15s;
+}
+.engagement-hour-col:hover .engagement-hour-bar { filter: brightness(1.15); }
+.engagement-hour-col.is-peak .engagement-hour-bar {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+}
+.engagement-hour-tick {
+  font-size: 0.62rem;
+  color: #94a3b8;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-height: 0.7rem;
+}
+
+.engagement-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.engagement-action {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-top-width: 3px;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.engagement-action-view     { border-top-color: #3b82f6; }
+.engagement-action-download { border-top-color: #10b981; }
+.engagement-action-gdocs    { border-top-color: #f59e0b; }
+.engagement-action-quizlet  { border-top-color: #8b5cf6; }
+.engagement-action-num {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.engagement-action-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.engagement-top-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.engagement-top-head .engagement-section-label { margin-bottom: 0; }
+.engagement-top-tabs {
+  display: inline-flex;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+.engagement-top-tab {
+  border: 0;
+  background: transparent;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.engagement-top-tab:hover { color: #1a56db; }
+.engagement-top-tab.is-active {
+  background: #fff;
+  color: #1a56db;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+.engagement-top {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.engagement-top-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.engagement-top-rank {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a56db;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.82rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.engagement-top-row:nth-child(1) .engagement-top-rank { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.engagement-top-row:nth-child(2) .engagement-top-rank { background: linear-gradient(135deg, #64748b, #475569); }
+.engagement-top-row:nth-child(3) .engagement-top-rank { background: linear-gradient(135deg, #b45309, #92400e); }
+.engagement-top-text {
+  flex: 1;
+  min-width: 0;
+}
+.engagement-top-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.engagement-top-meta {
+  font-size: 0.76rem;
+  color: #64748b;
+}
+.engagement-top-count {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1a56db;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .engagement-actions { grid-template-columns: repeat(2, 1fr); }
+  .engagement-peaks   { grid-template-columns: 1fr; }
+  .engagement-hours   { height: 64px; }
+  .engagement-hour-tick { font-size: 0.55rem; }
+}

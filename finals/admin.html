@@ -90,6 +90,58 @@
       </div>
     </section>
 
+    <!-- Engagement analytics — peak hour, action breakdown, top notes -->
+    <section class="card engagement-card" id="engagement-card">
+      <div class="engagement-head">
+        <h3 class="dashboard-h" style="margin:0;">📊 Engagement</h3>
+        <div class="engagement-total">
+          <span class="engagement-total-num" id="engagement-total">0</span>
+          <span class="engagement-total-label">interactions</span>
+        </div>
+      </div>
+
+      <div class="engagement-peaks">
+        <div class="engagement-peak">
+          <div class="engagement-peak-label">Peak hour</div>
+          <div class="engagement-peak-value" id="engagement-peak-hour">—</div>
+          <div class="engagement-peak-meta" id="engagement-peak-hour-meta"></div>
+        </div>
+        <div class="engagement-peak">
+          <div class="engagement-peak-label">Peak day</div>
+          <div class="engagement-peak-value" id="engagement-peak-day">—</div>
+          <div class="engagement-peak-meta" id="engagement-peak-day-meta"></div>
+        </div>
+      </div>
+
+      <div class="engagement-section">
+        <div class="engagement-section-label">Hourly activity</div>
+        <div class="engagement-hours" id="engagement-hours"></div>
+      </div>
+
+      <div class="engagement-section">
+        <div class="engagement-section-label">By action</div>
+        <div class="engagement-actions" id="engagement-actions">
+          <div class="engagement-action engagement-action-view"><span class="engagement-action-num" data-action="view">0</span><span class="engagement-action-label">Views</span></div>
+          <div class="engagement-action engagement-action-download"><span class="engagement-action-num" data-action="download">0</span><span class="engagement-action-label">Downloads</span></div>
+          <div class="engagement-action engagement-action-gdocs"><span class="engagement-action-num" data-action="gdocs">0</span><span class="engagement-action-label">Google Docs</span></div>
+          <div class="engagement-action engagement-action-quizlet"><span class="engagement-action-num" data-action="quizlet">0</span><span class="engagement-action-label">Quizlet</span></div>
+        </div>
+      </div>
+
+      <div class="engagement-section">
+        <div class="engagement-top-head">
+          <div class="engagement-section-label">Top notes</div>
+          <div class="engagement-top-tabs" role="tablist">
+            <button class="engagement-top-tab is-active" data-top-mode="all" type="button">All clicks</button>
+            <button class="engagement-top-tab" data-top-mode="download" type="button">Downloads</button>
+          </div>
+        </div>
+        <ol class="engagement-top" id="engagement-top">
+          <li class="empty-state-small">No data yet.</li>
+        </ol>
+      </div>
+    </section>
+
     <!-- Subject breakdown + recent uploads -->
     <section class="dashboard-row">
       <div class="card dashboard-half">

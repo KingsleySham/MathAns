@@ -64,12 +64,31 @@ const CLICK_FIELDS = {
   view: 'clicksView', download: 'clicksDownload',
   'gdocs-open': 'clicksGdocs', 'quizlet-open': 'clicksQuizlet',
 };
+const CLICK_ACTION_BUCKET = {
+  view: 'view', download: 'download',
+  'gdocs-open': 'gdocs', 'quizlet-open': 'quizlet',
+};
+function recordAggregateClick(action) {
+  const bucket = CLICK_ACTION_BUCKET[action];
+  if (!bucket) return;
+  const now = new Date();
+  const hour = String(now.getHours());
+  const dow  = String(now.getDay());
+  setDoc(doc(db, 'state', 'clickStats'), {
+    totalClicks: increment(1),
+    byHour:      { [hour]: increment(1) },
+    byDayOfWeek: { [dow]:  increment(1) },
+    byAction:    { [bucket]: increment(1) },
+    updatedAt: serverTimestamp(),
+  }, { merge: true }).catch(err => console.warn('[ces] aggregate failed:', err));
+}
 function trackClick(noteId, action) {
   if (isAdmin()) return;
   const field = CLICK_FIELDS[action];
   if (!field || !noteId) return;
   updateDoc(doc(db, 'notes', noteId), { [field]: increment(1) })
     .catch(err => console.warn('[ces] click track failed:', err));
+  recordAggregateClick(action);
 }
 
 /* ---------- Filter chips ---------- */
