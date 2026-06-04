@@ -13,6 +13,10 @@
 
   <header class="ces-hero">
     <a class="ces-back" href="/finals/">← Finals hub</a>
+    <button class="ces-coverage-pill" id="ces-coverage-pill" type="button" title="Exam coverage notes">
+      <span class="ces-coverage-pill-icon" aria-hidden="true">ⓘ</span>
+      <span class="ces-coverage-pill-label">Coverage notes</span>
+    </button>
     <a class="admin-badge ces-admin-badge" id="admin-badge" href="/admin" hidden title="Signed in as admin">
       <span class="admin-badge-icon" aria-hidden="true">🛡</span>
       <span class="admin-badge-label">Admin</span>
@@ -234,6 +238,33 @@
       <div class="gdocs-warn-actions">
         <button class="btn-secondary" data-close="cancel">Cancel</button>
         <a class="btn-primary gdocs-warn-open" id="gdocs-warn-open" href="#" target="_blank" rel="noopener">Open in new tab</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Exam coverage notice (shown once per device) ===== -->
+  <div class="modal-overlay gdocs-modal coverage-modal" id="coverage-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card gdocs-warn-card coverage-card">
+      <div class="gdocs-warn-icon coverage-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="56" height="56">
+          <path fill="#1a56db" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/>
+        </svg>
+      </div>
+      <div class="gdocs-warn-title">Before you study — exam coverage</div>
+      <ul class="coverage-list">
+        <li><strong>Skip pages 150–154</strong> — not in the exam.</li>
+        <li>Coverage stops at <strong>The Belt and Road Initiative</strong> — anything beyond is out of scope.</li>
+        <li><strong>The Belt and Road Initiative</strong> itself has a lower chance of being tested.</li>
+        <li>No need to memorise <strong>years or dates</strong>.</li>
+        <li>No need to memorise <strong>examples from official sources</strong> (e.g. articles).</li>
+        <li><strong>Political parties (p.152)</strong> — just be able to identify them briefly.</li>
+      </ul>
+      <label class="gdocs-warn-skip coverage-skip">
+        <input type="checkbox" id="coverage-skip" checked />
+        <span>Don't show this again on this device</span>
+      </label>
+      <div class="gdocs-warn-actions coverage-actions">
+        <button class="btn-primary gdocs-warn-open coverage-ok" id="coverage-ok" type="button">Got it</button>
       </div>
     </div>
   </div>

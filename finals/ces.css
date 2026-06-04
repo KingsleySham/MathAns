@@ -874,3 +874,115 @@
   .ces-flashcards-title { font-size: 1.1rem; }
   .ces-flashcards-arrow { display: none; }
 }
+
+/* ---------- Coverage notes pill (top-right of hero) ---------- */
+.ces-coverage-pill {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba(96, 165, 250, 0.38);
+  color: #dbeafe;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+  font-family: inherit;
+}
+.ces-coverage-pill:hover {
+  background: rgba(59, 130, 246, 0.30);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.ces-coverage-pill:active { transform: translateY(0) scale(0.98); }
+.ces-coverage-pill-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+/* If admin badge is visible, slide the pill leftward so they don't overlap */
+body:has(.ces-admin-badge:not([hidden])) .ces-coverage-pill {
+  right: 110px;
+}
+@media (max-width: 520px) {
+  .ces-coverage-pill {
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    font-size: 0.72rem;
+  }
+  .ces-coverage-pill-icon { font-size: 0.85rem; }
+  body:has(.ces-admin-badge:not([hidden])) .ces-coverage-pill { right: 92px; }
+}
+
+/* ---------- Coverage notice modal ---------- */
+.coverage-card {
+  max-width: 440px;
+  text-align: left;
+}
+.coverage-icon {
+  box-shadow: 0 8px 24px rgba(26, 86, 219, 0.22) !important;
+}
+.coverage-card .gdocs-warn-title {
+  text-align: center;
+  margin-bottom: 14px;
+}
+.coverage-list {
+  list-style: none;
+  margin: 0 0 16px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  animation: gdocsFadeUp 0.4s ease 0.4s both;
+}
+.coverage-list li {
+  position: relative;
+  padding: 9px 12px 9px 32px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: #1f2937;
+}
+.coverage-list li::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4285f4 0%, #1a56db 100%);
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.12);
+}
+.coverage-list li strong {
+  color: #1a56db;
+  font-weight: 700;
+}
+.coverage-skip {
+  display: flex !important;
+  justify-content: center;
+}
+.coverage-actions {
+  justify-content: center;
+}
+.coverage-ok {
+  flex: 0 1 auto !important;
+  min-width: 140px;
+  cursor: pointer;
+  font-family: inherit;
+}
+@media (max-width: 480px) {
+  .coverage-card { padding: 24px 18px 18px; }
+  .coverage-list li { font-size: 0.82rem; padding: 8px 10px 8px 28px; }
+  .coverage-list li::before { left: 10px; }
+}
