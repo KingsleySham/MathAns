@@ -1918,15 +1918,16 @@ function startAdmin(fb) {
   const engagementTotal      = $('engagement-total');
   const engagementPeakHour   = $('engagement-peak-hour');
   const engagementPeakHourM  = $('engagement-peak-hour-meta');
-  const engagementPeakDay    = $('engagement-peak-day');
-  const engagementPeakDayM   = $('engagement-peak-day-meta');
+  const engagementVisitors   = $('engagement-visitors');
+  const engagementVisitorsM  = $('engagement-visitors-meta');
   const engagementHoursEl    = $('engagement-hours');
   const engagementActionsEl  = $('engagement-actions');
   const engagementTopEl      = $('engagement-top');
-  let engagementStats = { totalClicks: 0, byHour: {}, byDayOfWeek: {}, byAction: {} };
+  let engagementStats = {
+    totalClicks: 0, byHour: {}, byAction: {},
+    uniqueVisitors: 0, pageViews: 0,
+  };
   let engagementTopMode = 'all';
-
-  const DOW_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   function formatHour(h) {
     const n = Number(h);
     if (!Number.isFinite(n)) return '—';
@@ -1950,9 +1951,10 @@ function startAdmin(fb) {
     if (engagementPeakHour) engagementPeakHour.textContent = ph.value ? formatHour(ph.key) : '—';
     if (engagementPeakHourM) engagementPeakHourM.textContent = ph.value ? `${ph.value} interaction${ph.value === 1 ? '' : 's'}` : 'no data yet';
 
-    const pd = peakKey(engagementStats.byDayOfWeek);
-    if (engagementPeakDay) engagementPeakDay.textContent = pd.value ? (DOW_LABELS[Number(pd.key)] || '—') : '—';
-    if (engagementPeakDayM) engagementPeakDayM.textContent = pd.value ? `${pd.value} interaction${pd.value === 1 ? '' : 's'}` : 'no data yet';
+    const visitors = Number(engagementStats.uniqueVisitors) || 0;
+    const views    = Number(engagementStats.pageViews) || 0;
+    if (engagementVisitors)  engagementVisitors.textContent  = visitors.toLocaleString();
+    if (engagementVisitorsM) engagementVisitorsM.textContent = `${views.toLocaleString()} page view${views === 1 ? '' : 's'}`;
 
     if (engagementHoursEl) {
       const max = ph.value || 1;
@@ -2026,10 +2028,11 @@ function startAdmin(fb) {
     (snap) => {
       const data = snap.exists() ? snap.data() : null;
       engagementStats = {
-        totalClicks: Number(data && data.totalClicks) || 0,
-        byHour:      (data && data.byHour)      || {},
-        byDayOfWeek: (data && data.byDayOfWeek) || {},
-        byAction:    (data && data.byAction)    || {},
+        totalClicks:    Number(data && data.totalClicks) || 0,
+        byHour:         (data && data.byHour)   || {},
+        byAction:       (data && data.byAction) || {},
+        uniqueVisitors: Number(data && data.uniqueVisitors) || 0,
+        pageViews:      Number(data && data.pageViews) || 0,
       };
       renderEngagementAggregate();
     },

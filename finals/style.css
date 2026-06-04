@@ -3585,6 +3585,10 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   border-radius: 12px;
   padding: 12px 14px;
 }
+.engagement-peak-visitors {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border-color: #a7f3d0;
+}
 .engagement-peak-label {
   font-size: 0.7rem;
   font-weight: 800;
@@ -3593,6 +3597,7 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   color: #1e40af;
   margin-bottom: 4px;
 }
+.engagement-peak-visitors .engagement-peak-label { color: #047857; }
 .engagement-peak-value {
   font-size: 1.4rem;
   font-weight: 800;
