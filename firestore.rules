@@ -252,6 +252,22 @@ service cloud.firestore {
       allow delete: if true;
     }
 
+    // Anonymous live-viewer presence — each open tab heartbeats every ~30 s
+    // so the admin dashboard can show how many people are viewing each
+    // student-facing page in real time. Docs are keyed by a random
+    // sessionStorage ID, so they self-replace per tab; the tab also deletes
+    // its own doc on pagehide / visibilitychange. The admin filters by
+    // recency, so abandoned docs are harmless.
+    match /presence/{sessionId} {
+      allow read: if true;
+      allow create, update: if
+        request.resource.data.keys().hasAll(['page', 'lastSeen']) &&
+        request.resource.data.page is string &&
+        request.resource.data.page.size() > 0 &&
+        request.resource.data.page.size() < 40;
+      allow delete: if true;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -1957,7 +1957,7 @@ function formatDateLabel(dateStr) {
 }
 
 function renderTimetable() {
-  const html = TIMETABLE.map((day, idx) => {
+  const renderDay = (day, idx) => {
     const status = formatDayStatus(day.date);
     const dateLabel = formatDateLabel(day.date);
     const isTSA = !!day.isTSA;
@@ -1984,8 +1984,29 @@ function renderTimetable() {
         </ul>
       </div>
     `;
-  }).join('');
-  timetableBody.innerHTML = html;
+  };
+
+  const past = [];
+  const current = [];
+  TIMETABLE.forEach(day => {
+    const status = formatDayStatus(day.date);
+    (status.cls === 'past' ? past : current).push(day);
+  });
+
+  const pastHtml = past.length ? `
+    <details class="finished-exams-group">
+      <summary class="finished-exams-summary">
+        <span class="finished-exams-icon" aria-hidden="true">✅</span>
+        <span class="finished-exams-label">Finished exams <span class="finished-exams-count">${past.length}</span></span>
+        <span class="finished-exams-chevron" aria-hidden="true">▾</span>
+      </summary>
+      <div class="finished-exams-body">
+        ${past.map((d, i) => renderDay(d, i)).join('')}
+      </div>
+    </details>
+  ` : '';
+  const currentHtml = current.map((d, i) => renderDay(d, i)).join('');
+  timetableBody.innerHTML = pastHtml + currentHtml;
 }
 
 function renderCoverage(focusKey) {

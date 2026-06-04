@@ -1853,6 +1853,65 @@ function startAdmin(fb) {
       }
     }
   );
+
+  /* -------- Live viewer count (CES page) -------- */
+  const LIVE_VIEWERS_WINDOW_MS = 75_000; // 30 s heartbeat + 45 s grace
+  const liveViewersCard  = $('live-viewers-card');
+  const liveViewersCount = $('live-viewers-count');
+  const liveViewersLabel = $('live-viewers-label');
+  let presenceDocs = new Map();
+
+  function renderLiveViewers() {
+    if (!liveViewersCard) return;
+    const cutoff = Date.now() - LIVE_VIEWERS_WINDOW_MS;
+    let count = 0;
+    presenceDocs.forEach((data) => {
+      if (data.page !== 'ces') return;
+      const ms = data.lastSeen && typeof data.lastSeen.toMillis === 'function'
+        ? data.lastSeen.toMillis() : 0;
+      if (ms > cutoff) count++;
+    });
+    liveViewersCount.textContent = String(count);
+    if (liveViewersLabel) {
+      liveViewersLabel.textContent = count === 1
+        ? 'person viewing the CES Study Hub right now'
+        : 'people viewing the CES Study Hub right now';
+    }
+    liveViewersCard.hidden = false;
+    liveViewersCard.classList.toggle('live-viewers-empty', count === 0);
+  }
+
+  onSnapshot(
+    collection(db, 'presence'),
+    (snap) => {
+      presenceDocs = new Map();
+      snap.forEach(d => presenceDocs.set(d.id, d.data() || {}));
+      renderLiveViewers();
+    },
+    (err) => console.error('[admin] presence listener:', err)
+  );
+  setInterval(renderLiveViewers, 15_000);
+
+  /* -------- Collapsible Exam Coverage section -------- */
+  const COVERAGE_COLLAPSE_KEY = 'admin.coverageCollapsed';
+  const coverageSection = $('coverage-section');
+  const coverageBtn     = $('coverage-collapse-btn');
+  if (coverageSection && coverageBtn) {
+    const startCollapsed = (() => {
+      try { return localStorage.getItem(COVERAGE_COLLAPSE_KEY) !== '0'; }
+      catch (_) { return true; }
+    })();
+    function setCoverageCollapsed(collapsed) {
+      coverageSection.classList.toggle('is-collapsed', collapsed);
+      coverageBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      try { localStorage.setItem(COVERAGE_COLLAPSE_KEY, collapsed ? '1' : '0'); }
+      catch (_) {}
+    }
+    setCoverageCollapsed(startCollapsed);
+    coverageBtn.addEventListener('click', () => {
+      setCoverageCollapsed(!coverageSection.classList.contains('is-collapsed'));
+    });
+  }
 }
 
 console.log('[admin] gate wired up — ready');
