@@ -1357,6 +1357,7 @@ function startAdmin(fb) {
       renderStats();
       renderCards();
       renderFolderTree();      // refresh note counts in tree
+      renderEngagementTop();   // top-notes ranking depends on allNotes
     },
     (err) => {
       console.error('[admin] notes listener:', err);
@@ -1912,6 +1913,130 @@ function startAdmin(fb) {
       setCoverageCollapsed(!coverageSection.classList.contains('is-collapsed'));
     });
   }
+
+  /* -------- Engagement analytics -------- */
+  const engagementTotal      = $('engagement-total');
+  const engagementPeakHour   = $('engagement-peak-hour');
+  const engagementPeakHourM  = $('engagement-peak-hour-meta');
+  const engagementPeakDay    = $('engagement-peak-day');
+  const engagementPeakDayM   = $('engagement-peak-day-meta');
+  const engagementHoursEl    = $('engagement-hours');
+  const engagementActionsEl  = $('engagement-actions');
+  const engagementTopEl      = $('engagement-top');
+  let engagementStats = { totalClicks: 0, byHour: {}, byDayOfWeek: {}, byAction: {} };
+  let engagementTopMode = 'all';
+
+  const DOW_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function formatHour(h) {
+    const n = Number(h);
+    if (!Number.isFinite(n)) return '—';
+    if (n === 0) return '12am';
+    if (n === 12) return '12pm';
+    return n < 12 ? `${n}am` : `${n - 12}pm`;
+  }
+  function peakKey(obj) {
+    let best = null, bestVal = -1;
+    Object.entries(obj || {}).forEach(([k, v]) => {
+      const n = Number(v) || 0;
+      if (n > bestVal) { best = k; bestVal = n; }
+    });
+    return { key: best, value: bestVal < 0 ? 0 : bestVal };
+  }
+  function renderEngagementAggregate() {
+    const total = Number(engagementStats.totalClicks) || 0;
+    if (engagementTotal) engagementTotal.textContent = total.toLocaleString();
+
+    const ph = peakKey(engagementStats.byHour);
+    if (engagementPeakHour) engagementPeakHour.textContent = ph.value ? formatHour(ph.key) : '—';
+    if (engagementPeakHourM) engagementPeakHourM.textContent = ph.value ? `${ph.value} interaction${ph.value === 1 ? '' : 's'}` : 'no data yet';
+
+    const pd = peakKey(engagementStats.byDayOfWeek);
+    if (engagementPeakDay) engagementPeakDay.textContent = pd.value ? (DOW_LABELS[Number(pd.key)] || '—') : '—';
+    if (engagementPeakDayM) engagementPeakDayM.textContent = pd.value ? `${pd.value} interaction${pd.value === 1 ? '' : 's'}` : 'no data yet';
+
+    if (engagementHoursEl) {
+      const max = ph.value || 1;
+      const html = Array.from({ length: 24 }, (_, h) => {
+        const v = Number((engagementStats.byHour || {})[String(h)]) || 0;
+        const pct = Math.max(2, Math.round((v / max) * 100));
+        const peak = ph.value && String(h) === ph.key;
+        const tip = `${formatHour(h)} · ${v} interaction${v === 1 ? '' : 's'}`;
+        return `<div class="engagement-hour-col${peak ? ' is-peak' : ''}" title="${tip}">
+          <div class="engagement-hour-bar" style="height:${pct}%;"></div>
+          <div class="engagement-hour-tick">${h % 6 === 0 ? formatHour(h) : ''}</div>
+        </div>`;
+      }).join('');
+      engagementHoursEl.innerHTML = html;
+    }
+
+    if (engagementActionsEl) {
+      engagementActionsEl.querySelectorAll('[data-action]').forEach(el => {
+        const v = Number((engagementStats.byAction || {})[el.dataset.action]) || 0;
+        el.textContent = v.toLocaleString();
+      });
+    }
+  }
+
+  function renderEngagementTop() {
+    if (!engagementTopEl) return;
+    const enriched = allNotes
+      .filter(n => !n.archived)
+      .map(n => {
+        const v = Number(n.clicksView)     || 0;
+        const d = Number(n.clicksDownload) || 0;
+        const g = Number(n.clicksGdocs)    || 0;
+        const q = Number(n.clicksQuizlet)  || 0;
+        const f = Number(n.clicksFullscreen) || 0;
+        return { note: n, all: v + d + g + q + f, download: d };
+      })
+      .filter(x => x[engagementTopMode] > 0)
+      .sort((a, b) => b[engagementTopMode] - a[engagementTopMode])
+      .slice(0, 5);
+
+    if (enriched.length === 0) {
+      engagementTopEl.innerHTML = `<li class="empty-state-small">No ${engagementTopMode === 'download' ? 'downloads' : 'clicks'} yet.</li>`;
+      return;
+    }
+    engagementTopEl.innerHTML = enriched.map((x, i) => `
+      <li class="engagement-top-row">
+        <span class="engagement-top-rank">${i + 1}</span>
+        <div class="engagement-top-text">
+          <div class="engagement-top-title">${escapeHtmlSimple(x.note.title || '(untitled)')}</div>
+          <div class="engagement-top-meta">${escapeHtmlSimple(x.note.subject || '—')}</div>
+        </div>
+        <span class="engagement-top-count">${x[engagementTopMode].toLocaleString()}</span>
+      </li>
+    `).join('');
+  }
+
+  document.querySelectorAll('.engagement-top-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const mode = tab.dataset.topMode;
+      if (mode === engagementTopMode) return;
+      engagementTopMode = mode;
+      document.querySelectorAll('.engagement-top-tab').forEach(t => {
+        t.classList.toggle('is-active', t.dataset.topMode === mode);
+      });
+      renderEngagementTop();
+    });
+  });
+
+  onSnapshot(
+    doc(db, 'state', 'clickStats'),
+    (snap) => {
+      const data = snap.exists() ? snap.data() : null;
+      engagementStats = {
+        totalClicks: Number(data && data.totalClicks) || 0,
+        byHour:      (data && data.byHour)      || {},
+        byDayOfWeek: (data && data.byDayOfWeek) || {},
+        byAction:    (data && data.byAction)    || {},
+      };
+      renderEngagementAggregate();
+    },
+    (err) => console.error('[admin] clickStats listener:', err)
+  );
+  renderEngagementAggregate();
+  renderEngagementTop();
 }
 
 console.log('[admin] gate wired up — ready');

@@ -3,7 +3,7 @@
 // custom countdown, stopwatch).
 import {
   db,
-  collection, addDoc, updateDoc,
+  collection, addDoc, updateDoc, setDoc,
   onSnapshot, query, orderBy, serverTimestamp,
   doc, increment
 } from './firebase-init.js';
@@ -634,6 +634,27 @@ const CLICK_FIELDS = {
   'quizlet-open':    'clicksQuizlet',
   'fullscreen-open': 'clicksFullscreen',
 };
+const CLICK_ACTION_BUCKET = {
+  'view':            'view',
+  'download':        'download',
+  'gdocs-open':      'gdocs',
+  'quizlet-open':    'quizlet',
+  'fullscreen-open': 'fullscreen',
+};
+function recordAggregateClick(action) {
+  const bucket = CLICK_ACTION_BUCKET[action];
+  if (!bucket) return;
+  const now = new Date();
+  const hour = String(now.getHours());
+  const dow  = String(now.getDay());
+  setDoc(doc(db, 'state', 'clickStats'), {
+    totalClicks: increment(1),
+    byHour:        { [hour]: increment(1) },
+    byDayOfWeek:   { [dow]:  increment(1) },
+    byAction:      { [bucket]: increment(1) },
+    updatedAt: serverTimestamp(),
+  }, { merge: true }).catch(err => console.warn('[clicks] aggregate failed:', err));
+}
 function isAdminSignedIn() {
   try { return !!sessionStorage.getItem('finals.adminPasscode'); }
   catch (_) { return false; }
@@ -663,6 +684,7 @@ function trackClick(noteId, action) {
   if (!field || !noteId) return;
   updateDoc(doc(db, 'notes', noteId), { [field]: increment(1) })
     .catch(err => console.warn('[clicks] track failed:', err));
+  recordAggregateClick(action);
 }
 
 notesListEl.addEventListener('click', (e) => {
