@@ -5,6 +5,9 @@
 // admin is unlocked.
 
 import { COVERAGE as DEFAULT_COVERAGE } from './exam-data.js';
+import {
+  TEMPLATE_LIST, getTemplate, configFromTemplate, pagePath, BUILTIN_DEFAULTS
+} from './subject-templates.js';
 
 console.log('[admin] script start');
 
@@ -1003,6 +1006,356 @@ function startAdmin(fb) {
       renderPopups();
     },
     (err) => console.error('[admin] popups listener:', err)
+  );
+
+  /* ==========================================================================
+     Subject Pages (admin-managed via /state/subjectPages)
+     Template-driven, per-card-editable study-hub pages. Stored as one doc:
+     { pages: { <slug>: PageConfig }, updatedAt }. The four built-in subjects
+     render from BUILTIN_DEFAULTS until overridden here.
+     ========================================================================== */
+  const subjpageListEl   = $('subjpage-list');
+  const subjpageModal    = $('subjpage-modal');
+  const subjpageFormEl   = $('subjpage-form');
+  const subjpageTitleEl  = $('subjpage-modal-title');
+  const subjpageNewBtn   = $('subjpage-new-btn');
+  const subjpageSaveBtn  = $('subjpage-save');
+  const subjpageDelBtn   = $('subjpage-delete');
+  const subjpageOpenLink = $('subjpage-open');
+
+  let allPages = {};           // slug → stored PageConfig
+  let draft = null;            // working copy being edited
+  let editingExisting = false; // slug locked when true
+
+  const cloneDeep = (o) => JSON.parse(JSON.stringify(o));
+  const normSlug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  function setByPath(obj, path, val) {
+    const parts = path.split('.');
+    let o = obj;
+    for (let i = 0; i < parts.length - 1; i++) { if (o[parts[i]] == null) o[parts[i]] = {}; o = o[parts[i]]; }
+    o[parts[parts.length - 1]] = val;
+  }
+
+  function renderSubjpageList() {
+    if (!subjpageListEl) return;
+    const slugs = new Set([...Object.keys(BUILTIN_DEFAULTS), ...Object.keys(allPages)]);
+    if (!slugs.size) { subjpageListEl.innerHTML = '<li class="empty-state-small">No subject pages yet.</li>'; return; }
+    subjpageListEl.innerHTML = [...slugs].sort().map(slug => {
+      const cfg = allPages[slug] || BUILTIN_DEFAULTS[slug];
+      const tpl = getTemplate(cfg.template);
+      const stored = !!allPages[slug];
+      const published = cfg.published !== false;
+      const path = (cfg.path || pagePath(slug)) + (published ? '' : '?preview=1');
+      const badge = (txt, bg, col) => `<span style="margin-left:6px;padding:2px 8px;background:${bg};color:${col};border-radius:999px;font-size:0.68rem;font-weight:800;letter-spacing:.03em;">${txt}</span>`;
+      return `
+        <li class="taxonomy-row-item" data-slug="${escapeAttr(slug)}">
+          <span class="taxonomy-name">
+            ${escapeHtmlSimple(cfg.emoji || '')} ${escapeHtmlSimple(cfg.label || slug)}
+            ${badge(escapeHtmlSimple(tpl.name), '#eef2ff', '#4338ca')}
+            ${published ? badge('LIVE', '#dcfce7', '#15803d') : badge('DRAFT', '#fef3c7', '#b45309')}
+            ${stored ? '' : badge('default', '#f1f5f9', '#64748b')}
+            <div style="font-weight:500;color:#6b7280;font-size:0.78rem;margin-top:2px;">${escapeHtmlSimple(path)}</div>
+          </span>
+          <span class="taxonomy-actions">
+            <a class="btn-secondary btn-sm" href="${escapeAttr(path)}" target="_blank" rel="noopener">Open</a>
+            <button class="btn-secondary btn-sm" data-subjpage-action="edit">Edit</button>
+            ${stored ? '<button class="btn-secondary btn-sm btn-danger-outline" data-subjpage-action="delete">Delete</button>' : ''}
+          </span>
+        </li>`;
+    }).join('');
+  }
+
+  function openSubjpageEditor(slug) {
+    editingExisting = !!slug;
+    if (slug) {
+      draft = cloneDeep(allPages[slug] || BUILTIN_DEFAULTS[slug]);
+      draft.slug = slug;
+    } else {
+      draft = configFromTemplate('', 'chronicle');
+    }
+    if (subjpageTitleEl) subjpageTitleEl.textContent = editingExisting ? `Edit page · ${draft.label || slug}` : 'New subject page';
+    if (subjpageDelBtn) subjpageDelBtn.style.display = editingExisting && allPages[slug] ? '' : 'none';
+    renderSubjpageForm();
+    if (subjpageSaveBtn) { subjpageSaveBtn.disabled = false; subjpageSaveBtn.textContent = 'Save & publish'; }
+    subjpageModal.style.display = 'flex';
+  }
+
+  function tplSwatch(tpl, selected) {
+    const p = tpl.palette;
+    return `
+      <button type="button" class="subjpage-tpl" data-template="${tpl.id}"
+        style="flex:0 0 auto;display:flex;flex-direction:column;gap:6px;align-items:flex-start;padding:10px;border-radius:12px;cursor:pointer;
+               border:2px solid ${selected ? p.accent : '#e5e7eb'};background:${selected ? '#f8fafc' : '#fff'};min-width:120px;">
+        <span style="display:flex;gap:4px;">
+          <span style="width:18px;height:18px;border-radius:5px;background:${p.accent};"></span>
+          <span style="width:18px;height:18px;border-radius:5px;background:${p.accent2};"></span>
+          <span style="width:18px;height:18px;border-radius:5px;background:${p.accent3};"></span>
+        </span>
+        <span style="font-weight:800;font-size:0.86rem;">${tpl.emoji} ${escapeHtmlSimple(tpl.name)}</span>
+        <span style="font-size:0.7rem;color:#6b7280;line-height:1.3;text-align:left;">${escapeHtmlSimple(tpl.blurb)}</span>
+      </button>`;
+  }
+
+  function txt(labelText, path, value, ph, style) {
+    return `
+      <label class="form-label" style="margin-top:12px;">${labelText}</label>
+      <input data-field="${path}" value="${escapeAttr(value || '')}" placeholder="${escapeAttr(ph || '')}" style="width:100%;${style || ''}" />`;
+  }
+
+  function multiCardEditor(sectionKey, sec, withPill) {
+    const cards = (sec.cards || []).map((c, i) => `
+      <div style="border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-top:8px;background:#fafafa;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input data-card-section="${sectionKey}" data-card-index="${i}" data-card-field="emoji" value="${escapeAttr(c.emoji || '')}" placeholder="🎯" style="width:46px;text-align:center;" />
+          ${withPill ? `<input data-card-section="${sectionKey}" data-card-index="${i}" data-card-field="pill" value="${escapeAttr(c.pill || '')}" placeholder="Pill label" style="flex:1;" />` : '<span style="flex:1;"></span>'}
+          <input data-card-section="${sectionKey}" data-card-index="${i}" data-card-field="tag" value="${escapeAttr(c.tag || '')}" placeholder="tag" title="Notes with this tag fill this card" style="width:110px;" />
+          <button type="button" data-remove-card="${sectionKey}" data-card-index="${i}" class="btn-secondary btn-sm btn-danger-outline" title="Remove card">✕</button>
+        </div>
+        <input data-card-section="${sectionKey}" data-card-index="${i}" data-card-field="title" value="${escapeAttr(c.title || '')}" placeholder="Card title" style="width:100%;margin-top:6px;" />
+        <input data-card-section="${sectionKey}" data-card-index="${i}" data-card-field="sub" value="${escapeAttr(c.sub || '')}" placeholder="Card subtitle" style="width:100%;margin-top:6px;" />
+      </div>`).join('');
+    return cards + `<button type="button" data-add-card="${sectionKey}" class="btn-secondary btn-sm" style="margin-top:8px;">+ Add card</button>`;
+  }
+
+  function singleCardEditor(sectionKey, sec) {
+    const c = sec.card || {};
+    return `
+      <div style="border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-top:8px;background:#fafafa;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input data-card-single="${sectionKey}" data-card-field="emoji" value="${escapeAttr(c.emoji || '')}" placeholder="📖" style="width:46px;text-align:center;" />
+          <input data-card-single="${sectionKey}" data-card-field="tag" value="${escapeAttr(c.tag || '')}" placeholder="tag" title="Notes with this tag fill this card" style="width:110px;" />
+        </div>
+        <input data-card-single="${sectionKey}" data-card-field="title" value="${escapeAttr(c.title || '')}" placeholder="Card title" style="width:100%;margin-top:6px;" />
+        <input data-card-single="${sectionKey}" data-card-field="sub" value="${escapeAttr(c.sub || '')}" placeholder="Card subtitle" style="width:100%;margin-top:6px;" />
+      </div>`;
+  }
+
+  function sectionBlock(key, heading, sec, kind) {
+    sec = sec || { enabled: false, cards: [] };
+    const editor = kind === 'single' ? singleCardEditor(key, sec) : multiCardEditor(key, sec, kind === 'multi-pill');
+    return `
+      <div style="border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:12px;">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:800;color:#374151;">
+          <input type="checkbox" data-field="sections.${key}.enabled" ${sec.enabled ? 'checked' : ''} />
+          ${heading}
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+          <input data-field="sections.${key}.eyebrow" value="${escapeAttr(sec.eyebrow || '')}" placeholder="Eyebrow" />
+          <input data-field="sections.${key}.title" value="${escapeAttr(sec.title || '')}" placeholder="Heading" />
+        </div>
+        <input data-field="sections.${key}.sub" value="${escapeAttr(sec.sub || '')}" placeholder="Sub-heading" style="width:100%;margin-top:8px;" />
+        ${editor}
+      </div>`;
+  }
+
+  function renderSubjpageForm() {
+    if (!subjpageFormEl || !draft) return;
+    const s = draft.sections || {};
+    const p = draft.palette || {};
+    subjpageFormEl.innerHTML = `
+      <label class="form-label">Template <span style="color:#9ca3af;font-weight:500;">— sets colours, emojis &amp; sections</span></label>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;">
+        ${TEMPLATE_LIST.map(t => tplSwatch(t, t.id === draft.template)).join('')}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="form-label" style="margin-top:12px;">Slug ${editingExisting ? '<span style="color:#9ca3af;font-weight:500;">(locked)</span>' : ''}</label>
+          <input data-field="slug" value="${escapeAttr(draft.slug || '')}" placeholder="e.g. chemistry" ${editingExisting ? 'disabled' : ''} style="width:100%;" />
+          <div class="file-hint" style="margin-top:4px;">URL: <code id="subjpage-path-preview">${escapeHtmlSimple(draft.path || pagePath(draft.slug || ''))}</code></div>
+        </div>
+        <div>
+          <label class="form-label" style="margin-top:12px;">Subject (notes filter)</label>
+          <input data-field="subject" value="${escapeAttr(draft.subject || '')}" placeholder="e.g. Chemistry" style="width:100%;" />
+          <div class="file-hint" style="margin-top:4px;">Must match the subject tag on uploaded notes.</div>
+        </div>
+      </div>
+
+      ${txt('Label (display name)', 'label', draft.label, 'e.g. Chemistry')}
+      ${txt('Hero emoji', 'emoji', draft.emoji, '🔬', 'max-width:120px;font-size:1.3rem;text-align:center;')}
+      ${txt('Eyebrow', 'eyebrow', draft.eyebrow, 'S.3 · Chemistry')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>${txt('Title lead', 'titleLead', draft.titleLead, '🔬 Chemistry')}</div>
+        <div>${txt('Title accent (gradient)', 'titleAccent', draft.titleAccent, 'Study Hub')}</div>
+      </div>
+      ${txt('Subtitle', 'subtitle', draft.subtitle, 'Every Chemistry note, mock paper and link — in one place.')}
+      ${txt('Floating emojis (space-separated)', 'floatEmojis', (draft.floatEmojis || []).join(' '), '🔬 ⚗️ 🧪 🧬')}
+
+      <label class="form-label" style="margin-top:14px;">Palette</label>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        <label style="font-size:0.8rem;color:#374151;">Accent <input type="color" data-field="palette.accent" value="${escapeAttr(p.accent || '#4f46e5')}" /></label>
+        <label style="font-size:0.8rem;color:#374151;">Accent 2 <input type="color" data-field="palette.accent2" value="${escapeAttr(p.accent2 || '#6366f1')}" /></label>
+        <label style="font-size:0.8rem;color:#374151;">Accent 3 <input type="color" data-field="palette.accent3" value="${escapeAttr(p.accent3 || '#8b5cf6')}" /></label>
+        <label style="font-size:0.8rem;color:#374151;">Background <input type="color" data-field="palette.bg" value="${escapeAttr(p.bg || '#f7f8fb')}" /></label>
+      </div>
+
+      <h3 class="taxonomy-h" style="margin-top:18px;">Sections &amp; cards</h3>
+      <div class="file-hint" style="margin-bottom:4px;">Untick a section to hide it. Each card's <strong>tag</strong> decides which uploaded notes appear under it.</div>
+      ${sectionBlock('tracks', 'Study tracks', s.tracks, 'multi-pill')}
+      ${sectionBlock('practice', 'Practice', s.practice, 'multi')}
+      ${sectionBlock('flashcards', 'Flashcards (Quizlet)', s.flashcards, 'single')}
+      ${sectionBlock('textbook', 'E-Textbook', s.textbook, 'single')}
+
+      <label style="display:flex;align-items:center;gap:8px;margin-top:16px;font-weight:800;color:#374151;">
+        <input type="checkbox" data-field="published" ${draft.published !== false ? 'checked' : ''} />
+        Published (visible to students)
+      </label>`;
+
+    if (subjpageOpenLink) {
+      const base = draft.path || pagePath(draft.slug || '');
+      subjpageOpenLink.href = base + (draft.published === false ? '?preview=1' : '');
+      subjpageOpenLink.style.display = draft.slug ? '' : 'none';
+    }
+  }
+
+  function applyTemplateToDraft(id) {
+    const tpl = getTemplate(id);
+    draft.template = id;
+    draft.emoji = tpl.emoji;
+    draft.palette = cloneDeep(tpl.palette);
+    draft.floatEmojis = cloneDeep(tpl.floatEmojis);
+    draft.sections = cloneDeep(tpl.sections);
+    renderSubjpageForm();
+  }
+
+  if (subjpageFormEl) {
+    subjpageFormEl.addEventListener('input', (e) => {
+      const t = e.target;
+      if (!draft) return;
+      if (t.dataset.field) {
+        if (t.type === 'checkbox') return; // handled on change
+        if (t.dataset.field === 'slug') {
+          const v = normSlug(t.value);
+          draft.slug = v; draft.path = pagePath(v);
+          const pv = $('subjpage-path-preview'); if (pv) pv.textContent = draft.path;
+          if (subjpageOpenLink) { subjpageOpenLink.href = draft.path + (draft.published === false ? '?preview=1' : ''); subjpageOpenLink.style.display = v ? '' : 'none'; }
+          return;
+        }
+        if (t.dataset.field === 'floatEmojis') {
+          const v = t.value.trim();
+          setByPath(draft, 'floatEmojis', v ? v.split(/\s+/) : []);
+          return;
+        }
+        setByPath(draft, t.dataset.field, t.value);
+        return;
+      }
+      if (t.dataset.cardSection) {
+        const sec = t.dataset.cardSection, i = +t.dataset.cardIndex, f = t.dataset.cardField;
+        if (draft.sections[sec] && draft.sections[sec].cards && draft.sections[sec].cards[i]) draft.sections[sec].cards[i][f] = t.value;
+        return;
+      }
+      if (t.dataset.cardSingle) {
+        const sec = t.dataset.cardSingle, f = t.dataset.cardField;
+        if (!draft.sections[sec]) draft.sections[sec] = {};
+        if (!draft.sections[sec].card) draft.sections[sec].card = {};
+        draft.sections[sec].card[f] = t.value;
+        return;
+      }
+    });
+    subjpageFormEl.addEventListener('change', (e) => {
+      const t = e.target;
+      if (!draft) return;
+      if (t.type === 'checkbox' && t.dataset.field) { setByPath(draft, t.dataset.field, t.checked); return; }
+    });
+    subjpageFormEl.addEventListener('click', (e) => {
+      if (!draft) return;
+      const tpl = e.target.closest('[data-template]');
+      if (tpl) { applyTemplateToDraft(tpl.dataset.template); return; }
+      const add = e.target.closest('[data-add-card]');
+      if (add) {
+        const sec = add.dataset.addCard;
+        if (!draft.sections[sec]) draft.sections[sec] = { enabled: true, cards: [] };
+        draft.sections[sec].cards = draft.sections[sec].cards || [];
+        draft.sections[sec].cards.push({ emoji: '⭐', title: 'New card', sub: '', tag: '' });
+        renderSubjpageForm();
+        return;
+      }
+      const rm = e.target.closest('[data-remove-card]');
+      if (rm) {
+        const sec = rm.dataset.removeCard, i = +rm.dataset.cardIndex;
+        if (draft.sections[sec] && draft.sections[sec].cards) draft.sections[sec].cards.splice(i, 1);
+        renderSubjpageForm();
+        return;
+      }
+    });
+  }
+
+  if (subjpageNewBtn) subjpageNewBtn.addEventListener('click', () => openSubjpageEditor(null));
+
+  if (subjpageListEl) {
+    subjpageListEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-subjpage-action]');
+      if (!btn) return;
+      const row = btn.closest('.taxonomy-row-item');
+      if (!row) return;
+      const slug = row.dataset.slug;
+      const action = btn.dataset.subjpageAction;
+      if (action === 'edit') return openSubjpageEditor(slug);
+      if (action === 'delete') {
+        if (!allPages[slug]) return;
+        if (!confirm(`Delete the saved config for "${slug}"? ${BUILTIN_DEFAULTS[slug] ? 'It will revert to the built-in default.' : 'The page will stop working.'}`)) return;
+        try {
+          delete allPages[slug];
+          await setDoc(doc(db, 'state', 'subjectPages'), { pages: allPages, updatedAt: serverTimestamp() });
+        } catch (err) { alert('Delete failed: ' + (err.message || err)); }
+      }
+    });
+  }
+
+  if (subjpageSaveBtn) subjpageSaveBtn.addEventListener('click', async () => {
+    if (!draft) return;
+    const slug = normSlug(draft.slug || '');
+    if (!slug) { alert('Enter a slug (letters/numbers, e.g. "chemistry").'); return; }
+    if (!editingExisting && (allPages[slug] || BUILTIN_DEFAULTS[slug])) {
+      if (!confirm(`A page already uses the slug "${slug}". Overwrite it?`)) return;
+    }
+    draft.slug = slug;
+    draft.path = pagePath(slug);
+    if (!draft.subject) draft.subject = draft.label || slug;
+    if (!draft.label) draft.label = draft.subject;
+    subjpageSaveBtn.disabled = true;
+    subjpageSaveBtn.textContent = 'Saving…';
+    try {
+      allPages[slug] = draft;
+      await setDoc(doc(db, 'state', 'subjectPages'), { pages: allPages, updatedAt: serverTimestamp() });
+      closeModal(subjpageModal);
+    } catch (err) {
+      subjpageSaveBtn.disabled = false;
+      subjpageSaveBtn.textContent = 'Save & publish';
+      alert('Save failed: ' + (err.message || err));
+    }
+  });
+
+  if (subjpageDelBtn) subjpageDelBtn.addEventListener('click', async () => {
+    if (!draft || !draft.slug || !allPages[draft.slug]) { closeModal(subjpageModal); return; }
+    const slug = draft.slug;
+    if (!confirm(`Delete the saved config for "${slug}"? ${BUILTIN_DEFAULTS[slug] ? 'It will revert to the built-in default.' : 'The page will stop working.'}`)) return;
+    try {
+      delete allPages[slug];
+      await setDoc(doc(db, 'state', 'subjectPages'), { pages: allPages, updatedAt: serverTimestamp() });
+      closeModal(subjpageModal);
+    } catch (err) { alert('Delete failed: ' + (err.message || err)); }
+  });
+
+  if (subjpageModal) {
+    subjpageModal.addEventListener('click', (e) => {
+      const role = e.target.dataset.close;
+      if (!role) return;
+      if (role === 'overlay' && e.target !== subjpageModal) return;
+      closeModal(subjpageModal);
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && subjpageModal && subjpageModal.style.display === 'flex') closeModal(subjpageModal);
+  });
+
+  onSnapshot(
+    doc(db, 'state', 'subjectPages'),
+    (snap) => {
+      allPages = (snap.exists() && snap.data().pages) || {};
+      renderSubjpageList();
+    },
+    (err) => { console.error('[admin] subjectPages listener:', err); if (subjpageListEl) subjpageListEl.innerHTML = '<li class="empty-state-small">Could not load.</li>'; }
   );
 
   /* ==========================================================================

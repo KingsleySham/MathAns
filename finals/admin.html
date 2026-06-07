@@ -243,6 +243,21 @@
       </div>
     </section>
 
+    <!-- Subject Pages -->
+    <section class="card">
+      <div class="admin-controls">
+        <h2 class="section-title" style="margin-bottom:0;">Subject Pages</h2>
+        <button class="btn-primary btn-sm" id="subjpage-new-btn" type="button">+ New page</button>
+      </div>
+      <p class="section-desc" style="margin-top:10px;margin-bottom:14px;">
+        Build a dedicated study-hub page for a subject from one of 7 templates. Pick colours, emojis, which sections show, and the tag each card filters by — then publish.
+        The four built-in subjects live at <code>/finals/&lt;slug&gt;</code>; new ones you add appear at <code>/finals/s/&lt;slug&gt;</code>.
+      </p>
+      <ul class="taxonomy-list" id="subjpage-list">
+        <li class="empty-state-small">Loading…</li>
+      </ul>
+    </section>
+
     <!-- Popups -->
     <section class="card">
       <div class="admin-controls">
@@ -376,6 +391,25 @@
       <div class="modal-card-footer">
         <button class="btn-secondary" data-close="cancel">Cancel</button>
         <button class="btn-primary" id="popup-save-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Subject page editor modal ===== -->
+  <div class="modal-overlay" id="subjpage-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-card-header">
+        <span id="subjpage-modal-title">New subject page</span>
+        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-card-body" id="subjpage-form">
+        <!-- built dynamically by admin.js -->
+      </div>
+      <div class="modal-card-footer">
+        <button class="btn-secondary" data-close="cancel">Cancel</button>
+        <a class="btn-secondary" id="subjpage-open" href="#" target="_blank" rel="noopener" style="display:none;">Open page ↗</a>
+        <button class="btn-secondary btn-danger-outline" id="subjpage-delete" type="button" style="display:none;">Delete</button>
+        <button class="btn-primary" id="subjpage-save" type="button">Save &amp; publish</button>
       </div>
     </div>
   </div>
