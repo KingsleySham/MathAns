@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geography Study Hub · S.3 Geography</title>
+  <meta name="description" content="A dedicated Geography study hub for S.3 students — browse notes and mock papers." />
+  <meta name="theme-color" content="#047857" />
+  <link rel="stylesheet" href="/finals/style.css" />
+  <link rel="stylesheet" href="/finals/subject.css" />
+</head>
+<body class="ces-body theme-geography">
+
+  <header class="ces-hero">
+    <a class="ces-back" href="/finals/">← Finals hub</a>
+    <a class="admin-badge ces-admin-badge" id="admin-badge" href="/admin" hidden title="Signed in as admin">
+      <span class="admin-badge-icon" aria-hidden="true">🛡</span>
+      <span class="admin-badge-label">Admin</span>
+    </a>
+
+    <!-- Animated decorative blobs -->
+    <div class="ces-blob ces-blob-1" aria-hidden="true"></div>
+    <div class="ces-blob ces-blob-2" aria-hidden="true"></div>
+    <div class="ces-blob ces-blob-3" aria-hidden="true"></div>
+
+    <!-- Floating subject icons -->
+    <div class="ces-float" aria-hidden="true">
+      <span class="ces-float-i" style="--i:0">🌍</span>
+      <span class="ces-float-i" style="--i:1">🗺️</span>
+      <span class="ces-float-i" style="--i:2">🏔️</span>
+      <span class="ces-float-i" style="--i:3">🌋</span>
+      <span class="ces-float-i" style="--i:4">🏜️</span>
+      <span class="ces-float-i" style="--i:5">🌊</span>
+      <span class="ces-float-i" style="--i:6">🧭</span>
+      <span class="ces-float-i" style="--i:7">🛰️</span>
+    </div>
+
+    <div class="ces-hero-inner">
+      <div class="ces-eyebrow">S.3 · Physical &amp; Human Geography</div>
+      <h1 class="ces-title">🌍 Geography <span>Study Hub</span></h1>
+      <p class="ces-sub">
+        Every Geography note, mock paper and link — in one place.
+      </p>
+      <div class="ces-stat-row">
+        <div class="ces-stat"><span class="ces-stat-num" id="ces-stat-total">0</span><span class="ces-stat-lab">items</span></div>
+        <div class="ces-stat-divider"></div>
+        <div class="ces-stat"><span class="ces-stat-num" id="ces-stat-notes">0</span><span class="ces-stat-lab">notes</span></div>
+        <div class="ces-stat-divider"></div>
+        <div class="ces-stat"><span class="ces-stat-num" id="ces-stat-papers">0</span><span class="ces-stat-lab">mocks</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="ces-main">
+
+    <!-- Three study tracks -->
+    <section class="ces-section">
+      <div class="ces-section-head">
+        <div class="ces-section-eyebrow">Study tracks</div>
+        <h2 class="ces-section-title">Pick your battle</h2>
+        <p class="ces-section-sub">Same syllabus, three depths.</p>
+      </div>
+      <div class="ces-tracks">
+        <button class="ces-track ces-track-100" data-ces-track="100">
+          <div class="ces-track-icon">🎯</div>
+          <div class="ces-track-pill">Aim for 100%</div>
+          <div class="ces-track-title">Precise notes</div>
+          <div class="ces-track-sub">Every detail, every term, every case study.</div>
+          <div class="ces-track-count" data-track-count="100"></div>
+        </button>
+        <button class="ces-track ces-track-balanced" data-ces-track="balanced">
+          <div class="ces-track-icon">⚖️</div>
+          <div class="ces-track-pill">Balanced</div>
+          <div class="ces-track-title">Best of both</div>
+          <div class="ces-track-sub">Core concepts plus the bits that score.</div>
+          <div class="ces-track-count" data-track-count="balanced"></div>
+        </button>
+        <button class="ces-track ces-track-pass" data-ces-track="pass">
+          <div class="ces-track-icon">✅</div>
+          <div class="ces-track-pill">Just to pass</div>
+          <div class="ces-track-title">Condensed notes</div>
+          <div class="ces-track-sub">The bare minimum to clear the bar.</div>
+          <div class="ces-track-count" data-track-count="pass"></div>
+        </button>
+      </div>
+    </section>
+
+    <!-- Two practice formats -->
+    <section class="ces-section">
+      <div class="ces-section-head">
+        <div class="ces-section-eyebrow">Practice</div>
+        <h2 class="ces-section-title">Two ways to drill</h2>
+        <p class="ces-section-sub">Pick the format that suits today.</p>
+      </div>
+      <div class="ces-practice">
+        <button class="ces-pract ces-pract-bank" data-ces-track="bank">
+          <div class="ces-pract-icon">📚</div>
+          <div class="ces-pract-text">
+            <div class="ces-pract-title">Question bank</div>
+            <div class="ces-pract-sub">Topic-by-topic exercises. Hit weak spots.</div>
+          </div>
+          <div class="ces-pract-count" data-track-count="bank"></div>
+        </button>
+        <button class="ces-pract ces-pract-mock" data-ces-track="mock">
+          <div class="ces-pract-icon">📝</div>
+          <div class="ces-pract-text">
+            <div class="ces-pract-title">Mock papers</div>
+            <div class="ces-pract-sub">Full exam-style sets, timed and graded.</div>
+          </div>
+          <div class="ces-pract-count" data-track-count="mock"></div>
+        </button>
+      </div>
+    </section>
+
+    <!-- Flashcards (Quizlet-themed) -->
+    <section class="ces-section">
+      <button class="ces-flashcards" data-ces-track="flashcards">
+        <div class="ces-fc-stack" aria-hidden="true">
+          <div class="ces-fc-card ces-fc-c3"><span>Q</span></div>
+          <div class="ces-fc-card ces-fc-c2"><span>?</span></div>
+          <div class="ces-fc-card ces-fc-c1">
+            <svg viewBox="0 0 48 48" width="32" height="32">
+              <rect x="4" y="4" width="40" height="40" rx="10" fill="#2563eb"/>
+              <text x="24" y="33" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="22" font-weight="800" fill="white" text-anchor="middle">Q</text>
+            </svg>
+          </div>
+          <div class="ces-fc-sparkle ces-fc-sp1">✨</div>
+          <div class="ces-fc-sparkle ces-fc-sp2">⚡</div>
+        </div>
+        <div class="ces-flashcards-text">
+          <div class="ces-flashcards-eyebrow">⚡ Flashcards</div>
+          <div class="ces-flashcards-title">Quizlet — drill terms fast</div>
+          <div class="ces-flashcards-sub">Tap to study the sets curated on Quizlet.</div>
+          <div class="ces-flashcards-count" data-track-count="flashcards"></div>
+        </div>
+        <div class="ces-flashcards-arrow">→</div>
+      </button>
+    </section>
+
+    <!-- E-Textbook -->
+    <section class="ces-section">
+      <button class="ces-textbook" data-ces-track="textbook">
+        <div class="ces-textbook-illustration" aria-hidden="true">
+          <div class="ces-tb-book">
+            <div class="ces-tb-page ces-tb-p1"></div>
+            <div class="ces-tb-page ces-tb-p2"></div>
+            <div class="ces-tb-page ces-tb-p3"></div>
+            <div class="ces-tb-spine"></div>
+          </div>
+          <div class="ces-tb-sparkle ces-tb-s1">✨</div>
+          <div class="ces-tb-sparkle ces-tb-s2">📖</div>
+          <div class="ces-tb-sparkle ces-tb-s3">📑</div>
+        </div>
+        <div class="ces-textbook-text">
+          <div class="ces-textbook-eyebrow">📖 E-Textbook</div>
+          <div class="ces-textbook-title">The full digital textbook</div>
+          <div class="ces-textbook-sub">Every chapter, every map — searchable.</div>
+          <div class="ces-textbook-count" data-track-count="textbook"></div>
+        </div>
+        <div class="ces-textbook-arrow">→</div>
+      </button>
+    </section>
+
+    <!-- Filter chips + notes grid -->
+    <section class="ces-section">
+      <div class="ces-section-head">
+        <div class="ces-section-eyebrow">All items</div>
+        <h2 class="ces-section-title">Library</h2>
+      </div>
+      <div class="ces-filters">
+        <button class="ces-chip active" data-ces-filter="all">All</button>
+        <button class="ces-chip" data-ces-filter="notes">Notes</button>
+        <button class="ces-chip" data-ces-filter="mock_paper">Mock papers</button>
+        <button class="ces-chip" data-ces-filter="links">Links only</button>
+        <div class="ces-search-wrap">
+          <input type="search" id="ces-search" placeholder="Search title or description…" />
+        </div>
+      </div>
+      <div class="ces-active-filter" id="ces-active-filter" hidden>
+        <span id="ces-active-filter-label"></span>
+        <button class="ces-clear-filter" id="ces-clear-filter" type="button">Clear ×</button>
+      </div>
+      <div class="ces-grid" id="ces-grid">
+        <div class="ces-empty" id="ces-empty">Loading Geography library…</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>S.3 Geography 🌍</div>
+    <div class="footer-links">
+      <a href="/finals/">← Back to Finals hub</a>
+    </div>
+  </footer>
+
+  <!-- ===== Viewer modal (re-used by subject-hub.js) ===== -->
+  <div class="modal-overlay viewer-modal" id="viewer-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card viewer-card">
+      <div class="modal-card-header viewer-header">
+        <div class="viewer-header-text">
+          <div class="viewer-title" id="viewer-title">Note</div>
+          <div class="viewer-meta" id="viewer-meta"></div>
+        </div>
+        <a class="viewer-download" id="viewer-download" href="#" target="_blank" rel="noopener" download>Download</a>
+        <button class="modal-close" data-close="x" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-card-body viewer-body" id="viewer-body"></div>
+    </div>
+  </div>
+
+  <!-- ===== Google Workspace sign-in warning (reused) ===== -->
+  <div class="modal-overlay gdocs-modal" id="gdocs-warn-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card gdocs-warn-card">
+      <div class="gdocs-warn-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="60" height="60">
+          <path fill="#4285f4" d="M21.6 12.227c0-.708-.058-1.39-.166-2.045H12v3.87h5.385a4.6 4.6 0 0 1-1.996 3.016v2.508h3.227c1.886-1.737 2.984-4.295 2.984-7.349z"/>
+          <path fill="#34a853" d="M12 22c2.7 0 4.964-.895 6.616-2.424l-3.227-2.508c-.895.6-2.037.953-3.389.953-2.603 0-4.806-1.756-5.59-4.12H3.07v2.59A9.997 9.997 0 0 0 12 22z"/>
+          <path fill="#fbbc05" d="M6.41 13.901A6.013 6.013 0 0 1 6.09 12c0-.66.114-1.302.32-1.901V7.508H3.07A9.997 9.997 0 0 0 2 12c0 1.614.386 3.14 1.07 4.49l3.34-2.589z"/>
+          <path fill="#ea4335" d="M12 5.977c1.47 0 2.788.505 3.826 1.498l2.866-2.866C16.96 2.99 14.696 2 12 2 8.087 2 4.705 4.244 3.07 7.508l3.34 2.59C7.194 7.734 9.397 5.977 12 5.977z"/>
+        </svg>
+      </div>
+      <div class="gdocs-warn-title">Sign in with your school account</div>
+      <div class="gdocs-warn-body">
+        Use your <strong>@smcesps.edu.hk</strong> Google account when this doc opens, or you'll get a "you need access" page.
+      </div>
+      <label class="gdocs-warn-skip">
+        <input type="checkbox" id="gdocs-warn-skip" />
+        <span>Don't show this again</span>
+      </label>
+      <div class="gdocs-warn-actions">
+        <button class="btn-secondary" data-close="cancel">Cancel</button>
+        <a class="btn-primary gdocs-warn-open" id="gdocs-warn-open" href="#" target="_blank" rel="noopener">Open in new tab</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initSubjectHub } from '/finals/subject-hub.js';
+    initSubjectHub({ subject: 'Geography', slug: 'geography', label: 'Geography' });
+  </script>
+</body>
+</html>
