@@ -358,8 +358,9 @@
 /* Grid */
 .ces-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 340px));
   gap: 14px;
+  justify-content: center;
 }
 .ces-card {
   background: var(--surface);
@@ -534,8 +535,9 @@
 /* ---------- Study tracks (3 big cards) ---------- */
 .ces-tracks {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 300px));
   gap: 14px;
+  justify-content: center;
 }
 .ces-track {
   position: relative;
@@ -611,8 +613,9 @@
 /* ---------- Practice (2 cards, horizontal) ---------- */
 .ces-practice {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 420px));
   gap: 14px;
+  justify-content: center;
 }
 .ces-pract {
   display: flex;
