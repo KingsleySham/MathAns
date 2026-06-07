@@ -759,15 +759,30 @@ viewModeTabsEl.addEventListener('click', (e) => {
   setViewMode(btn.dataset.view);
 });
 
+// Folders that have their own dedicated subject page. Clicking a folder
+// whose name matches (case-insensitive) jumps to that page instead of
+// opening it in the in-page browser. Keyed by a normalised folder name.
+const SUBJECT_FOLDER_PAGES = {
+  'ces':                  '/finals/ces',
+  'history':              '/finals/history',
+  'geography':            '/finals/geography',
+  'english literature':   '/finals/englit',
+  'eng lit':              '/finals/englit',
+  'ict':                  '/finals/ict',
+};
+
 function enterFolder(folderId) {
-  // CES has its own dedicated page (/finals/ces) — clicking a folder
-  // named exactly "CES" at any level jumps there instead of opening
+  // Subjects with a dedicated page (e.g. /finals/ces) — clicking a folder
+  // named after one of them at any level jumps there instead of opening
   // it in the in-page browser.
   if (folderId) {
     const node = folderById.get(folderId);
-    if (node && /^ces$/i.test((node.name || '').trim())) {
-      window.location.href = '/finals/ces';
-      return;
+    if (node) {
+      const key = (node.name || '').trim().toLowerCase();
+      if (SUBJECT_FOLDER_PAGES[key]) {
+        window.location.href = SUBJECT_FOLDER_PAGES[key];
+        return;
+      }
     }
   }
   currentFolderId = folderId || null;
