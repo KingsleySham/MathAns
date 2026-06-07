@@ -762,6 +762,8 @@ viewModeTabsEl.addEventListener('click', (e) => {
 // Folders that have their own dedicated subject page. Clicking a folder
 // whose name matches (case-insensitive) jumps to that page instead of
 // opening it in the in-page browser. Keyed by a normalised folder name.
+// The base map covers the hand-built pages; admin-created subject pages
+// (state/subjectPages) are merged in live below.
 const SUBJECT_FOLDER_PAGES = {
   'ces':                  '/finals/ces',
   'history':              '/finals/history',
@@ -770,6 +772,20 @@ const SUBJECT_FOLDER_PAGES = {
   'eng lit':              '/finals/englit',
   'ict':                  '/finals/ict',
 };
+
+// Live: fold in admin-configured subject pages so a folder named after any
+// published subject jumps to its hub. Matches on the page's subject, label
+// or slug. Unpublished pages are skipped for students.
+onSnapshot(doc(db, 'state', 'subjectPages'), (snap) => {
+  const pages = (snap.exists() && snap.data().pages) || {};
+  Object.values(pages).forEach(p => {
+    if (!p || !p.path || p.published === false) return;
+    [p.subject, p.label, p.slug].forEach(k => {
+      const key = String(k || '').trim().toLowerCase();
+      if (key) SUBJECT_FOLDER_PAGES[key] = p.path;
+    });
+  });
+}, (err) => console.warn('[app] subjectPages load failed:', err));
 
 function enterFolder(folderId) {
   // Subjects with a dedicated page (e.g. /finals/ces) — clicking a folder

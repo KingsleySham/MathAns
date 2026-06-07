@@ -490,6 +490,19 @@
   .ces-card-title { font-size: 0.94rem; }
 }
 
+/* Admin preview banner (shown only to admins on an unpublished page) */
+.subject-preview-banner {
+  margin: 0 0 22px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(var(--accent-rgb), 0.10);
+  border: 1px dashed rgba(var(--accent-rgb), 0.45);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+}
+
 /* ---------- Section blocks ---------- */
 .ces-section { margin-bottom: 36px; }
 .ces-section:last-child { margin-bottom: 0; }
