@@ -800,6 +800,15 @@ function trackClick(noteId, action) {
   updateDoc(doc(db, 'notes', noteId), { [field]: increment(1) })
     .catch(err => console.warn('[clicks] track failed:', err));
   recordAggregateClick(action);
+  // Per-folder engagement for the admin Insights tab.
+  const note = allNotes.find(n => n.id === noteId);
+  const bucket = CLICK_ACTION_BUCKET[action];
+  if (note && note.folderId && bucket) {
+    setDoc(doc(db, 'state', 'clickStats'), {
+      byFolder: { [note.folderId]: { [bucket]: increment(1) } },
+      updatedAt: serverTimestamp(),
+    }, { merge: true }).catch(() => {});
+  }
 }
 
 notesListEl.addEventListener('click', (e) => {

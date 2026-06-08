@@ -592,6 +592,7 @@ function startAdmin(fb) {
       rebuildFolderTree();
       renderFolderTree();
       renderCards();
+      renderInsightsFolders();
     },
     (err) => {
       console.error('[admin] folders listener:', err);
@@ -1354,6 +1355,8 @@ function startAdmin(fb) {
     (snap) => {
       allPages = (snap.exists() && snap.data().pages) || {};
       renderSubjpageList();
+      renderInsightsPages();    // labels/emojis resolve from page configs
+      renderInsightsSections(); // section list comes from page configs
     },
     (err) => { console.error('[admin] subjectPages listener:', err); if (subjpageListEl) subjpageListEl.innerHTML = '<li class="empty-state-small">Could not load.</li>'; }
   );
@@ -1710,6 +1713,7 @@ function startAdmin(fb) {
       renderStats();
       renderCards();
       renderFolderTree();      // refresh note counts in tree
+      renderInsightsFolders(); // folder note counts in the Insights tab
       renderEngagementTop();   // top-notes ranking depends on allNotes
     },
     (err) => {
@@ -2208,18 +2212,33 @@ function startAdmin(fb) {
     }
   );
 
-  /* -------- People online + in-depth per-hub views --------
+  /* ==========================================================================
+     People online + Insights tab (hubs · sections · folders)
      Presence docs (one per live session) carry the `page` slug they're on,
-     so we can count everyone online and break the live count down per hub.
-     Cumulative "clicked in / viewed / downloaded" counts come from the
-     `byPage` map on /state/clickStats (written by each hub page). */
+     so we count everyone online and break the live count down per hub.
+     Cumulative engagement comes from /state/clickStats:
+       byPage    { <slug>:   { visits, view, download, gdocs, quizlet } }
+       bySection { <key>:     { open, view, download, gdocs, quizlet, label, page } }
+       byFolder  { <folderId>:{ view, download, gdocs, quizlet } }
+     ========================================================================== */
   const LIVE_VIEWERS_WINDOW_MS = 75_000; // 30 s heartbeat + 45 s grace
   const liveViewersCard  = $('live-viewers-card');
   const liveViewersCount = $('live-viewers-count');
   const liveViewersLabel = $('live-viewers-label');
-  const indepthListEl    = $('indepth-list');
-  let presenceDocs = new Map();
-  let byPageStats  = {};
+  const insightsPagesEl    = $('insights-pages');
+  const insightsSectionsEl = $('insights-sections');
+  const insightsFoldersEl  = $('insights-folders');
+  let presenceDocs   = new Map();
+  let byPageStats    = {};
+  let bySectionStats = {};
+  let byFolderStats  = {};
+
+  // Same slug→key rule the hub pages use when writing bySection, so config
+  // sections and recorded sections line up on the same key.
+  function sanitizeTag(tag) {
+    const t = String(tag || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return t || 'untagged';
+  }
 
   // Friendly emoji + name for a page slug. 'finals' is the main hub and
   // 'ces' the dedicated CES page; the rest resolve from the stored
@@ -2233,6 +2252,18 @@ function startAdmin(fb) {
     const cfg = allPages[slug] || BUILTIN_DEFAULTS[slug];
     if (cfg) return { emoji: cfg.emoji || '📄', label: cfg.label || slug };
     return { emoji: '📄', label: slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Unknown' };
+  }
+
+  // Build engagement-stat chips (👁 views, ⬇ downloads, G docs, Q quizlet).
+  function statBits(s) {
+    const bits = [];
+    const v = Number(s.view) || 0, d = Number(s.download) || 0,
+          g = Number(s.gdocs) || 0, q = Number(s.quizlet) || 0;
+    if (v) bits.push(`<span class="indepth-stat indepth-view" title="Viewed / previewed">👁 ${v.toLocaleString()}</span>`);
+    if (d) bits.push(`<span class="indepth-stat indepth-dl" title="Downloaded">⬇ ${d.toLocaleString()}</span>`);
+    if (g) bits.push(`<span class="indepth-stat indepth-gdocs" title="Opened in Google Docs">G ${g.toLocaleString()}</span>`);
+    if (q) bits.push(`<span class="indepth-stat indepth-quizlet" title="Opened Quizlet">Q ${q.toLocaleString()}</span>`);
+    return bits;
   }
 
   // Live presence per page (within the heartbeat window) + grand total.
@@ -2264,38 +2295,37 @@ function startAdmin(fb) {
     liveViewersCard.classList.toggle('live-viewers-empty', total === 0);
   }
 
-  function renderInDepthViews() {
-    if (!indepthListEl) return;
+  /* -------- Insights: hubs & pages -------- */
+  function renderInsightsPages() {
+    if (!insightsPagesEl) return;
     const { map: liveByPage } = liveCountByPage();
-    // Show any hub that has cumulative stats OR someone live right now.
-    const slugs = new Set([...Object.keys(byPageStats || {}), ...liveByPage.keys()]);
+    // Always list every known hub/page, even with zero activity.
+    const slugs = new Set([
+      'finals', 'ces',
+      ...Object.keys(BUILTIN_DEFAULTS),
+      ...Object.keys(allPages),
+      ...Object.keys(byPageStats || {}),
+      ...liveByPage.keys(),
+    ]);
     const rows = [...slugs].map(slug => {
       const s = byPageStats[slug] || {};
+      const views = Number(s.view) || 0, downloads = Number(s.download) || 0,
+            gdocs = Number(s.gdocs) || 0, quizlet = Number(s.quizlet) || 0;
       return {
-        slug,
-        visits:    Number(s.visits)   || 0,
-        views:     Number(s.view)     || 0,
-        downloads: Number(s.download) || 0,
-        gdocs:     Number(s.gdocs)    || 0,
-        quizlet:   Number(s.quizlet)  || 0,
-        live:      liveByPage.get(slug) || 0,
-        get engaged() { return this.views + this.downloads + this.gdocs + this.quizlet; },
+        slug, s,
+        visits: Number(s.visits) || 0,
+        live:   liveByPage.get(slug) || 0,
+        engaged: views + downloads + gdocs + quizlet,
       };
-    }).sort((a, b) =>
-      (b.live - a.live) || (b.visits - a.visits) || (b.engaged - a.engaged)
-    );
+    }).sort((a, b) => (b.live - a.live) || (b.visits - a.visits) || (b.engaged - a.engaged));
 
     if (!rows.length) {
-      indepthListEl.innerHTML = '<li class="empty-state-small">No hub activity yet.</li>';
+      insightsPagesEl.innerHTML = '<li class="empty-state-small">No hub activity yet.</li>';
       return;
     }
-    indepthListEl.innerHTML = rows.map(r => {
+    insightsPagesEl.innerHTML = rows.map(r => {
       const meta = pageMeta(r.slug);
-      const bits = [];
-      if (r.views)     bits.push(`<span class="indepth-stat indepth-view" title="Viewed / previewed">👁 ${r.views.toLocaleString()}</span>`);
-      if (r.downloads) bits.push(`<span class="indepth-stat indepth-dl" title="Downloaded">⬇ ${r.downloads.toLocaleString()}</span>`);
-      if (r.gdocs)     bits.push(`<span class="indepth-stat indepth-gdocs" title="Opened in Google Docs">G ${r.gdocs.toLocaleString()}</span>`);
-      if (r.quizlet)   bits.push(`<span class="indepth-stat indepth-quizlet" title="Opened Quizlet">Q ${r.quizlet.toLocaleString()}</span>`);
+      const bits = statBits(r.s);
       return `
         <li class="indepth-row">
           <span class="indepth-emoji">${escapeHtmlSimple(meta.emoji)}</span>
@@ -2311,17 +2341,140 @@ function startAdmin(fb) {
     }).join('');
   }
 
+  /* -------- Insights: sections (grouped by hub) --------
+     Sections are enumerated from each hub's config so they show even with
+     zero activity; recorded counts (incl. CES, whose sections live in code)
+     are overlaid by key. */
+  function enumerateConfigSections() {
+    const out = new Map(); // key → { page, label }
+    const add = (slug, tag, title) => {
+      const key = slug + '__' + sanitizeTag(tag);
+      if (!out.has(key)) out.set(key, { page: slug, label: title || tag });
+    };
+    new Set([...Object.keys(BUILTIN_DEFAULTS), ...Object.keys(allPages)]).forEach(slug => {
+      const cfg = allPages[slug] || BUILTIN_DEFAULTS[slug];
+      const secs = (cfg && cfg.sections) || {};
+      // tracks/practice: empty tag → 'untagged' (matches the hub recorder).
+      ['tracks', 'practice'].forEach(sk => {
+        const sec = secs[sk];
+        if (sec && Array.isArray(sec.cards)) sec.cards.forEach(c => add(slug, c.tag, c.title));
+      });
+      // flashcards/textbook: hub registers tag default = section name, so match it.
+      ['flashcards', 'textbook'].forEach(sk => {
+        const sec = secs[sk];
+        if (sec && sec.card) add(slug, sec.card.tag || sk, sec.card.title || (sk === 'flashcards' ? 'Flashcards' : 'E-Textbook'));
+      });
+    });
+    return out;
+  }
+
+  function renderInsightsSections() {
+    if (!insightsSectionsEl) return;
+    const merged = new Map(); // key → { page, label, open, view, download, gdocs, quizlet }
+    enumerateConfigSections().forEach((v, key) => {
+      merged.set(key, { page: v.page, label: v.label, open: 0, view: 0, download: 0, gdocs: 0, quizlet: 0 });
+    });
+    Object.entries(bySectionStats || {}).forEach(([key, s]) => {
+      const base = merged.get(key) || { page: s.page || '', label: s.label || key, open: 0, view: 0, download: 0, gdocs: 0, quizlet: 0 };
+      if (s.page)  base.page  = s.page;
+      if (s.label) base.label = s.label;
+      base.open     = Number(s.open)     || 0;
+      base.view     = Number(s.view)     || 0;
+      base.download = Number(s.download) || 0;
+      base.gdocs    = Number(s.gdocs)    || 0;
+      base.quizlet  = Number(s.quizlet)  || 0;
+      merged.set(key, base);
+    });
+
+    if (!merged.size) {
+      insightsSectionsEl.innerHTML = '<div class="empty-state-small">No sections yet.</div>';
+      return;
+    }
+    const byPg = new Map();
+    merged.forEach(v => {
+      const pg = v.page || 'finals';
+      if (!byPg.has(pg)) byPg.set(pg, []);
+      byPg.get(pg).push(v);
+    });
+    const pages = [...byPg.keys()].sort((a, b) => pageMeta(a).label.localeCompare(pageMeta(b).label));
+    insightsSectionsEl.innerHTML = pages.map(pg => {
+      const meta = pageMeta(pg);
+      const rows = byPg.get(pg).sort((a, b) =>
+        (b.open - a.open) || ((b.view + b.download) - (a.view + a.download)) || a.label.localeCompare(b.label));
+      const items = rows.map(r => {
+        const bits = statBits(r);
+        return `
+          <li class="indepth-row indepth-row-section">
+            <div class="indepth-text">
+              <div class="indepth-name">${escapeHtmlSimple(r.label)}</div>
+              <div class="indepth-meta">${r.open.toLocaleString()} click${r.open === 1 ? '' : 's'} in${bits.length ? '' : ' · nothing opened yet'}</div>
+            </div>
+            <div class="indepth-stats">${bits.join('')}</div>
+          </li>`;
+      }).join('');
+      return `
+        <div class="insights-section-group">
+          <div class="insights-group-head"><span class="indepth-emoji">${escapeHtmlSimple(meta.emoji)}</span> ${escapeHtmlSimple(meta.label)}</div>
+          <ol class="indepth-list">${items}</ol>
+        </div>`;
+    }).join('');
+  }
+
+  /* -------- Insights: folders -------- */
+  function renderInsightsFolders() {
+    if (!insightsFoldersEl) return;
+    if (!folderLinear.length) {
+      insightsFoldersEl.innerHTML = '<li class="empty-state-small">No folders yet.</li>';
+      return;
+    }
+    insightsFoldersEl.innerHTML = folderLinear.map(node => {
+      const s = byFolderStats[node.id] || {};
+      const noteCount = countNotesInFolder(node.id);
+      const bits = statBits(s);
+      return `
+        <li class="indepth-row" style="padding-left:${node.depth * 16 + 12}px;">
+          <span class="indepth-emoji">📁</span>
+          <div class="indepth-text">
+            <div class="indepth-name">${escapeHtmlSimple(node.name)}</div>
+            <div class="indepth-meta">${noteCount} note${noteCount === 1 ? '' : 's'}${bits.length ? '' : ' · no views yet'}</div>
+          </div>
+          <div class="indepth-stats">${bits.join('')}</div>
+        </li>`;
+    }).join('');
+  }
+
+  function renderInsights() {
+    renderInsightsPages();
+    renderInsightsSections();
+    renderInsightsFolders();
+  }
+
   onSnapshot(
     collection(db, 'presence'),
     (snap) => {
       presenceDocs = new Map();
       snap.forEach(d => presenceDocs.set(d.id, d.data() || {}));
       renderLiveViewers();
-      renderInDepthViews();
+      renderInsightsPages();
     },
     (err) => console.error('[admin] presence listener:', err)
   );
-  setInterval(() => { renderLiveViewers(); renderInDepthViews(); }, 15_000);
+  setInterval(() => { renderLiveViewers(); renderInsightsPages(); }, 15_000);
+
+  /* -------- Tab switching (Dashboard ⇄ Insights) -------- */
+  const adminTabsEl = $('admin-tabs');
+  if (adminTabsEl && appEl) {
+    adminTabsEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.admin-tab');
+      if (!btn) return;
+      const tab = btn.dataset.tab;
+      adminTabsEl.querySelectorAll('.admin-tab').forEach(b =>
+        b.classList.toggle('is-active', b === btn));
+      appEl.classList.toggle('show-insights', tab === 'insights');
+      if (tab === 'insights') renderInsights();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 
   /* -------- Collapsible Exam Coverage section -------- */
   const COVERAGE_COLLAPSE_KEY = 'admin.coverageCollapsed';
@@ -2464,9 +2617,11 @@ function startAdmin(fb) {
         uniqueVisitors: Number(data && data.uniqueVisitors) || 0,
         pageViews:      Number(data && data.pageViews) || 0,
       };
-      byPageStats = (data && data.byPage) || {};
+      byPageStats    = (data && data.byPage)    || {};
+      bySectionStats = (data && data.bySection) || {};
+      byFolderStats  = (data && data.byFolder)  || {};
       renderEngagementAggregate();
-      renderInDepthViews();
+      renderInsights();
     },
     (err) => console.error('[admin] clickStats listener:', err)
   );

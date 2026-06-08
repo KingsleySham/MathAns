@@ -117,6 +117,43 @@ function recordCesVisit() {
 }
 recordCesVisit();
 
+/* Per-section + per-folder engagement for the admin Insights tab. Section =
+   the active study track; folder = the note's folder. Admin sessions skip. */
+function sanitizeTag(tag) {
+  const t = String(tag || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return t || 'untagged';
+}
+function recordSectionOpen(trackKey) {
+  if (isAdmin() || !trackKey) return;
+  const t = TRACKS[trackKey];
+  setDoc(doc(db, 'state', 'clickStats'), {
+    bySection: { ['ces__' + sanitizeTag(trackKey)]: {
+      open: increment(1),
+      label: (t && t.label) || trackKey,
+      page: 'ces',
+    } },
+    updatedAt: serverTimestamp(),
+  }, { merge: true }).catch(() => {});
+}
+function recordItemEngagement(action, note) {
+  if (isAdmin()) return;
+  const bucket = CLICK_ACTION_BUCKET[action];
+  if (!bucket) return;
+  const patch = { updatedAt: serverTimestamp() };
+  if (note && note.folderId) patch.byFolder = { [note.folderId]: { [bucket]: increment(1) } };
+  if (activeTrack) {
+    const t = TRACKS[activeTrack];
+    patch.bySection = { ['ces__' + sanitizeTag(activeTrack)]: {
+      [bucket]: increment(1),
+      label: (t && t.label) || activeTrack,
+      page: 'ces',
+    } };
+  }
+  if (patch.byFolder || patch.bySection) {
+    setDoc(doc(db, 'state', 'clickStats'), patch, { merge: true }).catch(() => {});
+  }
+}
+
 /* ---------- Filter chips ---------- */
 filterChips.forEach(b => b.addEventListener('click', () => {
   filterChips.forEach(x => x.classList.toggle('active', x === b));
@@ -171,6 +208,7 @@ trackButtons.forEach(btn => {
     } else {
       activeTrack = key;
     }
+    if (activeTrack) recordSectionOpen(activeTrack);
     trackButtons.forEach(b => b.classList.toggle('is-active', b.dataset.cesTrack === activeTrack));
     if (activeTrack && activeFilterEl) {
       activeFilterEl.hidden = false;
@@ -307,6 +345,7 @@ gridEl.addEventListener('click', (e) => {
   if (!actionEl) return;
   const action = actionEl.dataset.action;
   trackClick(note.id, action);
+  recordItemEngagement(action, note);
   if (action === 'view')          { openViewer(note); }
   else if (action === 'gdocs-open') { openGdocs(note); }
   // 'download' and 'quizlet-open' are native anchors — let them navigate.

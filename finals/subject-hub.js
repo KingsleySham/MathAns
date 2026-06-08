@@ -129,6 +129,44 @@ export function initSubjectPage(opts = {}) {
       .catch(err => console.warn('[' + SLUG + '] visit track failed:', err));
   }
 
+  /* Per-section + per-folder engagement for the admin Insights tab.
+     Section = the active card; folder = the note's folder. Admin skips. */
+  function sanitizeTag(tag) {
+    const t = String(tag || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return t || 'untagged';
+  }
+  function recordSectionOpen(card) {
+    if (isAdmin() || !card) return;
+    const tag = card.tag || 'untagged';
+    setDoc(doc(db, 'state', 'clickStats'), {
+      bySection: { [SLUG + '__' + sanitizeTag(tag)]: {
+        open: increment(1),
+        label: card.title || tag,
+        page: SLUG,
+      } },
+      updatedAt: serverTimestamp(),
+    }, { merge: true }).catch(() => {});
+  }
+  function recordItemEngagement(action, note) {
+    if (isAdmin()) return;
+    const bucket = CLICK_BUCKET[action];
+    if (!bucket) return;
+    const activeCard = state.activeCardId ? state.cardsById.get(state.activeCardId) : null;
+    const patch = { updatedAt: serverTimestamp() };
+    if (note && note.folderId) patch.byFolder = { [note.folderId]: { [bucket]: increment(1) } };
+    if (activeCard) {
+      const tag = activeCard.tag || 'untagged';
+      patch.bySection = { [SLUG + '__' + sanitizeTag(tag)]: {
+        [bucket]: increment(1),
+        label: activeCard.title || tag,
+        page: SLUG,
+      } };
+    }
+    if (patch.byFolder || patch.bySection) {
+      setDoc(doc(db, 'state', 'clickStats'), patch, { merge: true }).catch(() => {});
+    }
+  }
+
   /* ---------- card matching ---------- */
   function matchesCard(n, card) {
     if (!card) return true;
@@ -432,6 +470,7 @@ export function initSubjectPage(opts = {}) {
     syncChrome();
     renderNotes();
     if (state.activeCardId) {
+      recordSectionOpen(card);
       const grid = document.getElementById('ces-grid');
       if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -451,6 +490,7 @@ export function initSubjectPage(opts = {}) {
     if (!actionEl) return;
     const action = actionEl.dataset.action;
     trackClick(note.id, action);
+    recordItemEngagement(action, note);
     if (action === 'view') openViewer(note);
     else if (action === 'gdocs-open') openGdocs(note);
   }

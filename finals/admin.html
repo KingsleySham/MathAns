@@ -70,17 +70,12 @@
       <div class="live-viewers-meta">live</div>
     </section>
 
-    <!-- In-depth views — per-hub breakdown of who clicked in and what they
-         viewed / downloaded (English, CES, ICT, History, …). -->
-    <section class="card indepth-card" id="indepth-card">
-      <div class="indepth-head">
-        <h3 class="dashboard-h" style="margin:0;">🔎 In-depth views</h3>
-        <div class="indepth-sub">Clicks into each hub · views &amp; downloads</div>
-      </div>
-      <ol class="indepth-list" id="indepth-list">
-        <li class="empty-state-small">No hub activity yet.</li>
-      </ol>
-    </section>
+    <!-- Tab bar — switch between the main dashboard and the full Insights
+         breakdown (hubs, sections, pages, folders). -->
+    <div class="admin-tabs" id="admin-tabs" role="tablist">
+      <button class="admin-tab is-active" data-tab="dashboard" role="tab" type="button">📊 Dashboard</button>
+      <button class="admin-tab" data-tab="insights" role="tab" type="button">🔎 Insights</button>
+    </div>
 
     <!-- Stats dashboard -->
     <section class="stats-dashboard">
@@ -320,6 +315,41 @@
       <ul class="reports-list" id="reports-list">
         <li class="empty-state-small">Loading…</li>
       </ul>
+    </section>
+
+    <!-- ===== Insights tab — full per-item breakdown ===== -->
+    <section id="insights-panel" class="insights-panel">
+      <div class="insights-intro">
+        <h2 class="section-title" style="margin-bottom:4px;">🔎 Insights — everything, in depth</h2>
+        <p class="section-desc" style="margin:0;">
+          Live presence and cumulative engagement for every hub, section and folder.
+          Counts exclude your own admin sessions and build up over time.
+        </p>
+      </div>
+
+      <div class="card insights-block">
+        <h3 class="dashboard-h">📚 Hubs &amp; pages</h3>
+        <p class="section-desc" style="margin-top:-4px;margin-bottom:12px;">How many clicked into each hub, plus what they viewed and downloaded.</p>
+        <ol class="indepth-list" id="insights-pages">
+          <li class="empty-state-small">No hub activity yet.</li>
+        </ol>
+      </div>
+
+      <div class="card insights-block">
+        <h3 class="dashboard-h">🧭 Sections</h3>
+        <p class="section-desc" style="margin-top:-4px;margin-bottom:12px;">Study tracks, practice, flashcards &amp; e-textbook inside each hub — clicks in and what got opened.</p>
+        <div id="insights-sections">
+          <div class="empty-state-small">No section activity yet.</div>
+        </div>
+      </div>
+
+      <div class="card insights-block">
+        <h3 class="dashboard-h">📁 Folders</h3>
+        <p class="section-desc" style="margin-top:-4px;margin-bottom:12px;">Every folder, its note count, and how often its notes were viewed or downloaded.</p>
+        <ol class="indepth-list" id="insights-folders">
+          <li class="empty-state-small">No folders yet.</li>
+        </ol>
+      </div>
     </section>
 
   </main>
