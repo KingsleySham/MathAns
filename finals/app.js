@@ -8,6 +8,7 @@ import {
   doc, increment
 } from './firebase-init.js';
 import { TIMETABLE, COVERAGE as DEFAULT_COVERAGE } from './exam-data.js';
+import { mountSpeaking } from './speaking.js';
 
 // Coverage starts from the static default and gets replaced by the
 // admin-managed copy in /state/coverage once it loads.
@@ -84,7 +85,17 @@ document.getElementById('main-tabs').addEventListener('click', (e) => {
     p.classList.toggle('active', p.id === 'panel-' + target);
   });
   if (target === 'maths') ensureMathsInitialized();
+  if (target === 'speaking') ensureSpeakingInitialized();
 });
+
+/* English Speaking group-possibility counter — mounted lazily on first open. */
+let speakingInited = false;
+function ensureSpeakingInitialized() {
+  if (speakingInited) return;
+  speakingInited = true;
+  const root = document.getElementById('speaking-root');
+  if (root) mountSpeaking(root);
+}
 
 /* ==========================================================================
    Notes — upload
