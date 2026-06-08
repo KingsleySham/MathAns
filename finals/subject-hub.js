@@ -30,7 +30,7 @@ export function initSubjectPage(opts = {}) {
     rawNotes: [],   // every non-archived note, all subjects
     notes: [],      // filtered to this page's subject
     notesLoaded: false,
-    activeFilter: 'all',
+    activeFilter: null,  // null = nothing picked yet (show prompt, not all)
     activeCardId: null,
     cardsById: new Map(),
   };
@@ -297,7 +297,7 @@ export function initSubjectPage(opts = {}) {
           <h2 class="ces-section-title">Library</h2>
         </div>
         <div class="ces-filters">
-          <button class="ces-chip active" data-ces-filter="all">All</button>
+          <button class="ces-chip" data-ces-filter="all">All</button>
           <button class="ces-chip" data-ces-filter="notes">Notes</button>
           <button class="ces-chip" data-ces-filter="mock_paper">Mock papers</button>
           <button class="ces-chip" data-ces-filter="links">Links only</button>
@@ -320,7 +320,7 @@ export function initSubjectPage(opts = {}) {
     state.config = cfg;
     state.cardsById = new Map();
     state.activeCardId = null;
-    state.activeFilter = 'all';
+    state.activeFilter = null;
 
     // Unknown subject.
     if (!cfg) {
@@ -373,7 +373,7 @@ export function initSubjectPage(opts = {}) {
 
     setFooter(cfg);
     wireHeroOnly();
-    wireSections();
+    syncChrome();
     recomputeNotes();
   }
 
@@ -395,59 +395,79 @@ export function initSubjectPage(opts = {}) {
     } catch (_) {}
   }
 
-  /* ---------- section interactions ---------- */
-  function wireSections() {
-    document.querySelectorAll('[data-ces-filter]').forEach(b => {
-      b.addEventListener('click', () => {
-        document.querySelectorAll('[data-ces-filter]').forEach(x => x.classList.toggle('active', x === b));
-        state.activeFilter = b.dataset.cesFilter;
-        renderNotes();
-      });
-    });
-    const searchEl = document.getElementById('ces-search');
-    if (searchEl) searchEl.addEventListener('input', renderNotes);
-
-    const activeFilterEl = document.getElementById('ces-active-filter');
-    const activeFilterLabelEl = document.getElementById('ces-active-filter-label');
-    const clearBtn = document.getElementById('ces-clear-filter');
-
-    document.querySelectorAll('[data-card]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.card;
-        const card = state.cardsById.get(id);
-        if (!card) return; // guard: stale id, never throw past this point
-
-        state.activeCardId = (state.activeCardId === id) ? null : id;
-        document.querySelectorAll('[data-card]').forEach(b =>
-          b.classList.toggle('is-active', b.dataset.card === state.activeCardId));
-        if (state.activeCardId && activeFilterEl) {
-          activeFilterEl.hidden = false;
-          activeFilterLabelEl.textContent = 'Showing: ' + (card.title || card.tag || '');
-        } else if (activeFilterEl) {
-          activeFilterEl.hidden = true;
-        }
-        renderNotes();
-        if (state.activeCardId) {
-          const grid = document.getElementById('ces-grid');
-          if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      });
-    });
-    if (clearBtn) clearBtn.addEventListener('click', () => {
-      state.activeCardId = null;
-      document.querySelectorAll('[data-card]').forEach(b => b.classList.remove('is-active'));
-      if (activeFilterEl) activeFilterEl.hidden = true;
-      renderNotes();
-    });
-
-    const grid = document.getElementById('ces-grid');
-    if (grid) grid.addEventListener('click', onGridClick);
+  /* ---------- section interactions ----------
+     Listeners are DELEGATED on the persistent #subject-root container and
+     attached exactly once (see init below). This survives every re-render
+     of the page chrome, so clicks always work no matter how often mount()
+     runs. */
+  function syncChrome() {
+    document.querySelectorAll('[data-ces-filter]').forEach(b =>
+      b.classList.toggle('active', b.dataset.cesFilter === state.activeFilter));
+    document.querySelectorAll('[data-card]').forEach(b =>
+      b.classList.toggle('is-active', b.dataset.card === state.activeCardId));
+    const banner = document.getElementById('ces-active-filter');
+    const lbl = document.getElementById('ces-active-filter-label');
+    const card = state.activeCardId ? state.cardsById.get(state.activeCardId) : null;
+    if (banner) {
+      if (card) { banner.hidden = false; if (lbl) lbl.textContent = 'Showing: ' + (card.title || card.tag || ''); }
+      else banner.hidden = true;
+    }
   }
+  function selectFilter(f) {
+    state.activeFilter = (state.activeFilter === f) ? null : f;
+    state.activeCardId = null;
+    syncChrome();
+    renderNotes();
+  }
+  function selectCard(id) {
+    const card = state.cardsById.get(id);
+    if (!card) return;
+    state.activeCardId = (state.activeCardId === id) ? null : id;
+    state.activeFilter = null;
+    syncChrome();
+    renderNotes();
+    if (state.activeCardId) {
+      const grid = document.getElementById('ces-grid');
+      if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+  function clearPicks() {
+    state.activeFilter = null;
+    state.activeCardId = null;
+    const s = document.getElementById('ces-search');
+    if (s) s.value = '';
+    syncChrome();
+    renderNotes();
+  }
+  function handleNoteAction(e, cardEl) {
+    const note = state.notes.find(n => n.id === cardEl.dataset.id);
+    if (!note) return;
+    const actionEl = e.target.closest('[data-action]');
+    if (!actionEl) return;
+    const action = actionEl.dataset.action;
+    trackClick(note.id, action);
+    if (action === 'view') openViewer(note);
+    else if (action === 'gdocs-open') openGdocs(note);
+  }
+  // One delegated click + input listener for the whole page.
+  root.addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-ces-filter]');
+    if (chip) { selectFilter(chip.dataset.cesFilter); return; }
+    const clearBtn = e.target.closest('#ces-clear-filter');
+    if (clearBtn) { clearPicks(); return; }
+    const cardBtn = e.target.closest('[data-card]');
+    if (cardBtn) { selectCard(cardBtn.dataset.card); return; }
+    const noteCard = e.target.closest('.ces-card');
+    if (noteCard) { handleNoteAction(e, noteCard); return; }
+  });
+  root.addEventListener('input', (e) => {
+    if (e.target && e.target.id === 'ces-search') renderNotes();
+  });
 
   /* ---------- notes render ---------- */
   function passesFilter(n) {
     const f = state.activeFilter;
-    if (f === 'all') return true;
+    if (f === null || f === 'all') return true;
     if (f === 'notes')      return n.type === 'notes' || (!n.type && n.downloadUrl);
     if (f === 'mock_paper') return n.type === 'mock_paper';
     if (f === 'links')      return !n.downloadUrl && (!!n.gdocsUrl || !!n.quizletUrl);
@@ -458,9 +478,31 @@ export function initSubjectPage(opts = {}) {
     const grid = document.getElementById('ces-grid');
     const empty = document.getElementById('ces-empty');
     if (!grid || !empty) return;
+
+    // per-card counts (shown on the cards regardless of what's picked)
+    document.querySelectorAll('[data-count]').forEach(el => {
+      const card = state.cardsById.get(el.dataset.count);
+      const n = card ? countCard(card) : 0;
+      el.textContent = n > 0 ? (n + (n === 1 ? ' item' : ' items')) : 'Coming soon';
+      el.classList.toggle('is-empty', n === 0);
+    });
+
     const searchEl = document.getElementById('ces-search');
     const q = (searchEl && searchEl.value || '').trim().toLowerCase();
     const activeCard = state.activeCardId ? state.cardsById.get(state.activeCardId) : null;
+    const picked = state.activeFilter !== null || !!activeCard || q !== '';
+
+    // Nothing picked yet — prompt the user to choose instead of dumping
+    // the whole library.
+    if (!picked) {
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+      empty.textContent = !state.notesLoaded
+        ? `Loading ${label()} library…`
+        : `👆 Pick a study track, practice format, or a filter above to see ${label()} notes.`;
+      grid.appendChild(empty);
+      return;
+    }
 
     const filtered = state.notes.filter(n => {
       if (!passesFilter(n)) return false;
@@ -469,14 +511,6 @@ export function initSubjectPage(opts = {}) {
       return (n.title || '').toLowerCase().includes(q) ||
              (n.description || '').toLowerCase().includes(q) ||
              (n.uploaderName || '').toLowerCase().includes(q);
-    });
-
-    // per-card counts
-    document.querySelectorAll('[data-count]').forEach(el => {
-      const card = state.cardsById.get(el.dataset.count);
-      const n = card ? countCard(card) : 0;
-      el.textContent = n > 0 ? (n + (n === 1 ? ' item' : ' items')) : 'Coming soon';
-      el.classList.toggle('is-empty', n === 0);
     });
 
     if (filtered.length === 0) {
@@ -521,19 +555,6 @@ export function initSubjectPage(opts = {}) {
           <div class="ces-card-actions">${actions.join('')}</div>
         </div>`;
     }).join('');
-  }
-
-  function onGridClick(e) {
-    const card = e.target.closest('.ces-card');
-    if (!card) return;
-    const note = state.notes.find(n => n.id === card.dataset.id);
-    if (!note) return;
-    const actionEl = e.target.closest('[data-action]');
-    if (!actionEl) return;
-    const action = actionEl.dataset.action;
-    trackClick(note.id, action);
-    if (action === 'view') openViewer(note);
-    else if (action === 'gdocs-open') openGdocs(note);
   }
 
   /* ---------- viewer modal (static in shell) ---------- */
