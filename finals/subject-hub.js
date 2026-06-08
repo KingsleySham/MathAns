@@ -127,11 +127,17 @@ export function initSubjectPage(opts = {}) {
   /* ---------- card matching ---------- */
   function matchesCard(n, card) {
     if (!card) return true;
+    // Flashcards card is link-based (anything with a Quizlet set).
     if (card.kind === 'flashcardsOnly') return !!n.quizletUrl;
+    // Mock papers belong ONLY under a mock-only card — never under study
+    // tracks, question banks or the textbook, even if they happen to share
+    // a tag. Conversely the mock card never shows non-mock notes.
+    if (card.kind === 'mockOnly') return n.type === 'mock_paper';
+    if (n.type === 'mock_paper') return false;
+    // Note/track/textbook cards: match on the card's tag.
     const tags = Array.isArray(n.tags) ? n.tags : [];
     if (tags.length) return tags.includes(card.tag);
-    if (card.kind === 'mockOnly')   return n.type === 'mock_paper';
-    if (card.kind === 'excludeMock' && n.type === 'mock_paper') return false;
+    // Untagged fallback: loose match on title/description.
     const hay = `${n.title || ''} ${n.description || ''}`.toLowerCase();
     return card.tag ? hay.includes(String(card.tag).toLowerCase()) : false;
   }
