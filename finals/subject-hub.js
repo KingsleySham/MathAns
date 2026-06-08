@@ -76,6 +76,10 @@ export function initSubjectPage(opts = {}) {
     const ext = (String(name || '').split('.').pop() || '').toLowerCase();
     return ['pdf','png','jpg','jpeg','webp','gif','txt','doc','docx','html','htm'].includes(ext);
   }
+  function isHtmlFile(name) {
+    const ext = (String(name || '').split('.').pop() || '').toLowerCase();
+    return ext === 'html' || ext === 'htm';
+  }
   function isAdmin() {
     try { return !!sessionStorage.getItem('finals.adminPasscode'); }
     catch (_) { return false; }
@@ -579,6 +583,7 @@ export function initSubjectPage(opts = {}) {
       const actions = [];
       if (canPreview) actions.push(`<button class="ces-btn-view" data-action="view">View</button>`);
       if (hasFile) actions.push(`<a class="ces-btn-download" data-action="download" href="${esc(n.downloadUrl)}" target="_blank" rel="noopener" download="${esc(n.fileName || '')}">Download</a>`);
+      if (hasFile && isHtmlFile(n.fileName)) actions.push(`<a class="ces-btn-fullscreen" data-action="fullscreen-open" href="/view/${encodeURIComponent(n.id)}" target="_blank" rel="noopener" aria-label="Open in fullscreen" title="Open in fullscreen"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z" fill="currentColor"/></svg></a>`);
       if (hasGdocs) actions.push(`<button class="ces-btn-gdocs" data-action="gdocs-open">📄 Workspace</button>`);
       if (hasQuizlet) actions.push(`<a class="ces-btn-quizlet" data-action="quizlet-open" href="${esc(n.quizletUrl)}" target="_blank" rel="noopener">Q Flashcards</a>`);
       return `
