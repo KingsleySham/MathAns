@@ -2351,6 +2351,8 @@ function startAdmin(fb) {
       const key = slug + '__' + sanitizeTag(tag);
       if (!out.has(key)) out.set(key, { page: slug, label: title || tag });
     };
+    // Known main-hub sections (tab-based, not config-driven).
+    add('finals', 'english-speaking', 'English Speaking');
     new Set([...Object.keys(BUILTIN_DEFAULTS), ...Object.keys(allPages)]).forEach(slug => {
       const cfg = allPages[slug] || BUILTIN_DEFAULTS[slug];
       const secs = (cfg && cfg.sections) || {};

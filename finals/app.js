@@ -88,8 +88,25 @@ document.getElementById('main-tabs').addEventListener('click', (e) => {
   if (target === 'speaking') {
     ensureSpeakingInitialized();
     maybeShowSpeakingDisclaimer();
+    recordHubSectionOpen('english-speaking', 'English Speaking');
   }
 });
+
+/* Record a "clicked into" event for a section of the main Finals hub (e.g.
+   the English Speaking tab) so it shows in the admin Insights tab. Mirrors
+   the per-section tracking on the subject hubs; admin sessions are skipped. */
+function recordHubSectionOpen(tag, label) {
+  if (isAdminSignedIn()) return;
+  const t = String(tag || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'untagged';
+  setDoc(doc(db, 'state', 'clickStats'), {
+    bySection: { ['finals__' + t]: {
+      open: increment(1),
+      label: label || tag,
+      page: 'finals',
+    } },
+    updatedAt: serverTimestamp(),
+  }, { merge: true }).catch(() => {});
+}
 
 /* English Speaking group-possibility counter — mounted lazily on first open. */
 let speakingInited = false;
