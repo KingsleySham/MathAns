@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S3 ICT — Python Debug Lab</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4f8;--card:#fff;--border:#ccd6e0;--text:#1a2535;--muted:#5a6a7e;
+  --navy:#1F4E79;--navy-light:#dbeafe;--orange:#c84b00;--green:#1B5E20;
+  --red:#8B1A1A;--purple:#4A148C;--code-bg:#f8f9fb;
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+/* HEADER */
+.hdr{background:var(--navy);padding:11px 20px;display:flex;align-items:center;justify-content:space-between}
+.hdr h1{font-size:0.95rem;font-weight:700;color:#fff;letter-spacing:.01em}
+.hdr p{font-size:0.72rem;color:#aac8e8;margin-top:2px}
+.score-pill{background:#163d60;border:1px solid #2a6096;border-radius:20px;padding:5px 15px;font-size:0.82rem;color:#f9a825;font-weight:700;white-space:nowrap}
+
+/* LAYOUT */
+.app{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:195px;background:#fff;border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:8px 6px}
+.sidebar-title{font-size:0.68rem;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;padding:4px 6px 7px}
+.q-btn{display:block;width:100%;text-align:left;padding:6px 9px;border:none;border-radius:5px;background:transparent;color:var(--muted);font-size:0.79rem;cursor:pointer;margin-bottom:1px;transition:background .12s,color .12s;position:relative;line-height:1.35}
+.q-btn:hover{background:#f0f4f8;color:var(--text)}
+.q-btn.active{background:var(--navy);color:#fff;font-weight:600}
+.q-btn.done{color:var(--green)}
+.q-btn.done::after{content:'✓';position:absolute;right:7px;color:var(--green);font-weight:700}
+.q-btn.active.done{background:var(--navy);color:#fff}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:14px 18px 50px}
+
+/* PROGRESS */
+.prog-bar{background:#fff;border:1px solid var(--border);border-radius:6px;padding:9px 13px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.prog-label{font-size:0.78rem;color:var(--muted);white-space:nowrap;font-weight:600}
+.prog-track{flex:1;height:6px;background:#e2eaf0;border-radius:10px;overflow:hidden}
+.prog-fill{height:100%;background:var(--navy);border-radius:10px;transition:width .3s}
+.prog-count{font-size:0.78rem;color:var(--muted);white-space:nowrap}
+
+/* CARDS */
+.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:15px 16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+
+.card-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.card-row h2{font-size:0.97rem;font-weight:700;color:var(--text)}
+.badge-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.err-badge{padding:2px 9px;border-radius:4px;font-size:0.7rem;font-weight:700;letter-spacing:.04em}
+.badge-mix{background:#fff3cd;color:#7c4a00;border:1px solid #f9c74f}
+.bug-count{background:var(--navy);color:#fff;border-radius:4px;padding:2px 8px;font-size:0.72rem;font-weight:700}
+.chapter-tag{font-size:0.7rem;color:var(--muted);background:#f0f4f8;padding:2px 7px;border-radius:3px;border:1px solid var(--border)}
+
+.task-desc{font-size:0.9rem;line-height:1.65;color:#2d3e52;margin-bottom:11px}
+.task-desc strong{color:var(--navy)}
+.task-desc code{background:#f0f4f8;padding:1px 5px;border-radius:3px;font-size:0.85em;color:var(--orange);font-family:'Courier New',monospace}
+
+.section-label{font-size:0.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.label-bug{color:var(--red)}
+.label-fix{color:var(--navy)}
+
+/* Bug list */
+.bug-list{background:#fff8f0;border:1px solid #f9c74f;border-radius:6px;padding:9px 13px;margin-bottom:10px;font-size:0.85rem}
+.bug-list strong{color:var(--orange);font-size:0.8rem;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.bug-list ol{padding-left:18px;color:#5a3800}
+.bug-list li{margin-bottom:2px;line-height:1.5}
+
+/* CodeMirror */
+.CodeMirror{border-radius:5px;font-size:0.86rem;line-height:1.6;height:auto;font-family:'Courier New',monospace;border:1px solid var(--border)}
+.CodeMirror-scroll{min-height:100px}
+.CodeMirror-lines{padding:10px 0}
+.cm-broken .CodeMirror{background:#fff8f8;border-color:#e5b4b4}
+.cm-fix .CodeMirror{background:#f8fbff;border-color:#9dc3e6}
+.cm-fix .CodeMirror.CodeMirror-focused{border-color:var(--navy);box-shadow:0 0 0 2px rgba(31,78,121,.12)}
+
+/* Explanation */
+.explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:680px){.explain-grid{grid-template-columns:1fr}}
+.explain-box label{display:block;font-size:0.78rem;font-weight:700;color:var(--muted);margin-bottom:4px}
+.explain-box label em{font-weight:400;font-style:normal;color:#8a9bb0}
+.explain-textarea{width:100%;background:#fafcff;border:1px solid var(--border);border-radius:5px;padding:8px 10px;font-size:0.87rem;font-family:inherit;color:var(--text);resize:vertical;min-height:68px;transition:border-color .2s,box-shadow .2s}
+.explain-textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 2px rgba(31,78,121,.1)}
+
+/* Buttons */
+.action-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.btn{padding:7px 16px;border:none;border-radius:5px;font-size:0.83rem;font-weight:600;cursor:pointer;transition:background .15s,transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-check{background:var(--navy);color:#fff}
+.btn-check:hover{background:#163d60}
+.btn-hint{background:#f0f4f8;color:var(--text);border:1px solid var(--border)}
+.btn-hint:hover{background:#e2eaf0}
+.btn-answer{background:#fff3f3;color:var(--red);border:1px solid #f5c2c2}
+.btn-answer:hover{background:#fde8e8}
+.btn-next{background:#1B5E20;color:#fff;margin-left:auto}
+.btn-next:hover{background:#2e7d32}
+.btn-prev{background:#f0f4f8;color:var(--text);border:1px solid var(--border)}
+.btn-prev:hover{background:#e2eaf0}
+
+/* Feedback */
+.feedback{margin-top:11px;padding:11px 14px;border-radius:6px;font-size:0.87rem;line-height:1.6;display:none}
+.feedback.visible{display:block}
+.feedback.correct{background:#f0faf2;border:1px solid #86c99a;color:#1a4a27}
+.feedback.partial{background:#fff8e6;border:1px solid #f0c040;color:#5a3800}
+.feedback.wrong{background:#fff3f3;border:1px solid #f5c2c2;color:#6a1a1a}
+
+/* Hint / Answer */
+.hint-box{background:#fffbeb;border:1px solid #f0c040;border-radius:5px;padding:9px 12px;margin-top:9px;font-size:0.85rem;color:#5a3800;display:none}
+.hint-box.visible{display:block}
+.hint-box::before{content:'💡 Hint: ';font-weight:700}
+
+.answer-box{background:#f8f4ff;border:1px solid #c9a8f0;border-radius:6px;padding:13px 15px;margin-top:9px;display:none}
+.answer-box.visible{display:block}
+.answer-box h4{color:var(--purple);font-size:0.78rem;font-weight:700;margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em}
+.answer-box p{font-size:0.86rem;color:#2d1a4a;line-height:1.65;margin-bottom:8px}
+.answer-bugs{padding-left:18px;margin-bottom:10px}
+.answer-bugs li{font-size:0.86rem;color:#2d1a4a;line-height:1.55;margin-bottom:3px}
+.answer-bugs li strong{color:var(--red)}
+.answer-code-label{font-size:0.72rem;font-weight:700;letter-spacing:.06em;color:var(--purple);text-transform:uppercase;margin-bottom:4px}
+.answer-code{background:#1e1e2e;border-radius:5px;padding:12px;font-family:'Courier New',monospace;font-size:0.85rem;color:#9CDBAA;white-space:pre;overflow-x:auto;border:1px solid #4a148c33}
+
+.q-counter{font-size:0.75rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div>
+    <h1>S.3 ICT — Python Debug Lab</h1>
+    <p>Find every bug · Fix the code · Explain why it went wrong</p>
+  </div>
+  <div class="score-pill" id="score-pill">Score: 0 / 20</div>
+</header>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-title">Questions</div>
+    <div id="q-list"></div>
+  </aside>
+
+  <main class="main">
+    <div class="prog-bar">
+      <span class="prog-label">Progress</span>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <span class="prog-count" id="prog-count">0 / 20</span>
+    </div>
+
+    <div class="card">
+      <div class="card-row">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <h2 id="q-title">Q1. Weather Station Report</h2>
+            <span class="q-counter" id="q-counter">1 of 20</span>
+          </div>
+          <div class="badge-row">
+            <span class="err-badge badge-mix" id="q-badge">Multiple Errors</span>
+            <span class="bug-count" id="bug-count">5 bugs</span>
+            <span class="chapter-tag" id="q-chapter">Ch.2 / Ch.3 / Ch.5</span>
+          </div>
+        </div>
+      </div>
+      <p class="task-desc" id="q-task"></p>
+      <div class="bug-list" id="bug-guide">
+        <strong>Your Mission — find and fix all bugs:</strong>
+        <ol id="bug-ol"></ol>
+      </div>
+      <div class="section-label label-bug">⚠ Buggy Code — read carefully and spot every error</div>
+      <div class="cm-broken" id="broken-wrap"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label label-fix">🛠 Fix the Code — edit below, then check your answer</div>
+      <div class="cm-fix" id="fix-wrap"></div>
+      <div class="hint-box" id="hint-box"></div>
+      <div class="answer-box" id="answer-box">
+        <h4>Model Answer — All Bugs Explained</h4>
+        <ol class="answer-bugs" id="ans-bugs"></ol>
+        <div class="answer-code-label">Corrected Code</div>
+        <div class="answer-code" id="ans-code"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="explain-grid">
+        <div class="explain-box">
+          <label>List the bugs you found <em>(name each error type)</em></label>
+          <textarea class="explain-textarea" id="explain-why" placeholder="Bug 1: TypeError because…&#10;Bug 2: SyntaxError because…" oninput="markInput(this)"></textarea>
+        </div>
+        <div class="explain-box">
+          <label>Explain your fixes <em>(what did you change and why?)</em></label>
+          <textarea class="explain-textarea" id="explain-fix" placeholder="I fixed Bug 1 by…&#10;I fixed Bug 2 by…" oninput="markInput(this)"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-prev" onclick="navigate(-1)">← Prev</button>
+      <button class="btn btn-hint" onclick="showHint()">Show Hint</button>
+      <button class="btn btn-check" onclick="checkAnswer()">✓ Check Answer</button>
+      <button class="btn btn-answer" onclick="showAnswer()">Show Full Answer</button>
+      <button class="btn btn-next" onclick="navigate(1)">Next →</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+  </main>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// 20 SCENARIOS — each has 5+ bugs in a longer block
+// ══════════════════════════════════════════════════
+const scenarios = [
+
+// ── 1 ─────────────────────────────────────────────
+{
+  title:"Weather Station Report",
+  chapter:"Ch.2 / Ch.3 / Ch.5",
+  bugCount:5,
+  task:"A student writes a <strong>weather station report</strong> that reads city data and prints a formatted summary. There are <strong>5 bugs</strong> hidden in the code. Find them all.",
+  bugs:[
+    "Line 1: <strong>1st_city</strong> — variable names cannot start with a number (SyntaxError).",
+    "Line 4: <strong>temperature = input()</strong> — input() returns a string; must use int(input()) for comparisons.",
+    "Line 7: <strong>if temperature => 30:</strong> — the operator => does not exist; must be >= (SyntaxError).",
+    "Line 15: <strong>\"Temp: \" + temperature</strong> — temperature is an int (after fix) or str (before fix); either way the concatenation needs str().",
+    "Line 17: <strong>\"Humidity: \" + humidity</strong> — humidity is an int; cannot join int and str with + (TypeError).",
+  ],
+  hint:"Check: (1) the variable name on line 1, (2) whether input() is converted, (3) the comparison operator, (4 & 5) two print lines that join numbers with strings using +.",
+  broken:
+`1st_city = "Hong Kong"
+region  = "Kowloon"
+date    = "2025-06-01"
+temperature = input("Enter temperature (°C): ")
+humidity = 75
+wind_speed = 12.5
+
+if temperature => 30:
+    condition = "Hot and humid"
+elif temperature >= 20:
+    condition = "Warm"
+else:
+    condition = "Cool"
+
+print("City:        " + 1st_city + ", " + region)
+print("Date:        " + date)
+print("Temp:        " + temperature + " °C")
+print("Condition:   " + condition)
+print("Humidity:    " + humidity + "%")
+print("Wind speed:  " + str(wind_speed) + " km/h")`,
+  fixed:
+`city = "Hong Kong"
+region  = "Kowloon"
+date    = "2025-06-01"
+temperature = int(input("Enter temperature (°C): "))
+humidity = 75
+wind_speed = 12.5
+
+if temperature >= 30:
+    condition = "Hot and humid"
+elif temperature >= 20:
+    condition = "Warm"
+else:
+    condition = "Cool"
+
+print("City:        " + city + ", " + region)
+print("Date:        " + date)
+print("Temp:        " + str(temperature) + " °C")
+print("Condition:   " + condition)
+print("Humidity:    " + str(humidity) + "%")
+print("Wind speed:  " + str(wind_speed) + " km/h")`,
+  keywords:["str","int","input","=>",">=","1st","variable","SyntaxError","TypeError"]
+},
+
+// ── 2 ─────────────────────────────────────────────
+{
+  title:"Canteen Receipt Printer",
+  chapter:"Ch.2 / Ch.3 / Ch.6",
+  bugCount:5,
+  task:"A student writes a <strong>canteen receipt printer</strong> with a discount function. There are <strong>5 bugs</strong> — some cause crashes, one causes the wrong output silently.",
+  bugs:[
+    "Line 1: <strong>def calculate_total(qty, price):</strong> uses <strong>print</strong> instead of <strong>return</strong> — the caller receives None (Logic Error).",
+    "Line 5: <strong>has_discount = true</strong> — Python booleans are capitalised: <strong>True</strong> (NameError).",
+    "Line 9: <strong>if has_discount = true:</strong> — single = is assignment, not comparison; must use == (SyntaxError). Also true should be True.",
+    "Line 14: <strong>\"Qty: \" + qty</strong> — qty is an int (after int(input())); cannot join int and str with + (TypeError).",
+    "Line 15: <strong>\"Total: $\" + total</strong> — total is a float; cannot join float and str with + (TypeError).",
+  ],
+  hint:"Look for: (1) print vs return in the function, (2) boolean capitalisation, (3) = vs == in the if, (4 & 5) two print lines joining numbers directly with strings.",
+  broken:
+`def calculate_total(qty, price):
+    total = qty * price
+    print(total)
+
+has_discount = true
+discount_rate = 0.1
+
+qty   = int(input("Enter quantity: "))
+price = float(input("Enter unit price ($): "))
+total = calculate_total(qty, price)
+
+if has_discount = true:
+    total = total * (1 - discount_rate)
+
+print("---- Canteen Receipt ----")
+print("Qty:      " + qty)
+print("Price:    $" + str(price) + " each")
+print("Total:    $" + total)
+print("Discount: " + str(discount_rate * 100) + "%")
+print("-------------------------")`,
+  fixed:
+`def calculate_total(qty, price):
+    total = qty * price
+    return total
+
+has_discount = True
+discount_rate = 0.1
+
+qty   = int(input("Enter quantity: "))
+price = float(input("Enter unit price ($): "))
+total = calculate_total(qty, price)
+
+if has_discount == True:
+    total = total * (1 - discount_rate)
+
+print("---- Canteen Receipt ----")
+print("Qty:      " + str(qty))
+print("Price:    $" + str(price) + " each")
+print("Total:    $" + str(total))
+print("Discount: " + str(discount_rate * 100) + "%")
+print("-------------------------")`,
+  keywords:["return","print","True","true","==","=","str","TypeError","NameError","SyntaxError","None"]
+},
+
+// ── 3 ─────────────────────────────────────────────
+{
+  title:"Student Grade Book",
+  chapter:"Ch.5 Lab / Ch.3",
+  bugCount:5,
+  task:"A student writes a <strong>grade book</strong> that assigns letter grades. There are <strong>5 bugs</strong>: three prevent the program running, two produce wrong output.",
+  bugs:[
+    "Line 5: <strong>if score = 90:</strong> — single = is assignment; must use >= for comparison (SyntaxError).",
+    "Line 7: <strong>if score >= 80:</strong> — should be <strong>elif</strong> not <strong>if</strong>; without elif ALL conditions are checked, giving multiple grade labels (Logic Error).",
+    "Line 9: <strong>if score >= 70:</strong> — same issue; must be <strong>elif</strong> (Logic Error).",
+    "Line 13: <strong>passed = false</strong> — Python boolean is <strong>False</strong> with capital F (NameError).",
+    "Line 15: <strong>\"Score: \" + score</strong> — score is an int; must wrap with str() (TypeError).",
+  ],
+  hint:"Check: (1) the first condition operator, (2 & 3) whether subsequent grade checks use if or elif, (4) boolean capitalisation, (5) an integer joined to a string.",
+  broken:
+`name  = input("Student name: ")
+score = int(input("Score (0-100): "))
+
+if score = 90:
+    grade = "A"
+if score >= 80:
+    grade = "B"
+if score >= 70:
+    grade = "C"
+else:
+    grade = "F"
+
+passed = false
+
+print("Name:   " + name)
+print("Score:  " + score)
+print("Grade:  " + grade)
+print("Passed: " + str(passed))`,
+  fixed:
+`name  = input("Student name: ")
+score = int(input("Score (0-100): "))
+
+if score >= 90:
+    grade = "A"
+elif score >= 80:
+    grade = "B"
+elif score >= 70:
+    grade = "C"
+else:
+    grade = "F"
+
+passed = False
+
+print("Name:   " + name)
+print("Score:  " + str(score))
+print("Grade:  " + grade)
+print("Passed: " + str(passed))`,
+  keywords:["elif","if",">=","=","False","false","str","SyntaxError","TypeError","NameError","logic"]
+},
+
+// ── 4 ─────────────────────────────────────────────
+{
+  title:"Library Book Label Maker",
+  chapter:"Ch.2 / Ch.3",
+  bugCount:5,
+  task:"A student writes a <strong>library book label formatter</strong>. There are <strong>5 bugs</strong>. Two are naming errors, one is a string immutability violation, and two are type errors in the output.",
+  bugs:[
+    "Line 1: <strong>book-title</strong> — hyphens are not allowed in variable names; use book_title (SyntaxError).",
+    "Line 2: <strong>shelf-code</strong> — same issue; use shelf_code (SyntaxError).",
+    "Line 5: <strong>book-title[0] = book-title[0].upper()</strong> — strings are immutable; you cannot change a character by index (TypeError). Build a new string instead.",
+    "Line 9: <strong>\"Shelf: \" + shelf_code</strong> — shelf_code is used correctly as a string, but the code reference book-title on line 9 is still broken if not renamed.",
+    "Line 10: <strong>\"Year: \" + year</strong> — year is an int; must use str(year) (TypeError).",
+  ],
+  hint:"Look for: (1 & 2) illegal characters in variable names, (3) attempting to change a string character by index, (4) a reference to the bad variable name, (5) an int joined to a string.",
+  broken:
+`book-title  = "harry potter"
+shelf-code  = "FIC-001"
+author      = "J.K. Rowling"
+year        = 1997
+
+book-title[0] = book-title[0].upper()
+
+print("=== Library Label ===")
+print("Title:  " + book-title)
+print("Shelf:  " + shelf-code)
+print("Author: " + author)
+print("Year:   " + year)
+print("====================")`,
+  fixed:
+`book_title  = "harry potter"
+shelf_code  = "FIC-001"
+author      = "J.K. Rowling"
+year        = 1997
+
+book_title = "H" + book_title[1:]
+
+print("=== Library Label ===")
+print("Title:  " + book_title)
+print("Shelf:  " + shelf_code)
+print("Author: " + author)
+print("Year:   " + str(year))
+print("====================")`,
+  keywords:["hyphen","-","_","underscore","immutable","immutability","SyntaxError","TypeError","str","index"]
+},
+
+// ── 5 ─────────────────────────────────────────────
+{
+  title:"Sports Match Report",
+  chapter:"Ch.2 / Ch.3 / Ch.5",
+  bugCount:5,
+  task:"A student writes a <strong>sports match report</strong> that reads match data and decides the result. There are <strong>5 bugs</strong> — find all of them.",
+  bugs:[
+    "Line 2: <strong>home_goals = input()</strong> — input() returns a string; must use int(input()) to compare and calculate (TypeError on comparison).",
+    "Line 3: <strong>away_goals = input()</strong> — same issue; must be int(input()).",
+    "Line 5: <strong>if home_goals > away_goals</strong> — missing colon at end of if statement (SyntaxError).",
+    "Line 13: <strong>\"Home goals: \" + home_goals</strong> — home_goals is int (after fix); must use str() (TypeError).",
+    "Line 14: <strong>\"Away goals: \" + away_goals</strong> — same issue; must use str() (TypeError).",
+  ],
+  hint:"Check: (1 & 2) whether goal inputs are converted from strings, (3) missing punctuation at the end of the if line, (4 & 5) int values joined to strings in the print statements.",
+  broken:
+`home_team  = input("Home team name: ")
+home_goals = input("Home goals scored: ")
+away_team  = input("Away team name: ")
+away_goals = input("Away goals scored: ")
+
+if home_goals > away_goals
+    result = home_team + " wins!"
+elif home_goals == away_goals:
+    result = "Draw!"
+else:
+    result = away_team + " wins!"
+
+print("=== Match Report ===")
+print("Home: " + home_team + "  Goals: " + home_goals)
+print("Away: " + away_team + "  Goals: " + away_goals)
+print("Result: " + result)
+print("====================")`,
+  fixed:
+`home_team  = input("Home team name: ")
+home_goals = int(input("Home goals scored: "))
+away_team  = input("Away team name: ")
+away_goals = int(input("Away goals scored: "))
+
+if home_goals > away_goals:
+    result = home_team + " wins!"
+elif home_goals == away_goals:
+    result = "Draw!"
+else:
+    result = away_team + " wins!"
+
+print("=== Match Report ===")
+print("Home: " + home_team + "  Goals: " + str(home_goals))
+print("Away: " + away_team + "  Goals: " + str(away_goals))
+print("Result: " + result)
+print("====================")`,
+  keywords:["int","input","str","colon",":","SyntaxError","TypeError","convert","string"]
+},
+
+// ── 6 ─────────────────────────────────────────────
+{
+  title:"Hotel Room Booking",
+  chapter:"Ch.5 Lab / Ch.6",
+  bugCount:5,
+  task:"A student writes a <strong>hotel room booking system</strong> with a pricing function. There are <strong>5 bugs</strong>: one in the function definition, two in conditions, and two in output.",
+  bugs:[
+    "Line 2: <strong>print(base_rate)</strong> inside the function — should be <strong>return base_rate</strong>; otherwise get_rate() gives None (Logic Error).",
+    "Line 8: <strong>if room_type = \"suite\":</strong> — single = is assignment; must use == (SyntaxError).",
+    "Line 12: <strong>elif nights => 7:</strong> — the operator => does not exist; must be >= (SyntaxError).",
+    "Line 19: <strong>\"Room type: \" + room_type</strong> — room_type is a string so this is fine, BUT nights on the next line is not.",
+    "Line 20: <strong>\"Nights: \" + nights</strong> — nights is an int; must use str(nights) (TypeError).",
+  ],
+  hint:"Look for: (1) print vs return in the function, (2) = vs == in a condition, (3) the wrong comparison operator, (4) check each print line for int/string mismatch.",
+  broken:
+`def get_rate(room_type):
+    if room_type == "standard":
+        base_rate = 500
+    elif room_type == "deluxe":
+        base_rate = 800
+    else:
+        base_rate = 1200
+    print(base_rate)
+
+room_type = input("Room type (standard/deluxe/suite): ")
+nights    = int(input("Number of nights: "))
+
+if room_type = "suite":
+    surcharge = 200
+else:
+    surcharge = 0
+
+if nights => 7:
+    discount = 0.1
+else:
+    discount = 0.0
+
+rate  = get_rate(room_type)
+total = (rate + surcharge) * nights * (1 - discount)
+
+print("=== Booking Summary ===")
+print("Room type: " + room_type)
+print("Nights:    " + nights)
+print("Rate/night:$" + str(rate))
+print("Total:     $" + str(total))`,
+  fixed:
+`def get_rate(room_type):
+    if room_type == "standard":
+        base_rate = 500
+    elif room_type == "deluxe":
+        base_rate = 800
+    else:
+        base_rate = 1200
+    return base_rate
+
+room_type = input("Room type (standard/deluxe/suite): ")
+nights    = int(input("Number of nights: "))
+
+if room_type == "suite":
+    surcharge = 200
+else:
+    surcharge = 0
+
+if nights >= 7:
+    discount = 0.1
+else:
+    discount = 0.0
+
+rate  = get_rate(room_type)
+total = (rate + surcharge) * nights * (1 - discount)
+
+print("=== Booking Summary ===")
+print("Room type: " + room_type)
+print("Nights:    " + str(nights))
+print("Rate/night:$" + str(rate))
+print("Total:     $" + str(total))`,
+  keywords:["return","print","None","==","=",">=","=>","str","SyntaxError","TypeError","Logic"]
+},
+
+// ── 7 ─────────────────────────────────────────────
+{
+  title:"BMI Health Classifier",
+  chapter:"Ch.4 / Ch.5 Lab",
+  bugCount:5,
+  task:"A student writes a <strong>BMI health classifier</strong>. There are <strong>5 bugs</strong> — two cause wrong logic, two cause crashes, and one is a naming issue.",
+  bugs:[
+    "Line 1: <strong>1st_name = input()</strong> — variable name cannot start with a number (SyntaxError).",
+    "Line 4: <strong>bmi = weight + height * height</strong> — wrong formula; BMI = weight / (height × height); + should be / and brackets are needed (Logic Error).",
+    "Line 6: <strong>if bmi <= 18.5</strong> — missing colon at end (SyntaxError).",
+    "Line 8: <strong>if bmi <= 25:</strong> — should be <strong>elif</strong>; without it a BMI of 22 prints both 'Underweight' and 'Normal' (Logic Error — but this only triggers after other fixes).",
+    "Line 14: <strong>\"BMI: \" + bmi</strong> — bmi is a float; must use str(bmi) or round it (TypeError).",
+  ],
+  hint:"Check: (1) the variable name on line 1, (2) the BMI formula operators and brackets, (3) missing colon on if, (4) if vs elif on the second condition, (5) float joined to a string.",
+  broken:
+`1st_name = input("Enter your name: ")
+weight = float(input("Weight in kg: "))
+height = float(input("Height in metres: "))
+bmi = weight + height * height
+
+if bmi <= 18.5
+    category = "Underweight"
+if bmi <= 25:
+    category = "Normal weight"
+elif bmi <= 30:
+    category = "Overweight"
+else:
+    category = "Obese"
+
+print("Name:     " + 1st_name)
+print("BMI:      " + bmi)
+print("Category: " + category)`,
+  fixed:
+`name = input("Enter your name: ")
+weight = float(input("Weight in kg: "))
+height = float(input("Height in metres: "))
+bmi = weight / (height * height)
+
+if bmi <= 18.5:
+    category = "Underweight"
+elif bmi <= 25:
+    category = "Normal weight"
+elif bmi <= 30:
+    category = "Overweight"
+else:
+    category = "Obese"
+
+print("Name:     " + name)
+print("BMI:      " + str(round(bmi, 1)))
+print("Category: " + category)`,
+  keywords:["1st","variable","SyntaxError","elif","if","colon",":","str","float","TypeError","formula","/","*","brackets"]
+},
+
+// ── 8 ─────────────────────────────────────────────
+{
+  title:"Cinema Ticket Booker",
+  chapter:"Ch.2 / Ch.5 / Ch.6",
+  bugCount:5,
+  task:"A student writes a <strong>cinema ticket booking system</strong>. There are <strong>5 bugs</strong> spread through the variable names, function, conditions, and output.",
+  bugs:[
+    "Line 1: <strong>ticket-price = 85</strong> — hyphens not allowed in variable names; use ticket_price (SyntaxError).",
+    "Line 2: <strong>child-discount = 0.3</strong> — same issue; use child_discount (SyntaxError).",
+    "Line 5: <strong>print(total)</strong> inside function — should be <strong>return total</strong>; caller receives None (Logic Error).",
+    "Line 11: <strong>if age < 12 and is_student = true:</strong> — single = is assignment and true should be True (SyntaxError / NameError).",
+    "Line 19: <strong>\"Tickets: \" + qty</strong> — qty is an int; must use str(qty) (TypeError).",
+  ],
+  hint:"Look for: (1 & 2) illegal characters in variable names, (3) print vs return in the function, (4) multiple errors on the if condition line, (5) an int joined to a string in a print.",
+  broken:
+`ticket-price   = 85
+child-discount = 0.3
+adult_discount = 0.1
+
+def get_total(qty, price, discount):
+    total = qty * price * (1 - discount)
+    print(total)
+
+age        = int(input("Age: "))
+is_student = True
+qty        = int(input("Number of tickets: "))
+
+if age < 12 and is_student = true:
+    discount = child-discount
+elif age < 18:
+    discount = adult_discount
+else:
+    discount = 0.0
+
+total = get_total(qty, ticket-price, discount)
+
+print("=== Cinema Booking ===")
+print("Age:       " + str(age))
+print("Tickets:   " + qty)
+print("Discount:  " + str(discount * 100) + "%")
+print("Total:     $" + str(total))`,
+  fixed:
+`ticket_price   = 85
+child_discount = 0.3
+adult_discount = 0.1
+
+def get_total(qty, price, discount):
+    total = qty * price * (1 - discount)
+    return total
+
+age        = int(input("Age: "))
+is_student = True
+qty        = int(input("Number of tickets: "))
+
+if age < 12 and is_student == True:
+    discount = child_discount
+elif age < 18:
+    discount = adult_discount
+else:
+    discount = 0.0
+
+total = get_total(qty, ticket_price, discount)
+
+print("=== Cinema Booking ===")
+print("Age:       " + str(age))
+print("Tickets:   " + str(qty))
+print("Discount:  " + str(discount * 100) + "%")
+print("Total:     $" + str(total))`,
+  keywords:["hyphen","-","_","return","print","True","true","==","=","str","SyntaxError","TypeError","NameError"]
+},
+
+// ── 9 ─────────────────────────────────────────────
+{
+  title:"Electricity Bill System",
+  chapter:"Ch.4 / Ch.5 / Ch.6",
+  bugCount:5,
+  task:"A student writes an <strong>electricity bill calculator</strong> with a tiered pricing function. There are <strong>5 bugs</strong> — one logic error in the function, two syntax errors in conditions, and two type errors in output.",
+  bugs:[
+    "Line 3: <strong>print(charge)</strong> — should be <strong>return charge</strong>; caller gets None (Logic Error).",
+    "Line 10: <strong>if units => 500:</strong> — operator => does not exist; must be >= (SyntaxError).",
+    "Line 14: <strong>elif units => 200:</strong> — same; must be >= (SyntaxError).",
+    "Line 21: <strong>\"Units: \" + units</strong> — units is an int; must use str(units) (TypeError).",
+    "Line 22: <strong>\"Charge: $\" + charge</strong> — charge is a float (return value); must use str(charge) (TypeError).",
+  ],
+  hint:"Check: (1) print vs return in the function, (2 & 3) the comparison operators on the tier conditions, (4 & 5) two print lines that join numbers to strings.",
+  broken:
+`def calculate_charge(units):
+    if units > 500:
+        charge = units * 1.8
+    elif units > 200:
+        charge = units * 1.4
+    else:
+        charge = units * 1.0
+    print(charge)
+
+account  = input("Account number: ")
+name     = input("Account holder: ")
+units    = int(input("Units consumed: "))
+
+if units => 500:
+    tier = "High usage"
+elif units => 200:
+    tier = "Medium usage"
+else:
+    tier = "Low usage"
+
+charge = calculate_charge(units)
+
+print("=== Electricity Bill ===")
+print("Account: " + account)
+print("Name:    " + name)
+print("Units:   " + units)
+print("Tier:    " + tier)
+print("Charge:  $" + charge)
+print("========================")`,
+  fixed:
+`def calculate_charge(units):
+    if units > 500:
+        charge = units * 1.8
+    elif units > 200:
+        charge = units * 1.4
+    else:
+        charge = units * 1.0
+    return charge
+
+account  = input("Account number: ")
+name     = input("Account holder: ")
+units    = int(input("Units consumed: "))
+
+if units >= 500:
+    tier = "High usage"
+elif units >= 200:
+    tier = "Medium usage"
+else:
+    tier = "Low usage"
+
+charge = calculate_charge(units)
+
+print("=== Electricity Bill ===")
+print("Account: " + account)
+print("Name:    " + name)
+print("Units:   " + str(units))
+print("Tier:    " + tier)
+print("Charge:  $" + str(charge))
+print("========================")`,
+  keywords:["return","print","None",">=","=>","str","TypeError","SyntaxError","Logic"]
+},
+
+// ── 10 ────────────────────────────────────────────
+{
+  title:"School Report Card Average",
+  chapter:"Ch.4 / Ch.5 / Ch.3",
+  bugCount:5,
+  task:"A student writes a <strong>report card average calculator</strong>. There are <strong>5 bugs</strong>: a naming error, two logic errors, a syntax error, and a type error.",
+  bugs:[
+    "Line 1: <strong>student-name = input()</strong> — hyphens not allowed; use student_name (SyntaxError).",
+    "Line 5: <strong>average = english + maths + science / 3</strong> — operator precedence: division runs before addition. Must be (english + maths + science) / 3 (Logic Error).",
+    "Line 7: <strong>if average = 80:</strong> — single = is assignment; must be >= for comparison (SyntaxError).",
+    "Line 9: <strong>if average >= 60:</strong> — should be <strong>elif</strong>; multiple if blocks cause multiple grades to be assigned (Logic Error).",
+    "Line 15: <strong>\"Average: \" + average</strong> — average is a float; must use str() or round() (TypeError).",
+  ],
+  hint:"Look for: (1) illegal character in variable name, (2) operator precedence in the average formula, (3) assignment vs comparison in the condition, (4) if vs elif, (5) float joined to a string.",
+  broken:
+`student-name = input("Student name: ")
+english = int(input("English score: "))
+maths   = int(input("Maths score:   "))
+science = int(input("Science score: "))
+average = english + maths + science / 3
+
+if average = 80:
+    grade = "Distinction"
+if average >= 60:
+    grade = "Pass"
+else:
+    grade = "Fail"
+
+print("=== Report Card ===")
+print("Name:    " + student-name)
+print("Average: " + average)
+print("Grade:   " + grade)
+print("===================")`,
+  fixed:
+`student_name = input("Student name: ")
+english = int(input("English score: "))
+maths   = int(input("Maths score:   "))
+science = int(input("Science score: "))
+average = (english + maths + science) / 3
+
+if average >= 80:
+    grade = "Distinction"
+elif average >= 60:
+    grade = "Pass"
+else:
+    grade = "Fail"
+
+print("=== Report Card ===")
+print("Name:    " + student_name)
+print("Average: " + str(round(average, 1)))
+print("Grade:   " + grade)
+print("===================")`,
+  keywords:["hyphen","_","brackets","()","precedence","elif","if",">=","=","str","TypeError","SyntaxError","Logic"]
+},
+
+// ── 11 ────────────────────────────────────────────
+{
+  title:"Swimming Pool Booking",
+  chapter:"Ch.2 / Ch.5 / Ch.6",
+  bugCount:5,
+  task:"A student writes a <strong>swimming pool admission system</strong>. There are <strong>5 bugs</strong> — spot all of them before checking your answer.",
+  bugs:[
+    "Line 1: <strong>pool-name = \"City Pool\"</strong> — hyphen in variable name is not allowed; use pool_name (SyntaxError).",
+    "Line 8: <strong>print(fee)</strong> — should be <strong>return fee</strong>; caller gets None (Logic Error).",
+    "Line 13: <strong>if age < 12 and is_member = True:</strong> — single = is assignment, not comparison; must use == (SyntaxError).",
+    "Line 19: <strong>\"Age: \" + age</strong> — age is an int; must use str(age) (TypeError).",
+    "Line 20: <strong>\"Fee: $\" + fee</strong> — fee is a float/int; must use str(fee) (TypeError).",
+  ],
+  hint:"Check: (1) variable name on line 1, (2) print vs return in the function, (3) assignment inside a condition, (4 & 5) two numbers joined to strings in print statements.",
+  broken:
+`pool-name  = "City Pool"
+lane_count = 8
+is_member  = True
+
+def get_fee(age, is_member):
+    if age < 12:
+        fee = 20
+    elif age >= 65:
+        fee = 25
+    else:
+        fee = 50 if not is_member else 35
+    print(fee)
+
+age = int(input("Enter age: "))
+
+if age < 12 and is_member = True:
+    print("Junior member — free swim on Sundays!")
+
+fee = get_fee(age, is_member)
+
+print("=== Pool Admission ===")
+print("Pool: " + pool-name)
+print("Age:  " + age)
+print("Member: " + str(is_member))
+print("Fee:  $" + fee)`,
+  fixed:
+`pool_name  = "City Pool"
+lane_count = 8
+is_member  = True
+
+def get_fee(age, is_member):
+    if age < 12:
+        fee = 20
+    elif age >= 65:
+        fee = 25
+    else:
+        fee = 50 if not is_member else 35
+    return fee
+
+age = int(input("Enter age: "))
+
+if age < 12 and is_member == True:
+    print("Junior member — free swim on Sundays!")
+
+fee = get_fee(age, is_member)
+
+print("=== Pool Admission ===")
+print("Pool: " + pool_name)
+print("Age:  " + str(age))
+print("Member: " + str(is_member))
+print("Fee:  $" + str(fee))`,
+  keywords:["hyphen","_","return","print","None","==","=","str","TypeError","SyntaxError","Logic"]
+},
+
+// ── 12 ────────────────────────────────────────────
+{
+  title:"Restaurant Order System",
+  chapter:"Ch.2 / Ch.3 / Ch.5",
+  bugCount:5,
+  task:"A student writes a <strong>restaurant order and billing system</strong>. There are <strong>5 bugs</strong> — find every single one.",
+  bugs:[
+    "Line 2: <strong>table-number = input()</strong> — hyphen in variable name; use table_number (SyntaxError).",
+    "Line 5: <strong>qty = input()</strong> — input() returns string; must be int(input()) to multiply with price (TypeError).",
+    "Line 10: <strong>if qty > 10</strong> — missing colon at end of if statement (SyntaxError).",
+    "Line 17: <strong>\"Table: \" + table-number</strong> — hyphenated variable name still referenced; rename and use table_number (SyntaxError).",
+    "Line 18: <strong>\"Total: $\" + total</strong> — total is a float; must use str(total) (TypeError).",
+  ],
+  hint:"Look for: (1 & 2) naming and input issues in the first few lines, (3) missing punctuation on an if statement, (4) reuse of a bad variable name in a print, (5) float joined to a string.",
+  broken:
+`restaurant = "Dragon Palace"
+table-number = input("Table number: ")
+dish    = input("Dish name: ")
+price   = float(input("Price per item ($): "))
+qty     = input("Quantity: ")
+
+item_total = qty * price
+
+if qty > 10
+    bulk_discount = 0.05
+else:
+    bulk_discount = 0.0
+
+total = item_total * (1 - bulk_discount)
+
+print("=== Order Receipt ===")
+print("Restaurant: " + restaurant)
+print("Table:      " + table-number)
+print("Dish:       " + dish)
+print("Qty:        " + str(qty))
+print("Total:      $" + total)
+print("====================")`,
+  fixed:
+`restaurant   = "Dragon Palace"
+table_number = input("Table number: ")
+dish    = input("Dish name: ")
+price   = float(input("Price per item ($): "))
+qty     = int(input("Quantity: "))
+
+item_total = qty * price
+
+if qty > 10:
+    bulk_discount = 0.05
+else:
+    bulk_discount = 0.0
+
+total = item_total * (1 - bulk_discount)
+
+print("=== Order Receipt ===")
+print("Restaurant: " + restaurant)
+print("Table:      " + table_number)
+print("Dish:       " + dish)
+print("Qty:        " + str(qty))
+print("Total:      $" + str(total))
+print("====================")`,
+  keywords:["hyphen","_","int","input","colon",":","str","TypeError","SyntaxError"]
+},
+
+// ── 13 ────────────────────────────────────────────
+{
+  title:"Bus Fare Calculator",
+  chapter:"Ch.5 Lab / Ch.3",
+  bugCount:5,
+  task:"A student writes a <strong>bus fare calculator</strong> with multiple passenger categories. There are <strong>5 bugs</strong>: one naming error, two logic errors, one syntax error, and one type error.",
+  bugs:[
+    "Line 1: <strong>bus-route = \"Route 1\"</strong> — hyphen not allowed; use bus_route (SyntaxError).",
+    "Line 6: <strong>if age < 12:</strong> — should be first condition but using standalone if here is fine; the bug is on line 8: <strong>if age < 65:</strong> should be <strong>elif</strong> (Logic Error — adults get two categories).",
+    "Line 8: <strong>if age < 65:</strong> — must be <strong>elif</strong> (Logic Error).",
+    "Line 12: <strong>if is_disabled = True:</strong> — single = is assignment; must be == (SyntaxError).",
+    "Line 16: <strong>\"Fare: $\" + fare</strong> — fare is a float; must use str(fare) (TypeError).",
+  ],
+  hint:"Check: (1) hyphen in variable name, (2 & 3) the second category condition — should it be if or elif?, (4) assignment vs comparison in the disabled check, (5) float in a print.",
+  broken:
+`bus-route    = "Route 1"
+is_disabled  = False
+base_fare    = 6.5
+
+age = int(input("Passenger age: "))
+
+if age < 12:
+    fare = base_fare * 0.5
+if age < 65:
+    fare = base_fare
+else:
+    fare = base_fare * 0.7
+
+if is_disabled = True:
+    fare = fare * 0.5
+
+print("=== Bus Fare ===")
+print("Route: " + bus-route)
+print("Age:   " + str(age))
+print("Fare:  $" + fare)
+print("================")`,
+  fixed:
+`bus_route    = "Route 1"
+is_disabled  = False
+base_fare    = 6.5
+
+age = int(input("Passenger age: "))
+
+if age < 12:
+    fare = base_fare * 0.5
+elif age < 65:
+    fare = base_fare
+else:
+    fare = base_fare * 0.7
+
+if is_disabled == True:
+    fare = fare * 0.5
+
+print("=== Bus Fare ===")
+print("Route: " + bus_route)
+print("Age:   " + str(age))
+print("Fare:  $" + str(fare))
+print("================")`,
+  keywords:["hyphen","_","elif","if","==","=","str","TypeError","SyntaxError","Logic"]
+},
+
+// ── 14 ────────────────────────────────────────────
+{
+  title:"Password Strength Checker",
+  chapter:"Ch.5 / Ch.3 / Ch.2",
+  bugCount:5,
+  task:"A student writes a <strong>password strength checker</strong>. There are <strong>5 bugs</strong> — three prevent the code running and two produce wrong logic.",
+  bugs:[
+    "Line 2: <strong>min-length = 8</strong> — hyphen in variable name; use min_length (SyntaxError).",
+    "Line 6: <strong>if length = min-length:</strong> — single = is assignment and min-length is an invalid name; must be length >= min_length with == (SyntaxError × 2).",
+    "Line 8: <strong>if length >= 12:</strong> — should be <strong>elif</strong>; both conditions could trigger for long passwords (Logic Error).",
+    "Line 12: <strong>has_upper = false</strong> — Python boolean is <strong>False</strong> with capital F (NameError).",
+    "Line 16: <strong>\"Length: \" + length</strong> — length is an int; must use str(length) (TypeError).",
+  ],
+  hint:"Check: (1) hyphen in variable name on line 2, (2) the condition on line 6 has two issues, (3) if vs elif on line 8, (4) boolean capitalisation, (5) int joined to string in print.",
+  broken:
+`password   = input("Enter password: ")
+min-length = 8
+length     = len(password)
+
+if length = min-length:
+    strength = "Weak"
+if length >= 12:
+    strength = "Strong"
+else:
+    strength = "Medium"
+
+has_upper = false
+
+print("=== Password Check ===")
+print("Password: " + password)
+print("Length:   " + length)
+print("Strength: " + strength)
+print("Has uppercase: " + str(has_upper))`,
+  fixed:
+`password   = input("Enter password: ")
+min_length = 8
+length     = len(password)
+
+if length < min_length:
+    strength = "Weak"
+elif length >= 12:
+    strength = "Strong"
+else:
+    strength = "Medium"
+
+has_upper = False
+
+print("=== Password Check ===")
+print("Password: " + password)
+print("Length:   " + str(length))
+print("Strength: " + strength)
+print("Has uppercase: " + str(has_upper))`,
+  keywords:["hyphen","_","==","=","elif","if","False","false","str","SyntaxError","NameError","TypeError","Logic"]
+},
+
+// ── 15 ────────────────────────────────────────────
+{
+  title:"Shopping Cart Total",
+  chapter:"Ch.2 / Ch.4 / Ch.5",
+  bugCount:5,
+  task:"A student writes a <strong>shopping cart total calculator</strong>. There are <strong>5 bugs</strong> — spot the variable naming, input, logic, and type errors.",
+  bugs:[
+    "Line 1: <strong>item-count = 0</strong> — hyphen not allowed; use item_count (SyntaxError).",
+    "Line 5: <strong>price1 = input()</strong> — input() returns a string; must be float(input()) to do arithmetic (TypeError).",
+    "Line 6: <strong>price2 = input()</strong> — same issue; must be float(input()) (TypeError).",
+    "Line 9: <strong>tax = subtotal * 0.1 + subtotal</strong> — this calculates tax PLUS subtotal; tax should be only subtotal * 0.1 (Logic Error).",
+    "Line 13: <strong>\"Items:    \" + item_count</strong> — item_count is an int; must use str(item_count) (TypeError).",
+  ],
+  hint:"Check: (1) hyphen in variable name, (2 & 3) input() conversion for price values, (4) the tax formula — is it calculating tax or total?, (5) an int joined to a string.",
+  broken:
+`item-count = 0
+shop_name  = "Quick Mart"
+
+item1  = input("Item 1 name: ")
+price1 = input("Item 1 price ($): ")
+item2  = input("Item 2 name: ")
+price2 = input("Item 2 price ($): ")
+
+subtotal = price1 + price2
+tax      = subtotal * 0.1 + subtotal
+total    = subtotal + tax
+
+print("=== Shopping Cart ===")
+print("Shop:     " + shop_name)
+print("Items:    " + item_count)
+print(item1 + ": $" + str(price1))
+print(item2 + ": $" + str(price2))
+print("Subtotal: $" + str(subtotal))
+print("Tax:      $" + str(tax))
+print("Total:    $" + str(total))`,
+  fixed:
+`item_count = 2
+shop_name  = "Quick Mart"
+
+item1  = input("Item 1 name: ")
+price1 = float(input("Item 1 price ($): "))
+item2  = input("Item 2 name: ")
+price2 = float(input("Item 2 price ($): "))
+
+subtotal = price1 + price2
+tax      = subtotal * 0.1
+total    = subtotal + tax
+
+print("=== Shopping Cart ===")
+print("Shop:     " + shop_name)
+print("Items:    " + str(item_count))
+print(item1 + ": $" + str(price1))
+print(item2 + ": $" + str(price2))
+print("Subtotal: $" + str(subtotal))
+print("Tax:      $" + str(tax))
+print("Total:    $" + str(total))`,
+  keywords:["hyphen","_","float","input","tax","formula","Logic","str","int","TypeError","SyntaxError"]
+},
+
+// ── 16 ────────────────────────────────────────────
+{
+  title:"Quiz Score Tracker",
+  chapter:"Ch.5 Lab / Ch.6",
+  bugCount:5,
+  task:"A student writes a <strong>quiz score tracker</strong> with a grading function. There are <strong>5 bugs</strong> — two in the function, two in conditions, and one naming error.",
+  bugs:[
+    "Line 2: <strong>print(grade)</strong> — should be <strong>return grade</strong>; caller gets None (Logic Error).",
+    "Line 11: <strong>1st_attempt = True</strong> — variable name starts with a digit (SyntaxError).",
+    "Line 14: <strong>if correct = total_questions:</strong> — single = is assignment; must be == (SyntaxError).",
+    "Line 16: <strong>if correct >= half</strong> — missing colon (SyntaxError).",
+    "Line 21: <strong>\"Score: \" + correct</strong> — correct is an int; must use str(correct) (TypeError).",
+  ],
+  hint:"Look for: (1) print vs return in the function, (2) a variable name starting with a digit, (3) assignment in a condition, (4) missing colon, (5) int joined to a string.",
+  broken:
+`def get_grade(correct, total):
+    pct = correct / total * 100
+    if pct >= 90: grade = "A"
+    elif pct >= 70: grade = "B"
+    elif pct >= 50: grade = "C"
+    else: grade = "F"
+    print(grade)
+
+total_questions = 10
+half = total_questions // 2
+1st_attempt = True
+
+correct = int(input("How many did you get right? "))
+
+if correct = total_questions:
+    print("Perfect score!")
+
+if correct >= half
+    passed = True
+else:
+    passed = False
+
+grade = get_grade(correct, total_questions)
+print("=== Quiz Result ===")
+print("Score:  " + correct + "/" + str(total_questions))
+print("Grade:  " + str(grade))
+print("Passed: " + str(passed))`,
+  fixed:
+`def get_grade(correct, total):
+    pct = correct / total * 100
+    if pct >= 90: grade = "A"
+    elif pct >= 70: grade = "B"
+    elif pct >= 50: grade = "C"
+    else: grade = "F"
+    return grade
+
+total_questions = 10
+half = total_questions // 2
+first_attempt = True
+
+correct = int(input("How many did you get right? "))
+
+if correct == total_questions:
+    print("Perfect score!")
+
+if correct >= half:
+    passed = True
+else:
+    passed = False
+
+grade = get_grade(correct, total_questions)
+print("=== Quiz Result ===")
+print("Score:  " + str(correct) + "/" + str(total_questions))
+print("Grade:  " + str(grade))
+print("Passed: " + str(passed))`,
+  keywords:["return","print","None","1st","digit","variable","==","=","colon",":","str","TypeError","SyntaxError","Logic"]
+},
+
+// ── 17 ────────────────────────────────────────────
+{
+  title:"Plant Growth Tracker",
+  chapter:"Ch.2 / Ch.4 / Ch.5 / Ch.6",
+  bugCount:5,
+  task:"A student writes a <strong>plant growth tracker</strong> that calculates growth rate and classifies it. There are <strong>5 bugs</strong>.",
+  bugs:[
+    "Line 1: <strong>1st_reading = float(input())</strong> — variable name starts with a digit (SyntaxError).",
+    "Line 2: <strong>2nd_reading = float(input())</strong> — same; variable starts with digit (SyntaxError).",
+    "Line 6: <strong>print(growth_rate)</strong> — should be <strong>return growth_rate</strong>; caller gets None (Logic Error).",
+    "Line 13: <strong>if growth_rate => 5.0:</strong> — operator => does not exist; must be >= (SyntaxError).",
+    "Line 19: <strong>\"Growth rate: \" + growth_rate</strong> — growth_rate is a float; must use str() (TypeError).",
+  ],
+  hint:"Check: (1 & 2) two variable names at the top that start with digits, (3) print vs return in the function, (4) wrong comparison operator, (5) float joined to a string in print.",
+  broken:
+`1st_reading = float(input("First height (cm): "))
+2nd_reading = float(input("Second height (cm): "))
+days_apart  = int(input("Days between readings: "))
+
+def growth_per_day(start, end, days):
+    growth_rate = (end - start) / days
+    print(growth_rate)
+
+growth_rate = growth_per_day(1st_reading, 2nd_reading, days_apart)
+
+if growth_rate => 5.0:
+    status = "Very fast growth"
+elif growth_rate >= 2.0:
+    status = "Normal growth"
+else:
+    status = "Slow growth"
+
+print("=== Plant Tracker ===")
+print("Growth rate: " + growth_rate + " cm/day")
+print("Status:      " + status)`,
+  fixed:
+`first_reading = float(input("First height (cm): "))
+second_reading = float(input("Second height (cm): "))
+days_apart     = int(input("Days between readings: "))
+
+def growth_per_day(start, end, days):
+    growth_rate = (end - start) / days
+    return growth_rate
+
+growth_rate = growth_per_day(first_reading, second_reading, days_apart)
+
+if growth_rate >= 5.0:
+    status = "Very fast growth"
+elif growth_rate >= 2.0:
+    status = "Normal growth"
+else:
+    status = "Slow growth"
+
+print("=== Plant Tracker ===")
+print("Growth rate: " + str(growth_rate) + " cm/day")
+print("Status:      " + status)`,
+  keywords:["1st","2nd","digit","variable","return","print","None",">=","=>","str","TypeError","SyntaxError","Logic"]
+},
+
+// ── 18 ────────────────────────────────────────────
+{
+  title:"Café Drink Recommender",
+  chapter:"Ch.5 Lab / Ch.3",
+  bugCount:5,
+  task:"A student writes a <strong>café drink recommender</strong> based on temperature and preference. There are <strong>5 bugs</strong> — two syntax, two logic, and one type error.",
+  bugs:[
+    "Line 3: <strong>temp = input()</strong> — input() returns a string; must be int(input()) to compare with numbers (TypeError on comparison).",
+    "Line 8: <strong>if temp > 30</strong> — missing colon (SyntaxError).",
+    "Line 10: <strong>if temp > 20:</strong> — should be <strong>elif</strong>; overlapping if conditions means multiple drinks get assigned (Logic Error).",
+    "Line 12: <strong>if temp > 10:</strong> — should also be <strong>elif</strong> (Logic Error).",
+    "Line 20: <strong>\"Temperature: \" + temp</strong> — temp is an int (after fix); must use str(temp) (TypeError).",
+  ],
+  hint:"Check: (1) whether the temperature input is converted, (2) missing colon on first if, (3 & 4) should subsequent conditions be if or elif, (5) int joined to string in print.",
+  broken:
+`cafe_name   = "Morning Brew"
+preference  = input("Hot or cold preference? (hot/cold): ")
+temp        = input("Current temperature (°C): ")
+
+is_raining  = False
+
+if temp > 30
+    drink = "Iced lemon tea"
+else:
+    drink = "Hot chocolate"
+if temp > 20:
+    if preference == "cold":
+        drink = "Cold brew coffee"
+if temp > 10:
+    if preference == "hot":
+        drink = "Latte"
+else:
+    drink = "Hot soup"
+
+print("=== Drink Recommendation ===")
+print("Café:        " + cafe_name)
+print("Temperature: " + temp + "°C")
+print("Preference:  " + preference)
+print("Recommended: " + drink)`,
+  fixed:
+`cafe_name   = "Morning Brew"
+preference  = input("Hot or cold preference? (hot/cold): ")
+temp        = int(input("Current temperature (°C): "))
+
+is_raining  = False
+
+if temp > 30:
+    drink = "Iced lemon tea"
+elif temp > 20:
+    if preference == "cold":
+        drink = "Cold brew coffee"
+    else:
+        drink = "Hot chocolate"
+elif temp > 10:
+    if preference == "hot":
+        drink = "Latte"
+    else:
+        drink = "Cold brew coffee"
+else:
+    drink = "Hot soup"
+
+print("=== Drink Recommendation ===")
+print("Café:        " + cafe_name)
+print("Temperature: " + str(temp) + "°C")
+print("Preference:  " + preference)
+print("Recommended: " + drink)`,
+  keywords:["int","input","colon",":","elif","if","str","TypeError","SyntaxError","Logic"]
+},
+
+// ── 19 ────────────────────────────────────────────
+{
+  title:"Class Roll Entry Formatter",
+  chapter:"Ch.2 / Ch.3 / Ch.5",
+  bugCount:5,
+  task:"A student writes a <strong>class roll entry formatter</strong> that collects and displays student info. There are <strong>5 bugs</strong>.",
+  bugs:[
+    "Line 1: <strong>class-name = \"3A\"</strong> — hyphen not allowed; use class_name (SyntaxError).",
+    "Line 5: <strong>student-number = input()</strong> — hyphen not allowed; use student_number (SyntaxError).",
+    "Line 9: <strong>if score = 50:</strong> — single = is assignment; must be >= 50 with >= (SyntaxError).",
+    "Line 14: <strong>\"Class: \" + class-name</strong> — still uses the invalid hyphen variable name (SyntaxError).",
+    "Line 15: <strong>\"Student No.: \" + student-number</strong> — same issue with hyphens (SyntaxError). Also, if student_number stays as a string from input(), it still needs to be checked for TypeError if math is done — here it is fine as a string from input().",
+  ],
+  hint:"This question has many naming errors. Check every variable name with a hyphen. Also look at the condition on the if statement.",
+  broken:
+`class-name  = "3A"
+teacher     = "Ms. Chan"
+date        = "2025-06-01"
+
+student-number = input("Student number (e.g. 01): ")
+student_name   = input("Full name: ")
+score          = int(input("Score: "))
+
+if score = 50:
+    status = "Pass"
+else:
+    status = "Fail"
+
+print("=== Class Roll ===")
+print("Class:       " + class-name)
+print("Teacher:     " + teacher)
+print("Date:        " + date)
+print("Std. No.:    " + student-number)
+print("Name:        " + student_name)
+print("Score:       " + str(score))
+print("Status:      " + status)
+print("=================")`,
+  fixed:
+`class_name  = "3A"
+teacher     = "Ms. Chan"
+date        = "2025-06-01"
+
+student_number = input("Student number (e.g. 01): ")
+student_name   = input("Full name: ")
+score          = int(input("Score: "))
+
+if score >= 50:
+    status = "Pass"
+else:
+    status = "Fail"
+
+print("=== Class Roll ===")
+print("Class:       " + class_name)
+print("Teacher:     " + teacher)
+print("Date:        " + date)
+print("Std. No.:    " + student_number)
+print("Name:        " + student_name)
+print("Score:       " + str(score))
+print("Status:      " + status)
+print("=================")`,
+  keywords:["hyphen","_","underscore","==","=",">=","SyntaxError","variable","naming"]
+},
+
+// ── 20 ────────────────────────────────────────────
+{
+  title:"Theme Park Ride Eligibility",
+  chapter:"Ch.5 / Ch.6 / Ch.4",
+  bugCount:6,
+  task:"A student writes a <strong>theme park ride eligibility checker</strong> with a function. There are <strong>6 bugs</strong> — the most challenging question. Find them all.",
+  bugs:[
+    "Line 2: <strong>print(eligible, reason)</strong> — should be <strong>return eligible, reason</strong>; caller gets None (Logic Error).",
+    "Line 13: <strong>ride-name = \"Dragon Coaster\"</strong> — hyphen in variable name; use ride_name (SyntaxError).",
+    "Line 14: <strong>min-height = 1.2</strong> — hyphen; use min_height (SyntaxError).",
+    "Line 16: <strong>height = input()</strong> — must be float(input()) to compare with 1.2 (TypeError on comparison).",
+    "Line 18: <strong>if age => 18:</strong> — operator => does not exist; must be >= (SyntaxError).",
+    "Line 23: <strong>\"Height: \" + height</strong> — height is a float (after fix); must use str(height) (TypeError).",
+  ],
+  hint:"Check: (1) print vs return in the function, (2 & 3) two hyphenated variable names, (4) float conversion on the height input, (5) wrong comparison operator, (6) float joined to string in print.",
+  broken:
+`def check_eligibility(age, height, min_h):
+    if height >= min_h and age >= 12:
+        eligible = True
+        reason   = "All requirements met."
+    else:
+        eligible = False
+        reason   = "Must be 12+ and at least " + str(min_h) + "m tall."
+    print(eligible, reason)
+
+ride-name  = "Dragon Coaster"
+min-height = 1.2
+max_riders = 24
+
+height = input("Enter your height in metres: ")
+age    = int(input("Enter your age: "))
+
+if age => 18:
+    vip = True
+else:
+    vip = False
+
+eligible, reason = check_eligibility(age, height, min-height)
+
+print("=== Ride Eligibility ===")
+print("Ride:     " + ride-name)
+print("Height:   " + height + " m")
+print("Age:      " + str(age))
+print("Eligible: " + str(eligible))
+print("Reason:   " + reason)
+print("VIP Pass: " + str(vip))`,
+  fixed:
+`def check_eligibility(age, height, min_h):
+    if height >= min_h and age >= 12:
+        eligible = True
+        reason   = "All requirements met."
+    else:
+        eligible = False
+        reason   = "Must be 12+ and at least " + str(min_h) + "m tall."
+    return eligible, reason
+
+ride_name  = "Dragon Coaster"
+min_height = 1.2
+max_riders = 24
+
+height = float(input("Enter your height in metres: "))
+age    = int(input("Enter your age: "))
+
+if age >= 18:
+    vip = True
+else:
+    vip = False
+
+eligible, reason = check_eligibility(age, height, min_height)
+
+print("=== Ride Eligibility ===")
+print("Ride:     " + ride_name)
+print("Height:   " + str(height) + " m")
+print("Age:      " + str(age))
+print("Eligible: " + str(eligible))
+print("Reason:   " + reason)
+print("VIP Pass: " + str(vip))`,
+  keywords:["return","print","None","hyphen","_","float","input",">=","=>","str","TypeError","SyntaxError","Logic"]
+}
+
+]; // end scenarios
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let current=0, completed=new Set(), brokenCM=null, fixCM=null;
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  buildSidebar();
+  loadQuestion(0);
+});
+
+function buildSidebar(){
+  const list=document.getElementById('q-list');
+  scenarios.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='q-btn'; b.id=`qb-${i}`;
+    const short=s.title.length>20?s.title.slice(0,18)+'…':s.title;
+    b.innerHTML=`<span style="font-weight:600;color:#8a9bb0;margin-right:4px">${i+1}.</span>${short}`;
+    b.onclick=()=>loadQuestion(i);
+    list.appendChild(b);
+  });
+}
+
+function loadQuestion(idx){
+  current=idx;
+  const s=scenarios[idx];
+  document.querySelectorAll('.q-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`qb-${idx}`).classList.add('active');
+
+  document.getElementById('q-title').textContent=`Q${idx+1}. ${s.title}`;
+  document.getElementById('q-counter').textContent=`${idx+1} of ${scenarios.length}`;
+  document.getElementById('q-chapter').textContent=s.chapter;
+  document.getElementById('bug-count').textContent=`${s.bugCount} bug${s.bugCount>1?'s':''}`;
+  document.getElementById('q-badge').textContent='Multiple Errors';
+  document.getElementById('q-task').innerHTML=s.task;
+
+  // Bug guide list
+  const ol=document.getElementById('bug-ol');
+  ol.innerHTML='';
+  s.bugs.forEach(b=>{
+    const li=document.createElement('li'); li.innerHTML=b; ol.appendChild(li);
+  });
+
+  // Reset UI
+  ['explain-why','explain-fix'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('hint-box').classList.remove('visible');
+  document.getElementById('answer-box').classList.remove('visible');
+  const fb=document.getElementById('feedback');
+  fb.className='feedback'; fb.innerHTML='';
+
+  // Broken code (read-only)
+  const bw=document.getElementById('broken-wrap'); bw.innerHTML='';
+  const bta=document.createElement('textarea'); bw.appendChild(bta);
+  if(brokenCM) try{brokenCM.toTextArea()}catch(e){}
+  brokenCM=CodeMirror.fromTextArea(bta,{
+    mode:'python',theme:'default',readOnly:true,
+    lineNumbers:true,lineWrapping:false
+  });
+  brokenCM.setValue(s.broken);
+  setTimeout(()=>brokenCM.refresh(),50);
+
+  // Fix editor (editable)
+  const fw=document.getElementById('fix-wrap'); fw.innerHTML='';
+  const fta=document.createElement('textarea'); fw.appendChild(fta);
+  if(fixCM) try{fixCM.toTextArea()}catch(e){}
+  fixCM=CodeMirror.fromTextArea(fta,{
+    mode:'python',theme:'default',readOnly:false,
+    lineNumbers:true,lineWrapping:false,
+    extraKeys:{Tab:cm=>cm.replaceSelection('    ')}
+  });
+  fixCM.setValue(s.broken);
+  setTimeout(()=>{fixCM.refresh();fixCM.focus();},50);
+}
+
+// ══════════════════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════════════════
+function showHint(){
+  const b=document.getElementById('hint-box');
+  b.textContent=scenarios[current].hint;
+  b.classList.add('visible');
+}
+
+function showAnswer(){
+  const s=scenarios[current];
+  const ol=document.getElementById('ans-bugs'); ol.innerHTML='';
+  s.bugs.forEach(b=>{const li=document.createElement('li');li.innerHTML=b;ol.appendChild(li);});
+  document.getElementById('ans-code').textContent=s.fixed;
+  document.getElementById('answer-box').classList.add('visible');
+  markDone();
+}
+
+function checkAnswer(){
+  const s=scenarios[current];
+  const code=fixCM.getValue().trim();
+  const why=document.getElementById('explain-why').value.trim().toLowerCase();
+  const how=document.getElementById('explain-fix').value.trim().toLowerCase();
+  const combined=why+' '+how;
+  const fb=document.getElementById('feedback');
+
+  const norm=t=>t.replace(/\s+/g,' ').trim();
+  const codeOk=norm(code)===norm(s.fixed);
+  const hits=s.keywords.filter(k=>combined.includes(k.toLowerCase())).length;
+  const explainOk=hits>=3;
+
+  if(codeOk&&explainOk){
+    fb.className='feedback correct visible';
+    fb.innerHTML=`✓ <strong>Excellent!</strong> All bugs fixed and your explanation identifies the key error types. Score recorded.`;
+    markDone();
+  } else if(codeOk){
+    fb.className='feedback partial visible';
+    fb.innerHTML=`✓ Your code fix is <strong>correct</strong> — but expand your explanation. Try naming each bug type (e.g. <em>${s.keywords.slice(0,4).join(', ')}</em>).`;
+    markDone();
+  } else if(explainOk){
+    fb.className='feedback partial visible';
+    fb.innerHTML=`✎ Good explanation! But your code still has at least one bug remaining. Check every line again carefully.`;
+  } else {
+    fb.className='feedback wrong visible';
+    fb.innerHTML=`✗ Keep going — fix all ${s.bugCount} bugs in the editor and explain each one in the boxes. Use <em>Show Hint</em> if stuck.`;
+  }
+}
+
+function navigate(dir){
+  const n=current+dir;
+  if(n>=0&&n<scenarios.length) loadQuestion(n);
+}
+
+function markDone(){
+  completed.add(current);
+  document.getElementById(`qb-${current}`).classList.add('done');
+  updateProgress();
+}
+
+function updateProgress(){
+  const d=completed.size, t=scenarios.length;
+  document.getElementById('prog-fill').style.width=(d/t*100)+'%';
+  document.getElementById('prog-count').textContent=`${d} / ${t}`;
+  document.getElementById('score-pill').textContent=`Score: ${d} / ${t}`;
+}
+
+function markInput(el){
+  el.style.borderColor=el.value.trim().length>10?'var(--navy)':'var(--border)';
+}
+</script>
+</body>
+</html>
