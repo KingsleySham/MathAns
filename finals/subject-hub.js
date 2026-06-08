@@ -98,6 +98,7 @@ export function initSubjectPage(opts = {}) {
       byHour:      { [String(now.getHours())]: increment(1) },
       byDayOfWeek: { [String(now.getDay())]:  increment(1) },
       byAction:    { [bucket]: increment(1) },
+      byPage:      { [SLUG]: { [bucket]: increment(1) } },
       updatedAt: serverTimestamp(),
     }, { merge: true }).catch(err => console.warn('[' + SLUG + '] aggregate failed:', err));
   }
@@ -118,7 +119,11 @@ export function initSubjectPage(opts = {}) {
         firstVisit = true;
       }
     } catch (_) {}
-    const patch = { pageViews: increment(1), updatedAt: serverTimestamp() };
+    const patch = {
+      pageViews: increment(1),
+      byPage: { [SLUG]: { visits: increment(1) } },
+      updatedAt: serverTimestamp(),
+    };
     if (firstVisit) patch.uniqueVisitors = increment(1);
     setDoc(doc(db, 'state', 'clickStats'), patch, { merge: true })
       .catch(err => console.warn('[' + SLUG + '] visit track failed:', err));

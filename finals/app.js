@@ -3,7 +3,7 @@
 // custom countdown, stopwatch).
 import {
   db,
-  collection, addDoc, updateDoc, setDoc,
+  collection, addDoc, updateDoc, setDoc, deleteDoc,
   onSnapshot, query, orderBy, serverTimestamp,
   doc, increment
 } from './firebase-init.js';
@@ -713,6 +713,7 @@ function recordAggregateClick(action) {
     byHour:        { [hour]: increment(1) },
     byDayOfWeek:   { [dow]:  increment(1) },
     byAction:      { [bucket]: increment(1) },
+    byPage:        { finals: { [bucket]: increment(1) } },
     updatedAt: serverTimestamp(),
   }, { merge: true }).catch(err => console.warn('[clicks] aggregate failed:', err));
 }
@@ -731,6 +732,7 @@ function recordVisit() {
   } catch (_) { /* private mode — count as page view only */ }
   const patch = {
     pageViews: increment(1),
+    byPage: { finals: { visits: increment(1) } },
     updatedAt: serverTimestamp(),
   };
   if (firstVisit) patch.uniqueVisitors = increment(1);
@@ -738,6 +740,36 @@ function recordVisit() {
     .catch(err => console.warn('[visit] track failed:', err));
 }
 recordVisit();
+
+/* Live presence — a per-session heartbeat so the admin "people online"
+   count and per-hub live breakdown include the main hub. Admin sessions
+   are skipped so I don't count myself. */
+if (!isAdminSignedIn()) {
+  const PRESENCE_HEARTBEAT_MS = 30_000;
+  const presenceSessionId = (() => {
+    try {
+      let id = sessionStorage.getItem('finals.finalsPresenceId');
+      if (!id) {
+        id = 'p_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+        sessionStorage.setItem('finals.finalsPresenceId', id);
+      }
+      return id;
+    } catch (_) {
+      return 'p_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    }
+  })();
+  const presenceRef = doc(db, 'presence', presenceSessionId);
+  const presenceHeartbeat = () => setDoc(presenceRef, { page: 'finals', lastSeen: serverTimestamp() }).catch(() => {});
+  const presenceClear = () => deleteDoc(presenceRef).catch(() => {});
+  presenceHeartbeat();
+  setInterval(presenceHeartbeat, PRESENCE_HEARTBEAT_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') presenceClear();
+    else presenceHeartbeat();
+  });
+  window.addEventListener('pagehide', presenceClear);
+  window.addEventListener('beforeunload', presenceClear);
+}
 function isAdminSignedIn() {
   try { return !!sessionStorage.getItem('finals.adminPasscode'); }
   catch (_) { return false; }
