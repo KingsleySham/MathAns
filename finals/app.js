@@ -85,7 +85,10 @@ document.getElementById('main-tabs').addEventListener('click', (e) => {
     p.classList.toggle('active', p.id === 'panel-' + target);
   });
   if (target === 'maths') ensureMathsInitialized();
-  if (target === 'speaking') ensureSpeakingInitialized();
+  if (target === 'speaking') {
+    ensureSpeakingInitialized();
+    maybeShowSpeakingDisclaimer();
+  }
 });
 
 /* English Speaking group-possibility counter — mounted lazily on first open. */
@@ -95,6 +98,53 @@ function ensureSpeakingInitialized() {
   speakingInited = true;
   const root = document.getElementById('speaking-root');
   if (root) mountSpeaking(root);
+}
+
+/* English Speaking disclaimer — shown the first time the tab is opened each
+   visit (until "Don't show again" is ticked). No data leaves the browser;
+   this is a reference-only, personal-use, rights-reserved notice. */
+const SPEAKING_DISCLAIMER_KEY = 'finals.speakingDisclaimerDismissed';
+const speakingDisclaimerModal = document.getElementById('speaking-disclaimer-modal');
+const speakingDisclaimerOk    = document.getElementById('speaking-disclaimer-ok');
+const speakingDisclaimerSkip  = document.getElementById('speaking-disclaimer-skip');
+let speakingDisclaimerSeen = false;
+
+function speakingDisclaimerDismissed() {
+  try { return localStorage.getItem(SPEAKING_DISCLAIMER_KEY) === '1'; }
+  catch (_) { return false; }
+}
+function closeSpeakingDisclaimer() {
+  if (!speakingDisclaimerModal) return;
+  if (speakingDisclaimerSkip && speakingDisclaimerSkip.checked) {
+    try { localStorage.setItem(SPEAKING_DISCLAIMER_KEY, '1'); } catch (_) {}
+  }
+  speakingDisclaimerModal.classList.remove('open');
+  setTimeout(() => { speakingDisclaimerModal.style.display = 'none'; }, 200);
+}
+function maybeShowSpeakingDisclaimer() {
+  if (!speakingDisclaimerModal) return;
+  if (speakingDisclaimerSeen || speakingDisclaimerDismissed()) return;
+  speakingDisclaimerSeen = true;
+  if (speakingDisclaimerSkip) speakingDisclaimerSkip.checked = false;
+  speakingDisclaimerModal.style.display = 'flex';
+  speakingDisclaimerModal.offsetHeight;          // reflow for transition
+  speakingDisclaimerModal.classList.add('open');
+}
+if (speakingDisclaimerModal) {
+  speakingDisclaimerModal.addEventListener('click', (e) => {
+    const role = e.target.dataset.close;
+    if (!role) return;
+    if (role === 'overlay' && e.target !== speakingDisclaimerModal) return;
+    closeSpeakingDisclaimer();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && speakingDisclaimerModal.style.display === 'flex') {
+      closeSpeakingDisclaimer();
+    }
+  });
+}
+if (speakingDisclaimerOk) {
+  speakingDisclaimerOk.addEventListener('click', closeSpeakingDisclaimer);
 }
 
 /* ==========================================================================
