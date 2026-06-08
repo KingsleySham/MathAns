@@ -376,16 +376,20 @@ export function mountSpeaking(container) {
     const eMates = expectedGroupmates(N);
     const ranked = computeChances(me, pool, state.crossFactor);
 
+    // group sizes, each tagged with its discussion length
+    function sizeLabel(count, size) {
+      const dur = size === 4 ? "8-min" : "6-min";
+      return `${count} group${count > 1 ? "s" : ""} of ${size} <span class="sp-dur">(${dur} discussion)</span>`;
+    }
     const groupDesc = N <= 4
-      ? `one group of ${N}`
+      ? `one group of ${N} <span class="sp-dur">(${N === 3 ? "6" : "8"}-min discussion)</span>`
       : [
-          part.fours ? `${part.fours} group${part.fours > 1 ? "s" : ""} of 4` : "",
-          part.threes ? `${part.threes} group${part.threes > 1 ? "s" : ""} of 3` : ""
+          part.fours ? sizeLabel(part.fours, 4) : "",
+          part.threes ? sizeLabel(part.threes, 3) : ""
         ].filter(Boolean).join(" + ");
 
     const diffCount = pool.filter(c => c.cls !== me.cls).length;
     const sameCount = pool.length - diffCount;
-    const top = ranked[0];
 
     let html = `
       <div class="sp-you-card sp-cls-${me.cls}">
@@ -399,30 +403,22 @@ export function mountSpeaking(container) {
       <div class="sp-summary">
         <div class="sp-summary-row"><span class="sp-summary-num">${N}</span> students report at <strong>${prettyTime(me.time)}</strong></div>
         <div class="sp-summary-row">They split into <strong>${groupDesc}</strong> → you'll have about <strong>${eMates.toFixed(1)}</strong> groupmates.</div>
+        <div class="sp-summary-note">⏱ 8-minute group discussion for a group of 4 candidates, or 6 minutes for a group of 3 candidates.</div>
         <div class="sp-summary-row sp-summary-mix">${diffCount} from other classes · ${sameCount} from ${me.cls}</div>
       </div>`;
-
-    if (top) {
-      html += `
-        <div class="sp-top">
-          <div class="sp-top-label">Most likely groupmate</div>
-          <div class="sp-top-name">
-            <span class="sp-badge sp-badge-${top.cls}">${top.cls}</span>
-            No. ${top.no}${top.redacted ? "" : " · " + esc(displayName(top))}
-            <span class="sp-top-pct">${Math.round(top.chance * 100)}%</span>
-          </div>
-        </div>`;
-    }
 
     if (!ranked.length) {
       html += `<div class="sp-empty">No one else reports at ${prettyTime(me.time)} — you may be grouped across timeslots.</div>`;
     } else {
+      const maxChance = ranked[0].chance || 1;
       html += `
-        <div class="sp-list-head">Who you might be grouped with <span>(${prettyTime(me.time)} slot, ranked by chance)</span></div>
+        <div class="sp-list-head">Who you might be grouped with <span>(${prettyTime(me.time)} slot)</span></div>
+        <div class="sp-list-note">100% = your most likely groupmates — everyone in another class. It depends on class only, so they all share the top likelihood.</div>
         <ul class="sp-list">
-          ${ranked.map((c, i) => `
+          ${ranked.map(c => {
+            const relPct = Math.round((c.chance / maxChance) * 100);
+            return `
             <li class="sp-item">
-              <span class="sp-rank">${i + 1}</span>
               <span class="sp-who">
                 <span class="sp-badge sp-badge-${c.cls}">${c.cls}</span>
                 <span class="sp-no">No. ${c.no}</span>
@@ -430,10 +426,11 @@ export function mountSpeaking(container) {
                 <span class="sp-tag ${c.sameClass ? "sp-tag-same" : "sp-tag-diff"}">${c.sameClass ? "same class" : "different class"}</span>
               </span>
               <span class="sp-meter">
-                <span class="sp-bar"><span class="sp-bar-fill ${c.sameClass ? "is-same" : "is-diff"}" style="width:${Math.round(c.chance * 100)}%"></span></span>
-                <span class="sp-pct">${Math.round(c.chance * 100)}%</span>
+                <span class="sp-bar"><span class="sp-bar-fill ${c.sameClass ? "is-same" : "is-diff"}" style="width:${relPct}%"></span></span>
+                <span class="sp-pct ${c.sameClass ? "is-same" : "is-diff"}">${relPct}<span class="sp-pct-unit">%</span></span>
               </span>
-            </li>`).join("")}
+            </li>`;
+          }).join("")}
         </ul>`;
     }
 
