@@ -452,6 +452,17 @@
   border-color: var(--border-strong);
 }
 .ces-btn-download:hover { border-color: var(--accent); color: var(--accent); }
+.ces-btn-fullscreen {
+  background: transparent;
+  color: var(--text-soft);
+  border-color: var(--border-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 9px;
+}
+.ces-btn-fullscreen:hover { border-color: var(--accent); color: var(--accent); }
+.ces-btn-fullscreen svg { display: block; }
 .ces-btn-gdocs,
 .ces-btn-quizlet {
   background: var(--surface-soft);
