@@ -474,10 +474,13 @@ export function initSubjectPage(opts = {}) {
     return true;
   }
 
+  function emptyHTML(msg) {
+    return `<div class="ces-empty">${esc(msg)}</div>`;
+  }
+
   function renderNotes() {
     const grid = document.getElementById('ces-grid');
-    const empty = document.getElementById('ces-empty');
-    if (!grid || !empty) return;
+    if (!grid) return;
 
     // per-card counts (shown on the cards regardless of what's picked)
     document.querySelectorAll('[data-count]').forEach(el => {
@@ -493,14 +496,12 @@ export function initSubjectPage(opts = {}) {
     const picked = state.activeFilter !== null || !!activeCard || q !== '';
 
     // Nothing picked yet — prompt the user to choose instead of dumping
-    // the whole library.
+    // the whole library. (The grid HTML is rebuilt every call so we never
+    // depend on a persistent #ces-empty node.)
     if (!picked) {
-      grid.innerHTML = '';
-      empty.style.display = 'block';
-      empty.textContent = !state.notesLoaded
+      grid.innerHTML = emptyHTML(!state.notesLoaded
         ? `Loading ${label()} library…`
-        : `👆 Pick a study track, practice format, or a filter above to see ${label()} notes.`;
-      grid.appendChild(empty);
+        : `👆 Pick a study track, practice format, or a filter above to see ${label()} notes.`);
       return;
     }
 
@@ -514,17 +515,13 @@ export function initSubjectPage(opts = {}) {
     });
 
     if (filtered.length === 0) {
-      grid.innerHTML = '';
-      empty.style.display = 'block';
-      empty.textContent = !state.notesLoaded
+      grid.innerHTML = emptyHTML(!state.notesLoaded
         ? `Loading ${label()} library…`
         : (state.notes.length === 0
             ? `No ${label()} notes have been added yet. Check back soon.`
-            : `No ${label()} notes match that filter.`);
-      grid.appendChild(empty);
+            : `No ${label()} notes match that filter.`));
       return;
     }
-    empty.style.display = 'none';
 
     grid.innerHTML = filtered.map((n, idx) => {
       const isMock = n.type === 'mock_paper';
@@ -704,8 +701,7 @@ export function initSubjectPage(opts = {}) {
     (err) => {
       console.error('[' + SLUG + '] notes listener:', err);
       const grid = document.getElementById('ces-grid');
-      const empty = document.getElementById('ces-empty');
-      if (grid && empty) { grid.innerHTML = ''; empty.style.display = 'block'; empty.textContent = 'Could not load notes: ' + (err.message || err); grid.appendChild(empty); }
+      if (grid) grid.innerHTML = emptyHTML('Could not load notes: ' + (err.message || err));
     }
   );
 }
