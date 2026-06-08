@@ -415,9 +415,8 @@ export function initSubjectPage(opts = {}) {
       btn.addEventListener('click', () => {
         const id = btn.dataset.card;
         const card = state.cardsById.get(id);
+        if (!card) return; // guard: stale id, never throw past this point
 
-        // Flashcards / textbook single-link cards: if there's exactly one
-        // matching item with a direct link, just open it; otherwise filter.
         state.activeCardId = (state.activeCardId === id) ? null : id;
         document.querySelectorAll('[data-card]').forEach(b =>
           b.classList.toggle('is-active', b.dataset.card === state.activeCardId));

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mathans-v31';
+const CACHE_NAME = 'mathans-v32';
 const PRECACHE_ASSETS = ['/', '/index.html', '/style.css', '/app.js', '/data.js', '/manifest.json'];
 const BYPASS_PREFIXES = ['/3062470030624770', '/api/'];
 
