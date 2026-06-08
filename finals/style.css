@@ -3604,21 +3604,7 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   .live-viewers-label { font-size: 0.82rem; }
 }
 
-/* ---------- In-depth per-hub views ---------- */
-.indepth-card { margin-bottom: 18px; }
-.indepth-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.indepth-sub {
-  font-size: 0.78rem;
-  color: #64748b;
-  font-weight: 600;
-}
+/* ---------- In-depth engagement rows (shared by the Insights tab) ---------- */
 .indepth-list {
   list-style: none;
   margin: 0;
@@ -3688,6 +3674,57 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   .indepth-row { flex-wrap: wrap; }
   .indepth-stats { width: 100%; justify-content: flex-start; }
 }
+
+/* ---------- Admin tabs (Dashboard ⇄ Insights) ---------- */
+.admin-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 5px;
+}
+.admin-tab {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 9px 14px;
+  border-radius: 9px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.admin-tab:hover { color: #0f172a; }
+.admin-tab.is-active {
+  background: #fff;
+  color: #0d9488;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.10);
+}
+
+/* Insights panel — hidden until its tab is active. The people-online
+   banner stays visible on both tabs; every other dashboard section is
+   hidden while Insights is showing. */
+.insights-panel { display: none; }
+#admin-app.show-insights > section:not(.live-viewers-card):not(.insights-panel) { display: none; }
+#admin-app.show-insights .insights-panel { display: block; }
+.insights-intro { margin-bottom: 14px; }
+.insights-block { margin-bottom: 16px; }
+.insights-section-group { margin-bottom: 14px; }
+.insights-section-group:last-child { margin-bottom: 0; }
+.insights-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 4px 0 8px;
+}
+.indepth-row-section { padding-left: 12px; }
 
 /* ---------- Collapsible admin section ---------- */
 .collapsible-toggle {
