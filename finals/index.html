@@ -566,6 +566,26 @@
     </div>
   </div>
 
+  <!-- ===== English Speaking disclaimer (shown on opening the tab) ===== -->
+  <div class="modal-overlay welcome-popup-modal" id="speaking-disclaimer-modal" style="display:none;" data-close="overlay">
+    <div class="modal-card welcome-popup-card">
+      <button class="modal-close welcome-popup-close" data-close="x" aria-label="Close">&times;</button>
+      <div class="welcome-popup-emoji" aria-hidden="true">🔒</div>
+      <h2 class="welcome-popup-title">Before you continue</h2>
+      <hr class="welcome-popup-rule" />
+      <div class="welcome-popup-desc speaking-disclaimer-desc">
+        <p><strong>No personal information is collected or leaked.</strong> This tool runs entirely in your browser — your choice is never uploaded, shared, or stored on any server.</p>
+        <p>It is <strong>for reference only</strong> and shows an estimate. The school decides the real exam groups.</p>
+        <p><strong>All rights reserved.</strong> Please use it for your <strong>own personal use</strong> only.</p>
+      </div>
+      <button class="btn-primary welcome-popup-cta" id="speaking-disclaimer-ok" type="button">I understand</button>
+      <label class="welcome-popup-skip">
+        <input type="checkbox" id="speaking-disclaimer-skip" />
+        <span>Don't show again</span>
+      </label>
+    </div>
+  </div>
+
   <!-- Peek mode (triple-tap the title to lock the page to the
        bottom half of the viewport — for peeking from a drawer). -->
   <script>

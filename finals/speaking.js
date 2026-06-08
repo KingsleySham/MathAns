@@ -11,7 +11,7 @@
    fun estimate only — the school sets the real groups.
 
    Exported: mountSpeaking(container)  — builds the UI inside `container`.
-   Used by both /finals (English Speaking tab) and /finals/engp4 (standalone).
+   Used by the English Speaking tab in /finals.
    ========================================================================== */
 
 export const ENGP4_DATA = {

@@ -2212,25 +2212,13 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
 .sp-empty { text-align: center; color: #6b7280; font-size: 0.9rem; padding: 18px 0; }
 .sp-foot { margin-top: 16px; }
 
-/* standalone /finals/engp4 page header */
-.engp4-page-head {
-  text-align: center;
-  margin: 8px 0 18px;
+/* English Speaking disclaimer — multi-paragraph, left-aligned for reading */
+.speaking-disclaimer-desc {
+  white-space: normal;
+  text-align: left;
 }
-.engp4-page-head .engp4-back {
-  display: inline-block;
-  font-size: 0.82rem;
-  color: #1a56db;
-  text-decoration: none;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-.engp4-page-head .engp4-back:hover { text-decoration: underline; }
-.engp4-meta {
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-top: 4px;
-}
+.speaking-disclaimer-desc p { margin: 0 0 10px; }
+.speaking-disclaimer-desc p:last-child { margin-bottom: 0; }
 
 /* ---------- In-browser viewer modal ---------- */
 .viewer-modal {
