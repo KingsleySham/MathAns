@@ -2063,6 +2063,175 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   margin-top: 18px;
 }
 
+/* ---------- English Speaking — group possibility (scoped .speaking-finder) ---------- */
+.speaking-finder { padding: 22px 22px 18px; }
+.speaking-finder .form-group { margin-bottom: 18px; }
+.speaking-finder .step-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #374151;
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+.speaking-finder .sp-hint { font-weight: 500; color: #9ca3af; font-size: 0.78rem; }
+.speaking-finder .section-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.speaking-finder .tab {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1.5px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.speaking-finder .tab:hover { border-color: #1a56db; color: #1a56db; background: #eff6ff; }
+.speaking-finder .tab.active {
+  background: #1a56db;
+  border-color: #1a56db;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(26, 86, 219, 0.30);
+}
+.speaking-finder .select-wrap { position: relative; }
+.speaking-finder .select-wrap::after {
+  content: "\25BE";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  pointer-events: none;
+  font-size: 0.9rem;
+}
+
+/* class colour accents */
+.sp-badge {
+  display: inline-block;
+  min-width: 38px;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: #6b7280;
+}
+.sp-badge-S3A { background: #1a56db; }
+.sp-badge-S3B { background: #0d9488; }
+.sp-badge-S3C { background: #7c3aed; }
+
+/* "you" card */
+.sp-result { margin-top: 4px; }
+.sp-you-card {
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: #f8fafc;
+  border: 1.5px solid #e5e7eb;
+  border-left-width: 5px;
+}
+.sp-you-card.sp-cls-S3A { border-left-color: #1a56db; }
+.sp-you-card.sp-cls-S3B { border-left-color: #0d9488; }
+.sp-you-card.sp-cls-S3C { border-left-color: #7c3aed; }
+.sp-you-line { font-size: 1rem; font-weight: 800; color: #1f2937; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sp-you-time { font-size: 0.85rem; color: #6b7280; margin-top: 6px; }
+
+/* slot summary */
+.sp-summary {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.sp-summary-row { font-size: 0.88rem; color: #1e3a8a; margin: 2px 0; }
+.sp-summary-num { font-weight: 800; font-size: 1.05rem; }
+.sp-summary-mix { color: #475569; font-size: 0.8rem; margin-top: 6px; }
+
+/* top pick */
+.sp-top {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border: 1.5px solid #fde68a;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.sp-top-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #b45309; }
+.sp-top-name { font-size: 0.98rem; font-weight: 800; color: #1f2937; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sp-top-pct { margin-left: auto; color: #b45309; font-weight: 800; }
+
+/* candidate list */
+.sp-list-head { font-size: 0.85rem; font-weight: 700; color: #374151; margin-bottom: 10px; }
+.sp-list-head span { font-weight: 500; color: #9ca3af; }
+.sp-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.sp-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #eef0f3;
+  border-radius: 12px;
+  background: #fff;
+}
+.sp-rank {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sp-who { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
+.sp-no { font-weight: 800; color: #1f2937; font-size: 0.85rem; }
+.sp-name { color: #6b7280; font-size: 0.82rem; }
+.sp-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+.sp-tag-diff { background: #dcfce7; color: #166534; }
+.sp-tag-same { background: #f1f5f9; color: #64748b; }
+.sp-meter { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.sp-bar { width: 84px; height: 8px; border-radius: 999px; background: #eef0f3; overflow: hidden; }
+.sp-bar-fill { display: block; height: 100%; border-radius: 999px; transition: width 0.25s ease; }
+.sp-bar-fill.is-diff { background: linear-gradient(90deg, #34d399, #059669); }
+.sp-bar-fill.is-same { background: linear-gradient(90deg, #cbd5e1, #94a3b8); }
+.sp-pct { font-weight: 800; font-size: 0.82rem; color: #1f2937; width: 34px; text-align: right; }
+.sp-empty { text-align: center; color: #6b7280; font-size: 0.9rem; padding: 18px 0; }
+.sp-foot { margin-top: 16px; }
+
+/* standalone /finals/engp4 page header */
+.engp4-page-head {
+  text-align: center;
+  margin: 8px 0 18px;
+}
+.engp4-page-head .engp4-back {
+  display: inline-block;
+  font-size: 0.82rem;
+  color: #1a56db;
+  text-decoration: none;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.engp4-page-head .engp4-back:hover { text-decoration: underline; }
+.engp4-meta {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
 /* ---------- In-browser viewer modal ---------- */
 .viewer-modal {
   padding: 16px;
@@ -2609,6 +2778,14 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   .maths-finder .section-tabs { gap: 6px; }
   .maths-finder .tab { padding: 7px 12px; font-size: 0.78rem; }
   .maths-finder .btn-check { padding: 12px 16px; font-size: 0.92rem; }
+
+  /* English Speaking finder */
+  .speaking-finder { padding: 16px 14px 14px; }
+  .speaking-finder .section-tabs { gap: 6px; }
+  .speaking-finder .tab { padding: 7px 12px; font-size: 0.78rem; }
+  .sp-item { gap: 8px; padding: 9px 10px; }
+  .sp-bar { width: 56px; }
+  .sp-name { width: 100%; order: 5; }
 
   /* Admin */
   .admin-wrap { padding: 14px 12px 32px; }
