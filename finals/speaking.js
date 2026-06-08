@@ -228,32 +228,42 @@ export function expectedGroupmates(N) {
 /* -------------------------------------------------------------------------
    Possibility model.
 
-   Within a timeslot, each candidate is weighted: 1 if same class as the
-   selected student, `crossFactor` (>1) if a different class — so cross-class
-   partners are more likely. The chance a candidate shares your group is the
-   expected number of groupmates spread across the pool by weight:
+   The school builds each group as a MIX of classes — ideally one student
+   from S3A, S3B and S3C (a 3-way combination), plus a 4th from any class in
+   a group of four. So a partner from another class is much more likely than
+   one from your own class.
 
-       chance(c) = expectedGroupmates · weight(c) / Σ weights
-
-   clamped to [1%, 99%] for display.
+   The classes are filled by a fixed priority: S3A > S3B > S3C. From your
+   point of view your own class is the least likely partner (the group
+   already has you to represent it), and the two other classes take the top
+   two priority slots in S3A > S3B > S3C order. Everyone in the same class
+   shares the same percentage (evenly distributed within the class).
    ------------------------------------------------------------------------- */
-export function computeChances(me, pool, crossFactor) {
-  const N = pool.length + 1;
-  const eMates = expectedGroupmates(N);
-  let totalW = 0;
-  const weighted = pool.map(c => {
-    const sameClass = c.cls === me.cls;
-    const weight = sameClass ? 1 : crossFactor;
-    totalW += weight;
-    return { c, sameClass, weight };
-  });
-  return weighted.map(({ c, sameClass, weight }) => {
-    let chance = totalW > 0 ? (eMates * weight) / totalW : 0;
-    chance = Math.max(0.01, Math.min(0.99, chance));
-    return { ...c, sameClass, weight, chance };
-  }).sort((a, b) =>
-    b.chance - a.chance ||
-    a.cls.localeCompare(b.cls) ||
+export const CLASS_PRIORITY = ["S3A", "S3B", "S3C"];
+
+// Percentages per priority tier — kept in the 60–70% band at the top so no
+// one ever reads a misleading "100%".
+export const CLASS_TIER_PCT = { first: 66, second: 51, own: 36 };
+
+/* The percentage shown for each class, from `meCls`'s point of view. */
+export function classChancePercents(meCls) {
+  const others = CLASS_PRIORITY.filter(c => c !== meCls); // keeps S3A>S3B>S3C order
+  const map = {};
+  map[others[0]] = CLASS_TIER_PCT.first;   // top-priority other class
+  map[others[1]] = CLASS_TIER_PCT.second;  // second other class
+  map[meCls]     = CLASS_TIER_PCT.own;     // your own class — least likely
+  return map;
+}
+
+export function computeChances(me, pool) {
+  const pct = classChancePercents(me.cls);
+  return pool.map(c => ({
+    ...c,
+    sameClass: c.cls === me.cls,
+    percent: pct[c.cls]
+  })).sort((a, b) =>
+    b.percent - a.percent ||
+    CLASS_PRIORITY.indexOf(a.cls) - CLASS_PRIORITY.indexOf(b.cls) ||
     a.no - b.no
   );
 }
@@ -292,36 +302,25 @@ export function mountSpeaking(container) {
         </div>
       </div>
 
-      <div class="form-group">
-        <div class="step-label">3. Mixing strength <span class="sp-hint">— how much more likely a different-class partner is</span></div>
-        <div class="section-tabs sp-strength-tabs" id="sp-strength-tabs">
-          <button type="button" class="tab sp-str-tab" data-r="1.5">Mild ×1.5</button>
-          <button type="button" class="tab sp-str-tab active" data-r="2">Standard ×2</button>
-          <button type="button" class="tab sp-str-tab" data-r="3">Strong ×3</button>
-        </div>
-      </div>
-
       <div id="sp-result" class="sp-result"></div>
 
       <p class="maths-foot sp-foot">
-        Estimate only — the school sets the real groups. The chance is higher for students in a different class. 只供參考。
+        Estimate only — the school sets the real groups. Groups mix classes (aiming for a S3A + S3B + S3C combination), so a partner from another class is more likely than one from your own. 只供參考。
       </p>
     </div>
   `;
 
   const classTabs = container.querySelector("#sp-class-tabs");
   const noSelect = container.querySelector("#sp-no-select");
-  const strengthTabs = container.querySelector("#sp-strength-tabs");
   const resultBox = container.querySelector("#sp-result");
 
-  const state = { cls: "", no: null, crossFactor: 2 };
+  const state = { cls: "", no: null };
 
   /* restore last selection */
   try {
     const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
     if (CLASS_LABEL.includes(saved.cls)) state.cls = saved.cls;
     if (typeof saved.no === "number") state.no = saved.no;
-    if ([1.5, 2, 3].includes(saved.crossFactor)) state.crossFactor = saved.crossFactor;
   } catch (e) { /* ignore */ }
 
   function persist() {
@@ -344,10 +343,6 @@ export function mountSpeaking(container) {
   function syncClassTabs() {
     classTabs.querySelectorAll(".sp-cls-tab").forEach(b =>
       b.classList.toggle("active", b.dataset.cls === state.cls));
-  }
-  function syncStrengthTabs() {
-    strengthTabs.querySelectorAll(".sp-str-tab").forEach(b =>
-      b.classList.toggle("active", Number(b.dataset.r) === state.crossFactor));
   }
 
   function render() {
@@ -374,7 +369,9 @@ export function mountSpeaking(container) {
     const N = pool.length + 1;
     const part = partitionGroups(N);
     const eMates = expectedGroupmates(N);
-    const ranked = computeChances(me, pool, state.crossFactor);
+    const ranked = computeChances(me, pool);
+    const tierPct = classChancePercents(me.cls);
+    const partnerOrder = CLASS_PRIORITY.filter(c => c !== me.cls); // top two, in priority order
 
     // group sizes, each tagged with its discussion length
     function sizeLabel(count, size) {
@@ -410,13 +407,12 @@ export function mountSpeaking(container) {
     if (!ranked.length) {
       html += `<div class="sp-empty">No one else reports at ${prettyTime(me.time)} — you may be grouped across timeslots.</div>`;
     } else {
-      const maxChance = ranked[0].chance || 1;
       html += `
         <div class="sp-list-head">Who you might be grouped with <span>(${prettyTime(me.time)} slot)</span></div>
-        <div class="sp-list-note">100% = your most likely groupmates — everyone in another class. It depends on class only, so they all share the top likelihood.</div>
+        <div class="sp-list-note">Groups aim for a <strong>S3A + S3B + S3C</strong> mix. Class priority is <strong>${CLASS_PRIORITY.join(" › ")}</strong>, so a partner from <strong>${partnerOrder[0]}</strong> (${tierPct[partnerOrder[0]]}%) is the most likely, then <strong>${partnerOrder[1]}</strong> (${tierPct[partnerOrder[1]]}%); your own ${me.cls} is least likely (${tierPct[me.cls]}%). Everyone in a class shares the same chance.</div>
         <ul class="sp-list">
           ${ranked.map(c => {
-            const relPct = Math.round((c.chance / maxChance) * 100);
+            const pct = c.percent;
             return `
             <li class="sp-item">
               <span class="sp-who">
@@ -426,8 +422,8 @@ export function mountSpeaking(container) {
                 <span class="sp-tag ${c.sameClass ? "sp-tag-same" : "sp-tag-diff"}">${c.sameClass ? "same class" : "different class"}</span>
               </span>
               <span class="sp-meter">
-                <span class="sp-bar"><span class="sp-bar-fill ${c.sameClass ? "is-same" : "is-diff"}" style="width:${relPct}%"></span></span>
-                <span class="sp-pct ${c.sameClass ? "is-same" : "is-diff"}">${relPct}<span class="sp-pct-unit">%</span></span>
+                <span class="sp-bar"><span class="sp-bar-fill ${c.sameClass ? "is-same" : "is-diff"}" style="width:${pct}%"></span></span>
+                <span class="sp-pct ${c.sameClass ? "is-same" : "is-diff"}">${pct}<span class="sp-pct-unit">%</span></span>
               </span>
             </li>`;
           }).join("")}
@@ -455,17 +451,7 @@ export function mountSpeaking(container) {
     render();
   });
 
-  strengthTabs.addEventListener("click", e => {
-    const btn = e.target.closest(".sp-str-tab");
-    if (!btn) return;
-    state.crossFactor = Number(btn.dataset.r);
-    syncStrengthTabs();
-    persist();
-    render();
-  });
-
   /* ---- initial paint (restore) ---- */
-  syncStrengthTabs();
   if (state.cls) {
     syncClassTabs();
     populateNumbers();
