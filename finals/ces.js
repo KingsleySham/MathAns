@@ -79,6 +79,7 @@ function recordAggregateClick(action) {
     byHour:      { [hour]: increment(1) },
     byDayOfWeek: { [dow]:  increment(1) },
     byAction:    { [bucket]: increment(1) },
+    byPage:      { ces: { [bucket]: increment(1) } },
     updatedAt: serverTimestamp(),
   }, { merge: true }).catch(err => console.warn('[ces] aggregate failed:', err));
 }
@@ -107,6 +108,7 @@ function recordCesVisit() {
   } catch (_) {}
   const patch = {
     pageViews: increment(1),
+    byPage: { ces: { visits: increment(1) } },
     updatedAt: serverTimestamp(),
   };
   if (firstVisit) patch.uniqueVisitors = increment(1);

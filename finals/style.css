@@ -3610,6 +3610,91 @@ textarea { resize: vertical; min-height: 56px; font-family: inherit; }
   .live-viewers-label { font-size: 0.82rem; }
 }
 
+/* ---------- In-depth per-hub views ---------- */
+.indepth-card { margin-bottom: 18px; }
+.indepth-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.indepth-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+}
+.indepth-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.indepth-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.indepth-emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.indepth-text { flex: 1; min-width: 0; }
+.indepth-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.indepth-live {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #047857;
+  background: #d1fae5;
+  border-radius: 999px;
+  padding: 2px 8px;
+  letter-spacing: 0.02em;
+}
+.indepth-meta {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+.indepth-stats {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.indepth-stat {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.indepth-view    { background: #dbeafe; color: #1d4ed8; }
+.indepth-dl      { background: #d1fae5; color: #047857; }
+.indepth-gdocs   { background: #fef3c7; color: #b45309; }
+.indepth-quizlet { background: #ede9fe; color: #6d28d9; }
+@media (max-width: 520px) {
+  .indepth-row { flex-wrap: wrap; }
+  .indepth-stats { width: 100%; justify-content: flex-start; }
+}
+
 /* ---------- Collapsible admin section ---------- */
 .collapsible-toggle {
   display: inline-flex;

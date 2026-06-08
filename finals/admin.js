@@ -2208,31 +2208,107 @@ function startAdmin(fb) {
     }
   );
 
-  /* -------- Live viewer count (CES page) -------- */
+  /* -------- People online + in-depth per-hub views --------
+     Presence docs (one per live session) carry the `page` slug they're on,
+     so we can count everyone online and break the live count down per hub.
+     Cumulative "clicked in / viewed / downloaded" counts come from the
+     `byPage` map on /state/clickStats (written by each hub page). */
   const LIVE_VIEWERS_WINDOW_MS = 75_000; // 30 s heartbeat + 45 s grace
   const liveViewersCard  = $('live-viewers-card');
   const liveViewersCount = $('live-viewers-count');
   const liveViewersLabel = $('live-viewers-label');
+  const indepthListEl    = $('indepth-list');
   let presenceDocs = new Map();
+  let byPageStats  = {};
+
+  // Friendly emoji + name for a page slug. 'finals' is the main hub and
+  // 'ces' the dedicated CES page; the rest resolve from the stored
+  // subject-page configs (or the built-in defaults) so labels stay in sync.
+  const PAGE_META = {
+    finals: { emoji: '🏠', label: 'Finals Hub' },
+    ces:    { emoji: '📚', label: 'CES Study Hub' },
+  };
+  function pageMeta(slug) {
+    if (PAGE_META[slug]) return PAGE_META[slug];
+    const cfg = allPages[slug] || BUILTIN_DEFAULTS[slug];
+    if (cfg) return { emoji: cfg.emoji || '📄', label: cfg.label || slug };
+    return { emoji: '📄', label: slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Unknown' };
+  }
+
+  // Live presence per page (within the heartbeat window) + grand total.
+  function liveCountByPage() {
+    const cutoff = Date.now() - LIVE_VIEWERS_WINDOW_MS;
+    const map = new Map();
+    let total = 0;
+    presenceDocs.forEach((data) => {
+      const ms = data.lastSeen && typeof data.lastSeen.toMillis === 'function'
+        ? data.lastSeen.toMillis() : 0;
+      if (ms <= cutoff) return;
+      total++;
+      const slug = data.page || 'finals';
+      map.set(slug, (map.get(slug) || 0) + 1);
+    });
+    return { map, total };
+  }
 
   function renderLiveViewers() {
     if (!liveViewersCard) return;
-    const cutoff = Date.now() - LIVE_VIEWERS_WINDOW_MS;
-    let count = 0;
-    presenceDocs.forEach((data) => {
-      if (data.page !== 'ces') return;
-      const ms = data.lastSeen && typeof data.lastSeen.toMillis === 'function'
-        ? data.lastSeen.toMillis() : 0;
-      if (ms > cutoff) count++;
-    });
-    liveViewersCount.textContent = String(count);
+    const { total } = liveCountByPage();
+    if (liveViewersCount) liveViewersCount.textContent = String(total);
     if (liveViewersLabel) {
-      liveViewersLabel.textContent = count === 1
-        ? 'person viewing the CES Study Hub right now'
-        : 'people viewing the CES Study Hub right now';
+      liveViewersLabel.textContent = total === 1
+        ? 'person online right now'
+        : 'people online right now';
     }
     liveViewersCard.hidden = false;
-    liveViewersCard.classList.toggle('live-viewers-empty', count === 0);
+    liveViewersCard.classList.toggle('live-viewers-empty', total === 0);
+  }
+
+  function renderInDepthViews() {
+    if (!indepthListEl) return;
+    const { map: liveByPage } = liveCountByPage();
+    // Show any hub that has cumulative stats OR someone live right now.
+    const slugs = new Set([...Object.keys(byPageStats || {}), ...liveByPage.keys()]);
+    const rows = [...slugs].map(slug => {
+      const s = byPageStats[slug] || {};
+      return {
+        slug,
+        visits:    Number(s.visits)   || 0,
+        views:     Number(s.view)     || 0,
+        downloads: Number(s.download) || 0,
+        gdocs:     Number(s.gdocs)    || 0,
+        quizlet:   Number(s.quizlet)  || 0,
+        live:      liveByPage.get(slug) || 0,
+        get engaged() { return this.views + this.downloads + this.gdocs + this.quizlet; },
+      };
+    }).sort((a, b) =>
+      (b.live - a.live) || (b.visits - a.visits) || (b.engaged - a.engaged)
+    );
+
+    if (!rows.length) {
+      indepthListEl.innerHTML = '<li class="empty-state-small">No hub activity yet.</li>';
+      return;
+    }
+    indepthListEl.innerHTML = rows.map(r => {
+      const meta = pageMeta(r.slug);
+      const bits = [];
+      if (r.views)     bits.push(`<span class="indepth-stat indepth-view" title="Viewed / previewed">👁 ${r.views.toLocaleString()}</span>`);
+      if (r.downloads) bits.push(`<span class="indepth-stat indepth-dl" title="Downloaded">⬇ ${r.downloads.toLocaleString()}</span>`);
+      if (r.gdocs)     bits.push(`<span class="indepth-stat indepth-gdocs" title="Opened in Google Docs">G ${r.gdocs.toLocaleString()}</span>`);
+      if (r.quizlet)   bits.push(`<span class="indepth-stat indepth-quizlet" title="Opened Quizlet">Q ${r.quizlet.toLocaleString()}</span>`);
+      return `
+        <li class="indepth-row">
+          <span class="indepth-emoji">${escapeHtmlSimple(meta.emoji)}</span>
+          <div class="indepth-text">
+            <div class="indepth-name">
+              ${escapeHtmlSimple(meta.label)}
+              ${r.live ? `<span class="indepth-live">● ${r.live} online</span>` : ''}
+            </div>
+            <div class="indepth-meta">${r.visits.toLocaleString()} click${r.visits === 1 ? '' : 's'} in${bits.length ? '' : ' · nothing opened yet'}</div>
+          </div>
+          <div class="indepth-stats">${bits.join('')}</div>
+        </li>`;
+    }).join('');
   }
 
   onSnapshot(
@@ -2241,10 +2317,11 @@ function startAdmin(fb) {
       presenceDocs = new Map();
       snap.forEach(d => presenceDocs.set(d.id, d.data() || {}));
       renderLiveViewers();
+      renderInDepthViews();
     },
     (err) => console.error('[admin] presence listener:', err)
   );
-  setInterval(renderLiveViewers, 15_000);
+  setInterval(() => { renderLiveViewers(); renderInDepthViews(); }, 15_000);
 
   /* -------- Collapsible Exam Coverage section -------- */
   const COVERAGE_COLLAPSE_KEY = 'admin.coverageCollapsed';
@@ -2387,7 +2464,9 @@ function startAdmin(fb) {
         uniqueVisitors: Number(data && data.uniqueVisitors) || 0,
         pageViews:      Number(data && data.pageViews) || 0,
       };
+      byPageStats = (data && data.byPage) || {};
       renderEngagementAggregate();
+      renderInDepthViews();
     },
     (err) => console.error('[admin] clickStats listener:', err)
   );

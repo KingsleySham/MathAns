@@ -57,7 +57,7 @@
   <!-- ===== Admin app ===== -->
   <main id="admin-app" class="admin-wrap" style="display:none;">
 
-    <!-- Live viewers banner — anonymous presence count for the CES study hub -->
+    <!-- Live viewers banner — anonymous presence count across every hub -->
     <section class="live-viewers-card" id="live-viewers-card" hidden>
       <div class="live-viewers-pulse" aria-hidden="true">
         <span class="live-viewers-dot"></span>
@@ -65,9 +65,21 @@
       </div>
       <div class="live-viewers-text">
         <span class="live-viewers-num" id="live-viewers-count">0</span>
-        <span class="live-viewers-label" id="live-viewers-label">people viewing the CES Study Hub right now</span>
+        <span class="live-viewers-label" id="live-viewers-label">people online right now</span>
       </div>
       <div class="live-viewers-meta">live</div>
+    </section>
+
+    <!-- In-depth views — per-hub breakdown of who clicked in and what they
+         viewed / downloaded (English, CES, ICT, History, …). -->
+    <section class="card indepth-card" id="indepth-card">
+      <div class="indepth-head">
+        <h3 class="dashboard-h" style="margin:0;">🔎 In-depth views</h3>
+        <div class="indepth-sub">Clicks into each hub · views &amp; downloads</div>
+      </div>
+      <ol class="indepth-list" id="indepth-list">
+        <li class="empty-state-small">No hub activity yet.</li>
+      </ol>
     </section>
 
     <!-- Stats dashboard -->
