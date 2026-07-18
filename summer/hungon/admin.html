@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>鴻安 POS 後台管理</title>
+  <meta name="description" content="鴻安五金 POS 後台管理 — 產品及分類管理。" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#4A90E2" />
+  <link rel="stylesheet" href="common.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <header class="pos-header">
+    <div>
+      <h1>鴻安 後台管理</h1>
+      <div class="sub">Hung On · 產品及分類管理</div>
+    </div>
+    <a class="back-btn" href="/summer/hungon/pos">← 返回 POS</a>
+  </header>
+
+  <main class="admin-layout">
+
+    <section class="admin-card">
+      <h2>分類管理</h2>
+
+      <div class="add-row">
+        <input type="text" id="new-category-name" placeholder="新分類名稱" />
+        <button type="button" id="add-category-btn">新增分類</button>
+      </div>
+
+      <div class="category-list" id="category-list"></div>
+    </section>
+
+    <section class="admin-card">
+      <h2>產品管理</h2>
+
+      <div class="add-row add-row-product">
+        <input type="text" id="new-product-name" placeholder="產品名稱" />
+        <select id="new-product-category"></select>
+        <input type="text" id="new-product-unit" placeholder="單位 (支/呎/個…)" />
+        <input type="number" id="new-product-price" placeholder="價錢" min="0" step="0.1" />
+        <button type="button" id="add-product-btn">新增產品</button>
+      </div>
+
+      <div class="filter-row">
+        <input type="search" id="product-search" placeholder="搜尋產品名稱…" />
+        <select id="product-category-filter">
+          <option value="all">全部分類</option>
+        </select>
+        <span class="product-total" id="product-total"></span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="product-table">
+          <thead>
+            <tr>
+              <th>名稱</th>
+              <th>分類</th>
+              <th>單位</th>
+              <th class="num">價錢 ($)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="product-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="products.js"></script>
+  <script type="module" src="firebase-init.js"></script>
+  <script src="catalog.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

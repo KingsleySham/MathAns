@@ -45,7 +45,9 @@
     { "source": "/ths/", "destination": "/thsindex.html" },
     { "source": "/view/:id",  "destination": "/finals/view.html" },
     { "source": "/view/:id/", "destination": "/finals/view.html" },
-    { "source": "/summer/hungon/pos",  "destination": "/summer/hungon/pos.html" },
-    { "source": "/summer/hungon/pos/", "destination": "/summer/hungon/pos.html" }
+    { "source": "/summer/hungon/pos",    "destination": "/summer/hungon/pos.html" },
+    { "source": "/summer/hungon/pos/",   "destination": "/summer/hungon/pos.html" },
+    { "source": "/summer/hungon/admin",  "destination": "/summer/hungon/admin.html" },
+    { "source": "/summer/hungon/admin/", "destination": "/summer/hungon/admin.html" }
   ]
 }

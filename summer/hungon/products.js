@@ -1,5 +1,11 @@
-// 鴻安 POS 產品資料 (Traditional Chinese - Hong Kong)
-// 如發現價錢有誤，請直接修改此檔案內的 price 數值即可，不需改動其他程式。
+// 鴻安 POS 起始產品資料 (Traditional Chinese - Hong Kong)
+//
+// This is now only the SEED catalogue: the first time the POS ever loads
+// with an empty Firestore database, these products/categories are copied
+// in once so the shop isn't staring at a blank screen. After that, the
+// live catalogue lives in Firestore (hungonProducts / hungonCategories)
+// and is managed from the admin page (tap the POS title 3 times) — editing
+// this file will NOT change prices on an already-seeded deployment.
 // price: 港元 $；unit: 計價單位 (支/呎/碼/包/個/米/箱 等)
 
 window.HUNGON_CATEGORIES = [

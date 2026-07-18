@@ -268,6 +268,47 @@ service cloud.firestore {
       allow delete: if true;
     }
 
+    // 鴻安 (Hung On) POS — hardware-store product catalogue. Own, isolated
+    // collections (hungonProducts / hungonCategories / hungonMeta) so this
+    // feature can never overlap or contradict rules for any other page's
+    // data above. Same trusted-environment model: open writes, gated only
+    // by the admin page not being publicly linked, with shape validation.
+    match /hungonProducts/{id} {
+      allow read: if true;
+      allow create, update: if
+        request.resource.data.keys().hasAll(['name', 'unit', 'price', 'category']) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() < 160 &&
+        request.resource.data.unit is string &&
+        request.resource.data.unit.size() > 0 &&
+        request.resource.data.unit.size() < 20 &&
+        request.resource.data.price is number &&
+        request.resource.data.price >= 0 &&
+        request.resource.data.price < 1000000 &&
+        request.resource.data.category is string &&
+        request.resource.data.category.size() > 0 &&
+        request.resource.data.category.size() < 60;
+      allow delete: if true;
+    }
+
+    match /hungonCategories/{id} {
+      allow read: if true;
+      allow create, update: if
+        request.resource.data.keys().hasAll(['name']) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() < 60;
+      allow delete: if true;
+    }
+
+    match /hungonMeta/{id} {
+      allow read: if true;
+      allow write: if
+        request.resource.data.keys().hasOnly(['seeded']) &&
+        request.resource.data.seeded is bool;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
