@@ -7,13 +7,14 @@
   <meta name="description" content="鴻安五金 POS 收銀系統 — 產品選購、購物車結算及收據列印。" />
   <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#4A90E2" />
+  <link rel="stylesheet" href="common.css" />
   <link rel="stylesheet" href="pos.css" />
 </head>
 <body>
 
   <header class="pos-header">
     <div>
-      <h1>鴻安 POS 收銀系統</h1>
+      <h1 id="pos-title" title="連續按 3 下開啟後台管理">鴻安 POS 收銀系統</h1>
       <div class="sub">Hung On · 五金 / 建材 收銀</div>
     </div>
     <button class="cart-toggle-btn" id="cart-toggle-btn">
@@ -74,6 +75,8 @@
   <div class="toast" id="toast"></div>
 
   <script src="products.js"></script>
+  <script type="module" src="firebase-init.js"></script>
+  <script src="catalog.js"></script>
   <script src="pos.js"></script>
 </body>
 </html>

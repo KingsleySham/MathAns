@@ -1,0 +1,262 @@
+/* ============================================================
+   鴻安 後台管理 — styles
+   (shared variables/reset/toast live in common.css)
+   ============================================================ */
+
+.pos-header {
+  background: var(--blue);
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.pos-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.pos-header .sub {
+  font-size: 12px;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+.back-btn {
+  color: #fff;
+  text-decoration: none;
+  background: rgba(255,255,255,0.18);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-layout {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  padding: 20px;
+}
+
+.admin-card h2 {
+  font-size: 16px;
+  margin-bottom: 14px;
+}
+
+/* ---------- Add rows ---------- */
+.add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.add-row input, .add-row select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.add-row input[type="text"] {
+  flex: 1;
+  min-width: 140px;
+}
+
+.add-row-product input[type="text"]:first-child {
+  flex: 2;
+  min-width: 160px;
+}
+
+.add-row-product input[type="number"] {
+  width: 100px;
+}
+
+.add-row button {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+/* ---------- Category list ---------- */
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.category-row input[type="text"] {
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+.category-row input[type="text"]:focus {
+  border-color: var(--border);
+  background: var(--bg);
+  outline: none;
+}
+
+.category-row .count {
+  color: var(--muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.category-row .delete-btn {
+  border: none;
+  background: none;
+  color: var(--danger);
+  font-size: 12.5px;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.category-row .delete-btn:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* ---------- Filter row ---------- */
+.filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-row input, .filter-row select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.filter-row input[type="search"] {
+  flex: 1;
+  min-width: 160px;
+}
+
+.product-total {
+  color: var(--muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+/* ---------- Product table ---------- */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.product-table th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 6px;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.product-table th.num {
+  text-align: right;
+}
+
+.product-table td {
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.product-table tr:last-child td {
+  border-bottom: none;
+}
+
+.product-table input, .product-table select {
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 13.5px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+.product-table input:focus, .product-table select:focus {
+  border-color: var(--border);
+  background: var(--bg);
+  outline: none;
+}
+
+.product-table input[type="number"] {
+  text-align: right;
+  width: 90px;
+}
+
+.product-table .name-input {
+  min-width: 140px;
+}
+
+.product-table .delete-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.product-table .delete-btn {
+  border: none;
+  background: none;
+  color: var(--danger);
+  font-size: 12.5px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.empty-row td {
+  color: var(--muted);
+  text-align: center;
+  padding: 30px 0;
+}

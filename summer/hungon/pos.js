@@ -1,11 +1,12 @@
 (function () {
   "use strict";
 
-  var PRODUCTS = window.HUNGON_PRODUCTS || [];
-  var CATEGORIES = window.HUNGON_CATEGORIES || [];
   var STORAGE_KEY = "hungon-pos-cart-v1";
+  var escapeHtml = window.HungonCatalog.escapeHtml;
 
   var state = {
+    products: [],
+    categories: [],
     activeCategory: "all",
     searchTerm: "",
     cart: loadCart() // { productId: { id, name, unit, price, qty } }
@@ -37,10 +38,22 @@
     els.customAddBtn = document.getElementById("custom-add-btn");
     els.receiptBody = document.getElementById("receipt-body");
     els.receiptMeta = document.getElementById("receipt-meta");
+    els.posTitle = document.getElementById("pos-title");
 
-    renderCategoryTabs();
-    renderProducts();
     renderCart();
+    setupTitleTap();
+
+    window.HungonCatalog.start({
+      onCategories: function (cats) {
+        state.categories = cats;
+        renderCategoryTabs();
+        renderProducts();
+      },
+      onProducts: function (prods) {
+        state.products = prods;
+        renderProducts();
+      }
+    });
 
     els.searchInput.addEventListener("input", function (e) {
       state.searchTerm = e.target.value.trim();
@@ -89,37 +102,42 @@
   }
 
   function renderCategoryTabs() {
+    els.categoryTabs.innerHTML = "";
     var frag = document.createDocumentFragment();
 
     var allBtn = document.createElement("button");
     allBtn.textContent = "全部";
-    allBtn.className = "active";
     allBtn.dataset.category = "all";
-    allBtn.addEventListener("click", function () { selectCategory("all", allBtn); });
+    allBtn.addEventListener("click", function () { selectCategory("all"); });
     frag.appendChild(allBtn);
 
-    CATEGORIES.forEach(function (cat) {
+    state.categories.forEach(function (cat) {
       var btn = document.createElement("button");
       btn.textContent = cat.name;
       btn.dataset.category = cat.id;
-      btn.addEventListener("click", function () { selectCategory(cat.id, btn); });
+      btn.addEventListener("click", function () { selectCategory(cat.id); });
       frag.appendChild(btn);
     });
 
     els.categoryTabs.appendChild(frag);
+    updateActiveTab();
   }
 
-  function selectCategory(catId, btnEl) {
+  function selectCategory(catId) {
     state.activeCategory = catId;
-    Array.prototype.forEach.call(els.categoryTabs.children, function (b) {
-      b.classList.toggle("active", b === btnEl);
-    });
+    updateActiveTab();
     renderProducts();
+  }
+
+  function updateActiveTab() {
+    Array.prototype.forEach.call(els.categoryTabs.children, function (b) {
+      b.classList.toggle("active", b.dataset.category === state.activeCategory);
+    });
   }
 
   function renderProducts() {
     var term = state.searchTerm.toLowerCase();
-    var list = PRODUCTS.filter(function (p) {
+    var list = state.products.filter(function (p) {
       var matchesCategory = state.activeCategory === "all" || p.category === state.activeCategory;
       var matchesSearch = !term || p.name.toLowerCase().indexOf(term) !== -1;
       return matchesCategory && matchesSearch;
@@ -305,9 +323,19 @@
     }
   }
 
-  function escapeHtml(str) {
-    return String(str).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  function setupTitleTap() {
+    if (!els.posTitle) return;
+    var count = 0;
+    var timer = null;
+    els.posTitle.addEventListener("click", function () {
+      count += 1;
+      clearTimeout(timer);
+      if (count >= 3) {
+        count = 0;
+        window.location.href = "/summer/hungon/admin";
+        return;
+      }
+      timer = setTimeout(function () { count = 0; }, 1200);
     });
   }
 })();
