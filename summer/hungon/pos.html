@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>鴻安 POS 收銀系統</title>
+  <meta name="description" content="鴻安五金 POS 收銀系統 — 產品選購、購物車結算及收據列印。" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#4A90E2" />
+  <link rel="stylesheet" href="pos.css" />
+</head>
+<body>
+
+  <header class="pos-header">
+    <div>
+      <h1>鴻安 POS 收銀系統</h1>
+      <div class="sub">Hung On · 五金 / 建材 收銀</div>
+    </div>
+    <button class="cart-toggle-btn" id="cart-toggle-btn">
+      🛒 購物車 <span class="badge" id="cart-count-badge">0</span>
+    </button>
+  </header>
+
+  <div class="pos-layout">
+    <main>
+      <div class="search-bar">
+        <input type="search" id="search-input" placeholder="搜尋產品名稱…" />
+      </div>
+
+      <div class="category-tabs" id="category-tabs"></div>
+
+      <div class="custom-item-box">
+        <div class="label">自訂項目（清單沒有的貨品或特別報價）</div>
+        <input type="text" id="custom-name" placeholder="項目名稱" />
+        <input type="number" id="custom-price" placeholder="價錢" min="0" step="0.1" />
+        <button type="button" id="custom-add-btn">加入</button>
+      </div>
+
+      <div class="product-grid" id="product-grid"></div>
+    </main>
+
+    <div class="cart-overlay" id="cart-overlay"></div>
+
+    <aside class="cart-panel" id="cart-panel">
+      <h2>
+        購物車
+        <span>
+          <button class="clear-btn" id="clear-cart-btn">清空</button>
+          <button class="cart-panel-close" id="cart-panel-close" aria-label="關閉">×</button>
+        </span>
+      </h2>
+
+      <div class="cart-items" id="cart-items"></div>
+
+      <div class="cart-summary">
+        <div class="row"><span>件數</span><span id="cart-count">0</span></div>
+        <div class="row"><span>小計</span><span id="cart-subtotal">$0</span></div>
+        <div class="row total"><span>總計</span><span id="cart-total">$0</span></div>
+      </div>
+
+      <div class="cart-actions">
+        <button class="btn-print" id="print-btn">列印收據</button>
+        <button class="btn-checkout" id="checkout-btn">結帳</button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="receipt" id="receipt">
+    <h2>鴻安 Hung On</h2>
+    <div class="meta" id="receipt-meta"></div>
+    <div id="receipt-body"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="products.js"></script>
+  <script src="pos.js"></script>
+</body>
+</html>

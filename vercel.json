@@ -44,6 +44,8 @@
     { "source": "/ths",  "destination": "/thsindex.html" },
     { "source": "/ths/", "destination": "/thsindex.html" },
     { "source": "/view/:id",  "destination": "/finals/view.html" },
-    { "source": "/view/:id/", "destination": "/finals/view.html" }
+    { "source": "/view/:id/", "destination": "/finals/view.html" },
+    { "source": "/summer/hungon/pos",  "destination": "/summer/hungon/pos.html" },
+    { "source": "/summer/hungon/pos/", "destination": "/summer/hungon/pos.html" }
   ]
 }
