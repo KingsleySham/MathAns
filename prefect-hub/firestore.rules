@@ -1,0 +1,79 @@
+rules_version = '2';
+
+// Prefect Hub — Firestore security rules.
+// These rules ARE the access control. The UI only reflects them.
+// Roles come from Firebase custom claims (request.auth.token.role),
+// set by an admin script — never from a client-writable field.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return signedIn() && 'role' in request.auth.token
+        ? request.auth.token.role
+        : '';
+    }
+
+    function isStaff() {
+      return role() in ['head', 'vice-head', 'teacher'];
+    }
+
+    function isHeadOrTeacher() {
+      return role() in ['head', 'teacher'];
+    }
+
+    // Roster. A prefect can read their own profile; staff can read and
+    // manage everyone. The `role` field in these docs is display metadata
+    // only — enforcement uses custom claims, so even a tampered doc grants
+    // nothing.
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isStaff());
+      allow write: if isStaff();
+    }
+
+    match /notices/{id} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /weatherRules/{ruleId} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /weatherOverride/{doc} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /handbookArticles/{slug} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /scenarios/{id} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    // Written by the server (Admin SDK bypasses rules); readable by head
+    // prefects and teachers only.
+    match /auditLog/{id} {
+      allow read: if isHeadOrTeacher();
+      allow write: if false;
+    }
+
+    // Daily resolved arrangement (suspension stickiness). Server-written only.
+    match /dailyArrangement/{day} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
