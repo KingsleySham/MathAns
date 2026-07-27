@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Palette — locked by the brief. Three accents only. */
+  --navy: #0b3374; /* primary: headers, nav, structure, body text on light */
+  --red: #db1a11; /* emergency, suspension, destructive actions ONLY */
+  --yellow: #eda535; /* caution states, CTAs, badges, highlights */
+
+  /* derived */
+  --navy-900: #071f47;
+  --navy-700: #0b3374;
+  --navy-100: #e6ecf6;
+  --red-100: #fdeceb;
+  --yellow-100: #fdf3e2;
+  --green: #167a4b; /* "all clear" only */
+  --green-100: #e6f2ec;
+  --ink: #14181f;
+  --muted: #5b6472;
+  --line: #dfe3ea;
+  --surface: #ffffff;
+  --canvas: #f6f7fa;
+}
+
+html {
+  font-family: var(--font-body), sans-serif;
+  color: var(--ink);
+  background: var(--canvas);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display), sans-serif;
+  color: var(--navy);
+  font-weight: 700;
+}
+
+/* Keyboard focus must be visible on every interactive element. */
+:focus-visible {
+  outline: 3px solid var(--navy);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Page-load fade-in, 120ms per spec. */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.page-enter {
+  animation: page-fade-in 120ms ease-out;
+}
+
+/* Hover lift on cards. */
+.card-lift {
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(11, 51, 116, 0.08);
+}
+
+/* Weather banner cross-fade — the one deliberate motion moment. */
+.banner-crossfade {
+  animation: page-fade-in 400ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .banner-crossfade {
+    animation: none;
+  }
+
+  .card-lift,
+  .card-lift:hover {
+    transition: none;
+    transform: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
