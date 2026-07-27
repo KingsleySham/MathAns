@@ -17,6 +17,8 @@
     { "has": [{ "type": "host", "value": "finals.mathans.app" }], "source": "/", "destination": "/finals/", "permanent": false }
   ],
   "rewrites": [
+    { "source": "/api/upload-note", "destination": "/api/notes?op=upload" },
+    { "source": "/api/delete-note", "destination": "/api/notes?op=delete" },
     { "source": "/admin",        "destination": "/finals/admin.html" },
     { "source": "/admin/",       "destination": "/finals/admin.html" },
     { "source": "/3062470030624770",   "destination": "/3062470030624770/index.html" },
