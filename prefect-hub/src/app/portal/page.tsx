@@ -1,17 +1,40 @@
-import { CloudSun } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Megaphone, Table } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { StatusBanner } from "@/components/StatusBanner";
 
-export const metadata = { title: "Portal" };
+export const metadata: Metadata = { title: "Portal" };
 
 export default function PortalPage() {
   return (
-    <Card className="p-8 text-center">
-      <CloudSun aria-hidden className="mx-auto mb-3 h-8 w-8 text-navy" />
-      <h1 className="text-xl">Portal</h1>
-      <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-        Live weather arrangements and the notice feed arrive with the weather
-        engine phase.
-      </p>
-    </Card>
+    <div className="flex flex-col gap-6">
+      <StatusBanner />
+
+      <Link href="/portal/arrangements" className="group">
+        <Card lift className="flex items-center gap-4 p-5">
+          <Table aria-hidden className="h-6 w-6 shrink-0 text-navy" />
+          <div>
+            <h2 className="text-lg group-hover:underline">
+              All weather arrangements
+            </h2>
+            <p className="mt-0.5 text-sm text-muted">
+              The full reference table — every signal, every duty rule.
+            </p>
+          </div>
+        </Card>
+      </Link>
+
+      <section aria-label="Notices">
+        <h2 className="mb-2 text-lg">Notices</h2>
+        <Card className="flex items-center gap-4 p-5">
+          <Megaphone aria-hidden className="h-6 w-6 shrink-0 text-navy" />
+          <p className="text-sm text-muted">
+            The notice feed from Head and Vice-Head Prefects arrives in the
+            next build phase. Until then, keep an eye on the WhatsApp group.
+          </p>
+        </Card>
+      </section>
+    </div>
   );
 }

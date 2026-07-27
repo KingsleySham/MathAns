@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BookOpen, CloudSun, PlayCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { StatusBannerSlot } from "@/components/StatusBannerSlot";
+import { StatusBanner } from "@/components/StatusBanner";
 
 const SECTIONS = [
   {
@@ -27,7 +27,7 @@ const SECTIONS = [
 export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
-      <StatusBannerSlot />
+      <StatusBanner />
 
       <section aria-label="Sections" className="grid gap-4 sm:grid-cols-3">
         {SECTIONS.map(({ href, title, body, Icon }) => (
