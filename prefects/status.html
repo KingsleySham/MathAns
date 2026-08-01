@@ -48,6 +48,10 @@
   <p>Checking MTR service…</p>
 </div>
 
+<div id="reminders" class="strip" style="display:none"></div>
+
+<div id="roster" class="card" style="display:none"></div>
+
 <script>
 const TONE = {
   green: ['var(--green-bg)', 'var(--green-fg)'],
@@ -59,7 +63,45 @@ function esc(s) {
   return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 }
 
+let reminderTimer = null;
+
+function paintReminders(reminders) {
+  const el = document.getElementById('reminders');
+  if (reminderTimer) { clearInterval(reminderTimer); reminderTimer = null; }
+  if (!reminders || !reminders.length) { el.style.display = 'none'; return; }
+
+  el.style.display = '';
+  el.style.background = 'var(--muted-bg)';
+  el.style.color = 'var(--muted-fg)';
+
+  let i = 0;
+  const show = () => {
+    el.innerHTML = '<p><span class="name">Reminder</span> — ' + esc(reminders[i % reminders.length]) + '</p>';
+    i++;
+  };
+  show();
+  // Multiple reminders (or a long one that can't all show at once) rotate every 5s.
+  if (reminders.length > 1) reminderTimer = setInterval(show, 5000);
+}
+
+function paintRoster(roster) {
+  const el = document.getElementById('roster');
+  if (!roster || !roster.length) { el.style.display = 'none'; return; }
+
+  el.style.display = '';
+  el.style.background = 'var(--muted-bg)';
+  el.style.color = 'var(--muted-fg)';
+  el.innerHTML = '<p class="head" style="font-size:15px">This week&#8217;s duty roster</p>' +
+    roster.map(r =>
+      '<p class="body" style="margin:0 0 6px"><strong>' + esc(r.day) + '</strong> — ' + esc(r.location) + ' · ' + esc(r.time) +
+      (r.names && r.names.length ? ' · ' + esc(r.names.join(', ')) : '') + '</p>'
+    ).join('');
+}
+
 function paint(data) {
+  paintReminders(data.reminders);
+  paintRoster(data.roster);
+
   const w = data.weather;
   const [bg, fg] = TONE[w.level] || TONE.amber;
   const el = document.getElementById('weather');
