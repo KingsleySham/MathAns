@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prefect duty status — simulator</title>
+<style>
+  :root {
+    --green-bg: #eaf3de; --green-fg: #27500a;
+    --amber-bg: #faeeda; --amber-fg: #633806;
+    --red-bg:   #fcebeb; --red-fg:   #791f1f;
+    --muted-bg: #f1efe8; --muted-fg: #5f5e5a;
+    --page:     #ffffff; --line: #e5e3db; --panel: #f7f6f1; --text: #1c1b18;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --green-bg: #173404; --green-fg: #c0dd97;
+      --amber-bg: #412402; --amber-fg: #fac775;
+      --red-bg:   #501313; --red-fg:   #f7c1c1;
+      --muted-bg: #2c2c2a; --muted-fg: #b4b2a9;
+      --page:     #191917; --line: #35352f; --panel: #211f1c; --text: #ede9e1;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--page); color: var(--text);
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .sub { font-size: 13px; opacity: .7; margin: 0 0 20px; max-width: 640px; line-height: 1.5; }
+  .layout { display: grid; grid-template-columns: minmax(280px, 420px) minmax(260px, 380px); gap: 24px; align-items: start; }
+  @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 0 0 14px; background: var(--panel); }
+  legend { font-size: 12.5px; font-weight: 600; padding: 0 6px; opacity: .85; }
+  label.row { display: flex; align-items: center; gap: 7px; font-size: 13.5px; padding: 3px 0; cursor: pointer; }
+  label.row input[type="checkbox"] { flex: none; }
+  .mtr-row { border-top: 1px solid var(--line); padding: 8px 0 4px; }
+  .mtr-row:first-child { border-top: none; }
+  .mtr-row .name { font-size: 13.5px; font-weight: 600; margin: 0 0 5px; }
+  .mtr-row .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 12.5px; }
+  .mtr-row .controls label { display: flex; align-items: center; gap: 4px; }
+  input[type="number"] { width: 60px; }
+  input[type="time"], input[type="text"], select { font: inherit; padding: 3px 5px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .presets button {
+    font-size: 12.5px; padding: 6px 10px; border-radius: 7px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text); cursor: pointer;
+  }
+  .presets button:hover { border-color: currentColor; }
+  .card { border-radius: 10px; padding: 15px 17px; margin-bottom: 9px; }
+  .tag { margin: 0 0 3px; font-size: 12px; opacity: .8; }
+  .head { margin: 0 0 9px; font-size: 18px; font-weight: 600; line-height: 1.3; }
+  .body { margin: 0 0 10px; font-size: 14px; line-height: 1.6; }
+  .foot { margin: 0; font-size: 11.5px; line-height: 1.5; opacity: .72; }
+  .strip { border-radius: 10px; padding: 12px 15px; font-size: 13.5px; line-height: 1.55; }
+  .strip p { margin: 0; }
+  .strip .name { font-weight: 600; }
+  .skeleton { background: var(--muted-bg); color: var(--muted-fg); }
+  .preview-label { font-size: 12px; font-weight: 600; opacity: .7; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .03em; }
+  details { margin-top: 10px; }
+  summary { font-size: 12.5px; cursor: pointer; opacity: .75; }
+  pre { font-size: 11.5px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow: auto; max-height: 320px; }
+</style>
+</head>
+<body>
+
+<h1>Prefect duty status — simulator</h1>
+<p class="sub">
+  Drives <code>lib/prefect-duty-status-logic.js</code> — the exact same duty-mapping and MTR-alert
+  code the live <code>/api/prefects/status</code> endpoint uses — with inputs you control here
+  instead of a live HKO/MTR fetch. Nothing on this page calls the real APIs or touches the KV latch.
+</p>
+
+<div class="presets" id="presets"></div>
+
+<div class="layout">
+  <div>
+    <fieldset>
+      <legend>Clock</legend>
+      <label class="row">Simulated time (HK)
+        <input type="time" id="clock" value="07:00">
+      </label>
+      <p class="sub" style="margin:6px 0 0">Suspension rule applies from 05:30. ETA checks only run 06:30–08:30.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>HKO warnings currently in force</legend>
+      <div id="codes"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Whole-day latch</legend>
+      <label class="row"><input type="checkbox" id="latchSuspended"> Suspension already latched earlier today</label>
+      <label class="row" style="margin-top:4px">Latched warning name(s) (comma-separated, optional)
+      </label>
+      <input type="text" id="latchNames" placeholder="e.g. Red Rainstorm Warning" style="width:100%">
+      <label class="row" style="margin-top:8px"><input type="checkbox" id="kvDown"> Simulate KV store unavailable</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>MTR</legend>
+      <div id="mtrRows"></div>
+    </fieldset>
+  </div>
+
+  <div>
+    <p class="preview-label">Live preview</p>
+    <div id="weather" class="card skeleton"><p class="head" style="margin:0">Loading…</p></div>
+    <div id="transport" class="strip skeleton"><p>Loading…</p></div>
+
+    <details>
+      <summary>Raw JSON</summary>
+      <pre id="jsonOut"></pre>
+    </details>
+  </div>
+</div>
+
+<script type="module">
+import { LINES, SUSPEND, classifyWeather, evaluateLine, summarizeTransport } from '/lib/prefect-duty-status-logic.js';
+
+const CODE_LABELS = [
+  { code: 'WHOT',   name: 'Very Hot Weather Warning' },
+  { code: 'WCOLD',  name: 'Cold Weather Warning' },
+  { code: 'WTS',    name: 'Thunderstorm Warning' },
+  { code: 'WRAINA', name: 'Amber Rainstorm Warning' },
+  { code: 'TC1',    name: 'Standby Signal No. 1' },
+  { code: 'TC3',    name: 'Strong Wind Signal No. 3' },
+  { code: 'WRAINR', name: 'Red Rainstorm Warning' },
+  { code: 'WRAINB', name: 'Black Rainstorm Warning' },
+  { code: 'TC8NE',  name: 'No. 8 Gale or Storm Signal' },
+  { code: 'TC9',    name: 'Increasing Gale or Storm Signal No. 9' },
+  { code: 'TC10',   name: 'Hurricane Signal No. 10' },
+];
+
+const codesEl = document.getElementById('codes');
+CODE_LABELS.forEach(c => {
+  const label = document.createElement('label');
+  label.className = 'row';
+  label.innerHTML = `<input type="checkbox" id="code-${c.code}" data-code="${c.code}" data-name="${c.name}"> ${c.name} <span style="opacity:.55">(${c.code}${SUSPEND.has(c.code) ? ' — suspends' : ''})</span>`;
+  codesEl.appendChild(label);
+});
+
+const mtrRowsEl = document.getElementById('mtrRows');
+LINES.forEach(cfg => {
+  const key = `${cfg.line}-${cfg.sta}`;
+  const row = document.createElement('div');
+  row.className = 'mtr-row';
+  row.innerHTML = `
+    <p class="name">${cfg.label} <span style="opacity:.55;font-weight:400">(${key})</span></p>
+    <div class="controls">
+      <label><input type="checkbox" id="mtr-${key}-special"> Special arrangements</label>
+      <label><input type="checkbox" id="mtr-${key}-delay"> MTR-flagged delay</label>
+      ${cfg.threshold != null
+        ? `<label>Next train ETA <input type="number" id="mtr-${key}-eta" min="0" value="${Math.max(cfg.threshold - 3, 0)}"> min (alerts at ≥${cfg.threshold})</label>`
+        : `<span style="opacity:.55">no ETA threshold — status/delay only</span>`}
+    </div>`;
+  mtrRowsEl.appendChild(row);
+});
+
+function timeToMinutes(hhmm) {
+  const [h, m] = (hhmm || '00:00').split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+function minutesToClock(mins) {
+  const h = String(Math.floor(mins / 60) % 24).padStart(2, '0');
+  const m = String(mins % 60).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+function buildMtrResult(cfg) {
+  const key = `${cfg.line}-${cfg.sta}`;
+  const special = document.getElementById(`mtr-${key}-special`).checked;
+  if (special) return { status: 0, message: 'Special service arrangements in place.' };
+
+  const delay = document.getElementById(`mtr-${key}-delay`).checked;
+  const block = { isdelay: delay ? 'Y' : 'N' };
+  if (cfg.threshold != null) {
+    const eta = String(document.getElementById(`mtr-${key}-eta`).value || '0');
+    block.UP = [{ seq: '1', ttnt: eta }];
+    block.DOWN = [{ seq: '1', ttnt: eta }];
+  } else {
+    block.UP = [];
+    block.DOWN = [];
+  }
+  return { status: 1, data: { [key]: block } };
+}
+
+const TONE = {
+  green: ['var(--green-bg)', 'var(--green-fg)'],
+  amber: ['var(--amber-bg)', 'var(--amber-fg)'],
+  red:   ['var(--red-bg)',   'var(--red-fg)'],
+};
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+}
+
+// Same rendering as prefects/status.html — kept in sync by hand since it's
+// presentation only; the logic being tested lives in the shared module above.
+function paint(data) {
+  const w = data.weather;
+  const [bg, fg] = TONE[w.level] || TONE.amber;
+  const el = document.getElementById('weather');
+  el.className = 'card';
+  el.style.background = bg;
+  el.style.color = fg;
+  el.innerHTML =
+    (w.warnings.length ? '<p class="tag">' + esc(w.warnings.join(' · ')) + '</p>' : '<p class="tag">No warnings in force</p>') +
+    '<p class="head">' + esc(w.headline) + '</p>' +
+    '<p class="body">' + esc(w.detail) + '</p>' +
+    '<p class="foot">Suspensions are confirmed by WhatsApp — check the group before leaving home. Updated ' + esc(data.updated) + '</p>';
+
+  const t = data.transport;
+  const box = document.getElementById('transport');
+  if (t.ok) {
+    box.className = 'strip skeleton';
+    box.style.background = '';
+    box.style.color = '';
+    box.innerHTML = '<p>MTR — normal service on all lines</p>';
+  } else {
+    const [tbg, tfg] = TONE[t.severity];
+    box.className = 'strip';
+    box.style.background = tbg;
+    box.style.color = tfg;
+    box.innerHTML = t.alerts.map(a =>
+      '<p><span class="name">' + esc(a.label) + '</span> — ' + esc(a.reason) + '</p>'
+    ).join('') + '<p style="margin-top:7px;opacity:.75;font-size:11.5px">Advisory only. Leave earlier, and reply in the group if you cannot make it.</p>';
+  }
+}
+
+function recompute() {
+  const minutes = timeToMinutes(document.getElementById('clock').value);
+
+  const active = CODE_LABELS
+    .filter(c => document.getElementById(`code-${c.code}`).checked)
+    .map(c => ({ code: c.code, name: c.name }));
+
+  const latchSuspended = document.getElementById('latchSuspended').checked;
+  const kvDown = document.getElementById('kvDown').checked;
+  const latchNamesRaw = document.getElementById('latchNames').value.trim();
+  const latchNames = latchNamesRaw
+    ? latchNamesRaw.split(',').map(s => s.trim()).filter(Boolean)
+    : active.filter(a => SUSPEND.has(a.code)).map(a => a.name);
+  const latch = { available: !kvDown, suspended: latchSuspended, names: latchSuspended ? latchNames : [] };
+
+  const weather = classifyWeather(active, minutes, latch);
+  const alerts = LINES.map(cfg => evaluateLine(cfg, buildMtrResult(cfg), minutes)).filter(Boolean);
+  const transport = summarizeTransport(alerts);
+
+  const data = { weather, transport, updated: minutesToClock(minutes) };
+  paint(data);
+  document.getElementById('jsonOut').textContent = JSON.stringify(data, null, 2);
+}
+
+document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', recompute));
+
+function setChecked(id, val) { document.getElementById(id).checked = val; }
+function setValue(id, val) { document.getElementById(id).value = val; }
+function resetAll() {
+  CODE_LABELS.forEach(c => setChecked(`code-${c.code}`, false));
+  setChecked('latchSuspended', false);
+  setChecked('kvDown', false);
+  setValue('latchNames', '');
+  LINES.forEach(cfg => {
+    const key = `${cfg.line}-${cfg.sta}`;
+    setChecked(`mtr-${key}-special`, false);
+    setChecked(`mtr-${key}-delay`, false);
+    if (cfg.threshold != null) setValue(`mtr-${key}-eta`, Math.max(cfg.threshold - 3, 0));
+  });
+}
+
+const PRESETS = [
+  { name: 'Normal morning', apply() { resetAll(); setValue('clock', '07:00'); } },
+  { name: 'Amber Rainstorm — umbrella', apply() { resetAll(); setChecked('code-WRAINA', true); setValue('clock', '07:00'); } },
+  { name: 'Red Rainstorm — whole day', apply() { resetAll(); setChecked('code-WRAINR', true); setValue('clock', '06:15'); } },
+  { name: 'Signal lowered, still latched', apply() { resetAll(); setChecked('latchSuspended', true); setValue('latchNames', 'Red Rainstorm Warning'); setValue('clock', '09:00'); } },
+  { name: 'TC1 — heads up only', apply() { resetAll(); setChecked('code-TC1', true); setValue('clock', '07:00'); } },
+  { name: 'Slow train on commute line', apply() {
+      resetAll();
+      const cfg = LINES[0];
+      const key = `${cfg.line}-${cfg.sta}`;
+      setChecked(`mtr-${key}-delay`, false);
+      setValue(`mtr-${key}-eta`, cfg.threshold + 3);
+      setValue('clock', '07:30');
+    } },
+  { name: 'Citywide MTR disruption elsewhere', apply() {
+      resetAll();
+      const cfg = LINES.find(l => l.line === 'ISL');
+      setChecked(`mtr-${cfg.line}-${cfg.sta}-special`, true);
+      setValue('clock', '07:00');
+    } },
+  { name: 'KV store down', apply() { resetAll(); setChecked('code-WRAINB', true); setChecked('kvDown', true); setValue('clock', '06:30'); } },
+];
+
+const presetsEl = document.getElementById('presets');
+PRESETS.forEach(p => {
+  const btn = document.createElement('button');
+  btn.textContent = p.name;
+  btn.onclick = () => { p.apply(); recompute(); };
+  presetsEl.appendChild(btn);
+});
+
+resetAll();
+recompute();
+</script>
+
+</body>
+</html>

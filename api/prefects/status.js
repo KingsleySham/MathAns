@@ -4,54 +4,22 @@
 //   HKO warning summary  https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum
 //   MTR next train       https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php
 //
+// The duty-mapping and MTR-alert decisions live in lib/prefect-duty-status-logic.js,
+// shared with prefects/simulator.html — this file only does the I/O (fetch, KV,
+// request/response) around that shared logic.
+//
 // VERIFY ON FIRST DEPLOY: set DEBUG=1 as an env var and hit the endpoint once. The raw
 // payloads come back in the response so you can confirm the warnsum `code` values and
 // the Next Train `isdelay` / `ttnt` fields match what this file assumes — and, since the
-// LINES list below now covers all 10 MTR lines, that each added `sta` code is one the
+// LINES list covers all 10 MTR lines, that each added `sta` code is one the
 // getSchedule.php API actually recognises for its line (they came from the published
 // line/station code list, not a live response).
 
 import { kv } from '@vercel/kv';
+import { LINES, SUSPEND, CUTOFF, classifyWeather, evaluateLine, summarizeTransport } from '../../lib/prefect-duty-status-logic.js';
 
 const HKO = 'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en';
 const MTR = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php';
-
-// Stations serving the school get an ETA threshold, since a slow train there
-// actually changes when a prefect needs to leave (off-peak headways differ
-// per line, hence per-line thresholds). The remaining lines have no
-// threshold — they're checked at one representative station each purely for
-// network-wide status (json.status === 0 / isdelay), so prefects get a
-// heads-up on a citywide MTR problem even on a line they don't ride.
-const LINES = [
-  { line: 'TWL', sta: 'SSP', label: 'Tsuen Wan Line', threshold: 8 },
-  { line: 'TML', sta: 'NAC', label: 'Tuen Ma Line', threshold: 10 },
-  { line: 'TCL', sta: 'NAC', label: 'Tung Chung Line', threshold: 12 },
-  { line: 'AEL', sta: 'HOK', label: 'Airport Express' },
-  { line: 'TKL', sta: 'TKO', label: 'Tseung Kwan O Line' },
-  { line: 'EAL', sta: 'ADM', label: 'East Rail Line' },
-  { line: 'SIL', sta: 'SOH', label: 'South Island Line' },
-  { line: 'ISL', sta: 'CEN', label: 'Island Line' },
-  { line: 'KTL', sta: 'KOT', label: 'Kwun Tong Line' },
-  { line: 'DRL', sta: 'SUN', label: 'Disneyland Resort Line' },
-];
-
-const DUTY_WINDOW = [6 * 60 + 30, 8 * 60 + 30];   // only run the ETA check 06:30–08:30
-const CUTOFF = 5 * 60 + 30;                        // 05:30 — suspension rule starts here
-
-const SUSPEND = new Set(['WRAINR', 'WRAINB', 'TC8NE', 'TC8SE', 'TC8NW', 'TC8SW', 'TC9', 'TC10']);
-
-const ADVISORY = {
-  WHOT:   { text: 'Morning Assembly moves to homerooms or the Assembly Hall.', umbrella: false },
-  WCOLD:  { text: 'Assembly moves indoors. Non-school jackets are allowed if a notice has been issued via eClass.', umbrella: false },
-  WTS:    { text: 'Assembly moves indoors. Bring an umbrella in case of sudden showers.', umbrella: true },
-  WRAINA: { text: 'Assembly moves indoors. Bring an umbrella in case of sudden showers.', umbrella: true },
-  TC1:    { text: 'No change to duty — heads up only. If the weather is adverse, Assembly moves indoors.', umbrella: false },
-  TC3:    { text: 'No change to duty — heads up only. If the weather is adverse, Assembly moves indoors.', umbrella: false },
-};
-
-const SUSPEND_DETAIL =
-  'All duties cancelled, no rescheduling. Classes suspended for the whole day. ' +
-  'If you have not left for school, stay home. If you are already at school, remain there until it is safe to leave.';
 
 const hkNow = () => new Date(Date.now() + 8 * 3600 * 1000);
 const hkMinutes = () => { const d = hkNow(); return d.getUTCHours() * 60 + d.getUTCMinutes(); };
@@ -98,77 +66,23 @@ async function getWeather(debug) {
   if (debug) debug.hko = json;
 
   const active = Object.values(json).filter(w => w && w.code && w.actionCode !== 'CANCEL');
-  const afterCutoff = hkMinutes() >= CUTOFF;
+  const minutes = hkMinutes();
+  const afterCutoff = minutes >= CUTOFF;
 
   const suspendingNow = active.filter(w => SUSPEND.has(w.code)).map(w => w.name);
   if (suspendingNow.length && afterCutoff) await writeLatch(suspendingNow);
 
   const latch = await readLatch();
-  const names = suspendingNow.length ? suspendingNow : latch.names;
-
-  if ((suspendingNow.length && afterCutoff) || latch.suspended) {
-    return {
-      level: 'red',
-      headline: 'Duty suspended — whole day',
-      warnings: names,
-      detail: SUSPEND_DETAIL + (suspendingNow.length ? '' : ' The signal has since been lowered, but the suspension stands for the whole day.'),
-      latchAvailable: latch.available,
-    };
-  }
-
-  const advisories = active.filter(w => ADVISORY[w.code]);
-  if (advisories.length) {
-    const umbrella = advisories.some(w => ADVISORY[w.code].umbrella);
-    return {
-      level: 'amber',
-      headline: umbrella ? 'Duty as usual — bring an umbrella' : 'Duty as usual',
-      warnings: advisories.map(w => w.name),
-      detail: [...new Set(advisories.map(w => ADVISORY[w.code].text))].join(' '),
-      latchAvailable: latch.available,
-    };
-  }
-
-  return {
-    level: 'green',
-    headline: 'Duty as usual',
-    warnings: [],
-    detail: 'Front gate 7:45am. Morning Assembly outdoors as normal.',
-    latchAvailable: latch.available,
-  };
+  return classifyWeather(active, minutes, latch);
 }
 
-async function getLine({ line, sta, label, threshold }, debug) {
+async function getLine(cfg, debug) {
   try {
-    const res = await fetch(`${MTR}?line=${line}&sta=${sta}&lang=en`);
+    const res = await fetch(`${MTR}?line=${cfg.line}&sta=${cfg.sta}&lang=en`);
     if (!res.ok) return null;
     const json = await res.json();
-    if (debug) debug[`mtr_${line}_${sta}`] = json;
-
-    if (json.status === 0) {
-      return { label, severity: 'red', reason: json.message || 'Special service arrangements in place.' };
-    }
-
-    const block = json.data && json.data[`${line}-${sta}`];
-    if (!block) return null;
-
-    if (block.isdelay === 'Y') {
-      return { label, severity: 'amber', reason: 'MTR has flagged a delay on this line.' };
-    }
-
-    const mins = hkMinutes();
-    if (mins < DUTY_WINDOW[0] || mins > DUTY_WINDOW[1]) return null;
-
-    const waits = ['UP', 'DOWN']
-      .flatMap(dir => (block[dir] || []).filter(t => String(t.seq) === '1'))
-      .map(t => parseInt(t.ttnt, 10))
-      .filter(Number.isFinite);
-
-    if (!waits.length) return null;
-    const worst = Math.max(...waits);
-    if (worst >= threshold) {
-      return { label, severity: 'amber', reason: `Next train ${worst} minutes away — longer than usual for this time.` };
-    }
-    return null;
+    if (debug) debug[`mtr_${cfg.line}_${cfg.sta}`] = json;
+    return evaluateLine(cfg, json, hkMinutes());
   } catch {
     return null;
   }
@@ -176,12 +90,7 @@ async function getLine({ line, sta, label, threshold }, debug) {
 
 async function getTransport(debug) {
   const results = await Promise.all(LINES.map(l => getLine(l, debug)));
-  const alerts = results.filter(Boolean);
-  return {
-    ok: alerts.length === 0,
-    severity: alerts.some(a => a.severity === 'red') ? 'red' : alerts.length ? 'amber' : 'green',
-    alerts,
-  };
+  return summarizeTransport(results.filter(Boolean));
 }
 
 export default async function handler(req, res) {
