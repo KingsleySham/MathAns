@@ -9,6 +9,7 @@
     --green-bg: #eaf3de; --green-fg: #27500a;
     --amber-bg: #faeeda; --amber-fg: #633806;
     --red-bg:   #fcebeb; --red-fg:   #791f1f;
+    --blue-bg:  #e3ecfb; --blue-fg:  #1d3f8f;
     --muted-bg: #f1efe8; --muted-fg: #5f5e5a;
     --page:     #ffffff; --line: #e5e3db; --panel: #f7f6f1; --text: #1c1b18;
   }
@@ -17,6 +18,7 @@
       --green-bg: #173404; --green-fg: #c0dd97;
       --amber-bg: #412402; --amber-fg: #fac775;
       --red-bg:   #501313; --red-fg:   #f7c1c1;
+      --blue-bg:  #132a52; --blue-fg:  #a9c6f5;
       --muted-bg: #2c2c2a; --muted-fg: #b4b2a9;
       --page:     #191917; --line: #35352f; --panel: #211f1c; --text: #ede9e1;
     }
@@ -69,7 +71,7 @@
 <p class="sub">
   Drives <code>lib/prefect-duty-status-logic.js</code> — the exact same duty-mapping and MTR-alert
   code the live <code>/api/prefects/status</code> endpoint uses — with inputs you control here
-  instead of a live HKO/MTR fetch. Nothing on this page calls the real APIs or touches the KV latch.
+  instead of a live HKO/MTR fetch. Nothing on this page calls the real APIs or touches the Redis latch.
 </p>
 
 <div class="presets" id="presets"></div>
@@ -95,12 +97,28 @@
       <label class="row" style="margin-top:4px">Latched warning name(s) (comma-separated, optional)
       </label>
       <input type="text" id="latchNames" placeholder="e.g. Red Rainstorm Warning" style="width:100%">
-      <label class="row" style="margin-top:8px"><input type="checkbox" id="kvDown"> Simulate KV store unavailable</label>
+      <label class="row" style="margin-top:8px"><input type="checkbox" id="kvDown"> Simulate Redis unavailable</label>
     </fieldset>
 
     <fieldset>
       <legend>MTR</legend>
       <div id="mtrRows"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Next duty</legend>
+      <p class="hint" style="font-size:11.5px;opacity:.65;margin:-2px 0 8px">
+        One hypothetical roster entry. "Today"/"Tomorrow" are computed against the real
+        current HK date, same as production — leave the date blank to test the no-upcoming-duty state.
+      </p>
+      <div class="row" style="display:flex;gap:8px;margin-bottom:8px">
+        <label style="flex:1">Date<br><input type="date" id="dutyDate"></label>
+        <label style="flex:1">Time<br><input type="text" id="dutyTime" placeholder="7:45am"></label>
+      </div>
+      <div class="row" style="display:flex;gap:8px">
+        <label style="flex:1">Location<br><input type="text" id="dutyLocation" placeholder="Front gate"></label>
+        <label style="flex:1">Names<br><input type="text" id="dutyNames" placeholder="Calissa, Angelia"></label>
+      </div>
     </fieldset>
   </div>
 
@@ -108,6 +126,7 @@
     <p class="preview-label">Live preview</p>
     <div id="weather" class="card skeleton"><p class="head" style="margin:0">Loading…</p></div>
     <div id="transport" class="strip skeleton"><p>Loading…</p></div>
+    <div id="nextDuty" class="card" style="display:none"></div>
 
     <details>
       <summary>Raw JSON</summary>
@@ -117,7 +136,15 @@
 </div>
 
 <script type="module">
-import { LINES, SUSPEND, classifyWeather, evaluateLine, summarizeTransport } from '/lib/prefect-duty-status-logic.js';
+import { LINES, SUSPEND, classifyWeather, evaluateLine, summarizeTransport, nextDuty } from '/lib/prefect-duty-status-logic.js';
+
+// Same "HK calendar date" concept api/prefects/status.js uses for the roster.
+const hkToday = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+const addDays = (dateStr, n) => {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
 
 const CODE_LABELS = [
   { code: 'WHOT',   name: 'Very Hot Weather Warning' },
@@ -190,6 +217,7 @@ const TONE = {
   green: ['var(--green-bg)', 'var(--green-fg)'],
   amber: ['var(--amber-bg)', 'var(--amber-fg)'],
   red:   ['var(--red-bg)',   'var(--red-fg)'],
+  blue:  ['var(--blue-bg)',  'var(--blue-fg)'],
 };
 
 function esc(s) {
@@ -229,6 +257,32 @@ function paint(data) {
   }
 }
 
+function paintNextDuty(duty) {
+  const el = document.getElementById('nextDuty');
+  if (!duty) { el.style.display = 'none'; return; }
+
+  const [bg, fg] = duty.soon ? TONE.blue : ['var(--muted-bg)', 'var(--muted-fg)'];
+  el.style.display = '';
+  el.style.background = bg;
+  el.style.color = fg;
+  el.innerHTML =
+    '<p class="tag">Next duty' + (duty.relative ? ' · ' + esc(duty.relative) : '') + '</p>' +
+    '<p class="head">' + esc(duty.label) + (duty.time ? ' · ' + esc(duty.time) : '') + '</p>' +
+    '<p class="body" style="margin:0">' + esc(duty.location) +
+    (duty.names && duty.names.length ? ' · ' + esc(duty.names.join(', ')) : '') + '</p>';
+}
+
+function buildRoster() {
+  const date = document.getElementById('dutyDate').value;
+  if (!date) return [];
+  return [{
+    date,
+    location: document.getElementById('dutyLocation').value.trim(),
+    time: document.getElementById('dutyTime').value.trim(),
+    names: document.getElementById('dutyNames').value.split(',').map(s => s.trim()).filter(Boolean),
+  }];
+}
+
 function recompute() {
   const minutes = timeToMinutes(document.getElementById('clock').value);
 
@@ -247,9 +301,11 @@ function recompute() {
   const weather = classifyWeather(active, minutes, latch);
   const alerts = LINES.map(cfg => evaluateLine(cfg, buildMtrResult(cfg), minutes)).filter(Boolean);
   const transport = summarizeTransport(alerts);
+  const duty = nextDuty(buildRoster(), hkToday());
 
-  const data = { weather, transport, updated: minutesToClock(minutes) };
+  const data = { weather, transport, nextDuty: duty, updated: minutesToClock(minutes) };
   paint(data);
+  paintNextDuty(duty);
   document.getElementById('jsonOut').textContent = JSON.stringify(data, null, 2);
 }
 
@@ -268,6 +324,10 @@ function resetAll() {
     setChecked(`mtr-${key}-delay`, false);
     if (cfg.threshold != null) setValue(`mtr-${key}-eta`, Math.max(cfg.threshold - 3, 0));
   });
+  setValue('dutyDate', '');
+  setValue('dutyTime', '');
+  setValue('dutyLocation', '');
+  setValue('dutyNames', '');
 }
 
 const PRESETS = [
@@ -290,7 +350,28 @@ const PRESETS = [
       setChecked(`mtr-${cfg.line}-${cfg.sta}-special`, true);
       setValue('clock', '07:00');
     } },
-  { name: 'KV store down', apply() { resetAll(); setChecked('code-WRAINB', true); setChecked('kvDown', true); setValue('clock', '06:30'); } },
+  { name: 'Redis down', apply() { resetAll(); setChecked('code-WRAINB', true); setChecked('kvDown', true); setValue('clock', '06:30'); } },
+  { name: 'Next duty — today', apply() {
+      resetAll();
+      setValue('dutyDate', hkToday());
+      setValue('dutyTime', '7:45am');
+      setValue('dutyLocation', 'Front gate');
+      setValue('dutyNames', 'Calissa, Angelia');
+    } },
+  { name: 'Next duty — tomorrow', apply() {
+      resetAll();
+      setValue('dutyDate', addDays(hkToday(), 1));
+      setValue('dutyTime', '7:45am');
+      setValue('dutyLocation', 'Rear gate');
+      setValue('dutyNames', 'Bowie');
+    } },
+  { name: 'Next duty — next week (neutral)', apply() {
+      resetAll();
+      setValue('dutyDate', addDays(hkToday(), 7));
+      setValue('dutyTime', '7:45am');
+      setValue('dutyLocation', 'Side gate');
+      setValue('dutyNames', 'Test Name');
+    } },
 ];
 
 const presetsEl = document.getElementById('presets');

@@ -26,7 +26,7 @@
 import { getRedisClient } from '../../lib/prefect-redis-client.js';
 import {
   LINES, SUSPEND, CUTOFF, classifyWeather, evaluateLine, summarizeTransport,
-  sanitizeReminders, sanitizeRoster,
+  sanitizeReminders, sanitizeRoster, nextDuty,
 } from '../../lib/prefect-duty-status-logic.js';
 
 const HKO = 'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en';
@@ -205,6 +205,7 @@ export default async function handler(req, res) {
       transport,
       reminders,
       roster,
+      nextDuty: nextDuty(roster, hkDate()),
       updated: hkNow().toISOString().slice(11, 16),
       ...(debug ? { raw: debug } : {}),
     });
@@ -221,6 +222,7 @@ export default async function handler(req, res) {
       transport: { ok: true, severity: 'green', alerts: [] },
       reminders: [],
       roster: [],
+      nextDuty: null,
       updated: hkNow().toISOString().slice(11, 16),
       error: String(err.message || err),
     });
