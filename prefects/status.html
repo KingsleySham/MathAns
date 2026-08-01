@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prefect duty status</title>
+<style>
+  :root {
+    --green-bg: #eaf3de; --green-fg: #27500a;
+    --amber-bg: #faeeda; --amber-fg: #633806;
+    --red-bg:   #fcebeb; --red-fg:   #791f1f;
+    --muted-bg: #f1efe8; --muted-fg: #5f5e5a;
+    --page:     #ffffff; --line: #e5e3db;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --green-bg: #173404; --green-fg: #c0dd97;
+      --amber-bg: #412402; --amber-fg: #fac775;
+      --red-bg:   #501313; --red-fg:   #f7c1c1;
+      --muted-bg: #2c2c2a; --muted-fg: #b4b2a9;
+      --page:     #191917; --line: #35352f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--page);
+  }
+  .card { border-radius: 10px; padding: 15px 17px; margin-bottom: 9px; }
+  .tag { margin: 0 0 3px; font-size: 12px; opacity: .8; }
+  .head { margin: 0 0 9px; font-size: 18px; font-weight: 600; line-height: 1.3; }
+  .body { margin: 0 0 10px; font-size: 14px; line-height: 1.6; }
+  .foot { margin: 0; font-size: 11.5px; line-height: 1.5; opacity: .72; }
+  .strip { border-radius: 10px; padding: 12px 15px; font-size: 13.5px; line-height: 1.55; }
+  .strip p { margin: 0; }
+  .strip .name { font-weight: 600; }
+  .skeleton { background: var(--muted-bg); color: var(--muted-fg); }
+</style>
+</head>
+<body>
+
+<div id="weather" class="card skeleton">
+  <p class="head" style="margin:0">Loading duty status…</p>
+</div>
+
+<div id="transport" class="strip skeleton">
+  <p>Checking MTR service…</p>
+</div>
+
+<script>
+const TONE = {
+  green: ['var(--green-bg)', 'var(--green-fg)'],
+  amber: ['var(--amber-bg)', 'var(--amber-fg)'],
+  red:   ['var(--red-bg)',   'var(--red-fg)'],
+};
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+}
+
+function paint(data) {
+  const w = data.weather;
+  const [bg, fg] = TONE[w.level] || TONE.amber;
+  const el = document.getElementById('weather');
+  el.className = 'card';
+  el.style.background = bg;
+  el.style.color = fg;
+  el.innerHTML =
+    (w.warnings.length ? '<p class="tag">' + esc(w.warnings.join(' · ')) + '</p>' : '<p class="tag">No warnings in force</p>') +
+    '<p class="head">' + esc(w.headline) + '</p>' +
+    '<p class="body">' + esc(w.detail) + '</p>' +
+    '<p class="foot">Suspensions are confirmed by WhatsApp — check the group before leaving home. Updated ' + esc(data.updated) + '</p>';
+
+  const t = data.transport;
+  const box = document.getElementById('transport');
+  if (t.ok) {
+    box.className = 'strip skeleton';
+    box.style.background = '';
+    box.style.color = '';
+    box.innerHTML = '<p>MTR — normal service on all lines</p>';
+  } else {
+    const [tbg, tfg] = TONE[t.severity];
+    box.className = 'strip';
+    box.style.background = tbg;
+    box.style.color = tfg;
+    box.innerHTML = t.alerts.map(a =>
+      '<p><span class="name">' + esc(a.label) + '</span> — ' + esc(a.reason) + '</p>'
+    ).join('') + '<p style="margin-top:7px;opacity:.75;font-size:11.5px">Advisory only. Leave earlier, and reply in the group if you cannot make it.</p>';
+  }
+}
+
+async function load() {
+  try {
+    const res = await fetch('/api/prefects/status', { cache: 'no-store' });
+    paint(await res.json());
+  } catch (e) {
+    const el = document.getElementById('weather');
+    el.className = 'card';
+    el.style.background = 'var(--amber-bg)';
+    el.style.color = 'var(--amber-fg)';
+    el.innerHTML = '<p class="head">Status unavailable</p>' +
+      '<p class="body">Could not load the duty status. Check the WhatsApp group and the HKO app directly.</p>';
+    document.getElementById('transport').innerHTML = '<p>MTR status unavailable</p>';
+  }
+}
+
+load();
+setInterval(load, 120000);
+</script>
+
+</body>
+</html>
