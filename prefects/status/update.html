@@ -27,7 +27,7 @@
   fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 0 0 16px; background: var(--panel); }
   legend { font-size: 13px; font-weight: 600; padding: 0 6px; }
   label { display: block; font-size: 12.5px; color: var(--muted); margin: 0 0 4px; }
-  input[type="text"], input[type="password"], textarea {
+  input[type="text"], input[type="password"], input[type="date"], textarea {
     width: 100%; font: inherit; font-size: 14px; padding: 7px 9px; border-radius: 6px;
     border: 1px solid var(--line); background: var(--page); color: var(--text);
   }
@@ -56,7 +56,7 @@
 
 <h1>Prefect duty status — update</h1>
 <p class="sub">
-  Edits the reminders and this week&#8217;s duty roster shown on
+  Edits the reminders and duty roster shown on
   <a href="/prefects/status.html">the live status page</a>. Changes save straight to the
   production endpoint used by the Notion embed — check
   <a href="/prefects/status/test">the simulator</a> if you want to preview layout first.
@@ -75,8 +75,8 @@
 </fieldset>
 
 <fieldset>
-  <legend>This week&#8217;s duty roster</legend>
-  <p class="hint">One block per day. Names are comma-separated.</p>
+  <legend>Duty roster</legend>
+  <p class="hint">One block per day — add as many as you like. The status page only shows the nearest upcoming one, highlighted once it's Today or Tomorrow.</p>
   <div id="rosterRows"></div>
   <button type="button" class="add" id="addDay">+ Add day</button>
 </fieldset>
@@ -112,7 +112,7 @@ function dayRow(entry) {
   row.className = 'day-block';
   row.innerHTML = `
     <div class="row">
-      <div><label>Day</label><input type="text" class="day-day" placeholder="Mon 22 June"></div>
+      <div><label>Date</label><input type="date" class="day-date"></div>
       <div><label>Location</label><input type="text" class="day-location" placeholder="Front gate"></div>
       <button type="button" class="remove">Remove</button>
     </div>
@@ -121,7 +121,7 @@ function dayRow(entry) {
       <div><label>Names (comma-separated)</label><input type="text" class="day-names" placeholder="Calissa, Angelia"></div>
     </div>
   `;
-  row.querySelector('.day-day').value = entry.day || '';
+  row.querySelector('.day-date').value = entry.date || '';
   row.querySelector('.day-location').value = entry.location || '';
   row.querySelector('.day-time').value = entry.time || '';
   row.querySelector('.day-names').value = (entry.names || []).join(', ');
@@ -138,11 +138,11 @@ function collectReminders() {
 
 function collectRoster() {
   return [...rosterRows.querySelectorAll('.day-block')].map(block => ({
-    day: block.querySelector('.day-day').value.trim(),
+    date: block.querySelector('.day-date').value,
     location: block.querySelector('.day-location').value.trim(),
     time: block.querySelector('.day-time').value.trim(),
     names: block.querySelector('.day-names').value.split(',').map(s => s.trim()).filter(Boolean),
-  })).filter(d => d.day);
+  })).filter(d => d.date);
 }
 
 async function load() {
