@@ -5,7 +5,7 @@
 // POST — admin-only (x-admin-secret header or body.secret, checked against
 //        PREFECT_ADMIN_SECRET — same secret/header already used by
 //        api/whatsapp/send-duty.js). Body: { reminders: string[], roster: RosterDay[] }.
-//        Overwrites the saved reminders/roster in KV. Used by
+//        Overwrites the saved reminders/roster in Redis. Used by
 //        prefects/status/update.html.
 //
 // Sources
@@ -13,7 +13,7 @@
 //   MTR next train       https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php
 //
 // The duty-mapping and MTR-alert decisions live in lib/prefect-duty-status-logic.js,
-// shared with prefects/status/test.html — this file only does the I/O (fetch, KV,
+// shared with prefects/status/test.html — this file only does the I/O (fetch, Redis,
 // request/response) around that shared logic.
 //
 // VERIFY ON FIRST DEPLOY: set DEBUG=1 as an env var and hit the endpoint once. The raw
@@ -23,7 +23,7 @@
 // getSchedule.php API actually recognises for its line (they came from the published
 // line/station code list, not a live response).
 
-import { kv } from '@vercel/kv';
+import { getRedisClient } from '../../lib/prefect-redis-client.js';
 import {
   LINES, SUSPEND, CUTOFF, classifyWeather, evaluateLine, summarizeTransport,
   sanitizeReminders, sanitizeRoster,
@@ -40,20 +40,22 @@ const hkDate = () => hkNow().toISOString().slice(0, 10);
 // Whole-day latch.
 //
 // A Red Rainstorm hoisted at 06:00 and lowered at 06:45 disappears from warnsum, but the
-// suspension stands until midnight. So the first sighting after 05:30 is written to KV and
+// suspension stands until midnight. So the first sighting after 05:30 is written to Redis and
 // read back on every later request that day.
 //
-// Requires a KV store attached to the project. If Vercel has moved you to the Upstash Redis
-// integration, swap the import for `import { Redis } from '@upstash/redis'` and replace
-// kv.get/kv.set with redis.get/redis.set — the calls are the same shape.
+// Requires REDIS_URL set in the project's env vars, pointing at a Redis-compatible database
+// (see lib/prefect-redis-client.js). Values round-trip through JSON — the raw client only
+// speaks strings.
 //
-// If KV is unavailable the endpoint still works; it just loses the latch and says so in
+// If Redis is unavailable the endpoint still works; it just loses the latch and says so in
 // `latchAvailable`, so the page can fall back to trusting the live signal only.
 // ---------------------------------------------------------------------------
 
 async function readLatch() {
   try {
-    const v = await kv.get(`prefect:suspended:${hkDate()}`);
+    const redis = await getRedisClient();
+    const raw = await redis.get(`prefect:suspended:${hkDate()}`);
+    const v = raw ? JSON.parse(raw) : null;
     return { available: true, suspended: Boolean(v), names: Array.isArray(v) ? v : [] };
   } catch {
     return { available: false, suspended: false, names: [] };
@@ -62,8 +64,9 @@ async function readLatch() {
 
 async function writeLatch(names) {
   try {
+    const redis = await getRedisClient();
     // Expire after 24h so the key cannot outlive the day it describes.
-    await kv.set(`prefect:suspended:${hkDate()}`, names, { ex: 86400 });
+    await redis.set(`prefect:suspended:${hkDate()}`, JSON.stringify(names), { expiration: { type: 'EX', value: 86400 } });
     return true;
   } catch {
     return false;
@@ -74,14 +77,16 @@ async function writeLatch(names) {
 // Reminders and this-week's-duty-roster.
 //
 // Plain admin-edited content, not derived from HKO/MTR. No expiry — these
-// persist until prefects/status/update.html overwrites them again. If KV is
+// persist until prefects/status/update.html overwrites them again. If Redis is
 // unavailable, GET just returns empty arrays (the page hides those sections)
 // rather than failing the whole response.
 // ---------------------------------------------------------------------------
 
 async function readReminders() {
   try {
-    const v = await kv.get('prefect:reminders');
+    const redis = await getRedisClient();
+    const raw = await redis.get('prefect:reminders');
+    const v = raw ? JSON.parse(raw) : null;
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
@@ -90,7 +95,8 @@ async function readReminders() {
 
 async function writeReminders(list) {
   try {
-    await kv.set('prefect:reminders', list);
+    const redis = await getRedisClient();
+    await redis.set('prefect:reminders', JSON.stringify(list));
     return true;
   } catch {
     return false;
@@ -99,7 +105,9 @@ async function writeReminders(list) {
 
 async function readRoster() {
   try {
-    const v = await kv.get('prefect:roster');
+    const redis = await getRedisClient();
+    const raw = await redis.get('prefect:roster');
+    const v = raw ? JSON.parse(raw) : null;
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
@@ -108,7 +116,8 @@ async function readRoster() {
 
 async function writeRoster(list) {
   try {
-    await kv.set('prefect:roster', list);
+    const redis = await getRedisClient();
+    await redis.set('prefect:roster', JSON.stringify(list));
     return true;
   } catch {
     return false;
@@ -173,7 +182,7 @@ export default async function handler(req, res) {
     const reminders = sanitizeReminders(body.reminders);
     const roster = sanitizeRoster(body.roster);
     const [remindersOk, rosterOk] = await Promise.all([writeReminders(reminders), writeRoster(roster)]);
-    if (!remindersOk || !rosterOk) return res.status(502).json({ error: 'Could not save to the KV store' });
+    if (!remindersOk || !rosterOk) return res.status(502).json({ error: 'Could not save to Redis' });
 
     return res.status(200).json({ ok: true, reminders, roster });
   }
