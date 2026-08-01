@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prefect duty status — update</title>
+<style>
+  :root {
+    --page: #ffffff; --text: #1c1b18; --panel: #f7f6f1; --line: #e5e3db;
+    --muted: #5f5e5a; --accent: #2a5db0; --danger: #a02323; --ok: #27500a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #191917; --text: #ede9e1; --panel: #211f1c; --line: #35352f;
+      --muted: #b4b2a9; --accent: #7fb0ff; --danger: #f7c1c1; --ok: #c0dd97;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px 20px 60px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--page); color: var(--text); max-width: 640px;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .sub { font-size: 13px; color: var(--muted); margin: 0 0 20px; line-height: 1.5; }
+  .sub a { color: var(--accent); }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 0 0 16px; background: var(--panel); }
+  legend { font-size: 13px; font-weight: 600; padding: 0 6px; }
+  label { display: block; font-size: 12.5px; color: var(--muted); margin: 0 0 4px; }
+  input[type="text"], input[type="password"], textarea {
+    width: 100%; font: inherit; font-size: 14px; padding: 7px 9px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--page); color: var(--text);
+  }
+  .row { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-end; }
+  .row > div { flex: 1; }
+  .row .remove { flex: none; }
+  button {
+    font: inherit; font-size: 13px; padding: 7px 13px; border-radius: 7px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text); cursor: pointer;
+  }
+  button:hover { border-color: currentColor; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.remove { color: var(--danger); border-color: var(--danger); padding: 7px 10px; }
+  button.add { margin-top: 2px; }
+  #status { font-size: 13px; margin: 10px 0 0; min-height: 18px; }
+  #status.ok { color: var(--ok); }
+  #status.err { color: var(--danger); }
+  .gate { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; }
+  .gate input { max-width: 220px; }
+  .day-block { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+  .day-block:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .hint { font-size: 11.5px; color: var(--muted); margin: -6px 0 10px; }
+</style>
+</head>
+<body>
+
+<h1>Prefect duty status — update</h1>
+<p class="sub">
+  Edits the reminders and this week&#8217;s duty roster shown on
+  <a href="/prefects/status.html">the live status page</a>. Changes save straight to the
+  production endpoint used by the Notion embed — check
+  <a href="/prefects/status/test">the simulator</a> if you want to preview layout first.
+</p>
+
+<div class="gate">
+  <label for="secret" style="margin:0">Admin passcode</label>
+  <input type="password" id="secret" autocomplete="off">
+</div>
+
+<fieldset>
+  <legend>Reminders</legend>
+  <p class="hint">Shown above the roster on the status page. If there&#8217;s more than one, they rotate every 5 seconds.</p>
+  <div id="reminderRows"></div>
+  <button type="button" class="add" id="addReminder">+ Add reminder</button>
+</fieldset>
+
+<fieldset>
+  <legend>This week&#8217;s duty roster</legend>
+  <p class="hint">One block per day. Names are comma-separated.</p>
+  <div id="rosterRows"></div>
+  <button type="button" class="add" id="addDay">+ Add day</button>
+</fieldset>
+
+<button type="button" class="primary" id="save">Save</button>
+<p id="status"></p>
+
+<script type="module">
+const SECRET_KEY = 'prefectStatusAdminSecret';
+
+const secretInput = document.getElementById('secret');
+secretInput.value = localStorage.getItem(SECRET_KEY) || '';
+
+const reminderRows = document.getElementById('reminderRows');
+const rosterRows = document.getElementById('rosterRows');
+const statusEl = document.getElementById('status');
+
+function reminderRow(value) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `
+    <div><textarea rows="2" maxlength="240" class="reminder-text"></textarea></div>
+    <button type="button" class="remove">Remove</button>
+  `;
+  row.querySelector('textarea').value = value || '';
+  row.querySelector('.remove').onclick = () => row.remove();
+  return row;
+}
+
+function dayRow(entry) {
+  entry = entry || {};
+  const row = document.createElement('div');
+  row.className = 'day-block';
+  row.innerHTML = `
+    <div class="row">
+      <div><label>Day</label><input type="text" class="day-day" placeholder="Mon 22 June"></div>
+      <div><label>Location</label><input type="text" class="day-location" placeholder="Front gate"></div>
+      <button type="button" class="remove">Remove</button>
+    </div>
+    <div class="row">
+      <div><label>Time</label><input type="text" class="day-time" placeholder="7:45am"></div>
+      <div><label>Names (comma-separated)</label><input type="text" class="day-names" placeholder="Calissa, Angelia"></div>
+    </div>
+  `;
+  row.querySelector('.day-day').value = entry.day || '';
+  row.querySelector('.day-location').value = entry.location || '';
+  row.querySelector('.day-time').value = entry.time || '';
+  row.querySelector('.day-names').value = (entry.names || []).join(', ');
+  row.querySelector('.remove').onclick = () => row.remove();
+  return row;
+}
+
+document.getElementById('addReminder').onclick = () => reminderRows.appendChild(reminderRow(''));
+document.getElementById('addDay').onclick = () => rosterRows.appendChild(dayRow());
+
+function collectReminders() {
+  return [...reminderRows.querySelectorAll('.reminder-text')].map(t => t.value.trim()).filter(Boolean);
+}
+
+function collectRoster() {
+  return [...rosterRows.querySelectorAll('.day-block')].map(block => ({
+    day: block.querySelector('.day-day').value.trim(),
+    location: block.querySelector('.day-location').value.trim(),
+    time: block.querySelector('.day-time').value.trim(),
+    names: block.querySelector('.day-names').value.split(',').map(s => s.trim()).filter(Boolean),
+  })).filter(d => d.day);
+}
+
+async function load() {
+  try {
+    const res = await fetch('/api/prefects/status', { cache: 'no-store' });
+    const data = await res.json();
+    (data.reminders || []).forEach(r => reminderRows.appendChild(reminderRow(r)));
+    (data.roster || []).forEach(d => rosterRows.appendChild(dayRow(d)));
+    if (!(data.reminders || []).length) reminderRows.appendChild(reminderRow(''));
+    if (!(data.roster || []).length) rosterRows.appendChild(dayRow());
+  } catch {
+    reminderRows.appendChild(reminderRow(''));
+    rosterRows.appendChild(dayRow());
+    statusEl.textContent = 'Could not load current reminders/roster — starting blank.';
+    statusEl.className = 'err';
+  }
+}
+
+document.getElementById('save').onclick = async () => {
+  const secret = secretInput.value.trim();
+  if (!secret) {
+    statusEl.textContent = 'Enter the admin passcode first.';
+    statusEl.className = 'err';
+    return;
+  }
+
+  statusEl.textContent = 'Saving…';
+  statusEl.className = '';
+
+  try {
+    const res = await fetch('/api/prefects/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
+      body: JSON.stringify({ reminders: collectReminders(), roster: collectRoster() }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    localStorage.setItem(SECRET_KEY, secret);
+    statusEl.textContent = 'Saved.';
+    statusEl.className = 'ok';
+  } catch (e) {
+    statusEl.textContent = 'Save failed: ' + e.message;
+    statusEl.className = 'err';
+  }
+};
+
+load();
+</script>
+
+</body>
+</html>

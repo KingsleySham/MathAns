@@ -1,5 +1,13 @@
 // api/prefects/status.js  →  serves at https://mathans.app/api/prefects/status
 //
+// GET  — public. Returns the live weather/MTR status plus whatever reminders and
+//        this-week's-duty-roster the admin page has saved.
+// POST — admin-only (x-admin-secret header or body.secret, checked against
+//        PREFECT_ADMIN_SECRET — same secret/header already used by
+//        api/whatsapp/send-duty.js). Body: { reminders: string[], roster: RosterDay[] }.
+//        Overwrites the saved reminders/roster in KV. Used by
+//        prefects/status/update.html.
+//
 // Sources
 //   HKO warning summary  https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum
 //   MTR next train       https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php
@@ -16,7 +24,10 @@
 // line/station code list, not a live response).
 
 import { kv } from '@vercel/kv';
-import { LINES, SUSPEND, CUTOFF, classifyWeather, evaluateLine, summarizeTransport } from '../../lib/prefect-duty-status-logic.js';
+import {
+  LINES, SUSPEND, CUTOFF, classifyWeather, evaluateLine, summarizeTransport,
+  sanitizeReminders, sanitizeRoster,
+} from '../../lib/prefect-duty-status-logic.js';
 
 const HKO = 'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en';
 const MTR = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php';
@@ -59,6 +70,51 @@ async function writeLatch(names) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Reminders and this-week's-duty-roster.
+//
+// Plain admin-edited content, not derived from HKO/MTR. No expiry — these
+// persist until prefects/status/update.html overwrites them again. If KV is
+// unavailable, GET just returns empty arrays (the page hides those sections)
+// rather than failing the whole response.
+// ---------------------------------------------------------------------------
+
+async function readReminders() {
+  try {
+    const v = await kv.get('prefect:reminders');
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeReminders(list) {
+  try {
+    await kv.set('prefect:reminders', list);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function readRoster() {
+  try {
+    const v = await kv.get('prefect:roster');
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeRoster(list) {
+  try {
+    await kv.set('prefect:roster', list);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function getWeather(debug) {
   const res = await fetch(HKO);
   if (!res.ok) throw new Error('HKO ' + res.status);
@@ -94,16 +150,52 @@ async function getTransport(debug) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-secret');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  if (req.method === 'POST') {
+    const secret = process.env.PREFECT_ADMIN_SECRET;
+    if (!secret) return res.status(500).json({ error: 'PREFECT_ADMIN_SECRET is not set on the server' });
+
+    let body;
+    try {
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    } catch {
+      return res.status(400).json({ error: 'Invalid JSON body' });
+    }
+
+    const provided = req.headers['x-admin-secret'] || body.secret;
+    if (provided !== secret) return res.status(401).json({ error: 'Unauthorized' });
+
+    const reminders = sanitizeReminders(body.reminders);
+    const roster = sanitizeRoster(body.roster);
+    const [remindersOk, rosterOk] = await Promise.all([writeReminders(reminders), writeRoster(roster)]);
+    if (!remindersOk || !rosterOk) return res.status(502).json({ error: 'Could not save to the KV store' });
+
+    return res.status(200).json({ ok: true, reminders, roster });
+  }
+
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
 
   const debug = process.env.DEBUG === '1' ? {} : null;
 
   try {
-    const [weather, transport] = await Promise.all([getWeather(debug), getTransport(debug)]);
+    const [weather, transport, reminders, roster] = await Promise.all([
+      getWeather(debug),
+      getTransport(debug),
+      readReminders(),
+      readRoster(),
+    ]);
     res.status(200).json({
       weather,
       transport,
+      reminders,
+      roster,
       updated: hkNow().toISOString().slice(11, 16),
       ...(debug ? { raw: debug } : {}),
     });
@@ -118,6 +210,8 @@ export default async function handler(req, res) {
         latchAvailable: false,
       },
       transport: { ok: true, severity: 'green', alerts: [] },
+      reminders: [],
+      roster: [],
       updated: hkNow().toISOString().slice(11, 16),
       error: String(err.message || err),
     });
