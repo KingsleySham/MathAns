@@ -19,6 +19,8 @@
   "rewrites": [
     { "source": "/api/upload-note", "destination": "/api/notes?op=upload" },
     { "source": "/api/delete-note", "destination": "/api/notes?op=delete" },
+    { "source": "/api/zoom/callback", "destination": "/api/zoom?op=callback" },
+    { "source": "/api/zoom/meetings", "destination": "/api/zoom?op=meetings" },
     { "source": "/admin",        "destination": "/finals/admin.html" },
     { "source": "/admin/",       "destination": "/finals/admin.html" },
     { "source": "/3062470030624770",   "destination": "/3062470030624770/index.html" },
