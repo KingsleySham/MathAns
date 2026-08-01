@@ -5,7 +5,7 @@
 //   MTR next train       https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php
 //
 // The duty-mapping and MTR-alert decisions live in lib/prefect-duty-status-logic.js,
-// shared with prefects/simulator.html — this file only does the I/O (fetch, KV,
+// shared with prefects/status/test.html — this file only does the I/O (fetch, KV,
 // request/response) around that shared logic.
 //
 // VERIFY ON FIRST DEPLOY: set DEBUG=1 as an env var and hit the endpoint once. The raw
