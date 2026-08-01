@@ -245,14 +245,14 @@ function paint(data) {
     box.className = 'strip skeleton';
     box.style.background = '';
     box.style.color = '';
-    box.innerHTML = '<p>MTR — normal service on all lines</p>';
+    box.innerHTML = '<p>🚆 <span style="color:var(--green-fg);font-weight:700">✓</span> MTR — normal service on all lines</p>';
   } else {
     const [tbg, tfg] = TONE[t.severity];
     box.className = 'strip';
     box.style.background = tbg;
     box.style.color = tfg;
     box.innerHTML = t.alerts.map(a =>
-      '<p><span class="name">' + esc(a.label) + '</span> — ' + esc(a.reason) + '</p>'
+      '<p>🚆 <span class="name">' + esc(a.label) + '</span> — ' + esc(a.reason) + '</p>'
     ).join('') + '<p style="margin-top:7px;opacity:.75;font-size:11.5px">Advisory only. Leave earlier, and reply in the group if you cannot make it.</p>';
   }
 }
