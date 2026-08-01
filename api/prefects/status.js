@@ -6,18 +6,33 @@
 //
 // VERIFY ON FIRST DEPLOY: set DEBUG=1 as an env var and hit the endpoint once. The raw
 // payloads come back in the response so you can confirm the warnsum `code` values and
-// the Next Train `isdelay` / `ttnt` fields match what this file assumes.
+// the Next Train `isdelay` / `ttnt` fields match what this file assumes — and, since the
+// LINES list below now covers all 10 MTR lines, that each added `sta` code is one the
+// getSchedule.php API actually recognises for its line (they came from the published
+// line/station code list, not a live response).
 
 import { kv } from '@vercel/kv';
 
 const HKO = 'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en';
 const MTR = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php';
 
-// Stations serving the school. Per-line ETA thresholds because off-peak headways differ.
+// Stations serving the school get an ETA threshold, since a slow train there
+// actually changes when a prefect needs to leave (off-peak headways differ
+// per line, hence per-line thresholds). The remaining lines have no
+// threshold — they're checked at one representative station each purely for
+// network-wide status (json.status === 0 / isdelay), so prefects get a
+// heads-up on a citywide MTR problem even on a line they don't ride.
 const LINES = [
   { line: 'TWL', sta: 'SSP', label: 'Tsuen Wan Line', threshold: 8 },
   { line: 'TML', sta: 'NAC', label: 'Tuen Ma Line', threshold: 10 },
   { line: 'TCL', sta: 'NAC', label: 'Tung Chung Line', threshold: 12 },
+  { line: 'AEL', sta: 'HOK', label: 'Airport Express' },
+  { line: 'TKL', sta: 'TKO', label: 'Tseung Kwan O Line' },
+  { line: 'EAL', sta: 'ADM', label: 'East Rail Line' },
+  { line: 'SIL', sta: 'SOH', label: 'South Island Line' },
+  { line: 'ISL', sta: 'CEN', label: 'Island Line' },
+  { line: 'KTL', sta: 'KOT', label: 'Kwun Tong Line' },
+  { line: 'DRL', sta: 'SUN', label: 'Disneyland Resort Line' },
 ];
 
 const DUTY_WINDOW = [6 * 60 + 30, 8 * 60 + 30];   // only run the ETA check 06:30–08:30
