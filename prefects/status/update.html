@@ -27,7 +27,7 @@
   fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 0 0 16px; background: var(--panel); }
   legend { font-size: 13px; font-weight: 600; padding: 0 6px; }
   label { display: block; font-size: 12.5px; color: var(--muted); margin: 0 0 4px; }
-  input[type="text"], input[type="password"], input[type="date"], textarea {
+  input[type="text"], input[type="password"], input[type="date"], select, textarea {
     width: 100%; font: inherit; font-size: 14px; padding: 7px 9px; border-radius: 6px;
     border: 1px solid var(--line); background: var(--page); color: var(--text);
   }
@@ -118,12 +118,24 @@ function dayRow(entry) {
     </div>
     <div class="row">
       <div><label>Time</label><input type="text" class="day-time" placeholder="7:45am"></div>
+      <div><label>Team</label>
+        <select class="day-team">
+          <option value="">—</option>
+          <option value="A">Team A</option>
+          <option value="B">Team B</option>
+          <option value="C">Team C</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:2px">
       <div><label>Names (comma-separated)</label><input type="text" class="day-names" placeholder="Calissa, Angelia"></div>
     </div>
+    <p class="hint" style="margin:0 0 4px">Team shows on the public status page. Names don&#8217;t — they&#8217;re kept for the WhatsApp duty reminders only.</p>
   `;
   row.querySelector('.day-date').value = entry.date || '';
   row.querySelector('.day-location').value = entry.location || '';
   row.querySelector('.day-time').value = entry.time || '';
+  row.querySelector('.day-team').value = entry.team || '';
   row.querySelector('.day-names').value = (entry.names || []).join(', ');
   row.querySelector('.remove').onclick = () => row.remove();
   return row;
@@ -141,6 +153,7 @@ function collectRoster() {
     date: block.querySelector('.day-date').value,
     location: block.querySelector('.day-location').value.trim(),
     time: block.querySelector('.day-time').value.trim(),
+    team: block.querySelector('.day-team').value,
     names: block.querySelector('.day-names').value.split(',').map(s => s.trim()).filter(Boolean),
   })).filter(d => d.date);
 }

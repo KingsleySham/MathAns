@@ -96,11 +96,14 @@ function paintNextDuty(duty) {
   el.style.display = '';
   el.style.background = bg;
   el.style.color = fg;
+  // Individual names aren't shown publicly — only the team letter. The names
+  // are still in `duty` (the API keeps them for the WhatsApp reminder flow),
+  // just not rendered here.
   el.innerHTML =
     '<p class="tag">Next duty' + (duty.relative ? ' · ' + esc(duty.relative) : '') + '</p>' +
     '<p class="head">' + esc(duty.label) + (duty.time ? ' · ' + esc(duty.time) : '') + '</p>' +
     '<p class="body" style="margin:0">' + esc(duty.location) +
-    (duty.names && duty.names.length ? ' · ' + esc(duty.names.join(', ')) : '') + '</p>';
+    (duty.team ? ' · Team ' + esc(duty.team) : '') + '</p>';
 }
 
 function paint(data) {

@@ -115,9 +115,19 @@
         <label style="flex:1">Date<br><input type="date" id="dutyDate"></label>
         <label style="flex:1">Time<br><input type="text" id="dutyTime" placeholder="7:45am"></label>
       </div>
-      <div class="row" style="display:flex;gap:8px">
+      <div class="row" style="display:flex;gap:8px;margin-bottom:8px">
         <label style="flex:1">Location<br><input type="text" id="dutyLocation" placeholder="Front gate"></label>
-        <label style="flex:1">Names<br><input type="text" id="dutyNames" placeholder="Calissa, Angelia"></label>
+        <label style="flex:1">Team<br>
+          <select id="dutyTeam">
+            <option value="">—</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+        </label>
+      </div>
+      <div class="row" style="display:flex;gap:8px">
+        <label style="flex:1">Names (not shown publicly — WhatsApp only)<br><input type="text" id="dutyNames" placeholder="Calissa, Angelia"></label>
       </div>
     </fieldset>
   </div>
@@ -269,7 +279,7 @@ function paintNextDuty(duty) {
     '<p class="tag">Next duty' + (duty.relative ? ' · ' + esc(duty.relative) : '') + '</p>' +
     '<p class="head">' + esc(duty.label) + (duty.time ? ' · ' + esc(duty.time) : '') + '</p>' +
     '<p class="body" style="margin:0">' + esc(duty.location) +
-    (duty.names && duty.names.length ? ' · ' + esc(duty.names.join(', ')) : '') + '</p>';
+    (duty.team ? ' · Team ' + esc(duty.team) : '') + '</p>';
 }
 
 function buildRoster() {
@@ -279,6 +289,7 @@ function buildRoster() {
     date,
     location: document.getElementById('dutyLocation').value.trim(),
     time: document.getElementById('dutyTime').value.trim(),
+    team: document.getElementById('dutyTeam').value,
     names: document.getElementById('dutyNames').value.split(',').map(s => s.trim()).filter(Boolean),
   }];
 }
@@ -327,6 +338,7 @@ function resetAll() {
   setValue('dutyDate', '');
   setValue('dutyTime', '');
   setValue('dutyLocation', '');
+  setValue('dutyTeam', '');
   setValue('dutyNames', '');
 }
 
@@ -356,6 +368,7 @@ const PRESETS = [
       setValue('dutyDate', hkToday());
       setValue('dutyTime', '7:45am');
       setValue('dutyLocation', 'Front gate');
+      setValue('dutyTeam', 'C');
       setValue('dutyNames', 'Calissa, Angelia');
     } },
   { name: 'Next duty — tomorrow', apply() {
@@ -363,6 +376,7 @@ const PRESETS = [
       setValue('dutyDate', addDays(hkToday(), 1));
       setValue('dutyTime', '7:45am');
       setValue('dutyLocation', 'Rear gate');
+      setValue('dutyTeam', 'A');
       setValue('dutyNames', 'Bowie');
     } },
   { name: 'Next duty — next week (neutral)', apply() {
@@ -370,6 +384,7 @@ const PRESETS = [
       setValue('dutyDate', addDays(hkToday(), 7));
       setValue('dutyTime', '7:45am');
       setValue('dutyLocation', 'Side gate');
+      setValue('dutyTeam', 'B');
       setValue('dutyNames', 'Test Name');
     } },
 ];
