@@ -205,3 +205,5 @@ Recorded as the build progressed; where reality differs from the plan above, thi
 - **Webhook URL:** the Meta callback is **`https://www.mathans.app/whatsapp/prefects`** (rewritten to `/api/whatsapp/webhook`), not `/api/prefects/whatsapp` as drawn in the architecture diagram.
 - **Crons:** two Vercel cron jobs (the Hobby-plan maximum) — `/api/whatsapp/remind` at 12:00 UTC (evening-before reminders, ~20:00 HK) and `/api/whatsapp/morning` at 22:00 UTC (morning suspension check, ~06:00 HK). Both fire anywhere within their hour, which the 05:30 cutoff tolerates.
 - **Messaging code:** see `api/whatsapp/README.md` for endpoints, environment variables, template definitions and Redis keys.
+- **Weather in reminders (VHP decision, Aug 2026):** the evening reminder is weather-free; a separate "today" weather template goes out with the morning cron (06:00–07:00 HK) when a warning is in force, since an evening forecast is stale by morning.
+- **Cover requests (VHP decision, Aug 2026):** the reserve-list COVER flow described under "WhatsApp — VHP view" was dropped — the VHP still gets the short alerts, and cover is arranged in the group chat.

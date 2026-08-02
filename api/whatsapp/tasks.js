@@ -3,13 +3,15 @@
 // caps a deployment at 12 serverless functions, same reason api/notes.js is
 // consolidated):
 //
-//   GET  /api/whatsapp/remind    -> ?op=remind    evening-before reminders
-//                                   (cron 12:00 UTC ≈ 20:00 HK; add
-//                                   &date=YYYY-MM-DD for a manual run)
-//   GET  /api/whatsapp/morning   -> ?op=morning   suspension check — latches
-//                                   the whole-day suspension and asks ONLY
-//                                   the VHP (cron 22:00 UTC ≈ 06:00 HK,
-//                                   always past the 05:30 cutoff)
+//   GET  /api/whatsapp/remind    -> ?op=remind    evening-before reminders,
+//                                   buttons but no weather (cron 12:00 UTC
+//                                   ≈ 20:00 HK; add &date=YYYY-MM-DD for a
+//                                   manual run)
+//   GET  /api/whatsapp/morning   -> ?op=morning   morning check (cron 22:00
+//                                   UTC ≈ 06:00–07:00 HK, always past the
+//                                   05:30 cutoff): suspension → latch + ask
+//                                   ONLY the VHP; advisory warning → send
+//                                   the "today" weather reminder
 //   GET/POST /api/whatsapp/contacts -> ?op=contacts  opt-in contact list
 //
 // Auth: remind/morning accept Vercel's cron header (`Authorization: Bearer
