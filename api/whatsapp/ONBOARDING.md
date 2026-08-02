@@ -1,7 +1,7 @@
 # Prefect Hub WhatsApp — onboarding, step by step
 
 > **This guide lives on the site too:**
-> [mathans.app/prefects/setup](https://mathans.app/prefects/setup) — same
+> [mathans.app/prefects/setup](https://www.mathans.app/prefects/setup) — same
 > phases as an interactive checklist (ticks persist per device). This file
 > is the repo copy; keep the two in sync when steps change.
 
@@ -71,13 +71,13 @@ Leave the template-name variables alone; the defaults match Phase 5.
 - [ ] All six set → **redeploy** (env changes don't apply to the running
       deployment).
 
-**Check:** `curl https://mathans.app/api/whatsapp/remind` returns
+**Check:** `curl https://www.mathans.app/api/whatsapp/remind` returns
 `{"error":"Unauthorized"}` — the route is alive and locked.
 
 ## Phase 3 — connect the webhook
 
 1. [ ] App dashboard → **WhatsApp → Configuration → Webhook → Edit**:
-       - **Callback URL:** `https://mathans.app/whatsapp/prefects`
+       - **Callback URL:** `https://www.mathans.app/whatsapp/prefects`
        - **Verify token:** the exact `WHATSAPP_VERIFY_TOKEN` value
 2. [ ] Click **Verify and save**. Meta calls our GET handshake; if it
        fails, the token doesn't match or the deploy hasn't finished.
@@ -94,7 +94,7 @@ from a prefect is deliberately ignored unless a reason is pending.)
        `name` must match the names you type into the duty roster exactly):
 
 ```bash
-curl -X POST https://mathans.app/api/whatsapp/contacts \
+curl -X POST https://www.mathans.app/api/whatsapp/contacts \
   -H "Content-Type: application/json" -H "x-admin-secret: $PREFECT_ADMIN_SECRET" \
   -d '{ "contacts": [
     { "name": "Kingsley", "phone": "+85291234567", "role": "prefect", "optIn": true },
@@ -105,7 +105,7 @@ curl -X POST https://mathans.app/api/whatsapp/contacts \
        has a duty entry with those names, a location (e.g. `Front Gate`)
        and a time (e.g. `7:45am`).
 
-**Check:** `curl -H "x-admin-secret: …" https://mathans.app/api/whatsapp/contacts`
+**Check:** `curl -H "x-admin-secret: …" https://www.mathans.app/api/whatsapp/contacts`
 returns your list, phones normalised to digits.
 
 ## Phase 5 — create the four templates
@@ -135,7 +135,7 @@ wording and submit them whenever; nothing in code depends on them.
 Everything in one sitting, playing both roles:
 
 1. [ ] Trigger tomorrow's reminders by hand:
-       `curl -H "x-admin-secret: …" "https://mathans.app/api/whatsapp/remind?date=YYYY-MM-DD"`
+       `curl -H "x-admin-secret: …" "https://www.mathans.app/api/whatsapp/remind?date=YYYY-MM-DD"`
        — the JSON response lists each rostered name and `ok` or the reason
        it was skipped (`no contact on file` means a roster/contact name
        mismatch).
@@ -148,7 +148,7 @@ Everything in one sitting, playing both roles:
        template → they tap accept → VHP gets "Slot filled".
 6. [ ] From the VHP phone, send `anything` → you get the command help
        (proves the VHP number matches `VHP_PHONE`).
-7. [ ] `curl -H "x-admin-secret: …" https://mathans.app/api/whatsapp/morning`
+7. [ ] `curl -H "x-admin-secret: …" https://www.mathans.app/api/whatsapp/morning`
        → on a clear day returns `{"held":false,"reason":"no suspending
        signal in force"}`. That's the expected result — the full
        suspension flow can only fire on a real Red/Black/No. 8 morning, so

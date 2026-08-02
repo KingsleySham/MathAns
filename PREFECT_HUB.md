@@ -202,6 +202,6 @@ Recorded as the build progressed; where reality differs from the plan above, thi
 - **State:** a generic Redis database via `REDIS_URL` and the `redis` package (`lib/prefect-redis-client.js`), not Vercel KV. Same call shapes, as anticipated.
 - **Roster:** admin-edited in Redis via `/prefects/status/update` (key `prefect:roster`), not `data/roster.json`. Entries: `{ date, location, time, names }`.
 - **Status half (steps 2–4):** shipped. `/api/prefects/status`, `/prefects/status.html` embed, simulator at `/prefects/status/test`, whole-day latch under `prefect:suspended:YYYY-MM-DD`. Upstream field names verified with a `DEBUG=1` env var (gated, not committed as code).
-- **Webhook URL:** the Meta callback is **`https://mathans.app/whatsapp/prefects`** (rewritten to `/api/whatsapp/webhook`), not `/api/prefects/whatsapp` as drawn in the architecture diagram.
+- **Webhook URL:** the Meta callback is **`https://www.mathans.app/whatsapp/prefects`** (rewritten to `/api/whatsapp/webhook`), not `/api/prefects/whatsapp` as drawn in the architecture diagram.
 - **Crons:** two Vercel cron jobs (the Hobby-plan maximum) — `/api/whatsapp/remind` at 12:00 UTC (evening-before reminders, ~20:00 HK) and `/api/whatsapp/morning` at 22:00 UTC (morning suspension check, ~06:00 HK). Both fire anywhere within their hour, which the 05:30 cutoff tolerates.
 - **Messaging code:** see `api/whatsapp/README.md` for endpoints, environment variables, template definitions and Redis keys.
