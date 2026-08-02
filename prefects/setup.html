@@ -169,22 +169,22 @@
   <summary><span class="num"><span>4</span></span><span class="ph-title">Load contacts and roster</span><span class="ph-count"></span></summary>
   <div class="ph-body">
     <label class="step"><input type="checkbox" data-k="p4-contacts"><span class="t">Load the opt-in contact list — start with just the pilot people; <code>name</code> must match the roster name exactly</span></label>
-<pre><button class="copy" type="button">copy</button><code>curl -X POST https://www.mathans.app/api/whatsapp/contacts -H "Content-Type: application/json" -H "x-admin-secret: YOUR_ADMIN_SECRET" -d '{ "contacts": [ { "name": "Kingsley", "phone": "+85291234567", "role": "prefect", "optIn": true }, { "name": "Marcus",   "phone": "+85298765432", "role": "reserve", "optIn": true } ] }'</code></pre>
+<pre><button class="copy" type="button">copy</button><code>curl -X POST https://www.mathans.app/api/whatsapp/contacts -H "Content-Type: application/json" -H "x-admin-secret: YOUR_ADMIN_SECRET" -d '{ "contacts": [ { "name": "Kingsley", "phone": "+85291234567", "role": "prefect", "optIn": true }, { "name": "Angelia",  "phone": "+85298765432", "role": "prefect", "optIn": true } ] }'</code></pre>
     <label class="step"><input type="checkbox" data-k="p4-roster"><span class="t">On <a href="/prefects/status/update">the roster editor</a>, give tomorrow (or your test day) a duty entry with those names, a location (<code>Front Gate</code>) and a time (<code>7:45am</code>)</span></label>
     <div class="check">GET the same URL with the admin header — your list comes back with phones normalised to digits.</div>
   </div>
 </details>
 
 <details class="phase" id="p5">
-  <summary><span class="num"><span>5</span></span><span class="ph-title">Create the four templates</span><span class="ph-count"></span></summary>
+  <summary><span class="num"><span>5</span></span><span class="ph-title">Create the three templates</span><span class="ph-count"></span></summary>
   <div class="ph-body">
     <p>WhatsApp Manager → <b>Message templates → Create template</b>. Category <b>Utility</b>, language <b>English (en)</b>, names and bodies exactly as in the
     <a href="https://github.com/KingsleySham/MathAns/blob/main/api/whatsapp/README.md">README</a>:</p>
-    <label class="step"><input type="checkbox" data-k="p5-t1"><span class="t"><code>prefect_duty_reminder</code> — buttons <i>I'll be there</i>, <i>I can't make it</i> <b>in that order</b></span></label>
-    <label class="step"><input type="checkbox" data-k="p5-t2"><span class="t"><code>prefect_duty_reminder_weather</code> — same, plus the <code>{{5}}</code> weather line</span></label>
-    <label class="step"><input type="checkbox" data-k="p5-t3"><span class="t"><code>prefect_cover_request</code> — button <i>I can cover it</i></span></label>
-    <label class="step"><input type="checkbox" data-k="p5-t4"><span class="t"><code>prefect_notice</code> — single <code>{{1}}</code> body, no buttons</span></label>
-    <label class="step"><input type="checkbox" data-k="p5-approved"><span class="t">All four show <b>Approved</b> (minutes to ~24h; Meta emails you)</span></label>
+    <p>All three use <b>named variables</b> (pick "Name" as the variable type): <code>{{name}}</code>, <code>{{gate}}</code>, <code>{{time}}</code>, <code>{{day}}</code>, plus <code>{{weather}}</code> / <code>{{notice}}</code> — keep those exact names; the code fills them by name.</p>
+    <label class="step"><input type="checkbox" data-k="p5-t1"><span class="t"><code>prefect_duty_reminder</code> — the evening "tomorrow" reminder, buttons <i>I'll be there</i>, <i>I can't make it</i> <b>in that order</b></span></label>
+    <label class="step"><input type="checkbox" data-k="p5-t2"><span class="t"><code>prefect_duty_reminder_weather</code> — the morning "today" variant with the <code>{{weather}}</code> block, <b>no buttons</b></span></label>
+    <label class="step"><input type="checkbox" data-k="p5-t4"><span class="t"><code>prefect_notice</code> — <code>{{notice}}</code> body, no buttons</span></label>
+    <label class="step"><input type="checkbox" data-k="p5-approved"><span class="t">All three show <b>Approved</b> (minutes to ~24h; Meta emails you)</span></label>
     <div class="note">Rejected? Make the sample values look like a real message and resubmit — never change the variable order. The three hand-sent notice templates in <code>notice-templates.md</code> can wait; nothing in code depends on them.</div>
   </div>
 </details>
@@ -198,7 +198,6 @@
     <label class="step"><input type="checkbox" data-k="p6-arrive"><span class="t">The reminder lands on the pilot phones with both buttons</span></label>
     <label class="step"><input type="checkbox" data-k="p6-yes"><span class="t">Someone taps <i>I'll be there</i> → “Thanks — see you at the gate.”</span></label>
     <label class="step"><input type="checkbox" data-k="p6-no"><span class="t">Someone taps <i>I can't make it</i> → reason question → reply → “Noted” — and the VHP phone gets the private relay, plus the short alert if the slot dropped below two</span></label>
-    <label class="step"><input type="checkbox" data-k="p6-cover"><span class="t">VHP replies <code>COVER</code> → reserve gets the cover template → taps accept → VHP gets “Slot filled”</span></label>
     <label class="step"><input type="checkbox" data-k="p6-help"><span class="t">VHP sends any other text → command help comes back (proves <code>VHP_PHONE</code> matches)</span></label>
     <label class="step"><input type="checkbox" data-k="p6-morning"><span class="t">Run the morning check by hand — on a clear day it returns <code>{"held":false,"reason":"no suspending signal in force"}</code>, which is correct. The full hold/<code>CANCEL</code> flow only fires on a real Red/Black/No. 8 morning, and it messages the VHP only</span></label>
 <pre><button class="copy" type="button">copy</button><code>curl -H "x-admin-secret: YOUR_ADMIN_SECRET" "https://www.mathans.app/api/whatsapp/morning"</code></pre>

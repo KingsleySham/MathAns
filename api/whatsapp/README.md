@@ -1,9 +1,9 @@
 # Prefect Hub — WhatsApp messaging
 
 The reminder half of [PREFECT_HUB.md](../../PREFECT_HUB.md): evening-before
-duty reminders with weather factored in, private absence reporting to the
-VHP, two-prefect coverage alerts, a reserve-list cover flow, and the
-VHP-approved suspension flow. Meta WhatsApp Cloud API, direct — no BSP.
+duty reminders, a morning-of weather update, private absence reporting to
+the VHP, two-prefect coverage alerts, and the VHP-approved suspension
+flow. Meta WhatsApp Cloud API, direct — no BSP.
 
 Plain Vercel serverless functions, same style as the rest of `/api`
 (the webhook alone uses the Web `Request`/`Response` signature — signature
@@ -19,16 +19,14 @@ verification needs the raw request body).
 | --- | --- |
 | **`https://www.mathans.app/whatsapp/prefects`** | Meta webhook callback URL (rewritten to `api/whatsapp/webhook.js`) |
 | `api/whatsapp/webhook.js` | GET verify handshake + POST handler (buttons, reasons, VHP commands) |
-| `api/whatsapp/tasks.js` | One function, three rewritten routes (Hobby caps deployments at 12 functions): `/api/whatsapp/remind` — cron 12:00 UTC (~20:00 HK), tomorrow's reminders; `/api/whatsapp/morning` — cron 22:00 UTC (~06:00 HK), suspension check that asks the VHP only; `/api/whatsapp/contacts` — admin route for the opt-in contact list |
+| `api/whatsapp/tasks.js` | One function, three rewritten routes (Hobby caps deployments at 12 functions): `/api/whatsapp/remind` — cron 12:00 UTC (~20:00 HK), tomorrow's reminders; `/api/whatsapp/morning` — cron 22:00 UTC (~06:00 HK), suspension check (asks the VHP only) + morning weather update; `/api/whatsapp/contacts` — admin route for the opt-in contact list |
 | `lib/prefect-messenger.js` | All conversational logic + Redis state |
 | `lib/whatsapp.js` | Cloud API send helpers (`sendText`, `sendTemplate`, `sendTextOrTemplate`) |
 
 ## The flows
 
-**Prefect** — the evening before a duty, each rostered prefect gets a
-template ("Hi Kingsley — you're on front gate duty tomorrow, Mon 22 June at
-7:45am.", plus a weather line when a warning is in force) with two
-quick-reply buttons:
+**Prefect** — the evening before a duty (~20:00 HK), each rostered prefect
+gets the reminder template with two quick-reply buttons:
 
 - **I'll be there** → "Thanks — see you at the gate."
 - **I can't make it** → "No problem. What's the reason? Your reply goes to
@@ -36,16 +34,18 @@ quick-reply buttons:
   the VHP** ("Angelia is out on Mon 22 June — medical appointment.") and
   acknowledged with "Noted, thanks for letting me know."
 
+The evening reminder is deliberately weather-free — an evening forecast is
+stale by morning. Instead, the morning cron (06:00–07:00 HK) sends the
+**"today" weather variant** (no buttons) when a warning is actually in
+force, to today's team minus anyone who declined. Clear mornings send
+nothing.
+
 **VHP** — quiet by design; only speaks when something needs attention:
 
 - Coverage alert when confirmed replies drop below the two-prefect minimum
   ("Mon 22 June — one prefect short. Only 1 confirmed, minimum is two. …").
-  Once everyone has replied and it's still short, the alert offers
-  **COVER**.
-- `COVER` (optionally `COVER 2026-06-25`) sends the cover-request template
-  to opted-in reserves; first to tap accepts the slot ("Marcus can cover
-  Thu 25 June. Slot filled — two on duty."). No message when a short slot
-  recovers by itself beyond one "minimum met" notice.
+  Once everyone has replied and it's still short, one follow-up alert says
+  so — cover is then arranged in the group chat.
 - Suspension: when the morning check sees a Red/Black Rainstorm or No. 8+
   after 05:30, it latches the whole-day suspension for the status embed and
   messages **only the VHP**: nothing is sent to the board until the VHP
@@ -73,61 +73,73 @@ quick-reply buttons:
 | `WHATSAPP_API_VERSION` | `v21.0` |
 | `WHATSAPP_TEMPLATE` | `prefect_duty_reminder` |
 | `WHATSAPP_TEMPLATE_WEATHER` | `prefect_duty_reminder_weather` |
-| `WHATSAPP_COVER_TEMPLATE` | `prefect_cover_request` |
 | `WHATSAPP_NOTICE_TEMPLATE` | `prefect_notice` |
 | `WHATSAPP_TEMPLATE_LANG` | `en` (must match the language picked in Meta) |
 | `PREFECT_MIN_ON_DUTY` | `2` — the coverage minimum (do not lower without asking, per the brief) |
 
 ## Message templates (create in Meta → WhatsApp Manager, all **Utility**)
 
-Body parameters may not contain newlines — the send helper collapses
-whitespace automatically.
+All three use Meta's **named variables** ("Type of variable: Name" in the
+builder) — the code sends `parameter_name` values, so the variable names
+below (`name`, `gate`, `time`, `day`, `weather`, `notice`) must match the
+approved templates exactly. Wording around them can be adjusted freely
+(each edit goes back through review). Values are collapsed to one line by
+the send helper. The code fills: `name` = the contact's first name,
+`gate` = the roster row's location (e.g. `Front Gate`), `time` = the
+roster row's time, `day` = e.g. `Mon 22 June`.
 
-**`prefect_duty_reminder`** — header `Morning duty tomorrow`, body:
+**`prefect_duty_reminder`** — header `Prefect Duty Reminder`, body:
 
 ```
-Hi {{1}} — you're on {{2}} duty tomorrow, {{3}} at {{4}}.
+Hello {{name}},
+You'll be having duty at *{{gate}} tomorrow* 👋
+Details are as follows:
+⏰ Time: {{time}}
+🗓 Date: {{day}}
+Thank you for your kind attention 🙏
 ```
 
-Footer: `Prefect badge, no PE uniform. Bags to the General Office.`
+Footer: `Please be punctual and refer to the Notion for updates.`
 Quick-reply buttons, in this order: `I'll be there`, `I can't make it`.
-Samples: `Kingsley`, `front gate`, `Mon 22 June`, `7:45am`.
 
-**`prefect_duty_reminder_weather`** — same header/footer/buttons, body:
-
-```
-Hi {{1}} — you're on {{2}} duty tomorrow, {{3}} at {{4}}.
-
-{{5}}
-```
-
-Sample for `{{5}}`: `Thunderstorm Warning is in force. Assembly moves indoors — bring an umbrella.`
-
-**`prefect_cover_request`** — body:
+**`prefect_duty_reminder_weather`** — same header/footer, **no buttons**
+(it's a morning-of update, sent by the morning cron only when a warning is
+in force — hence "today"):
 
 ```
-Hi {{1}} — can you cover {{2}} duty on {{3}} at {{4}}? First to accept gets the slot.
+Hello {{name}},
+You'll be having duty at *{{gate}} today* 👋
+Details are as follows:
+⏰ Time: {{time}}
+🗓 Date: {{day}}
+
+⚠️ Weather Alert:
+{{weather}}
+
+Thank you and stay safe 🙏
 ```
 
-One quick-reply button: `I can cover it`.
+Sample for `{{weather}}`: `Thunderstorm Warning is in force. Assembly moves indoors — bring an umbrella.`
 
 **`prefect_notice`** — the fallback for VHP alerts and cancellations when
-the recipient's 24-hour window is closed. Body:
+the recipient's 24-hour window is closed. Footer `Prefect Team`, body:
 
 ```
-{{1}}
+⚠️ *{{notice}}*
+
+Thank you for your kind attention.
 ```
 
-(Meta may ask for context on a bare-variable body; sample:
+(Sample for `{{notice}}`:
 `Duty on Thu 25 June is cancelled — Red Rainstorm in force. Do not report for duty.`)
 
 The three general notice templates live in
 [`notice-templates.md`](../../notice-templates.md) and are sent by hand, not
 by this code.
 
-The webhook reads button payloads (`CONFIRM:2026-06-22`, `DECLINE:…`,
-`COVER:…`) set at send time, and falls back to matching the visible label,
-so the button text can be reworded in Meta without touching code.
+The webhook reads button payloads (`CONFIRM:2026-06-22`, `DECLINE:…`) set
+at send time, and falls back to matching the visible label, so the button
+text can be reworded in Meta without touching code.
 
 ## Webhook setup (Meta dashboard)
 
@@ -152,7 +164,8 @@ curl -X POST https://www.mathans.app/api/whatsapp/contacts \
 
 `name` must match the name used on the duty roster
 (`/prefects/status/update`) — that's how a roster row finds its number.
-`role: "reserve"` marks the reserve list the `COVER` command asks.
+(`role` is stored but currently unused — the reserve-list cover flow was
+dropped; cover is arranged in the group chat.)
 
 ## Manual runs / testing
 
@@ -176,9 +189,9 @@ While on the free test number, add each tester's number in Meta first
 | Key | Contents | TTL |
 | --- | --- | --- |
 | `prefect:contacts` | opt-in contact list | — |
-| `prefect:duty:{date}` | per-day replies, cover state, alert flags | 7 days |
+| `prefect:duty:{date}` | per-day replies and alert flags | 7 days |
 | `prefect:awaiting:{phone}` | duty date an absence reason is pending for | 24 h |
-| `prefect:last-short` | date of the most recent short alert (`COVER` target) | 48 h |
+| `prefect:wx-sent:{date}` | morning weather update already sent | 24 h |
 | `prefect:hold:{date}` | suspension awaiting the VHP's `CANCEL` | 24 h |
 | `prefect:suspended:{date}` | whole-day latch (shared with the status embed) | 24 h |
 

@@ -98,7 +98,7 @@ curl -X POST https://www.mathans.app/api/whatsapp/contacts \
   -H "Content-Type: application/json" -H "x-admin-secret: $PREFECT_ADMIN_SECRET" \
   -d '{ "contacts": [
     { "name": "Kingsley", "phone": "+85291234567", "role": "prefect", "optIn": true },
-    { "name": "Marcus",   "phone": "+85298765432", "role": "reserve", "optIn": true } ] }'
+    { "name": "Angelia",  "phone": "+85298765432", "role": "prefect", "optIn": true } ] }'
 ```
 
 2. [ ] On `/prefects/status/update`, make sure tomorrow (or your test day)
@@ -108,17 +108,20 @@ curl -X POST https://www.mathans.app/api/whatsapp/contacts \
 **Check:** `curl -H "x-admin-secret: …" https://www.mathans.app/api/whatsapp/contacts`
 returns your list, phones normalised to digits.
 
-## Phase 5 — create the four templates
+## Phase 5 — create the three templates
 
 WhatsApp Manager (from the app: **WhatsApp → Message templates**) →
 **Create template**. Category **Utility**, language **English (en)** for
-all four. Copy names and bodies **exactly** from
+all three. Copy names and bodies **exactly** from
 [README.md → Message templates](README.md#message-templates-create-in-meta--whatsapp-manager-all-utility):
 
+All three use **named variables** (`{{name}}`, `{{gate}}`, `{{time}}`,
+`{{day}}`, `{{weather}}`, `{{notice}}`) — pick "Name" as the variable type
+in the builder and keep those exact variable names:
+
 - [ ] `prefect_duty_reminder` — with buttons `I'll be there`, `I can't make it` **in that order**
-- [ ] `prefect_duty_reminder_weather` — same, plus the `{{5}}` weather line
-- [ ] `prefect_cover_request` — button `I can cover it`
-- [ ] `prefect_notice` — single `{{1}}` body, no buttons
+- [ ] `prefect_duty_reminder_weather` — the "today" morning variant with the `{{weather}}` block, **no buttons**
+- [ ] `prefect_notice` — `{{notice}}` body, no buttons
 
 Then wait for each to show **Approved** (minutes to ~24h). Meta emails you.
 If one is rejected, tweak the sample values (they must look like a real
@@ -128,7 +131,7 @@ The three hand-sent notice templates in
 [notice-templates.md](../../notice-templates.md) can wait — finalise the
 wording and submit them whenever; nothing in code depends on them.
 
-**Check:** all four show Approved in WhatsApp Manager.
+**Check:** all three show Approved in WhatsApp Manager.
 
 ## Phase 6 — dry-run the whole flow (test number, pilot trio)
 
@@ -144,14 +147,14 @@ Everything in one sitting, playing both roles:
 4. [ ] Another taps **I can't make it** → gets the reason question →
        replies → gets "Noted" — and the VHP phone receives the private
        relay plus, if the slot dropped below two, the short alert.
-5. [ ] From the VHP phone, reply `COVER` → the reserve gets the cover
-       template → they tap accept → VHP gets "Slot filled".
-6. [ ] From the VHP phone, send `anything` → you get the command help
+5. [ ] From the VHP phone, send `anything` → you get the command help
        (proves the VHP number matches `VHP_PHONE`).
-7. [ ] `curl -H "x-admin-secret: …" https://www.mathans.app/api/whatsapp/morning`
+6. [ ] `curl -H "x-admin-secret: …" https://www.mathans.app/api/whatsapp/morning`
        → on a clear day returns `{"held":false,"reason":"no suspending
        signal in force"}`. That's the expected result — the full
-       suspension flow can only fire on a real Red/Black/No. 8 morning, so
+       suspension flow can only fire on a real Red/Black/No. 8 morning
+       (and on advisory-warning mornings this same endpoint sends the
+       "today" weather reminder), so
        just read `morningCheck` twice: the held message goes to the VHP
        only, and `CANCEL` is what releases it.
 

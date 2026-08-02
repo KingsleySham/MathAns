@@ -84,12 +84,11 @@ async function route(body) {
 // fallback keeps taps working if a template was ever sent without payloads.
 function readButton(msg) {
   const payload = msg.button?.payload || msg.interactive?.button_reply?.id || '';
-  const m = /^(CONFIRM|DECLINE|COVER):(\d{4}-\d{2}-\d{2})$/.exec(payload);
+  const m = /^(CONFIRM|DECLINE):(\d{4}-\d{2}-\d{2})$/.exec(payload);
   if (m) return { action: m[1].toLowerCase(), date: m[2] };
 
   const label = (payload || msg.button?.text || msg.interactive?.button_reply?.title || '').toLowerCase();
   if (!label) return null;
-  if (/cover/.test(label)) return { action: 'cover', date: null };
   if (/there|attend|confirm|yes/.test(label)) return { action: 'confirm', date: null };
   if (/can.?t|cannot|absent|decline/.test(label)) return { action: 'decline', date: null };
   return null;
