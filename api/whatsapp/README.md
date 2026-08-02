@@ -11,13 +11,13 @@ verification needs the raw request body).
 
 **Setting this up for the first time?** Follow the step-by-step guide:
 [ONBOARDING.md](ONBOARDING.md), or the interactive checklist version at
-[mathans.app/prefects/setup](https://mathans.app/prefects/setup).
+[mathans.app/prefects/setup](https://www.mathans.app/prefects/setup).
 
 ## Endpoints
 
 | Path | Purpose |
 | --- | --- |
-| **`https://mathans.app/whatsapp/prefects`** | Meta webhook callback URL (rewritten to `api/whatsapp/webhook.js`) |
+| **`https://www.mathans.app/whatsapp/prefects`** | Meta webhook callback URL (rewritten to `api/whatsapp/webhook.js`) |
 | `api/whatsapp/webhook.js` | GET verify handshake + POST handler (buttons, reasons, VHP commands) |
 | `api/whatsapp/tasks.js` | One function, three rewritten routes (Hobby caps deployments at 12 functions): `/api/whatsapp/remind` — cron 12:00 UTC (~20:00 HK), tomorrow's reminders; `/api/whatsapp/morning` — cron 22:00 UTC (~06:00 HK), suspension check that asks the VHP only; `/api/whatsapp/contacts` — admin route for the opt-in contact list |
 | `lib/prefect-messenger.js` | All conversational logic + Redis state |
@@ -132,7 +132,7 @@ so the button text can be reworded in Meta without touching code.
 ## Webhook setup (Meta dashboard)
 
 1. Deploy, then Meta → your app → **WhatsApp → Configuration → Webhook**:
-   - **Callback URL:** `https://mathans.app/whatsapp/prefects`
+   - **Callback URL:** `https://www.mathans.app/whatsapp/prefects`
    - **Verify token:** the value in `WHATSAPP_VERIFY_TOKEN`
 2. **Verify and save** (hits the GET handshake), then **subscribe** to the
    `messages` field.
@@ -143,7 +143,7 @@ Every recipient must have opted in — consent is stored alongside the number
 and anyone with `optIn: false` is skipped by every send path:
 
 ```bash
-curl -X POST https://mathans.app/api/whatsapp/contacts \
+curl -X POST https://www.mathans.app/api/whatsapp/contacts \
   -H "Content-Type: application/json" -H "x-admin-secret: $PREFECT_ADMIN_SECRET" \
   -d '{ "contacts": [
     { "name": "Kingsley Sham", "phone": "+85291234567", "role": "prefect", "optIn": true },
@@ -159,11 +159,11 @@ curl -X POST https://mathans.app/api/whatsapp/contacts \
 ```bash
 # send (or re-send) reminders for a specific date
 curl -H "x-admin-secret: $PREFECT_ADMIN_SECRET" \
-  "https://mathans.app/api/whatsapp/remind?date=2026-06-25"
+  "https://www.mathans.app/api/whatsapp/remind?date=2026-06-25"
 
 # run the morning suspension check by hand
 curl -H "x-admin-secret: $PREFECT_ADMIN_SECRET" \
-  "https://mathans.app/api/whatsapp/morning"
+  "https://www.mathans.app/api/whatsapp/morning"
 ```
 
 Tier 0 (unverified) allows 250 unique recipients per rolling 24h — the

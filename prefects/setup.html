@@ -151,14 +151,14 @@
     <p>Leave the template-name variables alone — the defaults match phase 5.</p>
     <label class="step"><input type="checkbox" data-k="p2-set"><span class="t">All six set</span></label>
     <label class="step"><input type="checkbox" data-k="p2-deploy"><span class="t"><b>Redeploy</b> — env changes don't apply to the running deployment</span></label>
-    <div class="check"><code>curl https://mathans.app/api/whatsapp/remind</code> returns <code>{"error":"Unauthorized"}</code> — the route is alive and locked.</div>
+    <div class="check"><code>curl https://www.mathans.app/api/whatsapp/remind</code> returns <code>{"error":"Unauthorized"}</code> — the route is alive and locked.</div>
   </div>
 </details>
 
 <details class="phase" id="p3">
   <summary><span class="num"><span>3</span></span><span class="ph-title">Connect the webhook</span><span class="ph-count"></span></summary>
   <div class="ph-body">
-    <label class="step"><input type="checkbox" data-k="p3-cfg"><span class="t">App dashboard → <b>WhatsApp → Configuration → Webhook → Edit</b>: Callback URL <code>https://mathans.app/whatsapp/prefects</code>, Verify token = your exact <code>WHATSAPP_VERIFY_TOKEN</code></span></label>
+    <label class="step"><input type="checkbox" data-k="p3-cfg"><span class="t">App dashboard → <b>WhatsApp → Configuration → Webhook → Edit</b>: Callback URL <code>https://www.mathans.app/whatsapp/prefects</code>, Verify token = your exact <code>WHATSAPP_VERIFY_TOKEN</code></span></label>
     <label class="step"><input type="checkbox" data-k="p3-verify"><span class="t"><b>Verify and save</b> succeeds (if not: token mismatch, or the deploy hasn't finished)</span></label>
     <label class="step"><input type="checkbox" data-k="p3-sub"><span class="t">Under Webhook fields, subscribe to <b>messages</b> — only that one</span></label>
     <div class="check">text the test number from a verified phone; Vercel → Logs shows a 200 POST on <code>/api/whatsapp/webhook</code>. No reply is expected — free text is ignored unless a reason is pending.</div>
@@ -169,11 +169,7 @@
   <summary><span class="num"><span>4</span></span><span class="ph-title">Load contacts and roster</span><span class="ph-count"></span></summary>
   <div class="ph-body">
     <label class="step"><input type="checkbox" data-k="p4-contacts"><span class="t">Load the opt-in contact list — start with just the pilot people; <code>name</code> must match the roster name exactly</span></label>
-<pre><button class="copy" type="button">copy</button><code>curl -X POST https://mathans.app/api/whatsapp/contacts \
-  -H "Content-Type: application/json" -H "x-admin-secret: YOUR_ADMIN_SECRET" \
-  -d '{ "contacts": [
-    { "name": "Kingsley", "phone": "+85291234567", "role": "prefect", "optIn": true },
-    { "name": "Marcus",   "phone": "+85298765432", "role": "reserve", "optIn": true } ] }'</code></pre>
+<pre><button class="copy" type="button">copy</button><code>curl -X POST https://www.mathans.app/api/whatsapp/contacts -H "Content-Type: application/json" -H "x-admin-secret: YOUR_ADMIN_SECRET" -d '{ "contacts": [ { "name": "Kingsley", "phone": "+85291234567", "role": "prefect", "optIn": true }, { "name": "Marcus",   "phone": "+85298765432", "role": "reserve", "optIn": true } ] }'</code></pre>
     <label class="step"><input type="checkbox" data-k="p4-roster"><span class="t">On <a href="/prefects/status/update">the roster editor</a>, give tomorrow (or your test day) a duty entry with those names, a location (<code>Front Gate</code>) and a time (<code>7:45am</code>)</span></label>
     <div class="check">GET the same URL with the admin header — your list comes back with phones normalised to digits.</div>
   </div>
@@ -198,16 +194,14 @@
   <div class="ph-body">
     <p>One sitting, playing both roles, on the test number.</p>
     <label class="step"><input type="checkbox" data-k="p6-send"><span class="t">Trigger tomorrow's reminders by hand — the JSON response lists each name and <code>ok</code>, or why it was skipped (<code>no contact on file</code> = roster/contact name mismatch)</span></label>
-<pre><button class="copy" type="button">copy</button><code>curl -H "x-admin-secret: YOUR_ADMIN_SECRET" \
-  "https://mathans.app/api/whatsapp/remind?date=2026-08-03"</code></pre>
+<pre><button class="copy" type="button">copy</button><code>curl -H "x-admin-secret: YOUR_ADMIN_SECRET" "https://www.mathans.app/api/whatsapp/remind?date=2026-08-03"</code></pre>
     <label class="step"><input type="checkbox" data-k="p6-arrive"><span class="t">The reminder lands on the pilot phones with both buttons</span></label>
     <label class="step"><input type="checkbox" data-k="p6-yes"><span class="t">Someone taps <i>I'll be there</i> → “Thanks — see you at the gate.”</span></label>
     <label class="step"><input type="checkbox" data-k="p6-no"><span class="t">Someone taps <i>I can't make it</i> → reason question → reply → “Noted” — and the VHP phone gets the private relay, plus the short alert if the slot dropped below two</span></label>
     <label class="step"><input type="checkbox" data-k="p6-cover"><span class="t">VHP replies <code>COVER</code> → reserve gets the cover template → taps accept → VHP gets “Slot filled”</span></label>
     <label class="step"><input type="checkbox" data-k="p6-help"><span class="t">VHP sends any other text → command help comes back (proves <code>VHP_PHONE</code> matches)</span></label>
     <label class="step"><input type="checkbox" data-k="p6-morning"><span class="t">Run the morning check by hand — on a clear day it returns <code>{"held":false,"reason":"no suspending signal in force"}</code>, which is correct. The full hold/<code>CANCEL</code> flow only fires on a real Red/Black/No. 8 morning, and it messages the VHP only</span></label>
-<pre><button class="copy" type="button">copy</button><code>curl -H "x-admin-secret: YOUR_ADMIN_SECRET" \
-  "https://mathans.app/api/whatsapp/morning"</code></pre>
+<pre><button class="copy" type="button">copy</button><code>curl -H "x-admin-secret: YOUR_ADMIN_SECRET" "https://www.mathans.app/api/whatsapp/morning"</code></pre>
   </div>
 </details>
 
