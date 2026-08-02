@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prefect Hub — WhatsApp setup guide</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --green-bg: #eaf3de; --green-fg: #27500a;
+    --amber-bg: #faeeda; --amber-fg: #633806;
+    --red-bg:   #fcebeb; --red-fg:   #791f1f;
+    --blue-bg:  #e3ecfb; --blue-fg:  #1d3f8f;
+    --muted-bg: #f1efe8; --muted-fg: #5f5e5a;
+    --page:     #ffffff; --line: #e5e3db;
+    --ink:      #26251f; --code-bg: #26251f; --code-fg: #f1efe8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --green-bg: #173404; --green-fg: #c0dd97;
+      --amber-bg: #412402; --amber-fg: #fac775;
+      --red-bg:   #501313; --red-fg:   #f7c1c1;
+      --blue-bg:  #132a52; --blue-fg:  #a9c6f5;
+      --muted-bg: #2c2c2a; --muted-fg: #b4b2a9;
+      --page:     #191917; --line: #35352f;
+      --ink:      #eceae2; --code-bg: #101010; --code-fg: #d8d6cc;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; padding: 22px 16px 60px; max-width: 760px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--page); color: var(--ink); line-height: 1.6;
+  }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .sub { margin: 0 0 18px; font-size: 14px; color: var(--muted-fg); }
+  .sub a { color: var(--blue-fg); }
+
+  .progress { position: sticky; top: 0; z-index: 5; background: var(--page); padding: 10px 0 12px; }
+  .bar { height: 8px; border-radius: 999px; background: var(--muted-bg); overflow: hidden; }
+  .bar > div { height: 100%; width: 0; border-radius: 999px; background: var(--green-fg); transition: width .25s; }
+  .progress p { margin: 6px 0 0; font-size: 12px; color: var(--muted-fg); }
+  .progress button { float: right; border: 0; background: none; color: var(--muted-fg); font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0; }
+
+  .phase { border: 1px solid var(--line); border-radius: 12px; margin: 14px 0; overflow: hidden; }
+  .phase > summary {
+    list-style: none; cursor: pointer; padding: 13px 16px;
+    display: flex; align-items: center; gap: 11px; user-select: none;
+  }
+  .phase > summary::-webkit-details-marker { display: none; }
+  .num {
+    flex: none; width: 30px; height: 30px; border-radius: 999px;
+    background: var(--muted-bg); color: var(--muted-fg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .phase.done .num { background: var(--green-bg); color: var(--green-fg); }
+  .phase.done .num::before { content: "✓"; }
+  .phase.done .num span { display: none; }
+  .ph-title { font-size: 16px; font-weight: 600; flex: 1; }
+  .ph-count { font-size: 12px; color: var(--muted-fg); }
+  .ph-body { padding: 2px 16px 16px 57px; font-size: 14px; }
+  @media (max-width: 540px) { .ph-body { padding-left: 16px; } }
+
+  label.step { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; cursor: pointer; }
+  label.step input { flex: none; width: 17px; height: 17px; margin-top: 3px; accent-color: var(--green-fg); }
+  label.step.checked { color: var(--muted-fg); }
+  label.step.checked .t { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+  .check {
+    border-radius: 10px; background: var(--blue-bg); color: var(--blue-fg);
+    padding: 10px 14px; margin: 12px 0 4px; font-size: 13.5px;
+  }
+  .check::before { content: "Check before moving on — "; font-weight: 700; }
+  .note { border-radius: 10px; background: var(--amber-bg); color: var(--amber-fg); padding: 10px 14px; margin: 10px 0; font-size: 13.5px; }
+
+  pre {
+    position: relative; background: var(--code-bg); color: var(--code-fg);
+    border-radius: 10px; padding: 12px 14px; font-size: 12.5px; line-height: 1.55;
+    overflow-x: auto; margin: 10px 0;
+  }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  p code, li code, td code, label code {
+    background: var(--muted-bg); border-radius: 5px; padding: 1px 5px; font-size: 12.5px;
+  }
+  .copy {
+    position: absolute; top: 8px; right: 8px; border: 0; border-radius: 7px;
+    background: rgba(127,127,127,.25); color: inherit; font-size: 11px;
+    padding: 3px 9px; cursor: pointer;
+  }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 10px 0; }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted-fg); }
+  .wrap-table { overflow-x: auto; }
+  a { color: var(--blue-fg); }
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+</style>
+</head>
+<body>
+
+<h1>WhatsApp setup guide</h1>
+<p class="sub">
+  From nothing to duty reminders on the board's phones. Work top to bottom — each phase
+  ends with a check; don't move on until it passes. Ticks save on this device.
+  Reference: <a href="https://github.com/KingsleySham/MathAns/blob/main/api/whatsapp/README.md">README</a> ·
+  <a href="https://github.com/KingsleySham/MathAns/blob/main/PREFECT_HUB.md">project brief</a> ·
+  <a href="/prefects/status/update">roster editor</a>
+</p>
+
+<div class="progress">
+  <div class="bar"><div id="fill"></div></div>
+  <p><span id="count">0 of 0</span> steps done <button id="reset" type="button">reset all</button></p>
+</div>
+
+<details class="phase" open id="p0">
+  <summary><span class="num"><span>0</span></span><span class="ph-title">What you already have</span><span class="ph-count"></span></summary>
+  <div class="ph-body">
+    <label class="step"><input type="checkbox" data-k="p0-vercel"><span class="t">The MathAns Vercel project deploying to mathans.app, with <code>REDIS_URL</code> and <code>PREFECT_ADMIN_SECRET</code> already set (the status page uses both)</span></label>
+    <label class="step"><input type="checkbox" data-k="p0-roster"><span class="t">The duty roster maintained at <a href="/prefects/status/update">/prefects/status/update</a></span></label>
+    <label class="step"><input type="checkbox" data-k="p0-merged"><span class="t">The WhatsApp branch merged and deployed to production — crons and the webhook rewrite only exist on the production deployment</span></label>
+  </div>
+</details>
+
+<details class="phase" id="p1">
+  <summary><span class="num"><span>1</span></span><span class="ph-title">Meta accounts and the app</span><span class="ph-count"></span></summary>
+  <div class="ph-body">
+    <p>Three nested things: a Facebook account → a Meta Business portfolio → a developer app with WhatsApp attached.</p>
+    <label class="step"><input type="checkbox" data-k="p1-dev"><span class="t">Sign in at <a href="https://developers.facebook.com">developers.facebook.com</a> and register as a developer if asked</span></label>
+    <label class="step"><input type="checkbox" data-k="p1-app"><span class="t"><b>Create App</b> → use case “Other” → type <b>Business</b> → name it e.g. <code>Prefect Hub</code>. Create a Business portfolio if prompted (no company verification needed at our scale)</span></label>
+    <label class="step"><input type="checkbox" data-k="p1-wa"><span class="t">On the app dashboard: <b>WhatsApp → Set up</b>. This gives you a free <b>test number</b></span></label>
+    <label class="step"><input type="checkbox" data-k="p1-ids"><span class="t">In <b>WhatsApp → API Setup</b>, copy the <b>Phone number ID</b> (the long ID, not the phone number) and the <b>temporary access token</b> (lasts ~24h; replaced in phase 7)</span></label>
+    <label class="step"><input type="checkbox" data-k="p1-recip"><span class="t">Add recipient numbers under <b>To</b> (OTP each). The test number allows max <b>5 verified numbers</b> — you, the VHP if that's not you, and the pilot trio</span></label>
+    <div class="check">use API Setup's “Send message” to send yourself the hello_world template — it arrives on your phone.</div>
+  </div>
+</details>
+
+<details class="phase" id="p2">
+  <summary><span class="num"><span>2</span></span><span class="ph-title">Environment variables in Vercel</span><span class="ph-count"></span></summary>
+  <div class="ph-body">
+    <p>Vercel → MathAns → <b>Settings → Environment Variables</b>, scope <b>Production</b>.</p>
+    <div class="wrap-table"><table>
+      <tr><th>Add</th><th>Value</th></tr>
+      <tr><td><code>WHATSAPP_TOKEN</code></td><td>the temporary token from phase 1</td></tr>
+      <tr><td><code>PHONE_NUMBER_ID</code></td><td>from phase 1</td></tr>
+      <tr><td><code>WHATSAPP_VERIFY_TOKEN</code></td><td>invent a random string (<code>openssl rand -hex 16</code>)</td></tr>
+      <tr><td><code>META_APP_SECRET</code></td><td>app dashboard → App settings → Basic → App secret</td></tr>
+      <tr><td><code>VHP_PHONE</code></td><td>VHP's number, digits only with country code, e.g. <code>85291234567</code></td></tr>
+      <tr><td><code>CRON_SECRET</code></td><td>another random string — Vercel attaches it to cron requests automatically</td></tr>
+    </table></div>
+    <p>Leave the template-name variables alone — the defaults match phase 5.</p>
+    <label class="step"><input type="checkbox" data-k="p2-set"><span class="t">All six set</span></label>
+    <label class="step"><input type="checkbox" data-k="p2-deploy"><span class="t"><b>Redeploy</b> — env changes don't apply to the running deployment</span></label>
+    <div class="check"><code>curl https://mathans.app/api/whatsapp/remind</code> returns <code>{"error":"Unauthorized"}</code> — the route is alive and locked.</div>
+  </div>
+</details>
+
+<details class="phase" id="p3">
+  <summary><span class="num"><span>3</span></span><span class="ph-title">Connect the webhook</span><span class="ph-count"></span></summary>
+  <div class="ph-body">
+    <label class="step"><input type="checkbox" data-k="p3-cfg"><span class="t">App dashboard → <b>WhatsApp → Configuration → Webhook → Edit</b>: Callback URL <code>https://mathans.app/whatsapp/prefects</code>, Verify token = your exact <code>WHATSAPP_VERIFY_TOKEN</code></span></label>
+    <label class="step"><input type="checkbox" data-k="p3-verify"><span class="t"><b>Verify and save</b> succeeds (if not: token mismatch, or the deploy hasn't finished)</span></label>
+    <label class="step"><input type="checkbox" data-k="p3-sub"><span class="t">Under Webhook fields, subscribe to <b>messages</b> — only that one</span></label>
+    <div class="check">text the test number from a verified phone; Vercel → Logs shows a 200 POST on <code>/api/whatsapp/webhook</code>. No reply is expected — free text is ignored unless a reason is pending.</div>
+  </div>
+</details>
+
+<details class="phase" id="p4">
+  <summary><span class="num"><span>4</span></span><span class="ph-title">Load contacts and roster</span><span class="ph-count"></span></summary>
+  <div class="ph-body">
+    <label class="step"><input type="checkbox" data-k="p4-contacts"><span class="t">Load the opt-in contact list — start with just the pilot people; <code>name</code> must match the roster name exactly</span></label>
+<pre><button class="copy" type="button">copy</button><code>curl -X POST https://mathans.app/api/whatsapp/contacts \
+  -H "Content-Type: application/json" -H "x-admin-secret: YOUR_ADMIN_SECRET" \
+  -d '{ "contacts": [
+    { "name": "Kingsley", "phone": "+85291234567", "role": "prefect", "optIn": true },
+    { "name": "Marcus",   "phone": "+85298765432", "role": "reserve", "optIn": true } ] }'</code></pre>
+    <label class="step"><input type="checkbox" data-k="p4-roster"><span class="t">On <a href="/prefects/status/update">the roster editor</a>, give tomorrow (or your test day) a duty entry with those names, a location (<code>Front Gate</code>) and a time (<code>7:45am</code>)</span></label>
+    <div class="check">GET the same URL with the admin header — your list comes back with phones normalised to digits.</div>
+  </div>
+</details>
+
+<details class="phase" id="p5">
+  <summary><span class="num"><span>5</span></span><span class="ph-title">Create the four templates</span><span class="ph-count"></span></summary>
+  <div class="ph-body">
+    <p>WhatsApp Manager → <b>Message templates → Create template</b>. Category <b>Utility</b>, language <b>English (en)</b>, names and bodies exactly as in the
+    <a href="https://github.com/KingsleySham/MathAns/blob/main/api/whatsapp/README.md">README</a>:</p>
+    <label class="step"><input type="checkbox" data-k="p5-t1"><span class="t"><code>prefect_duty_reminder</code> — buttons <i>I'll be there</i>, <i>I can't make it</i> <b>in that order</b></span></label>
+    <label class="step"><input type="checkbox" data-k="p5-t2"><span class="t"><code>prefect_duty_reminder_weather</code> — same, plus the <code>{{5}}</code> weather line</span></label>
+    <label class="step"><input type="checkbox" data-k="p5-t3"><span class="t"><code>prefect_cover_request</code> — button <i>I can cover it</i></span></label>
+    <label class="step"><input type="checkbox" data-k="p5-t4"><span class="t"><code>prefect_notice</code> — single <code>{{1}}</code> body, no buttons</span></label>
+    <label class="step"><input type="checkbox" data-k="p5-approved"><span class="t">All four show <b>Approved</b> (minutes to ~24h; Meta emails you)</span></label>
+    <div class="note">Rejected? Make the sample values look like a real message and resubmit — never change the variable order. The three hand-sent notice templates in <code>notice-templates.md</code> can wait; nothing in code depends on them.</div>
+  </div>
+</details>
+
+<details class="phase" id="p6">
+  <summary><span class="num"><span>6</span></span><span class="ph-title">Dry-run the whole flow</span><span class="ph-count"></span></summary>
+  <div class="ph-body">
+    <p>One sitting, playing both roles, on the test number.</p>
+    <label class="step"><input type="checkbox" data-k="p6-send"><span class="t">Trigger tomorrow's reminders by hand — the JSON response lists each name and <code>ok</code>, or why it was skipped (<code>no contact on file</code> = roster/contact name mismatch)</span></label>
+<pre><button class="copy" type="button">copy</button><code>curl -H "x-admin-secret: YOUR_ADMIN_SECRET" \
+  "https://mathans.app/api/whatsapp/remind?date=2026-08-03"</code></pre>
+    <label class="step"><input type="checkbox" data-k="p6-arrive"><span class="t">The reminder lands on the pilot phones with both buttons</span></label>
+    <label class="step"><input type="checkbox" data-k="p6-yes"><span class="t">Someone taps <i>I'll be there</i> → “Thanks — see you at the gate.”</span></label>
+    <label class="step"><input type="checkbox" data-k="p6-no"><span class="t">Someone taps <i>I can't make it</i> → reason question → reply → “Noted” — and the VHP phone gets the private relay, plus the short alert if the slot dropped below two</span></label>
+    <label class="step"><input type="checkbox" data-k="p6-cover"><span class="t">VHP replies <code>COVER</code> → reserve gets the cover template → taps accept → VHP gets “Slot filled”</span></label>
+    <label class="step"><input type="checkbox" data-k="p6-help"><span class="t">VHP sends any other text → command help comes back (proves <code>VHP_PHONE</code> matches)</span></label>
+    <label class="step"><input type="checkbox" data-k="p6-morning"><span class="t">Run the morning check by hand — on a clear day it returns <code>{"held":false,"reason":"no suspending signal in force"}</code>, which is correct. The full hold/<code>CANCEL</code> flow only fires on a real Red/Black/No. 8 morning, and it messages the VHP only</span></label>
+<pre><button class="copy" type="button">copy</button><code>curl -H "x-admin-secret: YOUR_ADMIN_SECRET" \
+  "https://mathans.app/api/whatsapp/morning"</code></pre>
+  </div>
+</details>
+
+<details class="phase" id="p7">
+  <summary><span class="num"><span>7</span></span><span class="ph-title">Go permanent</span><span class="ph-count"></span></summary>
+  <div class="ph-body">
+    <p>The temporary token dies daily — swap it before trusting the crons.</p>
+    <label class="step"><input type="checkbox" data-k="p7-sysuser"><span class="t">business.facebook.com → <b>Business settings → Users → System users</b> → Add → name <code>prefect-hub</code>, role <b>Admin</b></span></label>
+    <label class="step"><input type="checkbox" data-k="p7-asset"><span class="t"><b>Add assets</b> → Apps → your app → full control</span></label>
+    <label class="step"><input type="checkbox" data-k="p7-token"><span class="t"><b>Generate new token</b> → expiry <b>never</b> → permissions <code>whatsapp_business_messaging</code> + <code>whatsapp_business_management</code></span></label>
+    <label class="step"><input type="checkbox" data-k="p7-swap"><span class="t">Replace <code>WHATSAPP_TOKEN</code> in Vercel, redeploy, re-run the phase-6 reminder curl</span></label>
+    <div class="note"><b>Real number, when ready to leave the 5-recipient test cage:</b> the number must not be registered on the WhatsApp app — on that phone: Settings → Account → <i>Delete account</i> (“free the number”), wait a few minutes, then <b>API Setup → Add phone number</b>, verify by SMS, and update <code>PHONE_NUMBER_ID</code> in Vercel — the ID changes with the number. Tier 0 allows 250 unique recipients per rolling 24h; the whole board fits.</div>
+  </div>
+</details>
+
+<details class="phase" id="p8">
+  <summary><span class="num"><span>8</span></span><span class="ph-title">Pilot, then the board</span><span class="ph-count"></span></summary>
+  <div class="ph-body">
+    <label class="step"><input type="checkbox" data-k="p8-cron"><span class="t">Confirm the crons fired on their own (Vercel → Logs): <code>remind</code> at 12:00–13:00 UTC (20:00–21:00 HK), <code>morning</code> at 22:00–23:00 UTC. No duty tomorrow = a quiet <code>"no duty scheduled"</code> — correct</span></label>
+    <label class="step"><input type="checkbox" data-k="p8-pilot"><span class="t">Pilot: three prefects, one week, real duties. Collect wording complaints now — template edits need re-approval</span></label>
+    <label class="step"><input type="checkbox" data-k="p8-optin"><span class="t">Meanwhile collect the rest of the board's numbers <b>with explicit opt-in</b> (a form: roster name, number, “I agree to receive duty reminders on WhatsApp”). Only then POST them with <code>"optIn": true</code></span></label>
+    <label class="step"><input type="checkbox" data-k="p8-scale"><span class="t">Scale the contact list to the full board. Done 🎉</span></label>
+  </div>
+</details>
+
+<details class="phase" id="p9">
+  <summary><span class="num"><span>?</span></span><span class="ph-title">When something misbehaves</span><span class="ph-count"></span></summary>
+  <div class="ph-body">
+    <div class="wrap-table"><table>
+      <tr><th>Symptom</th><th>Look at</th></tr>
+      <tr><td>Webhook verify fails</td><td><code>WHATSAPP_VERIFY_TOKEN</code> mismatch, or deploy not finished</td></tr>
+      <tr><td>Every POST from Meta gets 403</td><td><code>META_APP_SECRET</code> wrong — recopy from App settings → Basic</td></tr>
+      <tr><td><code>no contact on file</code></td><td>contact name ≠ roster name (exact, case-insensitive)</td></tr>
+      <tr><td><code>not opted in</code></td><td>contact saved without <code>"optIn": true</code></td></tr>
+      <tr><td>Template error 132001</td><td>template name/language mismatch — envs must equal the <i>approved</i> name and <code>en</code></td></tr>
+      <tr><td>Send error 131030</td><td>recipient isn't one of the test number's 5 verified numbers</td></tr>
+      <tr><td>VHP gets nothing</td><td><code>VHP_PHONE</code> digits ≠ the VHP's wa_id — check a webhook log for the real <code>from</code></td></tr>
+      <tr><td>VHP alerts fail with 131047</td><td>VHP's 24h window closed and <code>prefect_notice</code> isn't approved yet</td></tr>
+      <tr><td>Crons never fire</td><td>not deployed to production, or <code>CRON_SECRET</code> unset so the route 401s Vercel's own call</td></tr>
+      <tr><td>Everything silent</td><td>Vercel Logs first, then Meta → WhatsApp → webhook delivery attempts</td></tr>
+    </table></div>
+  </div>
+</details>
+
+<script>
+(function () {
+  const KEY = 'prefectSetupChecks';
+  let state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch {}
+
+  const boxes = Array.from(document.querySelectorAll('label.step input'));
+  const fill = document.getElementById('fill');
+  const count = document.getElementById('count');
+
+  function paint() {
+    let done = 0;
+    boxes.forEach((b) => {
+      b.checked = Boolean(state[b.dataset.k]);
+      b.closest('label').classList.toggle('checked', b.checked);
+      if (b.checked) done += 1;
+    });
+    fill.style.width = boxes.length ? (100 * done / boxes.length) + '%' : '0';
+    count.textContent = done + ' of ' + boxes.length;
+
+    document.querySelectorAll('details.phase').forEach((ph) => {
+      const own = Array.from(ph.querySelectorAll('input'));
+      const ownDone = own.filter((b) => b.checked).length;
+      ph.querySelector('.ph-count').textContent = own.length ? ownDone + '/' + own.length : '';
+      ph.classList.toggle('done', own.length > 0 && ownDone === own.length);
+    });
+  }
+
+  boxes.forEach((b) => b.addEventListener('change', () => {
+    state[b.dataset.k] = b.checked;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+    paint();
+  }));
+
+  document.getElementById('reset').addEventListener('click', () => {
+    if (!confirm('Clear all ticks on this device?')) return;
+    state = {};
+    try { localStorage.removeItem(KEY); } catch {}
+    paint();
+  });
+
+  document.querySelectorAll('.copy').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const code = btn.parentElement.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = 'copied';
+        setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+      });
+    });
+  });
+
+  // Open the first phase that still has unticked steps.
+  const firstOpen = Array.from(document.querySelectorAll('details.phase'))
+    .find((ph) => Array.from(ph.querySelectorAll('input')).some((b) => !state[b.dataset.k]));
+  if (firstOpen) firstOpen.open = true;
+
+  paint();
+})();
+</script>
+
+</body>
+</html>

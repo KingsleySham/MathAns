@@ -31,6 +31,8 @@
     { "source": "/prefects/status/test/", "destination": "/prefects/status/test.html" },
     { "source": "/prefects/status/update",  "destination": "/prefects/status/update.html" },
     { "source": "/prefects/status/update/", "destination": "/prefects/status/update.html" },
+    { "source": "/prefects/setup",  "destination": "/prefects/setup.html" },
+    { "source": "/prefects/setup/", "destination": "/prefects/setup.html" },
     { "source": "/admin",        "destination": "/finals/admin.html" },
     { "source": "/admin/",       "destination": "/finals/admin.html" },
     { "source": "/3062470030624770",   "destination": "/3062470030624770/index.html" },

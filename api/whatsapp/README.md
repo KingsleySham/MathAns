@@ -9,6 +9,10 @@ Plain Vercel serverless functions, same style as the rest of `/api`
 (the webhook alone uses the Web `Request`/`Response` signature — signature
 verification needs the raw request body).
 
+**Setting this up for the first time?** Follow the step-by-step guide:
+[ONBOARDING.md](ONBOARDING.md), or the interactive checklist version at
+[mathans.app/prefects/setup](https://mathans.app/prefects/setup).
+
 ## Endpoints
 
 | Path | Purpose |
