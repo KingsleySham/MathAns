@@ -1,90 +1,96 @@
-// WhatsApp Cloud API webhook.
+// WhatsApp Cloud API webhook — the Meta callback URL is
+// https://mathans.app/whatsapp/prefects (rewritten here by vercel.json).
 //
-//   GET  /api/whatsapp/webhook  – verification handshake (Meta dashboard)
-//   POST /api/whatsapp/webhook  – incoming messages & button replies
+//   GET   – verification handshake (Meta dashboard "Verify and save")
+//   POST  – incoming messages: reminder buttons, absence reasons, VHP commands
 //
-// Flow:
-//   • "attend" button  -> reply "Thank you {name}, see you there!"
-//   • "absent" button  -> reply "Please reply with your reason for absence."
-//   • plain text after an "absent" tap -> stored as the absence reason
+// Uses the Web Request/Response handler signature (unlike the rest of /api)
+// because X-Hub-Signature-256 must be computed over the RAW request body —
+// the (req, res) helpers parse JSON before we could hash the exact bytes.
 //
-// Responses are logged to Firestore (pm_responses) best-effort; a storage
-// failure never blocks the user-facing reply.
+// All conversational logic lives in lib/prefect-messenger.js; this file only
+// verifies, parses, and routes.
 
-import { sendText } from '../../lib/whatsapp.js';
-import { recordStatus, recordReason } from '../../lib/store.js';
+import crypto from 'node:crypto';
+import { isVhp, handleButton, handlePrefectText, handleVhpText } from '../../lib/prefect-messenger.js';
 
-export default async function handler(req, res) {
-  // ── GET: verification handshake ─────────────────────────────────────────
-  if (req.method === 'GET') {
-    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-    const mode = url.searchParams.get('hub.mode');
-    const token = url.searchParams.get('hub.verify_token');
-    const challenge = url.searchParams.get('hub.challenge');
-    if (mode === 'subscribe' && token && token === process.env.WHATSAPP_VERIFY_TOKEN) {
-      res.setHeader('Content-Type', 'text/plain');
-      return res.status(200).send(challenge ?? '');
-    }
-    return res.status(403).send('Forbidden');
+export async function GET(request) {
+  const url = new URL(request.url, 'http://localhost');
+  const mode = url.searchParams.get('hub.mode');
+  const token = url.searchParams.get('hub.verify_token');
+  const challenge = url.searchParams.get('hub.challenge');
+  if (mode === 'subscribe' && token && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+    return new Response(challenge ?? '', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+  }
+  return new Response('Forbidden', { status: 403 });
+}
+
+export async function POST(request) {
+  const raw = await request.text();
+
+  // Reject anything Meta didn't sign. META_APP_SECRET unset = pre-launch
+  // grace mode (accept unsigned) so the flow can be tested before the app
+  // secret is configured; set it before the pilot.
+  const secret = process.env.META_APP_SECRET;
+  if (secret && !validSignature(raw, request.headers.get('x-hub-signature-256'), secret)) {
+    return new Response('Invalid signature', { status: 403 });
   }
 
-  if (req.method !== 'POST') return res.status(405).send('Method not allowed');
-
-  // Parse body (Vercel usually gives us an object for application/json).
   let body;
   try {
-    body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    body = JSON.parse(raw);
   } catch {
     body = {};
   }
 
-  // Always ack quickly so Meta doesn't retry; guard all work in try/catch.
+  // Ack fast regardless of outcome so Meta doesn't retry-storm the endpoint.
   try {
-    const value = body?.entry?.[0]?.changes?.[0]?.value;
-    const msg = value?.messages?.[0];
-    if (msg) {
-      const from = msg.from; // sender wa_id (E.164 without '+')
-      const profileName = value?.contacts?.[0]?.profile?.name || '';
-      const action = readButton(msg);
-
-      if (action === 'attend') {
-        const name = profileName.split(' ')[0] || 'there';
-        await sendText(from, `Thank you ${name}, see you there!`);
-        await recordStatus({ phone: from, name: profileName, status: 'attend' })
-          .catch((e) => console.error('store attend failed:', e.message));
-      } else if (action === 'absent') {
-        await sendText(from, 'Please reply with your reason for absence.');
-        await recordStatus({ phone: from, name: profileName, status: 'absent' })
-          .catch((e) => console.error('store absent failed:', e.message));
-      } else if (msg.type === 'text') {
-        const text = (msg.text?.body || '').trim();
-        const stored = await recordReason({ phone: from, text })
-          .catch((e) => { console.error('store reason failed:', e.message); return false; });
-        if (stored) await sendText(from, 'Thank you — your reason has been recorded.');
-      }
-    }
+    await route(body);
   } catch (e) {
     console.error('webhook error:', e);
   }
-
-  return res.status(200).json({ received: true });
+  return Response.json({ received: true });
 }
 
-// Normalise the two button shapes WhatsApp can deliver into 'attend' | 'absent'.
-//   • template quick-reply  -> msg.button.payload / msg.button.text
-//   • interactive button     -> msg.interactive.button_reply.id / .title
-// Matching on substring keeps it robust whether the button is keyed by id
-// ("attend"/"absent") or by visible label ("Attend"/"Absent").
+function validSignature(raw, header, secret) {
+  const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(raw, 'utf8').digest('hex');
+  const got = String(header || '');
+  if (got.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(got), Buffer.from(expected));
+}
+
+async function route(body) {
+  const value = body?.entry?.[0]?.changes?.[0]?.value;
+  const msg = value?.messages?.[0];
+  if (!msg) return; // delivery/read status callbacks — nothing to do
+
+  const from = msg.from; // sender wa_id (E.164 without '+')
+  const profileName = value?.contacts?.[0]?.profile?.name || '';
+
+  const button = readButton(msg);
+  if (button) return handleButton({ from, profileName, ...button });
+
+  if (msg.type === 'text') {
+    const text = (msg.text?.body || '').trim();
+    if (isVhp(from)) return handleVhpText(text);
+    return handlePrefectText({ from, profileName, text });
+  }
+}
+
+// Normalise the two button shapes WhatsApp can deliver.
+//   • template quick-reply -> msg.button.payload / msg.button.text
+//   • interactive button   -> msg.interactive.button_reply.id / .title
+// Payloads are set at send time as "CONFIRM:YYYY-MM-DD" etc.; the label
+// fallback keeps taps working if a template was ever sent without payloads.
 function readButton(msg) {
-  const raw = (
-    msg.button?.payload ||
-    msg.button?.text ||
-    msg.interactive?.button_reply?.id ||
-    msg.interactive?.button_reply?.title ||
-    ''
-  ).toLowerCase();
-  if (!raw) return null;
-  if (raw.includes('attend')) return 'attend';
-  if (raw.includes('absent')) return 'absent';
+  const payload = msg.button?.payload || msg.interactive?.button_reply?.id || '';
+  const m = /^(CONFIRM|DECLINE|COVER):(\d{4}-\d{2}-\d{2})$/.exec(payload);
+  if (m) return { action: m[1].toLowerCase(), date: m[2] };
+
+  const label = (payload || msg.button?.text || msg.interactive?.button_reply?.title || '').toLowerCase();
+  if (!label) return null;
+  if (/cover/.test(label)) return { action: 'cover', date: null };
+  if (/there|attend|confirm|yes/.test(label)) return { action: 'confirm', date: null };
+  if (/can.?t|cannot|absent|decline/.test(label)) return { action: 'decline', date: null };
   return null;
 }

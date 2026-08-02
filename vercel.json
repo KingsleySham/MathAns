@@ -16,7 +16,13 @@
   "redirects": [
     { "has": [{ "type": "host", "value": "finals.mathans.app" }], "source": "/", "destination": "/finals/", "permanent": false }
   ],
+  "crons": [
+    { "path": "/api/whatsapp/remind", "schedule": "0 12 * * *" },
+    { "path": "/api/whatsapp/morning", "schedule": "0 22 * * *" }
+  ],
   "rewrites": [
+    { "source": "/whatsapp/prefects",  "destination": "/api/whatsapp/webhook" },
+    { "source": "/whatsapp/prefects/", "destination": "/api/whatsapp/webhook" },
     { "source": "/api/upload-note", "destination": "/api/notes?op=upload" },
     { "source": "/api/delete-note", "destination": "/api/notes?op=delete" },
     { "source": "/api/zoom/callback", "destination": "/api/zoom?op=callback" },
@@ -25,6 +31,8 @@
     { "source": "/prefects/status/test/", "destination": "/prefects/status/test.html" },
     { "source": "/prefects/status/update",  "destination": "/prefects/status/update.html" },
     { "source": "/prefects/status/update/", "destination": "/prefects/status/update.html" },
+    { "source": "/prefects/setup",  "destination": "/prefects/setup.html" },
+    { "source": "/prefects/setup/", "destination": "/prefects/setup.html" },
     { "source": "/admin",        "destination": "/finals/admin.html" },
     { "source": "/admin/",       "destination": "/finals/admin.html" },
     { "source": "/3062470030624770",   "destination": "/3062470030624770/index.html" },
