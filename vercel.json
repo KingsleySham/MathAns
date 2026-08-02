@@ -23,6 +23,9 @@
   "rewrites": [
     { "source": "/whatsapp/prefects",  "destination": "/api/whatsapp/webhook" },
     { "source": "/whatsapp/prefects/", "destination": "/api/whatsapp/webhook" },
+    { "source": "/api/whatsapp/remind",   "destination": "/api/whatsapp/tasks?op=remind" },
+    { "source": "/api/whatsapp/morning",  "destination": "/api/whatsapp/tasks?op=morning" },
+    { "source": "/api/whatsapp/contacts", "destination": "/api/whatsapp/tasks?op=contacts" },
     { "source": "/api/upload-note", "destination": "/api/notes?op=upload" },
     { "source": "/api/delete-note", "destination": "/api/notes?op=delete" },
     { "source": "/api/zoom/callback", "destination": "/api/zoom?op=callback" },

@@ -19,9 +19,7 @@ verification needs the raw request body).
 | --- | --- |
 | **`https://mathans.app/whatsapp/prefects`** | Meta webhook callback URL (rewritten to `api/whatsapp/webhook.js`) |
 | `api/whatsapp/webhook.js` | GET verify handshake + POST handler (buttons, reasons, VHP commands) |
-| `api/whatsapp/remind.js` | Cron 12:00 UTC (~20:00 HK) — sends tomorrow's reminders |
-| `api/whatsapp/morning.js` | Cron 22:00 UTC (~06:00 HK) — suspension check, asks the VHP only |
-| `api/whatsapp/contacts.js` | Admin route — the opt-in contact list (names, numbers, consent) |
+| `api/whatsapp/tasks.js` | One function, three rewritten routes (Hobby caps deployments at 12 functions): `/api/whatsapp/remind` — cron 12:00 UTC (~20:00 HK), tomorrow's reminders; `/api/whatsapp/morning` — cron 22:00 UTC (~06:00 HK), suspension check that asks the VHP only; `/api/whatsapp/contacts` — admin route for the opt-in contact list |
 | `lib/prefect-messenger.js` | All conversational logic + Redis state |
 | `lib/whatsapp.js` | Cloud API send helpers (`sendText`, `sendTemplate`, `sendTextOrTemplate`) |
 
