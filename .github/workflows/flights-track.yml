@@ -1,0 +1,45 @@
+# Twice-daily fare sweep for the Cathay tracker.
+#
+# This runs from GitHub rather than vercel.json crons because the Vercel
+# Hobby plan allows 2 cron jobs at daily granularity, and both slots are
+# taken by the prefect messenger. On Pro, move this into vercel.json
+# ("crons": { "path": "/api/flights/cron/track", "schedule": "0 1,13 * * *" })
+# and delete this file — Vercel attaches the CRON_SECRET header itself.
+#
+# 01:00 and 13:00 UTC = 09:00 and 21:00 Hong Kong, bracketing the morning
+# and evening fare loads. GitHub cron timing is best-effort (can lag), and
+# the endpoint's own freshness guard makes accidental double-runs free.
+#
+# Requires one repository secret: CRON_SECRET, matching the Vercel env var.
+
+name: flights-track
+on:
+  schedule:
+    - cron: '0 1,13 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Override the freshness guard (?force=1)
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger sweep
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET repository secret is not set" >&2
+            exit 1
+          fi
+          FORCE=""
+          if [ "${{ inputs.force }}" = "true" ]; then FORCE="?force=1"; fi
+          curl --fail-with-body -sS --max-time 300 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "https://www.mathans.app/api/flights/cron/track${FORCE}"
