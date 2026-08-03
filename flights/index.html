@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>CX Status Run — planner &amp; fare tracker</title>
+<meta name="description" content="Cathay status point mileage run planner and fare tracker.">
+<style>
+  :root {
+    --paper: #f7f5f0;
+    --ink: #17201f;
+    --rule: #17201f;
+    --faint: #6b7472;
+    --accent: #006564; /* the one flourish: Cathay's teal, used sparingly */
+    --warn: #8a4b08;
+    --row: #efece4;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0 auto;
+    max-width: 76rem;
+    padding: 1.25rem 1rem 4rem;
+    background: var(--paper);
+    color: var(--ink);
+    font: 14px/1.55 ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .doc-tag {
+    display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    border-top: 3px solid var(--rule); border-bottom: 1px solid var(--rule);
+    padding: .3rem 0; color: var(--faint);
+  }
+  h1 {
+    margin: 1rem 0 .25rem; font-size: 1.35rem; letter-spacing: .04em;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .masthead-sub { color: var(--faint); margin: 0 0 1rem; }
+  .masthead-figure {
+    display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+    border: 1px solid var(--rule); padding: .75rem 1rem; margin: 0 0 1.5rem;
+    background: #fff;
+  }
+  #mastheadPoints { font-size: 3.2rem; font-weight: 700; line-height: 1; color: var(--accent); }
+  .masthead-label { text-transform: uppercase; letter-spacing: .1em; font-size: 11px; color: var(--faint); max-width: 14rem; }
+  .masthead-detail { margin-left: auto; text-align: right; font-size: 12px; color: var(--faint); }
+
+  section { margin: 2.2rem 0; }
+  h2 {
+    font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    border-bottom: 1px solid var(--rule); padding-bottom: .3rem; margin: 0 0 .8rem;
+  }
+  h2 .idx { color: var(--accent); margin-right: .5rem; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: .8rem 1.2rem; }
+  label.field { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
+  label.field > * { display: block; margin-top: .25rem; }
+  input, select, button {
+    font: inherit; color: inherit; background: #fff;
+    border: 1px solid var(--rule); border-radius: 0; padding: .35rem .5rem; max-width: 100%;
+  }
+  input[type="number"] { width: 7.5rem; }
+  input[type="range"] { width: 100%; padding: 0; border: 0; background: transparent; }
+  button { cursor: pointer; background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  button.quiet { background: #fff; color: var(--ink); }
+  fieldset { border: 1px solid var(--rule); padding: .6rem .8rem; margin: 0; }
+  legend { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); padding: 0 .3rem; }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); background: #fff; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: .35rem .55rem; text-align: left; border-bottom: 1px solid #d8d4c8; white-space: nowrap; }
+  th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); border-bottom: 1px solid var(--rule); }
+  td.num, th.num { text-align: right; }
+  tbody tr:nth-child(even) { background: var(--row); }
+  tbody tr.selectable { cursor: pointer; }
+  tbody tr.selected { outline: 2px solid var(--accent); outline-offset: -2px; background: #e3edec; }
+  .t2 { color: var(--accent); font-weight: 700; }
+  .est { color: var(--warn); }
+  .estnote { font-size: 11px; color: var(--warn); margin: .35rem 0 0; }
+  .muted { color: var(--faint); }
+  .statusline { border: 1px dashed var(--rule); padding: .5rem .75rem; background: #fff; }
+  .badge {
+    display: inline-block; border: 1px solid currentColor; font-size: 10px;
+    letter-spacing: .08em; text-transform: uppercase; padding: 0 .3rem; margin-left: .4rem;
+  }
+  .badge.test { color: var(--warn); }
+  .delta { border-left: 3px solid var(--accent); padding: .4rem .75rem; background: #fff; margin-top: .6rem; }
+  .caveats li { margin: .35rem 0; }
+  details summary { cursor: pointer; }
+  .formrow { display: flex; flex-wrap: wrap; gap: .6rem .9rem; align-items: end; margin-top: .7rem; }
+  footer { margin-top: 3rem; border-top: 3px solid var(--rule); padding-top: .4rem; font-size: 11px; color: var(--faint); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    tbody tr.selectable { transition: background .12s ease; }
+  }
+  @media (max-width: 640px) {
+    #mastheadPoints { font-size: 2.2rem; }
+    .masthead-detail { margin-left: 0; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="doc-tag">
+    <span>CX STATUS RUN · OPERATIONS DOCUMENT</span>
+    <span>REV 2026-08 · EARNING TABLE EFF 20 AUG 2025</span>
+  </div>
+  <h1>Cathay status point planner &amp; fare tracker</h1>
+  <p class="masthead-sub">Deterministic earning off Cathay's published table. Fares below are modelled estimates until the tracker replaces them with observed prices.</p>
+  <div class="masthead-figure" aria-live="polite">
+    <span id="mastheadPoints">—</span>
+    <span class="masthead-label">status points still to fly</span>
+    <span class="masthead-detail" id="mastheadDetail"></span>
+  </div>
+</header>
+
+<main>
+
+<section aria-labelledby="h-stand">
+  <h2 id="h-stand"><span class="idx">1</span>Where you stand</h2>
+  <div class="grid">
+    <label class="field">Home airport
+      <select id="homeAirport"></select>
+    </label>
+    <label class="field">Current tier
+      <select id="currentTier">
+        <option value="green">Green</option>
+        <option value="silver">Silver</option>
+        <option value="gold">Gold</option>
+        <option value="diamond">Diamond</option>
+      </select>
+    </label>
+    <label class="field">Points balance
+      <input id="balance" type="number" min="0" step="1" value="0">
+    </label>
+    <label class="field">Target tier
+      <select id="targetTier">
+        <option value="silver">Silver</option>
+        <option value="gold" selected>Gold</option>
+        <option value="diamond">Diamond</option>
+      </select>
+    </label>
+    <fieldset>
+      <legend>Rule set</legend>
+      <label><input type="radio" name="rules" value="2026" checked> 2026 — reaching a tier <strong>resets points to zero</strong></label><br>
+      <label><input type="radio" name="rules" value="2027"> 2027 — no reset; Gold+ roll over up to 50%</label>
+    </fieldset>
+  </div>
+  <p class="muted">Renewals and upgrades also require <strong>at least one eligible Cathay Pacific sector</strong> flown in the membership year, whatever the points say.</p>
+</section>
+
+<section aria-labelledby="h-ladder">
+  <h2 id="h-ladder"><span class="idx">2</span>The ladder</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Rung</th><th class="num">Threshold</th><th class="num">Points to fly (selected rules)</th><th>Note</th></tr></thead>
+      <tbody id="ladderBody"></tbody>
+    </table>
+  </div>
+  <div class="delta" id="ladderDelta"></div>
+</section>
+
+<section aria-labelledby="h-controls">
+  <h2 id="h-controls"><span class="idx">3</span>Controls</h2>
+  <div class="grid">
+    <label class="field" style="grid-column: span 2;">Ranking weight — <span id="weightLabel"></span>
+      <input id="weight" type="range" min="0" max="100" value="50"
+             aria-label="Ranking weight between cheapest per point and fewest hours">
+    </label>
+    <fieldset style="grid-column: 1 / -1;">
+      <legend>Fare options in the ranking</legend>
+      <div id="optionToggles" class="formrow" style="margin-top:.2rem;"></div>
+    </fieldset>
+  </div>
+  <details style="margin-top: .8rem;">
+    <summary>Fare assumptions (editable) — <span class="est">estimates, not prices</span></summary>
+    <div class="tablewrap" style="margin-top:.5rem;">
+      <table>
+        <thead><tr><th>Option</th><th>Classes</th><th>Brand</th><th class="num">Base HK$/sector</th><th class="num">HK$ per mile</th></tr></thead>
+        <tbody id="fareAssumptions"></tbody>
+      </table>
+    </div>
+    <p class="estnote">Modelled as base + rate × miles per sector. The ranking between adjacent options sits within these estimates' margin of error — treat close calls as ties until tracked fares replace them.</p>
+  </details>
+</section>
+
+<section aria-labelledby="h-tracked">
+  <h2 id="h-tracked"><span class="idx">4</span>Tracked fares</h2>
+  <p class="statusline" id="trackedStatus">Checking the tracker…</p>
+  <div class="tablewrap" id="trackedWrap" hidden>
+    <table>
+      <thead><tr>
+        <th>Route</th><th>Window</th><th>Cabin</th><th>Filter</th>
+        <th class="num">Latest</th><th class="num">Low</th><th class="num">Median</th>
+        <th class="num">Pts</th><th class="num">HK$/pt</th><th class="num">Obs</th>
+        <th>Checked</th><th></th>
+      </tr></thead>
+      <tbody id="trackedBody"></tbody>
+    </table>
+  </div>
+  <details style="margin-top:.7rem;">
+    <summary>Add a watch</summary>
+    <form id="watchForm" class="formrow">
+      <label class="field">Origin <input name="origin" size="4" maxlength="3" value="HKG" required pattern="[A-Za-z]{3}"></label>
+      <label class="field">Dest <input name="destination" size="4" maxlength="3" required pattern="[A-Za-z]{3}"></label>
+      <label class="field">From <input name="depart_from" type="date" required></label>
+      <label class="field">To <input name="depart_to" type="date" required></label>
+      <label class="field">Return after (days) <input name="trip_days" type="number" min="1" max="60" placeholder="one-way"></label>
+      <label class="field">Cabin
+        <select name="cabin">
+          <option>ECONOMY</option><option>PREMIUM_ECONOMY</option><option>BUSINESS</option><option>FIRST</option>
+        </select>
+      </label>
+      <label class="field">Airlines only <input name="airlines_only" size="8" value="CX" placeholder="CX,JL"></label>
+      <label class="field">Max HK$ <input name="max_price" type="number" min="1" placeholder="—"></label>
+      <label class="field">Target HK$/pt <input name="target_cpp" type="number" min="1" step="0.5" placeholder="—"></label>
+      <button type="submit">Add watch</button>
+      <button type="button" class="quiet" id="refreshTracked">Refresh</button>
+    </form>
+  </details>
+</section>
+
+<section aria-labelledby="h-runs">
+  <h2 id="h-runs"><span class="idx">5</span>Ranked runs <span class="muted">— return trips from <span id="runsHome">HKG</span>, CX-marketed, select a row to plan</span></h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th class="num">#</th><th>Route</th><th>City</th><th>Zone</th>
+        <th>Option</th><th>Classes</th><th>Brand</th>
+        <th class="num">Pts/run</th><th class="num">Est fare</th><th class="num">HK$/pt</th>
+        <th class="num">Hrs</th><th class="num">Trips</th>
+      </tr></thead>
+      <tbody id="runsBody"></tbody>
+    </table>
+  </div>
+  <p class="estnote">Fares are modelled estimates (§3), not offers. Zone T2 sectors (Japan, Indonesia, Sri Lanka, Nepal, Bangladesh, India) out-earn same-distance T1 — which is why Japan keeps floating to the top from Hong Kong.</p>
+</section>
+
+<section aria-labelledby="h-plan">
+  <h2 id="h-plan"><span class="idx">6</span>The plan</h2>
+  <div class="statusline" id="planBody">Select a run above.</div>
+</section>
+
+<section aria-labelledby="h-caveats">
+  <h2 id="h-caveats"><span class="idx">7</span>Caveats</h2>
+  <ul class="caveats">
+    <li><strong>Cathay Pacific–marketed flights only.</strong> Partner-marketed sectors earn on a different chart this tool does not model — it shows them as unknown, never a guessed number.</li>
+    <li><strong>One eligible CX sector minimum</strong> in the membership year for any upgrade or renewal to count.</li>
+    <li><strong>All fares in the planner are estimates</strong> until the tracker's observed prices replace them. Tracked quotes from the Amadeus <em>test</em> environment are cached, non-live fares and are badged as such.</li>
+    <li>Booking class and fare brand matter far more than cabin — the same ultra-short Economy seat earns 25 points in Y-Flex and 3 in Q-Light.</li>
+    <li>Where a tracked quote's fare brand is unknown, its points figure is an <strong>upper bound</strong> (assumes Flex) and is shown with a ≤ sign.</li>
+    <li>Points accrue per sector; this build prices nonstop returns only. Connecting routings (e.g. HKG–KHH–TPE–HKG) earn more and are deliberately out of scope for now.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  CX STATUS RUN · not affiliated with Cathay Pacific · earning table per Cathay's published chart for departures on/after 20 Aug 2025
+</footer>
+
+<script type="module">
+import {
+  AIRPORTS, TIER_ORDER, TIER_THRESHOLDS, ZONE_LABELS,
+  greatCircleMiles, ladderSteps, pointsNeeded, statusPoints, zoneForSector,
+} from '/lib/flights/status-points.js';
+
+// Bookable option presets — one per published earning row group. base/rate
+// are the editable fare model: HK$ per sector = base + rate × miles.
+// Placeholders, clearly labelled as estimates throughout the UI.
+const FARE_OPTIONS = [
+  { key: 'eco_light',  label: 'Economy Light',       classes: ['S','N','Q','O'], fareType: 'light',     base: 450,   rate: 0.55 },
+  { key: 'eco_ess',    label: 'Economy Essential',   classes: ['M','L','V'],     fareType: 'essential', base: 650,   rate: 0.70 },
+  { key: 'eco_flex',   label: 'Economy Flex',        classes: ['Y','B','H','K'], fareType: 'flex',      base: 1200,  rate: 1.10 },
+  { key: 'pe_ess',     label: 'Prem Econ Essential', classes: ['E'],             fareType: 'essential', base: 1500,  rate: 1.30 },
+  { key: 'pe_flex',    label: 'Prem Econ Flex',      classes: ['W','R'],         fareType: 'flex',      base: 2600,  rate: 1.80 },
+  { key: 'biz_ess',    label: 'Business Ess/Light',  classes: ['D','P','I'],     fareType: 'essential', base: 4200,  rate: 2.80 },
+  { key: 'biz_flex',   label: 'Business Flex',       classes: ['J','C'],         fareType: 'flex',      base: 7500,  rate: 4.20 },
+  { key: 'first_flex', label: 'First Flex',          classes: ['F','A'],         fareType: 'flex',      base: 13000, rate: 6.50 },
+];
+
+// React-style single state object, plain JS. No browser storage anywhere.
+const state = {
+  home: 'HKG',
+  currentTier: 'green',
+  balance: 0,
+  targetTier: 'gold',
+  reset2026: true,
+  weight: 0.5, // 0 = fewest hours, 1 = cheapest per point
+  enabled: new Set(FARE_OPTIONS.map(o => o.key)),
+  fares: Object.fromEntries(FARE_OPTIONS.map(o => [o.key, { base: o.base, rate: o.rate }])),
+  selectedRun: null,
+};
+
+const $ = (id) => document.getElementById(id);
+const fmt = new Intl.NumberFormat('en-HK');
+const hk$ = (n) => 'HK$' + fmt.format(Math.round(n));
+
+// --- Section 1: where you stand -------------------------------------------
+
+const homeSel = $('homeAirport');
+for (const [iata, a] of Object.entries(AIRPORTS)) {
+  const opt = document.createElement('option');
+  opt.value = iata;
+  opt.textContent = `${iata} — ${a.city}`;
+  if (iata === 'HKG') opt.selected = true;
+  homeSel.appendChild(opt);
+}
+
+homeSel.addEventListener('change', () => { state.home = homeSel.value; render(); });
+$('currentTier').addEventListener('change', (e) => {
+  state.currentTier = e.target.value;
+  const ti = TIER_ORDER.indexOf(state.currentTier);
+  const target = $('targetTier');
+  if (TIER_ORDER.indexOf(target.value) <= ti && state.currentTier !== 'diamond') {
+    target.value = TIER_ORDER[ti + 1];
+    state.targetTier = target.value;
+  }
+  render();
+});
+$('balance').addEventListener('input', (e) => { state.balance = Math.max(0, Number(e.target.value) || 0); render(); });
+$('targetTier').addEventListener('change', (e) => { state.targetTier = e.target.value; render(); });
+for (const r of document.querySelectorAll('input[name="rules"]')) {
+  r.addEventListener('change', () => { state.reset2026 = r.value === '2026'; render(); });
+}
+
+// --- Section 3: controls ---------------------------------------------------
+
+$('weight').addEventListener('input', (e) => { state.weight = Number(e.target.value) / 100; render(); });
+
+const toggles = $('optionToggles');
+for (const o of FARE_OPTIONS) {
+  const label = document.createElement('label');
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = true;
+  cb.addEventListener('change', () => {
+    cb.checked ? state.enabled.add(o.key) : state.enabled.delete(o.key);
+    render();
+  });
+  label.appendChild(cb);
+  label.append(` ${o.label}`);
+  toggles.appendChild(label);
+}
+
+const assumptions = $('fareAssumptions');
+for (const o of FARE_OPTIONS) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${o.label}</td><td>${o.classes.join('/')}</td><td>${o.fareType}</td>`;
+  for (const field of ['base', 'rate']) {
+    const td = document.createElement('td');
+    td.className = 'num';
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.step = field === 'rate' ? '0.05' : '50';
+    input.value = state.fares[o.key][field];
+    input.setAttribute('aria-label', `${o.label} ${field}`);
+    input.addEventListener('input', () => {
+      state.fares[o.key][field] = Number(input.value) || 0;
+      render();
+    });
+    td.appendChild(input);
+    tr.appendChild(td);
+  }
+  assumptions.appendChild(tr);
+}
+
+// --- Planner computation ---------------------------------------------------
+
+function candidateRuns() {
+  const home = AIRPORTS[state.home];
+  const runs = [];
+  for (const [iata, dest] of Object.entries(AIRPORTS)) {
+    if (iata === state.home) continue;
+    const miles = greatCircleMiles(home, dest);
+    const zone = zoneForSector(miles, home.country, dest.country);
+    if (!zone) continue;
+    for (const o of FARE_OPTIONS) {
+      if (!state.enabled.has(o.key)) continue;
+      const perSector = statusPoints({
+        marketingCarrier: 'CX', bookingClass: o.classes[0], fareType: o.fareType, zone,
+      });
+      if (perSector == null) continue;
+      const { base, rate } = state.fares[o.key];
+      const fare = 2 * (base + rate * miles);          // return trip, estimate
+      const points = 2 * perSector;                     // two sectors
+      const hours = 2 * (miles / 500 + 0.75);           // block time estimate
+      runs.push({
+        iata, city: dest.city, zone, option: o,
+        miles: Math.round(miles), points, fare,
+        cpp: fare / points, hours, hpp: hours / points,
+      });
+    }
+  }
+  if (!runs.length) return runs;
+  const min = (k) => Math.min(...runs.map(r => r[k]));
+  const max = (k) => Math.max(...runs.map(r => r[k]));
+  const norm = (v, lo, hi) => hi > lo ? (v - lo) / (hi - lo) : 0;
+  const [cLo, cHi, hLo, hHi] = [min('cpp'), max('cpp'), min('hpp'), max('hpp')];
+  for (const r of runs) {
+    r.score = state.weight * norm(r.cpp, cLo, cHi) + (1 - state.weight) * norm(r.hpp, hLo, hHi);
+  }
+  runs.sort((a, b) => a.score - b.score);
+  return runs;
+}
+
+// --- Render ----------------------------------------------------------------
+
+const MAX_ROWS = 40;
+
+function render() {
+  const need = pointsNeeded(state.currentTier, state.targetTier, state.balance, state.reset2026) ?? 0;
+  $('mastheadPoints').textContent = fmt.format(need);
+  $('mastheadDetail').innerHTML =
+    `${cap(state.currentTier)} (${fmt.format(state.balance)} pts) → ${cap(state.targetTier)}<br>` +
+    `${state.reset2026 ? '2026 rules — balance resets at each tier' : '2027 rules — no reset'}`;
+
+  const w = Math.round(state.weight * 100);
+  $('weightLabel').textContent = `${w}% cheapest per point · ${100 - w}% fewest hours`;
+
+  renderLadder();
+  renderRuns(need);
+  renderPlan(need);
+  $('runsHome').textContent = state.home;
+}
+
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function renderLadder() {
+  const body = $('ladderBody');
+  body.replaceChildren();
+  const steps = ladderSteps(state.currentTier, state.targetTier, state.balance, state.reset2026);
+  if (!steps.length) {
+    body.innerHTML = '<tr><td colspan="4" class="muted">Target tier is not above the current tier.</td></tr>';
+  }
+  for (const s of steps) {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td>${cap(s.tier)}</td>` +
+      `<td class="num">${fmt.format(s.threshold)}</td>` +
+      `<td class="num"><strong>${fmt.format(s.pointsToFly)}</strong></td>` +
+      `<td class="muted">${state.reset2026
+        ? (s.startingBalance ? `starts from ${fmt.format(s.startingBalance)}, then balance resets to 0 on arrival` : 'balance resets to 0 on arrival')
+        : 'balance rolls forward'}</td>`;
+    body.appendChild(tr);
+  }
+  const n2026 = pointsNeeded(state.currentTier, state.targetTier, state.balance, true) ?? 0;
+  const n2027 = pointsNeeded(state.currentTier, state.targetTier, state.balance, false) ?? 0;
+  $('ladderDelta').innerHTML =
+    `This climb costs <strong>${fmt.format(n2026)} pts under 2026 rules</strong> vs ` +
+    `<strong>${fmt.format(n2027)} pts under 2027 rules</strong>` +
+    (n2026 > n2027
+      ? ` — the transition-year reset penalty is <strong class="t2">${fmt.format(n2026 - n2027)} pts</strong>. If the timing is yours to choose, that is the number to weigh.`
+      : '.');
+}
+
+function renderRuns(need) {
+  const body = $('runsBody');
+  body.replaceChildren();
+  const runs = candidateRuns();
+  runs.slice(0, MAX_ROWS).forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'selectable';
+    tr.tabIndex = 0;
+    tr.setAttribute('role', 'button');
+    const key = `${r.iata}|${r.option.key}`;
+    if (state.selectedRun === key) tr.classList.add('selected');
+    const trips = need > 0 ? Math.ceil(need / r.points) : 0;
+    tr.innerHTML =
+      `<td class="num">${i + 1}</td>` +
+      `<td>${state.home}–${r.iata}–${state.home}</td>` +
+      `<td>${r.city}</td>` +
+      `<td>${ZONE_LABELS[r.zone]}${r.zone === 'short_t2' ? ' <span class="t2">T2</span>' : ''}</td>` +
+      `<td>${r.option.label}</td>` +
+      `<td>${r.option.classes.join('/')}</td>` +
+      `<td>${r.option.fareType}</td>` +
+      `<td class="num">${r.points}</td>` +
+      `<td class="num est">~${hk$(r.fare)}</td>` +
+      `<td class="num est">~${fmt.format(Math.round(r.cpp))}</td>` +
+      `<td class="num">${r.hours.toFixed(1)}</td>` +
+      `<td class="num">${trips || '—'}</td>`;
+    const select = () => { state.selectedRun = key; render(); };
+    tr.addEventListener('click', select);
+    tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); } });
+    body.appendChild(tr);
+  });
+  if (runs.length > MAX_ROWS) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="12" class="muted">Showing the top ${MAX_ROWS} of ${runs.length} candidate runs.</td>`;
+    body.appendChild(tr);
+  }
+  if (!runs.length) {
+    body.innerHTML = '<tr><td colspan="12" class="muted">No options enabled — tick at least one fare option in §3.</td></tr>';
+  }
+}
+
+function renderPlan(need) {
+  const el = $('planBody');
+  if (!state.selectedRun) { el.textContent = 'Select a run above.'; return; }
+  const [iata, optKey] = state.selectedRun.split('|');
+  const run = candidateRuns().find(r => r.iata === iata && r.option.key === optKey);
+  if (!run) { el.textContent = 'Selected run is filtered out — re-enable its fare option in §3.'; state.selectedRun = null; return; }
+  if (need <= 0) {
+    el.innerHTML = 'Nothing left to fly for this target — but remember the <strong>one eligible CX sector</strong> requirement still applies to renewals.';
+    return;
+  }
+  const trips = Math.ceil(need / run.points);
+  const totalPts = trips * run.points;
+  el.innerHTML =
+    `<strong>${trips}× ${state.home}–${run.iata}–${state.home}</strong> on ${run.option.label} (${run.option.classes.join('/')}, ${run.option.fareType})<br>` +
+    `Earns <strong>${fmt.format(totalPts)} pts</strong> against the ${fmt.format(need)} needed (overshoot ${fmt.format(totalPts - need)}) · ` +
+    `<span class="est">~${hk$(trips * run.fare)} total at ~HK$${fmt.format(Math.round(run.cpp))}/pt — estimate</span> · ` +
+    `≈${Math.round(trips * run.hours)} h in the air · ` +
+    `${ZONE_LABELS[run.zone]} zone at ${fmt.format(run.miles)} mi/sector.`;
+}
+
+// --- Section 4: tracked fares ---------------------------------------------
+
+// Served under /flights/api/* so the basic-auth credentials the browser
+// cached for this page apply. Degrades gracefully at every step: the
+// planner never depends on it.
+const API = '/flights/api/watches';
+
+async function loadTracked() {
+  const status = $('trackedStatus');
+  const wrap = $('trackedWrap');
+  status.textContent = 'Checking the tracker…';
+  let data;
+  try {
+    const res = await fetch(API, { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    wrap.hidden = true;
+    status.innerHTML = `Couldn't reach the tracker API (${err.message}). The planner above works without it.`;
+    return;
+  }
+  if (!data.dbConfigured) {
+    wrap.hidden = true;
+    status.innerHTML = 'Tracker database isn\'t wired up yet (<code>DATABASE_URL</code> unset). The planner above works without it.';
+    return;
+  }
+  if (!data.watches.length) {
+    wrap.hidden = true;
+    status.textContent = 'No routes watched yet.';
+    return;
+  }
+  status.textContent = `${data.watches.length} route${data.watches.length === 1 ? '' : 's'} watched. Quotes land at 09:00 & 21:00 HK.`;
+  const body = $('trackedBody');
+  body.replaceChildren();
+  for (const w of data.watches) {
+    const tr = document.createElement('tr');
+    if (!w.active) tr.style.opacity = '.5';
+    const pts = w.latest_points == null ? '—'
+      : `${w.latest_points_upper_bound ? '≤' : ''}${w.latest_points}`;
+    const envBadge = w.latest_environment === 'test' ? ' <span class="badge test" title="Amadeus test env: cached, non-live fares">test</span>' : '';
+    tr.innerHTML =
+      `<td>${w.origin}–${w.destination}${w.trip_days ? ` <span class="muted">rt+${w.trip_days}d</span>` : ''}</td>` +
+      `<td>${w.depart_from?.slice(0, 10)} → ${w.depart_to?.slice(0, 10)}</td>` +
+      `<td>${w.cabin}</td>` +
+      `<td>${w.airlines_only?.length ? w.airlines_only.join(',') : (w.exclude_lcc ? 'no LCC' : 'any')}</td>` +
+      `<td class="num">${w.latest_price != null ? hk$(w.latest_price) + envBadge : '—'}</td>` +
+      `<td class="num">${w.all_time_low != null ? hk$(w.all_time_low) : '—'}</td>` +
+      `<td class="num">${w.median_price != null ? hk$(w.median_price) : '—'}</td>` +
+      `<td class="num" title="status points for the latest best offer; ≤ means fare brand unknown, points assume Flex (upper bound)">${pts}</td>` +
+      `<td class="num">${w.best_cpp != null ? fmt.format(Math.round(w.best_cpp)) : '—'}</td>` +
+      `<td class="num">${w.observations ?? 0}</td>` +
+      `<td class="muted">${w.last_checked ? new Date(w.last_checked).toLocaleString('en-HK', { hour12: false }) : 'never'}</td>`;
+    const td = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.className = 'quiet';
+    btn.textContent = w.active ? 'pause' : 'resume';
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      try {
+        await fetch(API, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: w.id, active: !w.active }),
+        });
+      } finally {
+        loadTracked();
+      }
+    });
+    td.appendChild(btn);
+    tr.appendChild(td);
+    body.appendChild(tr);
+  }
+  wrap.hidden = false;
+}
+
+$('refreshTracked').addEventListener('click', loadTracked);
+
+$('watchForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const val = (k) => { const v = f.get(k); return v === '' ? null : v; };
+  const payload = {
+    origin: f.get('origin').toUpperCase(),
+    destination: f.get('destination').toUpperCase(),
+    depart_from: f.get('depart_from'),
+    depart_to: f.get('depart_to'),
+    trip_days: val('trip_days') ? Number(val('trip_days')) : null,
+    cabin: f.get('cabin'),
+    airlines_only: val('airlines_only') ? f.get('airlines_only').toUpperCase().split(',').map(s => s.trim()).filter(Boolean) : null,
+    exclude_lcc: true,
+    max_price: val('max_price') ? Number(val('max_price')) : null,
+    target_cpp: val('target_cpp') ? Number(val('target_cpp')) : null,
+  };
+  const status = $('trackedStatus');
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    e.target.reset();
+    e.target.querySelector('[name="origin"]').value = state.home;
+    e.target.querySelector('[name="airlines_only"]').value = 'CX';
+    loadTracked();
+  } catch (err) {
+    status.textContent = `Couldn't add watch: ${err.message}`;
+  }
+});
+
+// --- boot ------------------------------------------------------------------
+render();
+loadTracked();
+</script>
+</body>
+</html>
