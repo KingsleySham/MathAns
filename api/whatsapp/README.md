@@ -177,7 +177,8 @@ Everything above is also driveable from
 [`/prefects/status/update`](https://www.mathans.app/prefects/status/update)
 (same admin passcode): a live **duty replies** view (tally + per-prefect
 status, including private absence reasons), a **send a notice** box (whole
-board or one day's team — Utility-category content only), **resend
+board or one day's team, always delivered via the `prefect_notice`
+template — Utility-category content only), **resend
 reminders** for any date, **run the weather check now**, and the **send
 cancellation** button, which is the same VHP approval as texting CANCEL and
 only works while a suspension is held.
