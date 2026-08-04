@@ -19,7 +19,7 @@ verification needs the raw request body).
 | --- | --- |
 | **`https://www.mathans.app/whatsapp/prefects`** | Meta webhook callback URL (rewritten to `api/whatsapp/webhook.js`) |
 | `api/whatsapp/webhook.js` | GET verify handshake + POST handler (buttons, reasons, VHP commands) |
-| `api/whatsapp/tasks.js` | One function, three rewritten routes (Hobby caps deployments at 12 functions): `/api/whatsapp/remind` — cron 12:00 UTC (~20:00 HK), tomorrow's reminders; `/api/whatsapp/morning` — cron 22:00 UTC (~06:00 HK), suspension check (asks the VHP only) + morning weather update; `/api/whatsapp/contacts` — admin route for the opt-in contact list |
+| `api/whatsapp/tasks.js` | One function, three rewritten routes (Hobby caps deployments at 12 functions): `/api/whatsapp/remind` — cron 12:00 UTC (~20:00 HK), tomorrow's reminders; `/api/whatsapp/morning` — cron 22:00 UTC (~06:00 HK), suspension check (asks the VHP only) + morning weather update; `/api/whatsapp/contacts` — admin route for the opt-in contact list; plus admin-page ops `?op=replies` (who confirmed/declined + suspension state), `?op=notice` (one-off notice to board or a day's team), `?op=cancel` (approve a held suspension) |
 | `lib/prefect-messenger.js` | All conversational logic + Redis state |
 | `lib/whatsapp.js` | Cloud API send helpers (`sendText`, `sendTemplate`, `sendTextOrTemplate`) |
 
@@ -40,7 +40,11 @@ stale by morning. Instead, the morning cron (06:00–07:00 HK) sends the
 force, to today's team minus anyone who declined. Clear mornings send
 nothing.
 
-**VHP** — quiet by design; only speaks when something needs attention:
+**VHP** — gets a WhatsApp ping for **every reply** (their request), as a
+one-liner with a running tally: "Kingsley confirmed for Mon 22 June
+(2 in · 0 out · 1 waiting)." The coverage alerts below carry the same news,
+so a reply that triggers one doesn't also send the generic ping. Beyond
+that:
 
 - Coverage alert when confirmed replies drop below the two-prefect minimum
   ("Mon 22 June — one prefect short. Only 1 confirmed, minimum is two. …").
@@ -166,6 +170,17 @@ curl -X POST https://www.mathans.app/api/whatsapp/contacts \
 (`/prefects/status/update`) — that's how a roster row finds its number.
 (`role` is stored but currently unused — the reserve-list cover flow was
 dropped; cover is arranged in the group chat.)
+
+## The admin page
+
+Everything above is also driveable from
+[`/prefects/status/update`](https://www.mathans.app/prefects/status/update)
+(same admin passcode): a live **duty replies** view (tally + per-prefect
+status, including private absence reasons), a **send a notice** box (whole
+board or one day's team — Utility-category content only), **resend
+reminders** for any date, **run the weather check now**, and the **send
+cancellation** button, which is the same VHP approval as texting CANCEL and
+only works while a suspension is held.
 
 ## Manual runs / testing
 
