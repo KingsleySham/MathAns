@@ -84,6 +84,54 @@
 <button type="button" class="primary" id="save">Save</button>
 <p id="status"></p>
 
+<h1 style="margin-top:34px">WhatsApp</h1>
+<p class="sub">
+  These act on real phones immediately — every button asks before sending.
+  Uses the same admin passcode entered above.
+</p>
+
+<fieldset>
+  <legend>Duty replies</legend>
+  <div class="row">
+    <div><label>Duty date</label><input type="date" id="repliesDate"></div>
+    <div class="remove"><button type="button" id="repliesRefresh">Refresh</button></div>
+  </div>
+  <div id="repliesOut" style="font-size:13.5px"></div>
+  <p id="repliesStatus" class="hint" style="margin:6px 0 0"></p>
+</fieldset>
+
+<fieldset>
+  <legend>Send a notice</legend>
+  <p class="hint">Operational notices only (schedule changes, procedures) — social messages belong in the group chat. Delivered as plain text where possible, otherwise via the approved notice template.</p>
+  <div class="row"><div><textarea id="noticeText" rows="3" maxlength="900" placeholder="Duty on Thu 25 June moves to 7:30am for the fire drill."></textarea></div></div>
+  <div class="row">
+    <div><label>Send to</label>
+      <select id="noticeAudience">
+        <option value="board">Whole board (all opted-in contacts)</option>
+        <option value="duty">One day's duty team</option>
+      </select>
+    </div>
+    <div><label>Duty date (team only)</label><input type="date" id="noticeDate"></div>
+  </div>
+  <button type="button" class="primary" id="noticeSend">Send notice</button>
+  <p id="noticeStatus" class="hint" style="margin:8px 0 0"></p>
+</fieldset>
+
+<fieldset>
+  <legend>Reminders &amp; suspension</legend>
+  <div class="row">
+    <div><label>Resend duty reminders for</label><input type="date" id="resendDate"></div>
+    <div class="remove"><button type="button" id="resendBtn">Send reminders</button></div>
+  </div>
+  <p class="hint">Same send as the nightly cron — safe to re-run; prefects just get the reminder again.</p>
+  <div class="row" style="margin-top:6px">
+    <div><button type="button" id="morningBtn">Run weather check now</button></div>
+    <div><button type="button" class="remove" id="cancelBtn">Send cancellation (CANCEL)</button></div>
+  </div>
+  <p class="hint">The weather check latches a suspension and messages the VHP only. The cancellation button is the same approval as texting CANCEL — it messages today's team and only works while a suspension is held.</p>
+  <p id="opsStatus" class="hint" style="margin:8px 0 0"></p>
+</fieldset>
+
 <script type="module">
 const SECRET_KEY = 'prefectStatusAdminSecret';
 
@@ -204,6 +252,164 @@ document.getElementById('save').onclick = async () => {
 };
 
 load();
+
+// ── WhatsApp admin section ──────────────────────────────────────────────────
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function needSecret(el) {
+  const secret = secretInput.value.trim();
+  if (!secret) {
+    el.textContent = 'Enter the admin passcode first.';
+    el.className = 'hint';
+    el.style.color = 'var(--danger)';
+  } else {
+    el.style.color = '';
+  }
+  return secret;
+}
+
+function say(el, msg, isErr) {
+  el.textContent = msg;
+  el.style.color = isErr ? 'var(--danger)' : 'var(--ok)';
+}
+
+const hkToday = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+const hkTomorrow = () => new Date(Date.now() + 32 * 3600 * 1000).toISOString().slice(0, 10);
+
+const repliesDate = document.getElementById('repliesDate');
+const repliesOut = document.getElementById('repliesOut');
+const repliesStatus = document.getElementById('repliesStatus');
+repliesDate.value = hkTomorrow();
+
+async function refreshReplies() {
+  const secret = needSecret(repliesStatus);
+  if (!secret) return;
+  repliesStatus.textContent = 'Loading…';
+  repliesStatus.style.color = '';
+  try {
+    const res = await fetch(`/api/whatsapp/tasks?op=replies&date=${repliesDate.value}`, {
+      headers: { 'x-admin-secret': secret }, cache: 'no-store',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    if (!data.hasDuty) {
+      repliesOut.innerHTML = '<p class="hint" style="margin:0">No duty on the roster for this date.</p>';
+    } else {
+      const icon = { confirmed: '✅', out: '❌', 'no reply': '⏳' };
+      repliesOut.innerHTML =
+        `<p style="margin:0 0 6px"><b>${data.tally.confirmed} in · ${data.tally.out} out · ${data.tally.waiting} waiting</b>` +
+        (data.location ? ` — ${esc(data.location)}${data.time ? ', ' + esc(data.time) : ''}` : '') + '</p>' +
+        data.rows.map((r) =>
+          `<p style="margin:2px 0">${icon[r.status] || ''} ${esc(r.name)} — ${esc(r.status)}` +
+          (r.reason ? ` <span style="color:var(--muted)">(${esc(r.reason)})</span>` : '') + '</p>'
+        ).join('');
+    }
+    const s = data.suspension;
+    const susLine = s.notified ? 'suspension sent to the board'
+      : s.held ? `⚠️ suspension HELD (${s.labels.join(', ')}) — waiting for CANCEL`
+      : s.latched ? '⚠️ whole-day suspension latched'
+      : 'no suspension today';
+    repliesStatus.textContent = `Today: ${susLine}.`;
+    repliesStatus.style.color = (s.held && !s.notified) ? 'var(--danger)' : '';
+    localStorage.setItem(SECRET_KEY, secret);
+  } catch (e) {
+    say(repliesStatus, 'Failed: ' + e.message, true);
+  }
+}
+document.getElementById('repliesRefresh').onclick = refreshReplies;
+
+const noticeStatus = document.getElementById('noticeStatus');
+document.getElementById('noticeSend').onclick = async () => {
+  const secret = needSecret(noticeStatus);
+  if (!secret) return;
+  const text = document.getElementById('noticeText').value.trim();
+  const audience = document.getElementById('noticeAudience').value;
+  const date = document.getElementById('noticeDate').value;
+  if (!text) return say(noticeStatus, 'Write the notice first.', true);
+  if (audience === 'duty' && !date) return say(noticeStatus, 'Pick the duty date for a team notice.', true);
+  const who = audience === 'board' ? 'the WHOLE board' : `the ${date} duty team`;
+  if (!confirm(`Send this notice to ${who}?\n\n${text}`)) return;
+
+  say(noticeStatus, 'Sending…');
+  noticeStatus.style.color = '';
+  try {
+    const res = await fetch('/api/whatsapp/tasks?op=notice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
+      body: JSON.stringify({ text, audience, ...(audience === 'duty' ? { date } : {}) }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    const failed = (data.results || []).filter((r) => !r.ok);
+    say(noticeStatus, `Sent to ${data.sent} of ${data.results.length} (${data.scope}).` +
+      (failed.length ? ' Failed: ' + failed.map((f) => f.name).join(', ') : ''), failed.length > 0);
+  } catch (e) {
+    say(noticeStatus, 'Failed: ' + e.message, true);
+  }
+};
+
+const opsStatus = document.getElementById('opsStatus');
+const resendDate = document.getElementById('resendDate');
+resendDate.value = hkTomorrow();
+
+document.getElementById('resendBtn').onclick = async () => {
+  const secret = needSecret(opsStatus);
+  if (!secret) return;
+  if (!resendDate.value) return say(opsStatus, 'Pick a date first.', true);
+  if (!confirm(`Send duty reminders for ${resendDate.value} now?`)) return;
+  say(opsStatus, 'Sending…');
+  opsStatus.style.color = '';
+  try {
+    const res = await fetch(`/api/whatsapp/remind?date=${resendDate.value}`, { headers: { 'x-admin-secret': secret } });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    if (data.note) return say(opsStatus, `${data.note} for ${data.date}.`, true);
+    const failed = (data.results || []).filter((r) => !r.ok);
+    say(opsStatus, `Reminders sent to ${data.sent} of ${data.results.length}.` +
+      (failed.length ? ' Skipped/failed: ' + failed.map((f) => `${f.name} (${f.error})`).join('; ') : ''), failed.length > 0);
+  } catch (e) {
+    say(opsStatus, 'Failed: ' + e.message, true);
+  }
+};
+
+document.getElementById('morningBtn').onclick = async () => {
+  const secret = needSecret(opsStatus);
+  if (!secret) return;
+  say(opsStatus, 'Checking…');
+  opsStatus.style.color = '';
+  try {
+    const res = await fetch('/api/whatsapp/morning', { headers: { 'x-admin-secret': secret } });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    if (data.held) say(opsStatus, data.already ? 'Suspension already held — check WhatsApp for the CANCEL prompt.' : `Suspension held (${(data.labels || []).join(', ')}) — VHP messaged, reply CANCEL or use the button.`, true);
+    else if (data.weatherUpdate) say(opsStatus, `Weather update sent to ${data.weatherUpdate.sent} prefects.`);
+    else say(opsStatus, `Nothing to do — ${data.reason}.`);
+  } catch (e) {
+    say(opsStatus, 'Failed: ' + e.message, true);
+  }
+};
+
+document.getElementById('cancelBtn').onclick = async () => {
+  const secret = needSecret(opsStatus);
+  if (!secret) return;
+  if (!confirm("Approve the held suspension and tell today's team duty is CANCELLED?")) return;
+  say(opsStatus, 'Sending cancellation…');
+  opsStatus.style.color = '';
+  try {
+    const res = await fetch('/api/whatsapp/tasks?op=cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
+      body: '{}',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    say(opsStatus, `Cancellation sent to ${data.sent} prefects.`);
+  } catch (e) {
+    say(opsStatus, 'Failed: ' + e.message, true);
+  }
+};
 </script>
 
 </body>

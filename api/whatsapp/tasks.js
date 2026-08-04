@@ -14,6 +14,13 @@
 //                                   the "today" weather reminder
 //   GET/POST /api/whatsapp/contacts -> ?op=contacts  opt-in contact list
 //
+// Admin-page ops (called directly as /api/whatsapp/tasks?op=..., used by
+// /prefects/status/update — all x-admin-secret only):
+//   GET  ?op=replies&date=YYYY-MM-DD  who confirmed/declined/hasn't replied
+//                                     + today's suspension state
+//   POST ?op=notice   {text, audience: 'board'|'duty', date?}  one-off notice
+//   POST ?op=cancel   approve a held suspension (same as texting CANCEL)
+//
 // Auth: remind/morning accept Vercel's cron header (`Authorization: Bearer
 // ${CRON_SECRET}`, attached automatically once CRON_SECRET is set) or
 // x-admin-secret for manual runs. contacts is x-admin-secret only — it's
@@ -23,6 +30,7 @@
 import {
   sendReminders, morningCheck,
   getContacts, setContacts, sanitizeContacts, MAX_CONTACTS,
+  sendNotice, getReplies, approveCancel,
 } from '../../lib/prefect-messenger.js';
 
 function adminOk(req, body) {
@@ -83,6 +91,44 @@ export default async function handler(req, res) {
     const ok = await setContacts(contacts);
     if (!ok) return res.status(502).json({ error: 'Could not save to Redis' });
     return res.status(200).json({ ok: true, contacts });
+  }
+
+  if (op === 'replies' || op === 'notice' || op === 'cancel') {
+    let body = {};
+    if (req.method === 'POST') {
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      } catch {
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
+    }
+    if (!adminOk(req, body)) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+      if (op === 'replies') {
+        if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+        const date = url.searchParams.get('date') || undefined;
+        if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          return res.status(400).json({ error: 'date must be YYYY-MM-DD' });
+        }
+        return res.status(200).json(await getReplies(date));
+      }
+
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      if (op === 'notice') {
+        if (body.date && !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
+          return res.status(400).json({ error: 'date must be YYYY-MM-DD' });
+        }
+        const out = await sendNotice(body);
+        return res.status(out.ok ? 200 : 400).json(out);
+      }
+      // op === 'cancel'
+      const out = await approveCancel({ viaWeb: true });
+      return res.status(out.ok ? 200 : 409).json(out);
+    } catch (e) {
+      console.error(`${op} failed:`, e);
+      return res.status(500).json({ error: String(e.message || e) });
+    }
   }
 
   return res.status(404).json({ error: 'Unknown op' });
