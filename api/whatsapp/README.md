@@ -156,7 +156,10 @@ text can be reworded in Meta without touching code.
 ## Contacts and consent
 
 Every recipient must have opted in — consent is stored alongside the number
-and anyone with `optIn: false` is skipped by every send path:
+and anyone with `optIn: false` is skipped by every send path. Easiest way
+to manage the list is the contacts editor on
+[`/prefects/status/update`](https://www.mathans.app/prefects/status/update);
+the equivalent curl:
 
 ```bash
 curl -X POST https://www.mathans.app/api/whatsapp/contacts \
@@ -175,7 +178,8 @@ dropped; cover is arranged in the group chat.)
 
 Everything above is also driveable from
 [`/prefects/status/update`](https://www.mathans.app/prefects/status/update)
-(same admin passcode): a live **duty replies** view (tally + per-prefect
+(same admin passcode): a **contacts editor** (add/remove prefects, opt-in
+ticks — the UI version of the curl below), a live **duty replies** view (tally + per-prefect
 status, including private absence reasons), a **send a notice** box (whole
 board or one day's team, always delivered via the `prefect_notice`
 template — Utility-category content only), **resend

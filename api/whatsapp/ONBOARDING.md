@@ -90,8 +90,10 @@ from a prefect is deliberately ignored unless a reason is pending.)
 
 ## Phase 4 — load contacts and roster
 
-1. [ ] Load the opt-in contact list (start with just the pilot people;
-       `name` must match the names you type into the duty roster exactly):
+1. [ ] Load the opt-in contact list — easiest via the **contacts editor**
+       on `/prefects/status/update` (WhatsApp section); start with just the
+       pilot people, and `name` must match the names you type into the duty
+       roster exactly. The curl equivalent:
 
 ```bash
 curl -X POST https://www.mathans.app/api/whatsapp/contacts \
