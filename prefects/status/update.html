@@ -101,6 +101,22 @@
 </fieldset>
 
 <fieldset>
+  <legend>Contacts (who the bot can message)</legend>
+  <p class="hint">
+    The opt-in list behind reminders and notices. <b>Name must match the roster exactly</b> — that's how a duty row
+    finds the number. Phone needs the country code (e.g. +85291234567). Only tick “opted in” once the prefect has
+    actually agreed to receive WhatsApp reminders; unticked contacts are never messaged. Saving replaces the whole list.
+  </p>
+  <div id="contactRows"></div>
+  <button type="button" class="add" id="addContact">+ Add prefect</button>
+  <div style="margin-top:10px">
+    <button type="button" id="contactsReload">Reload</button>
+    <button type="button" class="primary" id="contactsSave">Save contacts</button>
+  </div>
+  <p id="contactsStatus" class="hint" style="margin:8px 0 0"></p>
+</fieldset>
+
+<fieldset>
   <legend>Send a notice</legend>
   <p class="hint">Operational notices only (schedule changes, procedures) — social messages belong in the group chat. Always delivered via the approved <b>prefect_notice</b> template (⚠️ bold body, Prefect Team footer).</p>
   <div class="row"><div><textarea id="noticeText" rows="3" maxlength="900" placeholder="Duty on Thu 25 June moves to 7:30am for the fire drill."></textarea></div></div>
@@ -319,6 +335,84 @@ async function refreshReplies() {
   }
 }
 document.getElementById('repliesRefresh').onclick = refreshReplies;
+
+// ── contacts editor ─────────────────────────────────────────────────────────
+
+const contactRows = document.getElementById('contactRows');
+const contactsStatus = document.getElementById('contactsStatus');
+let contactsLoaded = false;
+
+function contactRow(c) {
+  c = c || {};
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `
+    <div><label>Name (as on the roster)</label><input type="text" class="c-name" maxlength="80"></div>
+    <div><label>Phone (with country code)</label><input type="text" class="c-phone" placeholder="+85291234567"></div>
+    <div style="flex:none"><label>Opted in</label><input type="checkbox" class="c-optin" style="width:17px;height:17px;margin-top:8px"></div>
+    <button type="button" class="remove">Remove</button>
+  `;
+  row.querySelector('.c-name').value = c.name || '';
+  row.querySelector('.c-phone').value = c.phone ? '+' + c.phone : '';
+  row.querySelector('.c-optin').checked = c.optIn !== false && Boolean(c.name);
+  row.querySelector('.remove').onclick = () => row.remove();
+  return row;
+}
+
+document.getElementById('addContact').onclick = () => contactRows.appendChild(contactRow());
+
+async function loadContacts() {
+  const secret = needSecret(contactsStatus);
+  if (!secret) return;
+  contactsStatus.textContent = 'Loading…';
+  contactsStatus.style.color = '';
+  try {
+    const res = await fetch('/api/whatsapp/contacts', { headers: { 'x-admin-secret': secret }, cache: 'no-store' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    contactRows.innerHTML = '';
+    (data.contacts || []).forEach((c) => contactRows.appendChild(contactRow(c)));
+    if (!(data.contacts || []).length) contactRows.appendChild(contactRow());
+    contactsLoaded = true;
+    say(contactsStatus, `${(data.contacts || []).length} contacts loaded.`);
+    localStorage.setItem(SECRET_KEY, secret);
+  } catch (e) {
+    say(contactsStatus, 'Load failed: ' + e.message, true);
+  }
+}
+document.getElementById('contactsReload').onclick = loadContacts;
+
+document.getElementById('contactsSave').onclick = async () => {
+  const secret = needSecret(contactsStatus);
+  if (!secret) return;
+  if (!contactsLoaded && !confirm('Contacts were never loaded — saving now replaces whatever is stored with just the rows below. Continue?')) return;
+  const contacts = [...contactRows.querySelectorAll('.row')].map((row) => ({
+    name: row.querySelector('.c-name').value.trim(),
+    phone: row.querySelector('.c-phone').value.trim(),
+    optIn: row.querySelector('.c-optin').checked,
+  })).filter((c) => c.name && c.phone);
+  if (!confirm(`Save ${contacts.length} contacts? This replaces the stored list.`)) return;
+  say(contactsStatus, 'Saving…');
+  contactsStatus.style.color = '';
+  try {
+    const res = await fetch('/api/whatsapp/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
+      body: JSON.stringify({ contacts }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    contactRows.innerHTML = '';
+    data.contacts.forEach((c) => contactRows.appendChild(contactRow(c)));
+    contactsLoaded = true;
+    say(contactsStatus, `Saved — ${data.contacts.length} contacts on file.`);
+  } catch (e) {
+    say(contactsStatus, 'Save failed: ' + e.message, true);
+  }
+};
+
+// Pre-fill automatically when the passcode is already remembered on this device.
+if (secretInput.value.trim()) loadContacts();
 
 const noticeStatus = document.getElementById('noticeStatus');
 document.getElementById('noticeSend').onclick = async () => {
