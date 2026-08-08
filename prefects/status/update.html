@@ -355,6 +355,7 @@ function contactRow(c) {
   row.querySelector('.c-name').value = c.name || '';
   row.querySelector('.c-phone').value = c.phone ? '+' + c.phone : '';
   row.querySelector('.c-optin').checked = c.optIn !== false && Boolean(c.name);
+  row.dataset.userId = c.userId || ''; // learned WhatsApp BSUID — preserved invisibly across saves
   row.querySelector('.remove').onclick = () => row.remove();
   return row;
 }
@@ -390,6 +391,7 @@ document.getElementById('contactsSave').onclick = async () => {
     name: row.querySelector('.c-name').value.trim(),
     phone: row.querySelector('.c-phone').value.trim(),
     optIn: row.querySelector('.c-optin').checked,
+    userId: row.dataset.userId || '',
   })).filter((c) => c.name && c.phone);
   if (!confirm(`Save ${contacts.length} contacts? This replaces the stored list.`)) return;
   say(contactsStatus, 'Saving…');

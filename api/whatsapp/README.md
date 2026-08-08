@@ -145,6 +145,27 @@ The webhook reads button payloads (`CONFIRM:2026-06-22`, `DECLINE:…`) set
 at send time, and falls back to matching the visible label, so the button
 text can be reworded in Meta without touching code.
 
+## Usernames & BSUIDs (Meta's 2026 rollout)
+
+WhatsApp is rolling out usernames: a prefect who adopts one may have **no
+phone number in webhooks** — only a business-scoped user ID (BSUID, e.g.
+`HK.13491208655302741918`). The system is ready for this:
+
+- Whenever a webhook carries both a phone number and a BSUID, the BSUID is
+  learned onto the matching contact (stored as `userId`, preserved
+  invisibly by the contacts editor). Phone-less webhooks then resolve
+  through it, and replies are addressed to the BSUID via the API's
+  `recipient` field.
+- The VHP's BSUID is learned the same way (`prefect:vhp-bsuid`), so the
+  CANCEL/command channel survives the VHP adopting a username.
+- Duty state stays keyed by phone number whenever the contact is known, so
+  a prefect's reply history never splits across identifiers.
+- Outbound reminders still target stored phone numbers, which remain fully
+  supported. The main residual risk is a prefect who adopts a username
+  **before** the system has ever seen them message in — their first
+  phone-less webhook won't match a contact and is ignored. Fix: have every
+  prefect tap any button or text the bot once, which banks their BSUID.
+
 ## Webhook setup (Meta dashboard)
 
 1. Deploy, then Meta → your app → **WhatsApp → Configuration → Webhook**:
