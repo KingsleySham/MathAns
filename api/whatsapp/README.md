@@ -35,8 +35,9 @@ gets the reminder template with two quick-reply buttons:
   acknowledged with "Noted, thanks for letting me know."
 
 Any other text to the bot — from a prefect or a stranger — gets an
-automated redirect: this line isn't read, contact the enquiries number
-instead. Sent at most once per sender per day.
+automated redirect: "This is a no-reply number. For direct enquiries,
+please contact Kingsley via +852 9257 7822. / Thank you for your kind
+attention." Sent at most once per sender per day.
 
 The evening reminder is deliberately weather-free — an evening forecast is
 stale by morning. Instead, the morning cron (06:00–07:00 HK) sends the

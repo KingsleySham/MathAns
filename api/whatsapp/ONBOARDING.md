@@ -85,7 +85,7 @@ Leave the template-name variables alone; the defaults match Phase 5.
 
 **Check:** send any WhatsApp text *to* the test number from a verified
 phone (not the VHP's). You should get the automated redirect back —
-"…messages here aren't read. For any enquiries, please contact …" —
+"This is a no-reply number. For direct enquiries, please contact Kingsley…" —
 which proves the webhook round-trip. (Once per sender per day; the VHP
 gets command help instead.)
 
