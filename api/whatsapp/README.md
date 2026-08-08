@@ -19,7 +19,7 @@ verification needs the raw request body).
 | --- | --- |
 | **`https://www.mathans.app/whatsapp/prefects`** | Meta webhook callback URL (rewritten to `api/whatsapp/webhook.js`) |
 | `api/whatsapp/webhook.js` | GET verify handshake + POST handler (buttons, reasons, VHP commands) |
-| `api/whatsapp/tasks.js` | One function, three rewritten routes (Hobby caps deployments at 12 functions): `/api/whatsapp/remind` — cron 12:00 UTC (~20:00 HK), tomorrow's reminders; `/api/whatsapp/morning` — cron 22:00 UTC (~06:00 HK), suspension check (asks the VHP only) + morning weather update; `/api/whatsapp/contacts` — admin route for the opt-in contact list; plus admin-page ops `?op=replies` (who confirmed/declined + suspension state), `?op=notice` (one-off notice to board or a day's team), `?op=cancel` (approve a held suspension) |
+| `api/whatsapp/tasks.js` | One function, three rewritten routes (Hobby caps deployments at 12 functions): `/api/whatsapp/remind` — cron 12:00 UTC (~20:00 HK), tomorrow's reminders; `/api/whatsapp/morning` — cron 22:00 UTC (~06:00 HK), suspension check (asks the VHP only) + morning weather update; `/api/whatsapp/contacts` — admin route for the opt-in contact list; plus admin-page ops `?op=replies` (who confirmed/declined + suspension state), `?op=notice` (one-off notice to board or a day's team), `?op=cancel` (approve a held suspension), `?op=intro` (welcome template to not-yet-introduced contacts) |
 | `lib/prefect-messenger.js` | All conversational logic + Redis state |
 | `lib/whatsapp.js` | Cloud API send helpers (`sendText`, `sendTemplate`, `sendTextOrTemplate`) |
 
@@ -86,12 +86,16 @@ that:
 | `WHATSAPP_TEMPLATE_LANG` | `en` (must match the language picked in Meta) |
 | `PREFECT_MIN_ON_DUTY` | `2` — the coverage minimum (do not lower without asking, per the brief) |
 | `PREFECT_ENQUIRY_PHONE` | `+852 9257 7822` — the number the free-text auto-reply points enquiries to |
+| `WHATSAPP_INTRO_TEMPLATE` | `prefect_intro` |
+| `PREFECT_VHP_NAME` | `Kingsley` — fills `{{vhp}}` in the intro |
+| `PREFECT_DUTY_START` / `PREFECT_DUTY_END` | `7:45am` / `8:10am` — fill `{{start}}`/`{{end}}` in the intro |
 
 ## Message templates (create in Meta → WhatsApp Manager, all **Utility**)
 
-All three use Meta's **named variables** ("Type of variable: Name" in the
+All four use Meta's **named variables** ("Type of variable: Name" in the
 builder) — the code sends `parameter_name` values, so the variable names
-below (`name`, `gate`, `time`, `day`, `weather`, `notice`) must match the
+below (`name`, `gate`, `time`, `day`, `weather`, `notice`, `vhp`,
+`start`, `end`) must match the
 approved templates exactly. Wording around them can be adjusted freely
 (each edit goes back through review). Values are collapsed to one line by
 the send helper. The code fills: `name` = the contact's first name,
@@ -130,6 +134,28 @@ Thank you and stay safe 🙏
 ```
 
 Sample for `{{weather}}`: `Thunderstorm Warning is in force. Assembly moves indoors — bring an umbrella.`
+
+**`prefect_intro`** — the one-off welcome, sent from the contacts editor's
+"Send intro" button to each new opted-in contact. No buttons. Body (the
+code fills `name` = first name, `vhp` = `PREFECT_VHP_NAME`, `start`/`end` =
+`PREFECT_DUTY_START`/`PREFECT_DUTY_END`):
+
+```
+Goood Morningggg!
+Hello {{name}} 👋
+I'm {{vhp}}, your vice-head prefect.
+
+☀️ Morning duty starts from {{start}} to {{end}}
+☎️ Prefect reminders and notices will issue via this number.
+❌ DO NOT reply unless prompted.
+✅ WhatsApp me via +852 92577822
+❤️ Remember to answer the reminders sent :)
+
+Thank you for your kind attention.
+Do not reply to this message, text via +852 92577822.
+```
+
+Samples: `Angelia`, `Kingsley`, `7:45am`, `8:10am`.
 
 **`prefect_notice`** — the fallback for VHP alerts and cancellations when
 the recipient's 24-hour window is closed. Footer `Prefect Team`, body:
