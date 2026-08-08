@@ -34,6 +34,10 @@ gets the reminder template with two quick-reply buttons:
   the VHP** ("Angelia is out on Mon 22 June — medical appointment.") and
   acknowledged with "Noted, thanks for letting me know."
 
+Any other text to the bot — from a prefect or a stranger — gets an
+automated redirect: this line isn't read, contact the enquiries number
+instead. Sent at most once per sender per day.
+
 The evening reminder is deliberately weather-free — an evening forecast is
 stale by morning. Instead, the morning cron (06:00–07:00 HK) sends the
 **"today" weather variant** (no buttons) when a warning is actually in
@@ -80,6 +84,7 @@ that:
 | `WHATSAPP_NOTICE_TEMPLATE` | `prefect_notice` |
 | `WHATSAPP_TEMPLATE_LANG` | `en` (must match the language picked in Meta) |
 | `PREFECT_MIN_ON_DUTY` | `2` — the coverage minimum (do not lower without asking, per the brief) |
+| `PREFECT_ENQUIRY_PHONE` | `+852 9257 7822` — the number the free-text auto-reply points enquiries to |
 
 ## Message templates (create in Meta → WhatsApp Manager, all **Utility**)
 
