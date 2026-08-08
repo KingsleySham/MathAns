@@ -88,7 +88,6 @@ that:
 | `PREFECT_ENQUIRY_PHONE` | `+852 9257 7822` — the number the free-text auto-reply points enquiries to |
 | `WHATSAPP_INTRO_TEMPLATE` | `prefect_intro` |
 | `PREFECT_VHP_NAME` | `Kingsley` — fills `{{vhp}}` in the intro |
-| `PREFECT_DUTY_START` / `PREFECT_DUTY_END` | `7:45am` / `8:10am` — fill `{{start}}`/`{{end}}` in the intro |
 
 ## Message templates (create in Meta → WhatsApp Manager, all **Utility**)
 
@@ -137,8 +136,9 @@ Sample for `{{weather}}`: `Thunderstorm Warning is in force. Assembly moves indo
 
 **`prefect_intro`** — the one-off welcome, sent from the contacts editor's
 "Send intro" button to each new opted-in contact. No buttons. Body (the
-code fills `name` = first name, `vhp` = `PREFECT_VHP_NAME`, `start`/`end` =
-`PREFECT_DUTY_START`/`PREFECT_DUTY_END`):
+code fills `name` = first name, `vhp` = `PREFECT_VHP_NAME`, and
+`start`/`end` = the **duty period dates** typed on the admin page, e.g.
+`16/9` and `30/10`, remembered between sends):
 
 ```
 Goood Morningggg!
@@ -155,7 +155,7 @@ Thank you for your kind attention.
 Do not reply to this message, text via +852 92577822.
 ```
 
-Samples: `Angelia`, `Kingsley`, `7:45am`, `8:10am`.
+Samples: `Angelia`, `Kingsley`, `16/9`, `30/10`.
 
 **`prefect_notice`** — the fallback for VHP alerts and cancellations when
 the recipient's 24-hour window is closed. Footer `Prefect Team`, body:

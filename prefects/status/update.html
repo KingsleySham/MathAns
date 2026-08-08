@@ -112,9 +112,13 @@
   <div style="margin-top:10px">
     <button type="button" id="contactsReload">Reload</button>
     <button type="button" class="primary" id="contactsSave">Save contacts</button>
-    <button type="button" id="introSend">Send intro to new contacts</button>
   </div>
-  <p class="hint" style="margin:6px 0 0">"Send intro" sends the <code>prefect_intro</code> welcome template once to each opted-in contact who hasn't had it — save first, then send.</p>
+  <div class="row" style="margin-top:12px">
+    <div><label>Duty period start (e.g. 16/9)</label><input type="text" id="introStart" maxlength="20"></div>
+    <div><label>Duty period end (e.g. 30/10)</label><input type="text" id="introEnd" maxlength="20"></div>
+    <div class="remove"><button type="button" id="introSend">Send intro to new contacts</button></div>
+  </div>
+  <p class="hint" style="margin:6px 0 0">"Send intro" sends the <code>prefect_intro</code> welcome template once to each opted-in contact who hasn't had it — save first, then send. The period dates fill {{start}}/{{end}} and are remembered for next time.</p>
   <p id="contactsStatus" class="hint" style="margin:8px 0 0"></p>
 </fieldset>
 
@@ -417,21 +421,30 @@ document.getElementById('contactsSave').onclick = async () => {
   }
 };
 
+const introStart = document.getElementById('introStart');
+const introEnd = document.getElementById('introEnd');
+introStart.value = localStorage.getItem('prefectIntroStart') || '';
+introEnd.value = localStorage.getItem('prefectIntroEnd') || '';
+
 document.getElementById('introSend').onclick = async () => {
   const secret = needSecret(contactsStatus);
   if (!secret) return;
+  const start = introStart.value.trim(), end = introEnd.value.trim();
+  if (!start || !end) return say(contactsStatus, 'Fill in the duty period start and end dates first (e.g. 16/9 and 30/10).', true);
   const pending = [...contactRows.querySelectorAll('.row')]
     .filter((r) => r.dataset.introSent !== '1' && r.querySelector('.c-optin').checked)
     .map((r) => r.querySelector('.c-name').value.trim()).filter(Boolean);
   if (!pending.length) return say(contactsStatus, 'Nobody is pending an intro.', false);
-  if (!confirm(`Send the intro template to ${pending.length} contact(s)?\n\n${pending.join(', ')}\n\n(Unsaved edits are not included — save first.)`)) return;
+  if (!confirm(`Send the intro template to ${pending.length} contact(s), for the duty period ${start} – ${end}?\n\n${pending.join(', ')}\n\n(Unsaved edits are not included — save first.)`)) return;
   say(contactsStatus, 'Sending intros…');
   contactsStatus.style.color = '';
   try {
+    localStorage.setItem('prefectIntroStart', start);
+    localStorage.setItem('prefectIntroEnd', end);
     const res = await fetch('/api/whatsapp/tasks?op=intro', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
-      body: '{}',
+      body: JSON.stringify({ start, end }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
