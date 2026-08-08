@@ -12,7 +12,7 @@
 // verifies, parses, and routes.
 
 import crypto from 'node:crypto';
-import { isVhp, handleButton, handlePrefectText, handleVhpText } from '../../lib/prefect-messenger.js';
+import { isVhpSender, handleButton, handlePrefectText, handleVhpText } from '../../lib/prefect-messenger.js';
 
 export async function GET(request) {
   const url = new URL(request.url, 'http://localhost');
@@ -64,16 +64,20 @@ async function route(body) {
   const msg = value?.messages?.[0];
   if (!msg) return; // delivery/read status callbacks — nothing to do
 
-  const from = msg.from; // sender wa_id (E.164 without '+')
+  // Meta's 2026 usernames rollout: `from` (the phone number) can be absent
+  // for username adopters; `from_user_id` (BSUID) is then the only sender
+  // identifier. lib/prefect-messenger.js resolves whichever is present.
+  const from = msg.from;
+  const fromUserId = msg.from_user_id || value?.contacts?.[0]?.user_id;
   const profileName = value?.contacts?.[0]?.profile?.name || '';
 
   const button = readButton(msg);
-  if (button) return handleButton({ from, profileName, ...button });
+  if (button) return handleButton({ from, fromUserId, profileName, ...button });
 
   if (msg.type === 'text') {
     const text = (msg.text?.body || '').trim();
-    if (isVhp(from)) return handleVhpText(text);
-    return handlePrefectText({ from, profileName, text });
+    if (await isVhpSender({ from, fromUserId })) return handleVhpText(text);
+    return handlePrefectText({ from, fromUserId, profileName, text });
   }
 }
 
