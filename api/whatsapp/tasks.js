@@ -30,7 +30,7 @@
 import {
   sendReminders, morningCheck,
   getContacts, setContacts, sanitizeContacts, MAX_CONTACTS,
-  sendNotice, getReplies, approveCancel,
+  sendNotice, getReplies, approveCancel, sendIntro,
 } from '../../lib/prefect-messenger.js';
 
 function adminOk(req, body) {
@@ -93,7 +93,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, contacts });
   }
 
-  if (op === 'replies' || op === 'notice' || op === 'cancel') {
+  if (op === 'replies' || op === 'notice' || op === 'cancel' || op === 'intro') {
     let body = {};
     if (req.method === 'POST') {
       try {
@@ -115,6 +115,10 @@ export default async function handler(req, res) {
       }
 
       if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      if (op === 'intro') {
+        const out = await sendIntro(body);
+        return res.status(out.ok ? 200 : 400).json(out);
+      }
       if (op === 'notice') {
         if (body.date && !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
           return res.status(400).json({ error: 'date must be YYYY-MM-DD' });
