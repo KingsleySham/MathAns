@@ -83,10 +83,11 @@ Leave the template-name variables alone; the defaults match Phase 5.
        fails, the token doesn't match or the deploy hasn't finished.
 3. [ ] Under **Webhook fields**, subscribe to **messages** (only that one).
 
-**Check:** send any WhatsApp text *to* the test number from your verified
-phone. Vercel → project → **Logs** should show a POST to
-`/api/whatsapp/webhook` returning 200. (You won't get a reply — free text
-from a prefect is deliberately ignored unless a reason is pending.)
+**Check:** send any WhatsApp text *to* the test number from a verified
+phone (not the VHP's). You should get the automated redirect back —
+"…messages here aren't read. For any enquiries, please contact …" —
+which proves the webhook round-trip. (Once per sender per day; the VHP
+gets command help instead.)
 
 ## Phase 4 — load contacts and roster
 
