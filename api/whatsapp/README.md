@@ -40,10 +40,18 @@ please contact Kingsley via +852 9257 7822. / Thank you for your kind
 attention." Sent at most once per sender per day.
 
 The evening reminder is deliberately weather-free — an evening forecast is
-stale by morning. Instead, the morning cron (06:00–07:00 HK) sends the
-**"today" weather variant** (no buttons) when a warning is actually in
-force, to today's team minus anyone who declined. Clear mornings send
-nothing.
+stale by morning. Instead, the morning cron (06:00–07:00 HK) sends a
+**weather notice to the whole board** when a warning is actually in force
+on a day that has a duty. Clear mornings send nothing, and so do days with
+no duty on the roster.
+
+It goes to every opted-in prefect rather than just that day's team (VHP
+decision, Aug 2026): a warning that moves assembly indoors or changes what
+to bring affects anyone who might turn up. It is sent as `prefect_notice`,
+**not** `prefect_duty_reminder_weather` — that template's body says "You'll
+be having duty at {{gate}} today", which would tell the thirty-odd prefects
+who are not rostered that they are on duty. The rostered few already had
+their gate and time in last night's reminder.
 
 **VHP** — gets a WhatsApp ping for **every reply** (their request), as a
 one-liner with a running tally: "Kingsley confirmed for Mon 22 June
@@ -81,7 +89,7 @@ that:
 | --- | --- |
 | `WHATSAPP_API_VERSION` | `v21.0` |
 | `WHATSAPP_TEMPLATE` | `prefect_duty_reminder` |
-| `WHATSAPP_TEMPLATE_WEATHER` | `prefect_duty_reminder_weather` |
+| `WHATSAPP_TEMPLATE_WEATHER` | `prefect_duty_reminder_weather` — **no longer read by the code**, see below |
 | `WHATSAPP_NOTICE_TEMPLATE` | `prefect_notice` |
 | `WHATSAPP_TEMPLATE_LANG` | `en` (must match the language picked in Meta) |
 | `PREFECT_MIN_ON_DUTY` | `2` — the coverage minimum (do not lower without asking, per the brief) |
@@ -115,9 +123,11 @@ Thank you for your kind attention 🙏
 Footer: `Please be punctual and refer to the Notion for updates.`
 Quick-reply buttons, in this order: `I'll be there`, `I can't make it`.
 
-**`prefect_duty_reminder_weather`** — same header/footer, **no buttons**
-(it's a morning-of update, sent by the morning cron only when a warning is
-in force — hence "today"):
+**`prefect_duty_reminder_weather`** — same header/footer, **no buttons**.
+**Retired Aug 2026 and no longer sent by any code path:** the morning
+weather update now goes to the whole board as `prefect_notice`, and this
+body would tell every non-rostered prefect they were on duty. Keep it
+approved in Meta in case the per-team variant is wanted back.
 
 ```
 Hello {{name}},

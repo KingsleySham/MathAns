@@ -8,6 +8,6 @@
   },
   "scripts": {
     "test:flights": "node --test lib/flights/status-points.test.js",
-    "test:prefects": "node --test lib/prefect-roster-retention.test.js"
+    "test:prefects": "node --experimental-test-module-mocks --test lib/prefect-roster-retention.test.js lib/prefect-morning-weather.test.js"
   }
 }
