@@ -41,9 +41,21 @@ attention." Sent at most once per sender per day.
 
 The evening reminder is deliberately weather-free — an evening forecast is
 stale by morning. Instead, the morning cron (06:00–07:00 HK) sends the
-**"today" weather variant** (no buttons) when a warning is actually in
-force, to today's team minus anyone who declined. Clear mornings send
-nothing.
+**`prefect_duty_reminder_weather` template to every opted-in contact** when
+a warning is actually in force on a day that has a duty. Clear mornings
+send nothing, and so do days with no duty on the roster.
+
+It goes to all opted-in contacts rather than just that day's roster names
+(VHP decision, Aug 2026): the contact list *is* the morning duty group (see
+the scale note in `PREFECT_HUB.md`), so a warning that moves assembly
+indoors concerns all of them. Anyone rostered who declined gets it too.
+
+`{{gate}}`, `{{time}}` and `{{day}}` come from the day's roster entry and
+are therefore the same for everyone; only `{{name}}` is per-recipient. That
+is fine while the contact list stays the duty group. If the hub is ever
+opened up to prefects who do not do morning duty, revisit the wording —
+"You'll be having duty at {{gate}} today" would then be telling the wrong
+people to turn up.
 
 **VHP** — gets a WhatsApp ping for **every reply** (their request), as a
 one-liner with a running tally: "Kingsley confirmed for Mon 22 June
@@ -117,7 +129,9 @@ Quick-reply buttons, in this order: `I'll be there`, `I can't make it`.
 
 **`prefect_duty_reminder_weather`** — same header/footer, **no buttons**
 (it's a morning-of update, sent by the morning cron only when a warning is
-in force — hence "today"):
+in force — hence "today"). Since Aug 2026 it goes to every opted-in
+contact, which is the morning duty group, so the second-person wording
+still holds:
 
 ```
 Hello {{name}},
