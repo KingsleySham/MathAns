@@ -7,6 +7,7 @@
     "redis": "^6.2.0"
   },
   "scripts": {
-    "test:flights": "node --test lib/flights/status-points.test.js"
+    "test:flights": "node --test lib/flights/status-points.test.js",
+    "test:prefects": "node --test lib/prefect-roster-retention.test.js"
   }
 }

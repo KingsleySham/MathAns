@@ -32,6 +32,27 @@ import {
   getContacts, setContacts, sanitizeContacts, MAX_CONTACTS,
   sendNotice, getReplies, approveCancel, sendIntro,
 } from '../../lib/prefect-messenger.js';
+import { readRoster, readSettings, purgeEndedDuties } from '../../lib/prefect-roster-store.js';
+
+const hkDate = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+
+// Automatic clean-up of ended duty days, hung off the two existing crons.
+//
+// The Hobby plan allows exactly two cron jobs and both are already spoken for,
+// so rather than add a third this piggybacks on remind (20:00 HK) and morning
+// (06:00 HK) — a roster with nothing left to purge costs one Redis read.
+//
+// Deliberately best-effort and never awaited into the send path's error
+// handling: a failed clean-up must not stop reminders going out.
+async function purgeQuietly(op) {
+  try {
+    const [roster, settings] = await Promise.all([readRoster(), readSettings()]);
+    const { removed } = await purgeEndedDuties(roster, settings, hkDate());
+    if (removed) console.log(`${op}: purged ${removed} ended duty day(s) from the roster`);
+  } catch (e) {
+    console.error('roster purge failed:', e);
+  }
+}
 
 function adminOk(req, body) {
   const admin = process.env.PREFECT_ADMIN_SECRET;
@@ -54,6 +75,10 @@ export default async function handler(req, res) {
     if (!cronOrAdminOk(req)) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
+      // Never throws (see purgeQuietly) — a clean-up problem must not cost the
+      // board its reminders. Runs first so the send works off a pruned roster.
+      await purgeQuietly(op);
+
       if (op === 'morning') return res.status(200).json(await morningCheck());
 
       const date = url.searchParams.get('date') || undefined;

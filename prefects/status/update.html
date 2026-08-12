@@ -3,37 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prefect duty status — update</title>
+<title>Prefect Hub — update</title>
 <style>
   :root {
     --page: #ffffff; --text: #1c1b18; --panel: #f7f6f1; --line: #e5e3db;
     --muted: #5f5e5a; --accent: #2a5db0; --danger: #a02323; --ok: #27500a;
+    --accent-soft: #e9f0fb; --chip: #ffffff; --raised: #ffffff; --shade: #f1efe8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --page: #191917; --text: #ede9e1; --panel: #211f1c; --line: #35352f;
       --muted: #b4b2a9; --accent: #7fb0ff; --danger: #f7c1c1; --ok: #c0dd97;
+      --accent-soft: #1d2941; --chip: #2a2823; --raised: #262420; --shade: #1f1d1a;
     }
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; padding: 20px 20px 60px;
+    margin: 0 auto; padding: 20px 20px 80px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--page); color: var(--text); max-width: 640px;
+    background: var(--page); color: var(--text); max-width: 900px;
   }
   h1 { font-size: 18px; margin: 0 0 4px; }
-  .sub { font-size: 13px; color: var(--muted); margin: 0 0 20px; line-height: 1.5; }
+  h2 { font-size: 15px; margin: 26px 0 8px; }
+  h3 { font-size: 13px; font-weight: 600; margin: 0 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .sub { font-size: 13px; color: var(--muted); margin: 0 0 18px; line-height: 1.5; max-width: 62ch; }
   .sub a { color: var(--accent); }
   fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 0 0 16px; background: var(--panel); }
   legend { font-size: 13px; font-weight: 600; padding: 0 6px; }
   label { display: block; font-size: 12.5px; color: var(--muted); margin: 0 0 4px; }
-  input[type="text"], input[type="password"], input[type="date"], select, textarea {
+  input[type="text"], input[type="password"], input[type="date"], input[type="number"], select, textarea {
     width: 100%; font: inherit; font-size: 14px; padding: 7px 9px; border-radius: 6px;
     border: 1px solid var(--line); background: var(--page); color: var(--text);
   }
-  .row { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-end; }
-  .row > div { flex: 1; }
-  .row .remove { flex: none; }
+  .row { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 130px; }
+  .row .remove { flex: none; min-width: 0; }
   button {
     font: inherit; font-size: 13px; padding: 7px 13px; border-radius: 7px; border: 1px solid var(--line);
     background: var(--panel); color: var(--text); cursor: pointer;
@@ -42,242 +46,898 @@
   button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   button.remove { color: var(--danger); border-color: var(--danger); padding: 7px 10px; }
   button.add { margin-top: 2px; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button:disabled:hover { border-color: var(--line); }
+  /* The page had no visible keyboard focus at all — the calendar is unusable without it. */
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+  textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
   #status { font-size: 13px; margin: 10px 0 0; min-height: 18px; }
   #status.ok { color: var(--ok); }
   #status.err { color: var(--danger); }
-  .gate { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; }
+  .gate { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
   .gate input { max-width: 220px; }
+  .gate label { margin: 0; }
   .day-block { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
   .day-block:first-child { border-top: none; padding-top: 0; margin-top: 0; }
-  .hint { font-size: 11.5px; color: var(--muted); margin: -6px 0 10px; }
+  .hint { font-size: 11.5px; color: var(--muted); margin: -6px 0 10px; line-height: 1.5; }
+  .hint.block { margin: 0 0 10px; }
+
+  /* ── tabs ───────────────────────────────────────────────────────────── */
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin: 0 0 20px; }
+  .tabs button {
+    border: none; border-bottom: 2px solid transparent; border-radius: 0; background: none;
+    padding: 9px 14px; color: var(--muted); font-size: 13.5px;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tabs button:focus-visible { outline-offset: -2px; }
+
+  /* ── roster toolbar ─────────────────────────────────────────────────── */
+  .toolbar { display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+  /* margin-right rather than space-between: the view toggle must stay right
+     even when the month navigator is hidden in list view. */
+  .monthnav { display: flex; gap: 6px; align-items: center; margin-right: auto; }
+  .monthnav[hidden] { display: none; }
+  .monthnav strong { font-size: 14.5px; min-width: 9.5em; text-align: center; }
+  .monthnav button.step { padding: 6px 11px; line-height: 1; }
+  .segmented { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .segmented button { border: none; border-radius: 0; background: var(--page); padding: 6px 13px; }
+  .segmented button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .segmented button:focus-visible { outline-offset: -2px; }
+
+  /* ── calendar ───────────────────────────────────────────────────────── */
+  .cal-head, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .cal-head { margin-bottom: 4px; }
+  .cal-head span { font-size: 11px; color: var(--muted); text-align: center; padding: 2px 0; }
+  .cal-cell {
+    position: relative; min-height: 86px; padding: 5px; border: 1px solid var(--line);
+    border-radius: 8px; background: var(--panel); display: flex; flex-direction: column; gap: 4px;
+  }
+  .cal-cell.outside { background: var(--shade); border-color: transparent; }
+  .cal-cell.outside .cal-num { opacity: .45; }
+  .cal-cell.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .cal-num { font-size: 11.5px; color: var(--muted); line-height: 1.4; padding-left: 2px; }
+  .cal-cell.today .cal-num {
+    background: var(--accent); color: #fff; border-radius: 999px;
+    padding: 0 6px; display: inline-block; width: fit-content; font-weight: 600;
+  }
+  .cal-cell.past .chip { opacity: .55; }
+  .chip {
+    display: block; width: 100%; text-align: left; font-size: 11.5px; line-height: 1.35;
+    padding: 4px 6px; border-radius: 5px; border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); background: var(--chip); color: var(--text); cursor: pointer;
+  }
+  .chip.past { border-left-color: var(--muted); }
+  .chip b { display: block; font-weight: 600; }
+  .chip .meta { color: var(--muted); }
+  .cal-add {
+    position: absolute; inset: auto 4px 4px auto; padding: 1px 7px; font-size: 14px; line-height: 1.4;
+    border-radius: 5px; color: var(--muted); background: transparent; border: 1px dashed var(--line); opacity: .4;
+  }
+  .cal-cell:hover .cal-add, .cal-add:focus-visible { opacity: 1; }
+  .cal-legend { font-size: 11.5px; color: var(--muted); margin: 8px 0 0; }
+
+  /* ── day editor ─────────────────────────────────────────────────────── */
+  .editor { border: 1px solid var(--accent); border-radius: 10px; padding: 14px 16px; margin-top: 14px; background: var(--raised); }
+  .editor header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .editor header strong { font-size: 14.5px; }
+  .editor .entry { border-top: 1px dashed var(--line); padding-top: 12px; margin-top: 12px; }
+  .editor .entry:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .badge {
+    display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent); border: 1px solid transparent;
+  }
+  .badge.grey { background: var(--shade); color: var(--muted); }
+
+  /* ── archive ────────────────────────────────────────────────────────── */
+  details.archive { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; background: var(--shade); margin-top: 14px; }
+  details.archive summary { font-size: 13px; cursor: pointer; }
+  details.archive[open] summary { margin-bottom: 10px; }
+  .past-row { display: flex; gap: 10px; align-items: center; justify-content: space-between; font-size: 13px; padding: 6px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .past-row:first-of-type { border-top: none; }
+  .past-row .when { color: var(--muted); font-size: 11.5px; }
+
+  /* ── save bar ───────────────────────────────────────────────────────── */
+  .savebar { display: flex; gap: 12px; align-items: center; margin-top: 18px; }
+  .savebar .dirty { font-size: 12.5px; color: var(--muted); }
+  .savebar .dirty[hidden] { display: none; }
+
+  /* ── settings ───────────────────────────────────────────────────────── */
+  .setting { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); }
+  .setting:first-of-type { border-top: none; padding-top: 2px; }
+  .setting .copy { flex: 1; }
+  .setting .copy p { margin: 3px 0 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .setting .copy strong { font-size: 13.5px; font-weight: 600; }
+  .setting .control { flex: none; }
+  .setting .control input[type="number"] { width: 88px; }
+  .switch { position: relative; display: inline-block; width: 42px; height: 24px; flex: none; }
+  .switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--line); transition: background .15s; pointer-events: none; }
+  .switch span::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+    border-radius: 50%; background: #fff; transition: transform .15s;
+  }
+  .switch input:checked + span { background: var(--accent); }
+  .switch input:checked + span::after { transform: translateX(18px); }
+  .switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .warn {
+    border: 1px solid var(--danger); border-radius: 8px; padding: 9px 12px; margin: 0 0 14px;
+    font-size: 12.5px; color: var(--danger); line-height: 1.5;
+  }
+  .warn[hidden] { display: none; }
+
+  /* ── narrow screens: the VHP is usually on a phone ──────────────────── */
+  @media (max-width: 640px) {
+    body { padding: 16px 14px 70px; }
+    .cal-head, .cal-grid { gap: 3px; }
+    .cal-cell { min-height: 46px; padding: 3px; align-items: center; }
+    .cal-num { padding: 0; }
+    .cal-add { display: none; }
+    /* Chips can't fit — a dot per duty, and the day editor does the work. */
+    .chip { padding: 0; border: none; border-radius: 999px; width: 7px; height: 7px; background: var(--accent); text-indent: -9999px; overflow: hidden; }
+    .chip.past { background: var(--muted); }
+    .monthnav strong { min-width: 7.5em; font-size: 13.5px; }
+  }
 </style>
 </head>
 <body>
 
-<h1>Prefect duty status — update</h1>
+<h1>Prefect Hub — update</h1>
 <p class="sub">
   Edits the reminders and duty roster shown on
-  <a href="/prefects/status.html">the live status page</a>. Changes save straight to the
-  production endpoint used by the Notion embed — check
+  <a href="/prefects/status.html">the live status page</a>, and drives the WhatsApp duty reminders.
+  Changes save straight to production — check
   <a href="/prefects/status/test">the simulator</a> if you want to preview layout first.
 </p>
 
 <div class="gate">
-  <label for="secret" style="margin:0">Admin passcode</label>
+  <label for="secret">Admin passcode</label>
   <input type="password" id="secret" autocomplete="off">
 </div>
 
-<fieldset>
-  <legend>Reminders</legend>
-  <p class="hint">Each one shows as its own chip on the status page. Keep them short — they don&#8217;t wrap into a paragraph.</p>
-  <div id="reminderRows"></div>
-  <button type="button" class="add" id="addReminder">+ Add reminder</button>
-</fieldset>
+<div class="tabs" role="tablist">
+  <button role="tab" id="tab-roster" aria-controls="panel-roster" aria-selected="true">Roster</button>
+  <button role="tab" id="tab-whatsapp" aria-controls="panel-whatsapp" aria-selected="false">WhatsApp</button>
+  <button role="tab" id="tab-settings" aria-controls="panel-settings" aria-selected="false">Settings</button>
+</div>
 
-<fieldset>
-  <legend>Duty roster</legend>
-  <p class="hint">One block per day — add as many as you like. The status page only shows the nearest upcoming one, highlighted once it's Today or Tomorrow.</p>
-  <div id="rosterRows"></div>
-  <button type="button" class="add" id="addDay">+ Add day</button>
-</fieldset>
+<!-- ══ ROSTER ══════════════════════════════════════════════════════════ -->
+<section id="panel-roster" role="tabpanel" aria-labelledby="tab-roster">
 
-<button type="button" class="primary" id="save">Save</button>
-<p id="status"></p>
+  <p class="warn" id="loadWarn" hidden></p>
 
-<h1 style="margin-top:34px">WhatsApp</h1>
-<p class="sub">
-  These act on real phones immediately — every button asks before sending.
-  Uses the same admin passcode entered above.
-</p>
-
-<fieldset>
-  <legend>Duty replies</legend>
-  <div class="row">
-    <div><label>Duty date</label><input type="date" id="repliesDate"></div>
-    <div class="remove"><button type="button" id="repliesRefresh">Refresh</button></div>
+  <div class="toolbar">
+    <div class="monthnav" id="monthnav">
+      <button type="button" class="step" id="prevMonth" aria-label="Previous month">&#8249;</button>
+      <strong id="monthLabel">&nbsp;</strong>
+      <button type="button" class="step" id="nextMonth" aria-label="Next month">&#8250;</button>
+      <button type="button" id="todayBtn">Today</button>
+    </div>
+    <div class="segmented" role="group" aria-label="Roster view">
+      <button type="button" id="viewCalendar" aria-pressed="true">Calendar</button>
+      <button type="button" id="viewList" aria-pressed="false">List</button>
+    </div>
   </div>
-  <div id="repliesOut" style="font-size:13.5px"></div>
-  <p id="repliesStatus" class="hint" style="margin:6px 0 0"></p>
-</fieldset>
 
-<fieldset>
-  <legend>Contacts (who the bot can message)</legend>
-  <p class="hint">
-    The opt-in list behind reminders and notices. <b>Name must match the roster exactly</b> — that's how a duty row
-    finds the number. Phone needs the country code (e.g. +85291234567). Only tick “opted in” once the prefect has
-    actually agreed to receive WhatsApp reminders; unticked contacts are never messaged. Saving replaces the whole list.
+  <div id="calendarView">
+    <div class="cal-head" aria-hidden="true">
+      <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <p class="cal-legend">Click a day to add or edit its duty. Faded days have already ended — they stay here until the clean-up window in Settings passes.</p>
+    <div id="dayEditor"></div>
+  </div>
+
+  <div id="listView" hidden>
+    <h3>Upcoming</h3>
+    <div id="rosterRows"></div>
+    <button type="button" class="add" id="addDay">+ Add day</button>
+    <details class="archive" id="archive">
+      <summary id="archiveSummary">Past duties</summary>
+      <div id="archiveRows"></div>
+    </details>
+  </div>
+
+  <h2>Reminders</h2>
+  <fieldset>
+    <legend>Status-page reminders</legend>
+    <p class="hint block">Each one shows as its own chip on the status page. Keep them short &mdash; they don&#8217;t wrap into a paragraph. Saved together with the roster.</p>
+    <div id="reminderRows"></div>
+    <button type="button" class="add" id="addReminder">+ Add reminder</button>
+  </fieldset>
+
+  <div class="savebar">
+    <button type="button" class="primary" id="save">Save roster &amp; reminders</button>
+    <span class="dirty" id="dirtyFlag" hidden>&#9679; Unsaved changes</span>
+  </div>
+  <p id="status"></p>
+</section>
+
+<!-- ══ WHATSAPP ════════════════════════════════════════════════════════ -->
+<section id="panel-whatsapp" role="tabpanel" aria-labelledby="tab-whatsapp" hidden>
+  <p class="sub">
+    These act on real phones immediately &mdash; every button asks before sending.
+    Uses the same admin passcode entered above.
   </p>
-  <div id="contactRows"></div>
-  <button type="button" class="add" id="addContact">+ Add prefect</button>
-  <div style="margin-top:10px">
-    <button type="button" id="contactsReload">Reload</button>
-    <button type="button" class="primary" id="contactsSave">Save contacts</button>
-  </div>
-  <div class="row" style="margin-top:12px">
-    <div><label>Duty period start (e.g. 16/9)</label><input type="text" id="introStart" maxlength="20"></div>
-    <div><label>Duty period end (e.g. 30/10)</label><input type="text" id="introEnd" maxlength="20"></div>
-    <div class="remove"><button type="button" id="introSend">Send intro to new contacts</button></div>
-  </div>
-  <p class="hint" style="margin:6px 0 0">"Send intro" sends the <code>prefect_intro</code> welcome template once to each opted-in contact who hasn't had it — save first, then send. The period dates fill {{start}}/{{end}} and are remembered for next time.</p>
-  <p id="contactsStatus" class="hint" style="margin:8px 0 0"></p>
-</fieldset>
 
-<fieldset>
-  <legend>Send a notice</legend>
-  <p class="hint">Operational notices only (schedule changes, procedures) — social messages belong in the group chat. Always delivered via the approved <b>prefect_notice</b> template (⚠️ bold body, Prefect Team footer).</p>
-  <div class="row"><div><textarea id="noticeText" rows="3" maxlength="900" placeholder="Duty on Thu 25 June moves to 7:30am for the fire drill."></textarea></div></div>
-  <div class="row">
-    <div><label>Send to</label>
-      <select id="noticeAudience">
-        <option value="board">Whole board (all opted-in contacts)</option>
-        <option value="duty">One day's duty team</option>
-      </select>
-    </div>
-    <div><label>Duty date (team only)</label><input type="date" id="noticeDate"></div>
-  </div>
-  <button type="button" class="primary" id="noticeSend">Send notice</button>
-  <p id="noticeStatus" class="hint" style="margin:8px 0 0"></p>
-</fieldset>
-
-<fieldset>
-  <legend>Reminders &amp; suspension</legend>
-  <div class="row">
-    <div><label>Resend duty reminders for</label><input type="date" id="resendDate"></div>
-    <div class="remove"><button type="button" id="resendBtn">Send reminders</button></div>
-  </div>
-  <p class="hint">Same send as the nightly cron — safe to re-run; prefects just get the reminder again.</p>
-  <div class="row" style="margin-top:6px">
-    <div><button type="button" id="morningBtn">Run weather check now</button></div>
-    <div><button type="button" class="remove" id="cancelBtn">Send cancellation (CANCEL)</button></div>
-  </div>
-  <p class="hint">The weather check latches a suspension and messages the VHP only. The cancellation button is the same approval as texting CANCEL — it messages today's team and only works while a suspension is held.</p>
-  <p id="opsStatus" class="hint" style="margin:8px 0 0"></p>
-</fieldset>
-
-<script type="module">
-const SECRET_KEY = 'prefectStatusAdminSecret';
-
-const secretInput = document.getElementById('secret');
-secretInput.value = localStorage.getItem(SECRET_KEY) || '';
-
-const reminderRows = document.getElementById('reminderRows');
-const rosterRows = document.getElementById('rosterRows');
-const statusEl = document.getElementById('status');
-
-function reminderRow(value) {
-  const row = document.createElement('div');
-  row.className = 'row';
-  row.innerHTML = `
-    <div><textarea rows="2" maxlength="240" class="reminder-text"></textarea></div>
-    <button type="button" class="remove">Remove</button>
-  `;
-  row.querySelector('textarea').value = value || '';
-  row.querySelector('.remove').onclick = () => row.remove();
-  return row;
-}
-
-function dayRow(entry) {
-  entry = entry || {};
-  const row = document.createElement('div');
-  row.className = 'day-block';
-  row.innerHTML = `
+  <fieldset>
+    <legend>Duty replies</legend>
     <div class="row">
-      <div><label>Date</label><input type="date" class="day-date"></div>
-      <div><label>Location</label><input type="text" class="day-location" placeholder="Front gate"></div>
-      <button type="button" class="remove">Remove</button>
+      <div><label for="repliesDate">Duty date</label><input type="date" id="repliesDate"></div>
+      <div class="remove"><button type="button" id="repliesRefresh">Refresh</button></div>
     </div>
+    <div id="repliesOut" style="font-size:13.5px"></div>
+    <p id="repliesStatus" class="hint" style="margin:6px 0 0"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Contacts (who the bot can message)</legend>
+    <p class="hint block">
+      The opt-in list behind reminders and notices. <b>Name must match the roster exactly</b> &mdash; that's how a duty row
+      finds the number. Phone needs the country code (e.g. +85291234567). Only tick &ldquo;opted in&rdquo; once the prefect has
+      actually agreed to receive WhatsApp reminders; unticked contacts are never messaged. Saving replaces the whole list.
+    </p>
+    <div id="contactRows"></div>
+    <button type="button" class="add" id="addContact">+ Add prefect</button>
+    <div style="margin-top:10px">
+      <button type="button" id="contactsReload">Reload</button>
+      <button type="button" class="primary" id="contactsSave">Save contacts</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div><label for="introStart">Duty period start (e.g. 16/9)</label><input type="text" id="introStart" maxlength="20"></div>
+      <div><label for="introEnd">Duty period end (e.g. 30/10)</label><input type="text" id="introEnd" maxlength="20"></div>
+      <div class="remove"><button type="button" id="introSend">Send intro to new contacts</button></div>
+    </div>
+    <p class="hint" style="margin:6px 0 0">"Send intro" sends the <code>prefect_intro</code> welcome template once to each opted-in contact who hasn't had it &mdash; save first, then send. The period dates fill {{start}}/{{end}} and are remembered for next time.</p>
+    <p id="contactsStatus" class="hint" style="margin:8px 0 0"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Send a notice</legend>
+    <p class="hint block">Operational notices only (schedule changes, procedures) &mdash; social messages belong in the group chat. Always delivered via the approved <b>prefect_notice</b> template (&#9888;&#65039; bold body, Prefect Team footer).</p>
+    <div class="row"><div><textarea id="noticeText" rows="3" maxlength="900" placeholder="Duty on Thu 25 June moves to 7:30am for the fire drill."></textarea></div></div>
     <div class="row">
-      <div><label>Time</label><input type="text" class="day-time" placeholder="7:45am"></div>
-      <div><label>Team</label>
-        <select class="day-team">
-          <option value="">—</option>
+      <div><label for="noticeAudience">Send to</label>
+        <select id="noticeAudience">
+          <option value="board">Whole board (all opted-in contacts)</option>
+          <option value="duty">One day's duty team</option>
+        </select>
+      </div>
+      <div><label for="noticeDate">Duty date (team only)</label><input type="date" id="noticeDate"></div>
+    </div>
+    <button type="button" class="primary" id="noticeSend">Send notice</button>
+    <p id="noticeStatus" class="hint" style="margin:8px 0 0"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Reminders &amp; suspension</legend>
+    <div class="row">
+      <div><label for="resendDate">Resend duty reminders for</label><input type="date" id="resendDate"></div>
+      <div class="remove"><button type="button" id="resendBtn">Send reminders</button></div>
+    </div>
+    <p class="hint">Same send as the nightly cron &mdash; safe to re-run; prefects just get the reminder again.</p>
+    <div class="row" style="margin-top:6px">
+      <div><button type="button" id="morningBtn">Run weather check now</button></div>
+      <div><button type="button" class="remove" id="cancelBtn">Send cancellation (CANCEL)</button></div>
+    </div>
+    <p class="hint">The weather check latches a suspension and messages the VHP only. The cancellation button is the same approval as texting CANCEL &mdash; it messages today's team and only works while a suspension is held.</p>
+    <p id="opsStatus" class="hint" style="margin:8px 0 0"></p>
+  </fieldset>
+</section>
+
+<!-- ══ SETTINGS ════════════════════════════════════════════════════════ -->
+<section id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+  <p class="sub">Defaults and housekeeping for the duty roster. Saved to the same admin endpoint as the roster.</p>
+
+  <fieldset>
+    <legend>Duty defaults</legend>
+    <p class="hint block">
+      Pre-fill every new day you add on the calendar, so most days only need a date and the names.
+      They also stand in for blank fields in the WhatsApp reminder templates.
+    </p>
+    <div class="row">
+      <div><label for="defLocation">Location</label><input type="text" id="defLocation" maxlength="120" placeholder="Front gate"></div>
+      <div><label for="defTime">Time</label><input type="text" id="defTime" maxlength="120" placeholder="7:45am"></div>
+      <div><label for="defTeam">Team</label>
+        <select id="defTeam">
+          <option value="">&mdash;</option>
           <option value="A">Team A</option>
           <option value="B">Team B</option>
           <option value="C">Team C</option>
         </select>
       </div>
     </div>
-    <div class="row" style="margin-bottom:2px">
-      <div><label>Names (comma-separated)</label><input type="text" class="day-names" placeholder="Calissa, Angelia"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Automatic clean-up</legend>
+    <div class="setting">
+      <div class="copy">
+        <strong>Automatically delete ended duties</strong>
+        <p>Duty days that have finished are kept for a while so you can still look them up, then removed for good. Turn this off and the roster keeps everything until you delete it by hand.</p>
+      </div>
+      <div class="control">
+        <label class="switch">
+          <input type="checkbox" id="retentionEnabled" aria-label="Automatically delete ended duties">
+          <span></span>
+        </label>
+      </div>
     </div>
-    <p class="hint" style="margin:0 0 4px">Team shows on the public status page. Names don&#8217;t — they&#8217;re kept for the WhatsApp duty reminders only.</p>
+    <div class="setting">
+      <div class="copy">
+        <strong>Keep past duties for</strong>
+        <p>0&ndash;90 days. A day is only ever removed after it has ended, so today&#8217;s duty is never touched. The default of 7 matches how long WhatsApp reply history is stored.</p>
+      </div>
+      <div class="control">
+        <input type="number" id="retentionDays" min="0" max="90" step="1" aria-label="Days to keep past duties">
+      </div>
+    </div>
+    <div class="setting">
+      <div class="copy">
+        <strong>Last clean-up</strong>
+        <p id="lastPurge">&mdash;</p>
+      </div>
+      <div class="control"><button type="button" id="purgeNow">Clean up now</button></div>
+    </div>
+  </fieldset>
+
+  <div class="savebar">
+    <button type="button" class="primary" id="settingsSave">Save settings</button>
+  </div>
+  <p id="settingsStatus" class="hint" style="margin:10px 0 0"></p>
+</section>
+
+<script type="module">
+import {
+  DEFAULT_SETTINGS, sanitizeSettings, splitRoster, pruneRoster,
+  formatDayLabel, addDaysToDateStr,
+} from '/lib/prefect-duty-status-logic.js';
+
+const SECRET_KEY = 'prefectStatusAdminSecret';
+const TAB_KEY = 'prefectAdminTab';
+const VIEW_KEY = 'prefectRosterView';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const hkToday = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+const hkTomorrow = () => new Date(Date.now() + 32 * 3600 * 1000).toISOString().slice(0, 10);
+
+const secretInput = $('secret');
+secretInput.value = localStorage.getItem(SECRET_KEY) || '';
+
+// ── tabs ────────────────────────────────────────────────────────────────
+
+const TABS = ['roster', 'whatsapp', 'settings'];
+
+function showTab(name) {
+  const active = TABS.includes(name) ? name : 'roster';
+  TABS.forEach((t) => {
+    $(`tab-${t}`).setAttribute('aria-selected', String(t === active));
+    $(`panel-${t}`).hidden = t !== active;
+  });
+  localStorage.setItem(TAB_KEY, active);
+}
+TABS.forEach((t) => { $(`tab-${t}`).onclick = () => showTab(t); });
+showTab(localStorage.getItem(TAB_KEY) || 'roster');
+
+// ── state ───────────────────────────────────────────────────────────────
+//
+// One in-memory roster drives both the calendar and the list; Save posts it
+// whole, exactly as this page always has. `loaded` guards against the case
+// where the GET failed: saving then would write an empty roster over a real
+// one, so it asks first.
+
+let roster = [];
+let settings = structuredClone(DEFAULT_SETTINGS);
+let loaded = false;
+let dirty = false;
+let selectedDate = null;
+let view = localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'calendar';
+
+const today = hkToday();
+let viewYear = Number(today.slice(0, 4));
+let viewMonth = Number(today.slice(5, 7)) - 1; // 0-based
+
+const statusEl = $('status');
+const reminderRows = $('reminderRows');
+const rosterRows = $('rosterRows');
+
+function markDirty() {
+  dirty = true;
+  $('dirtyFlag').hidden = false;
+}
+
+function newEntry(date) {
+  return {
+    date,
+    location: settings.defaults.location || '',
+    time: settings.defaults.time || '',
+    team: settings.defaults.team || '',
+    names: [],
+  };
+}
+
+const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+const entriesOn = (date) => roster.filter((e) => e.date === date);
+
+// ── reminders (unchanged behaviour, still saved with the roster) ─────────
+
+function reminderRow(value) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `
+    <div><textarea rows="2" maxlength="240" class="reminder-text" aria-label="Reminder text"></textarea></div>
+    <button type="button" class="remove">Remove</button>
   `;
-  row.querySelector('.day-date').value = entry.date || '';
-  row.querySelector('.day-location').value = entry.location || '';
-  row.querySelector('.day-time').value = entry.time || '';
-  row.querySelector('.day-team').value = entry.team || '';
-  row.querySelector('.day-names').value = (entry.names || []).join(', ');
-  row.querySelector('.remove').onclick = () => row.remove();
+  row.querySelector('textarea').value = value || '';
+  row.querySelector('textarea').oninput = markDirty;
+  row.querySelector('.remove').onclick = () => { row.remove(); markDirty(); };
   return row;
 }
 
-document.getElementById('addReminder').onclick = () => reminderRows.appendChild(reminderRow(''));
-document.getElementById('addDay').onclick = () => rosterRows.appendChild(dayRow());
+$('addReminder').onclick = () => { reminderRows.appendChild(reminderRow('')); markDirty(); };
 
-function collectReminders() {
-  return [...reminderRows.querySelectorAll('.reminder-text')].map(t => t.value.trim()).filter(Boolean);
+const collectReminders = () =>
+  [...reminderRows.querySelectorAll('.reminder-text')].map((t) => t.value.trim()).filter(Boolean);
+
+// ── calendar ────────────────────────────────────────────────────────────
+
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+
+const iso = (y, m, d) => new Date(Date.UTC(y, m, d)).toISOString().slice(0, 10);
+
+// Monday-first weeks, with the surrounding days shown dimmed so a duty that
+// falls on the 1st or the 31st is still visible from the neighbouring month.
+function monthCells(y, m) {
+  const firstDow = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7;
+  const daysInMonth = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const cells = [];
+
+  for (let i = firstDow; i > 0; i--) cells.push({ date: iso(y, m, 1 - i), outside: true });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ date: iso(y, m, d), outside: false });
+  for (let extra = 1; cells.length % 7; extra++) cells.push({ date: iso(y, m, daysInMonth + extra), outside: true });
+
+  return cells;
 }
 
-function collectRoster() {
-  return [...rosterRows.querySelectorAll('.day-block')].map(block => ({
-    date: block.querySelector('.day-date').value,
-    location: block.querySelector('.day-location').value.trim(),
-    time: block.querySelector('.day-time').value.trim(),
-    team: block.querySelector('.day-team').value,
-    names: block.querySelector('.day-names').value.split(',').map(s => s.trim()).filter(Boolean),
-  })).filter(d => d.date);
+function chipHtml(entry) {
+  const head = [entry.time, entry.location].filter(Boolean).join(' · ') || 'Duty';
+  const meta = [entry.team ? `Team ${entry.team}` : '', entry.names.length ? `${entry.names.length} on duty` : 'no names']
+    .filter(Boolean).join(' · ');
+  return `<b>${esc(head)}</b><span class="meta">${esc(meta)}</span>`;
 }
+
+// Grid only. Kept separate from the day editor so an edit can refresh the chip
+// without tearing down the panel the cursor is still moving through.
+function renderGrid() {
+  $('monthLabel').textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+
+  const grid = $('calGrid');
+  grid.innerHTML = '';
+
+  for (const cell of monthCells(viewYear, viewMonth)) {
+    const entries = entriesOn(cell.date);
+    const isPast = cell.date < today;
+
+    const el = document.createElement('div');
+    el.className = 'cal-cell'
+      + (cell.outside ? ' outside' : '')
+      + (cell.date === today ? ' today' : '')
+      + (isPast ? ' past' : '')
+      + (cell.date === selectedDate ? ' selected' : '');
+    el.dataset.date = cell.date;
+
+    const num = document.createElement('span');
+    num.className = 'cal-num';
+    num.textContent = Number(cell.date.slice(8, 10));
+    el.appendChild(num);
+
+    entries.forEach((entry) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip' + (isPast ? ' past' : '');
+      chip.innerHTML = chipHtml(entry);
+      chip.setAttribute('aria-label', `Edit duty on ${formatDayLabel(cell.date)}`);
+      chip.onclick = () => selectDay(cell.date);
+      el.appendChild(chip);
+    });
+
+    if (!entries.length) {
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'cal-add';
+      add.textContent = '+';
+      add.setAttribute('aria-label', `Add duty on ${formatDayLabel(cell.date)}`);
+      add.onclick = () => addDuty(cell.date);
+      el.appendChild(add);
+      // The whole empty cell is a target too — the + is only the visible cue.
+      el.onclick = (e) => { if (e.target === el || e.target === num) addDuty(cell.date); };
+    }
+
+    grid.appendChild(el);
+  }
+}
+
+function renderCalendar() {
+  renderGrid();
+  renderDayEditor();
+}
+
+function selectDay(date) {
+  selectedDate = date;
+  renderCalendar();
+  $('dayEditor').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function addDuty(date) {
+  roster.push(newEntry(date));
+  roster.sort(byDate);
+  markDirty();
+  selectedDate = date;
+  render();
+}
+
+function gotoMonthOf(date) {
+  viewYear = Number(date.slice(0, 4));
+  viewMonth = Number(date.slice(5, 7)) - 1;
+}
+
+// ── day editor ──────────────────────────────────────────────────────────
+
+// The inputs write straight into the roster entry on change. Nothing re-renders
+// while you type — repainting the grid mid-edit would steal focus — so the chip
+// catches up on blur, when the change event fires.
+function entryFields(entry) {
+  const wrap = document.createElement('div');
+  wrap.className = 'entry';
+  wrap.innerHTML = `
+    <div class="row">
+      <div><label>Location</label><input type="text" class="f-location" maxlength="120" placeholder="Front gate"></div>
+      <div><label>Time</label><input type="text" class="f-time" maxlength="120" placeholder="7:45am"></div>
+      <div><label>Team</label>
+        <select class="f-team">
+          <option value="">&mdash;</option>
+          <option value="A">Team A</option>
+          <option value="B">Team B</option>
+          <option value="C">Team C</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div><label>Names (comma-separated)</label><input type="text" class="f-names" placeholder="Calissa, Angelia"></div>
+      <button type="button" class="remove">Delete</button>
+    </div>
+    <p class="hint" style="margin:0">Team shows on the public status page. Names don&#8217;t &mdash; they&#8217;re how the WhatsApp reminder finds each prefect&#8217;s number, so they must match the contact list exactly.</p>
+  `;
+  const loc = wrap.querySelector('.f-location');
+  const time = wrap.querySelector('.f-time');
+  const team = wrap.querySelector('.f-team');
+  const names = wrap.querySelector('.f-names');
+
+  loc.value = entry.location;
+  time.value = entry.time;
+  team.value = entry.team;
+  names.value = entry.names.join(', ');
+
+  const sync = () => {
+    entry.location = loc.value.trim();
+    entry.time = time.value.trim();
+    entry.team = team.value;
+    entry.names = names.value.split(',').map((s) => s.trim()).filter(Boolean);
+    markDirty();
+    if (view === 'calendar') renderGrid();
+  };
+  [loc, time, team, names].forEach((el) => { el.onchange = sync; });
+
+  wrap.querySelector('.remove').onclick = () => {
+    roster.splice(roster.indexOf(entry), 1);
+    markDirty();
+    render();
+  };
+  return wrap;
+}
+
+function renderDayEditor() {
+  const host = $('dayEditor');
+  host.innerHTML = '';
+  if (!selectedDate) return;
+
+  const entries = entriesOn(selectedDate);
+  const isPast = selectedDate < today;
+
+  const panel = document.createElement('div');
+  panel.className = 'editor';
+  panel.innerHTML = `
+    <header>
+      <strong>${esc(formatDayLabel(selectedDate))}</strong>
+      <span class="badge ${isPast ? 'grey' : ''}">${isPast ? 'Ended' : selectedDate === today ? 'Today' : 'Upcoming'}</span>
+    </header>
+  `;
+
+  if (!entries.length) {
+    const p = document.createElement('p');
+    p.className = 'hint';
+    p.style.margin = '0 0 10px';
+    p.textContent = 'Nothing scheduled on this day.';
+    panel.appendChild(p);
+  }
+  entries.forEach((entry) => panel.appendChild(entryFields(entry)));
+
+  const actions = document.createElement('div');
+  actions.className = 'row';
+  actions.style.marginTop = '12px';
+  actions.innerHTML = `
+    <div style="flex:none"><button type="button" class="add" id="addOnDay">+ Add duty on this day</button></div>
+    <div><label for="copyTo">Copy this day&#8217;s duty to</label><input type="date" id="copyTo"></div>
+    <div class="remove"><button type="button" id="copyBtn">Copy</button></div>
+    <div class="remove"><button type="button" id="closeEditor">Close</button></div>
+  `;
+  panel.appendChild(actions);
+  host.appendChild(panel);
+
+  $('addOnDay').onclick = () => addDuty(selectedDate);
+  $('closeEditor').onclick = () => { selectedDate = null; renderCalendar(); };
+  $('copyTo').value = addDaysToDateStr(selectedDate, 7);
+  $('copyBtn').onclick = () => {
+    const to = $('copyTo').value;
+    if (!to) return;
+    const source = entriesOn(selectedDate);
+    if (!source.length) return;
+    source.forEach((e) => roster.push({ ...e, date: to, names: [...e.names] }));
+    roster.sort(byDate);
+    markDirty();
+    selectedDate = to;
+    gotoMonthOf(to);
+    render();
+  };
+}
+
+// ── list view + archive ─────────────────────────────────────────────────
+
+function dayBlock(entry) {
+  const block = document.createElement('div');
+  block.className = 'day-block';
+  const date = document.createElement('div');
+  date.className = 'row';
+  date.innerHTML = '<div><label>Date</label><input type="date" class="f-date"></div>';
+  const input = date.querySelector('.f-date');
+  input.value = entry.date;
+  input.onchange = () => {
+    entry.date = input.value;
+    roster.sort(byDate);
+    markDirty();
+    render();
+  };
+  block.appendChild(date);
+  block.appendChild(entryFields(entry));
+  return block;
+}
+
+function renderList() {
+  const { upcoming, past } = splitRoster(roster, today);
+
+  rosterRows.innerHTML = '';
+  if (!upcoming.length) {
+    rosterRows.innerHTML = '<p class="hint" style="margin:0 0 10px">No upcoming duty days yet.</p>';
+  }
+  upcoming.forEach((entry) => rosterRows.appendChild(dayBlock(entry)));
+
+  $('archive').hidden = !past.length;
+  $('archiveSummary').textContent = `Past duties (${past.length})`;
+
+  const host = $('archiveRows');
+  host.innerHTML = '';
+  past.forEach((entry) => {
+    const row = document.createElement('div');
+    row.className = 'past-row';
+    const detail = [entry.time, entry.location, entry.team ? `Team ${entry.team}` : '']
+      .filter(Boolean).join(' · ');
+    row.innerHTML = `
+      <div>
+        <div>${esc(formatDayLabel(entry.date))}${detail ? ' — ' + esc(detail) : ''}</div>
+        <div class="when">${esc(purgeNote(entry.date))}</div>
+      </div>
+      <button type="button" class="remove">Delete now</button>
+    `;
+    row.querySelector('.remove').onclick = () => {
+      roster.splice(roster.indexOf(entry), 1);
+      markDirty();
+      render();
+    };
+    host.appendChild(row);
+  });
+}
+
+function purgeNote(date) {
+  if (!settings.retention.enabled) return 'Kept until you delete it — automatic clean-up is off.';
+  const goesOn = addDaysToDateStr(date, settings.retention.days + 1);
+  return goesOn <= today ? 'Due to be removed at the next clean-up.' : `Removed automatically after ${formatDayLabel(goesOn)}.`;
+}
+
+// ── view switching ──────────────────────────────────────────────────────
+
+function setView(next) {
+  view = next;
+  localStorage.setItem(VIEW_KEY, next);
+  $('viewCalendar').setAttribute('aria-pressed', String(next === 'calendar'));
+  $('viewList').setAttribute('aria-pressed', String(next === 'list'));
+  $('calendarView').hidden = next !== 'calendar';
+  $('listView').hidden = next !== 'list';
+  // The list is one continuous run of days, so month stepping means nothing there.
+  $('monthnav').hidden = next !== 'calendar';
+  render();
+}
+
+$('viewCalendar').onclick = () => setView('calendar');
+$('viewList').onclick = () => setView('list');
+
+$('prevMonth').onclick = () => {
+  if (--viewMonth < 0) { viewMonth = 11; viewYear--; }
+  renderCalendar();
+};
+$('nextMonth').onclick = () => {
+  if (++viewMonth > 11) { viewMonth = 0; viewYear++; }
+  renderCalendar();
+};
+$('todayBtn').onclick = () => { gotoMonthOf(today); renderCalendar(); };
+$('addDay').onclick = () => {
+  // New rows in the list start from today so the date picker opens somewhere useful.
+  addDuty(hkTomorrow());
+};
+
+function render() {
+  if (view === 'calendar') renderCalendar(); else renderList();
+}
+
+// ── settings pane ───────────────────────────────────────────────────────
+
+function paintSettings() {
+  $('defLocation').value = settings.defaults.location;
+  $('defTime').value = settings.defaults.time;
+  $('defTeam').value = settings.defaults.team;
+  $('retentionEnabled').checked = settings.retention.enabled;
+  $('retentionDays').value = settings.retention.days;
+  $('retentionDays').disabled = !settings.retention.enabled;
+
+  const p = settings.lastPurge;
+  $('lastPurge').textContent = p
+    ? `${new Date(p.at).toLocaleString()} — ${p.removed} duty day${p.removed === 1 ? '' : 's'} removed.`
+    : 'Never run.';
+}
+
+function collectSettings() {
+  return sanitizeSettings({
+    defaults: {
+      location: $('defLocation').value,
+      time: $('defTime').value,
+      team: $('defTeam').value,
+    },
+    retention: {
+      enabled: $('retentionEnabled').checked,
+      days: $('retentionDays').value,
+    },
+    lastPurge: settings.lastPurge,
+  });
+}
+
+$('retentionEnabled').onchange = () => {
+  $('retentionDays').disabled = !$('retentionEnabled').checked;
+};
+
+// ── load ────────────────────────────────────────────────────────────────
 
 async function load() {
   try {
     const res = await fetch('/api/prefects/status', { cache: 'no-store' });
     const data = await res.json();
-    (data.reminders || []).forEach(r => reminderRows.appendChild(reminderRow(r)));
-    (data.roster || []).forEach(d => rosterRows.appendChild(dayRow(d)));
+
+    // The endpoint answers 200 with an `error` field when an upstream fails —
+    // in that state reminders/roster come back empty even though Redis has
+    // them, so treat it as "not loaded" rather than "nothing scheduled".
+    if (data.error) throw new Error(data.error);
+
+    roster = (data.roster || []).map((d) => ({
+      date: d.date || '', location: d.location || '', time: d.time || '',
+      team: d.team || '', names: Array.isArray(d.names) ? [...d.names] : [],
+    })).sort(byDate);
+    settings = sanitizeSettings(data.settings);
+    (data.reminders || []).forEach((r) => reminderRows.appendChild(reminderRow(r)));
     if (!(data.reminders || []).length) reminderRows.appendChild(reminderRow(''));
-    if (!(data.roster || []).length) rosterRows.appendChild(dayRow());
-  } catch {
+    loaded = true;
+  } catch (e) {
     reminderRows.appendChild(reminderRow(''));
-    rosterRows.appendChild(dayRow());
-    statusEl.textContent = 'Could not load current reminders/roster — starting blank.';
-    statusEl.className = 'err';
+    const warn = $('loadWarn');
+    warn.hidden = false;
+    warn.textContent =
+      `Could not load the saved reminders and roster (${e.message}). The page is showing a blank one — `
+      + 'saving now would replace whatever is stored, so reload before making changes.';
   }
+  dirty = false;
+  $('dirtyFlag').hidden = true;
+  paintSettings();
+  render();
 }
 
-document.getElementById('save').onclick = async () => {
+// ── save ────────────────────────────────────────────────────────────────
+
+async function postAll(nextSettings, el) {
   const secret = secretInput.value.trim();
   if (!secret) {
-    statusEl.textContent = 'Enter the admin passcode first.';
-    statusEl.className = 'err';
-    return;
+    el.textContent = 'Enter the admin passcode first.';
+    el.className = el === statusEl ? 'err' : 'hint';
+    el.style.color = 'var(--danger)';
+    return false;
+  }
+  if (!loaded && !confirm('The saved roster was never loaded — saving now replaces whatever is stored with what is on screen. Continue?')) {
+    return false;
   }
 
-  statusEl.textContent = 'Saving…';
-  statusEl.className = '';
+  el.textContent = 'Saving…';
+  el.className = el === statusEl ? '' : 'hint';
+  el.style.color = '';
 
   try {
     const res = await fetch('/api/prefects/status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
-      body: JSON.stringify({ reminders: collectReminders(), roster: collectRoster() }),
+      body: JSON.stringify({ reminders: collectReminders(), roster, settings: nextSettings }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
     localStorage.setItem(SECRET_KEY, secret);
-    statusEl.textContent = 'Saved.';
-    statusEl.className = 'ok';
+    // The server prunes on write, so take its roster back rather than keeping
+    // rows it just deleted.
+    roster = data.roster || [];
+    settings = sanitizeSettings(data.settings);
+    loaded = true;
+    dirty = false;
+    $('dirtyFlag').hidden = true;
+    $('loadWarn').hidden = true;
+    paintSettings();
+    render();
+
+    el.textContent = 'Saved.';
+    el.className = el === statusEl ? 'ok' : 'hint';
+    el.style.color = el === statusEl ? '' : 'var(--ok)';
+    return true;
   } catch (e) {
-    statusEl.textContent = 'Save failed: ' + e.message;
-    statusEl.className = 'err';
+    el.textContent = 'Save failed: ' + e.message;
+    el.className = el === statusEl ? 'err' : 'hint';
+    el.style.color = 'var(--danger)';
+    return false;
   }
+}
+
+// Both buttons post the whole document — one endpoint, one stored shape. The
+// roster save reads the settings form too, so saving the roster can't discard
+// an edit sitting unsaved on the Settings tab.
+$('save').onclick = () => postAll(collectSettings(), statusEl);
+$('settingsSave').onclick = () => postAll(collectSettings(), $('settingsStatus'));
+
+$('purgeNow').onclick = async () => {
+  const next = collectSettings();
+  const { removed } = pruneRoster(roster, today, next.retention);
+  if (!removed.length) {
+    const el = $('settingsStatus');
+    el.textContent = next.retention.enabled
+      ? 'Nothing to clean up — no duty day is past its window yet.'
+      : 'Automatic clean-up is off, so nothing was removed.';
+    el.style.color = '';
+    return;
+  }
+  if (!confirm(`Permanently delete ${removed.length} ended duty day(s)?\n\n${removed.map((r) => r.date).join(', ')}`)) return;
+  await postAll(next, $('settingsStatus'));
 };
 
+setView(view); // applies the remembered Calendar/List choice before data lands
 load();
 
-// ── WhatsApp admin section ──────────────────────────────────────────────────
-
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// ══ WhatsApp admin section ═══════════════════════════════════════════════
 
 function needSecret(el) {
   const secret = secretInput.value.trim();
@@ -296,12 +956,9 @@ function say(el, msg, isErr) {
   el.style.color = isErr ? 'var(--danger)' : 'var(--ok)';
 }
 
-const hkToday = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-const hkTomorrow = () => new Date(Date.now() + 32 * 3600 * 1000).toISOString().slice(0, 10);
-
-const repliesDate = document.getElementById('repliesDate');
-const repliesOut = document.getElementById('repliesOut');
-const repliesStatus = document.getElementById('repliesStatus');
+const repliesDate = $('repliesDate');
+const repliesOut = $('repliesOut');
+const repliesStatus = $('repliesStatus');
 repliesDate.value = hkTomorrow();
 
 async function refreshReplies() {
@@ -340,12 +997,12 @@ async function refreshReplies() {
     say(repliesStatus, 'Failed: ' + e.message, true);
   }
 }
-document.getElementById('repliesRefresh').onclick = refreshReplies;
+$('repliesRefresh').onclick = refreshReplies;
 
-// ── contacts editor ─────────────────────────────────────────────────────────
+// ── contacts editor ─────────────────────────────────────────────────────
 
-const contactRows = document.getElementById('contactRows');
-const contactsStatus = document.getElementById('contactsStatus');
+const contactRows = $('contactRows');
+const contactsStatus = $('contactsStatus');
 let contactsLoaded = false;
 
 function contactRow(c) {
@@ -367,7 +1024,7 @@ function contactRow(c) {
   return row;
 }
 
-document.getElementById('addContact').onclick = () => contactRows.appendChild(contactRow());
+$('addContact').onclick = () => contactRows.appendChild(contactRow());
 
 async function loadContacts() {
   const secret = needSecret(contactsStatus);
@@ -388,9 +1045,9 @@ async function loadContacts() {
     say(contactsStatus, 'Load failed: ' + e.message, true);
   }
 }
-document.getElementById('contactsReload').onclick = loadContacts;
+$('contactsReload').onclick = loadContacts;
 
-document.getElementById('contactsSave').onclick = async () => {
+$('contactsSave').onclick = async () => {
   const secret = needSecret(contactsStatus);
   if (!secret) return;
   if (!contactsLoaded && !confirm('Contacts were never loaded — saving now replaces whatever is stored with just the rows below. Continue?')) return;
@@ -421,12 +1078,12 @@ document.getElementById('contactsSave').onclick = async () => {
   }
 };
 
-const introStart = document.getElementById('introStart');
-const introEnd = document.getElementById('introEnd');
+const introStart = $('introStart');
+const introEnd = $('introEnd');
 introStart.value = localStorage.getItem('prefectIntroStart') || '';
 introEnd.value = localStorage.getItem('prefectIntroEnd') || '';
 
-document.getElementById('introSend').onclick = async () => {
+$('introSend').onclick = async () => {
   const secret = needSecret(contactsStatus);
   if (!secret) return;
   const start = introStart.value.trim(), end = introEnd.value.trim();
@@ -460,13 +1117,13 @@ document.getElementById('introSend').onclick = async () => {
 // Pre-fill automatically when the passcode is already remembered on this device.
 if (secretInput.value.trim()) loadContacts();
 
-const noticeStatus = document.getElementById('noticeStatus');
-document.getElementById('noticeSend').onclick = async () => {
+const noticeStatus = $('noticeStatus');
+$('noticeSend').onclick = async () => {
   const secret = needSecret(noticeStatus);
   if (!secret) return;
-  const text = document.getElementById('noticeText').value.trim();
-  const audience = document.getElementById('noticeAudience').value;
-  const date = document.getElementById('noticeDate').value;
+  const text = $('noticeText').value.trim();
+  const audience = $('noticeAudience').value;
+  const date = $('noticeDate').value;
   if (!text) return say(noticeStatus, 'Write the notice first.', true);
   if (audience === 'duty' && !date) return say(noticeStatus, 'Pick the duty date for a team notice.', true);
   const who = audience === 'board' ? 'the WHOLE board' : `the ${date} duty team`;
@@ -490,11 +1147,11 @@ document.getElementById('noticeSend').onclick = async () => {
   }
 };
 
-const opsStatus = document.getElementById('opsStatus');
-const resendDate = document.getElementById('resendDate');
+const opsStatus = $('opsStatus');
+const resendDate = $('resendDate');
 resendDate.value = hkTomorrow();
 
-document.getElementById('resendBtn').onclick = async () => {
+$('resendBtn').onclick = async () => {
   const secret = needSecret(opsStatus);
   if (!secret) return;
   if (!resendDate.value) return say(opsStatus, 'Pick a date first.', true);
@@ -514,7 +1171,7 @@ document.getElementById('resendBtn').onclick = async () => {
   }
 };
 
-document.getElementById('morningBtn').onclick = async () => {
+$('morningBtn').onclick = async () => {
   const secret = needSecret(opsStatus);
   if (!secret) return;
   say(opsStatus, 'Checking…');
@@ -531,7 +1188,7 @@ document.getElementById('morningBtn').onclick = async () => {
   }
 };
 
-document.getElementById('cancelBtn').onclick = async () => {
+$('cancelBtn').onclick = async () => {
   const secret = needSecret(opsStatus);
   if (!secret) return;
   if (!confirm("Approve the held suspension and tell today's team duty is CANCELLED?")) return;
@@ -550,6 +1207,11 @@ document.getElementById('cancelBtn').onclick = async () => {
     say(opsStatus, 'Failed: ' + e.message, true);
   }
 };
+
+// Warn before losing unsaved roster edits.
+window.addEventListener('beforeunload', (e) => {
+  if (dirty) { e.preventDefault(); e.returnValue = ''; }
+});
 </script>
 
 </body>
