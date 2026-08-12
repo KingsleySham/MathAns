@@ -110,6 +110,10 @@
     border-left: 3px solid var(--accent); background: var(--chip); color: var(--text); cursor: pointer;
   }
   .chip.past { border-left-color: var(--muted); }
+  /* A cancelled duty stays visible — it is still on the roster — but must not
+     read like a normal one, since nobody is being reminded about it. */
+  .chip.cancelled { border-left-color: var(--danger); }
+  .chip.cancelled b { text-decoration: line-through; }
   .chip b { display: block; font-weight: 600; }
   .chip .meta { color: var(--muted); }
   .cal-add {
@@ -421,22 +425,22 @@
   <fieldset>
     <legend>Which column is which</legend>
     <p class="hint block">
-      Press <b>Detect properties</b> first &mdash; these fill with your database&#8217;s real columns.
-      Only the date is required; a row with just a date still syncs, and the duty defaults above fill the rest.
+      Press <b>Detect properties</b> first &mdash; these fill with your database&#8217;s real columns, and the
+      obvious match for each is picked automatically. Only the date is required.
     </p>
     <div class="row">
-      <div><label for="npDate">Date <b>(required)</b></label><select id="npDate" data-key="date"></select></div>
-      <div><label for="npLocation">Location</label><select id="npLocation" data-key="location"></select></div>
-      <div><label for="npTime">Time</label><select id="npTime" data-key="time"></select></div>
+      <div><label for="npDate">Date + time <b>(required)</b></label><select id="npDate" data-key="date"></select></div>
+      <div><label for="npStatus">Status</label><select id="npStatus" data-key="status"></select></div>
+      <div><label for="npTitle">Page title</label><select id="npTitle" data-key="title"></select></div>
     </div>
-    <div class="row">
-      <div><label for="npTeam">Team</label><select id="npTeam" data-key="team"></select></div>
-      <div><label for="npNames">Prefect names</label><select id="npNames" data-key="names"></select></div>
-    </div>
-    <p class="hint" style="margin:0" id="notionNamesWarn"></p>
+    <p class="hint" style="margin:0">
+      The duty&#8217;s <b>time</b> is written into the Date column as part of the date, so 9 September at 7:45am
+      is one value. The page title is <b>generated</b> as &ldquo;9/9 Prefect Duty&rdquo; and overwritten on
+      every sync &mdash; renaming a row by hand will not stick.
+    </p>
     <p class="hint" style="margin:6px 0 0">
-      Names have to match the WhatsApp contact list exactly &mdash; that is how a duty day finds each
-      prefect&#8217;s number. A <b>Multi-select</b> or <b>Text</b> column works best.
+      Location, team and prefect names are <b>not</b> synced &mdash; the database has no columns for them, so
+      they stay here in the hub and a sync never touches them.
     </p>
   </fieldset>
 
@@ -524,7 +528,27 @@ function newEntry(date) {
     time: settings.defaults.time || '',
     team: settings.defaults.team || '',
     names: [],
+    status: '',
   };
+}
+
+// Status values come from the Notion Status column when it is known (learned on
+// Detect properties), so the VHP picks rather than types. Any value already on
+// the entry is kept as an option even if the column has since changed, so
+// opening an old day never silently clears its status.
+let statusOptions = [];
+
+function fillStatusSelect(el, current) {
+  el.innerHTML = '';
+  el.appendChild(new Option('— none —', ''));
+  const values = [...new Set([...statusOptions, ...(current ? [current] : [])])];
+  for (const v of values) el.appendChild(new Option(v, v));
+  el.value = current || '';
+}
+
+// Repaint every open status dropdown after the options are learned.
+function paintStatusOptions() {
+  for (const el of document.querySelectorAll('.f-status')) fillStatusSelect(el, el.value);
 }
 
 const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
@@ -573,8 +597,11 @@ function monthCells(y, m) {
 
 function chipHtml(entry) {
   const head = [entry.time, entry.location].filter(Boolean).join(' · ') || 'Duty';
-  const meta = [entry.team ? `Team ${entry.team}` : '', entry.names.length ? `${entry.names.length} on duty` : 'no names']
-    .filter(Boolean).join(' · ');
+  const meta = [
+    entry.status || '',
+    entry.team ? `Team ${entry.team}` : '',
+    entry.names.length ? `${entry.names.length} on duty` : 'no names',
+  ].filter(Boolean).join(' · ');
   return `<b>${esc(head)}</b><span class="meta">${esc(meta)}</span>`;
 }
 
@@ -606,7 +633,8 @@ function renderGrid() {
     entries.forEach((entry) => {
       const chip = document.createElement('button');
       chip.type = 'button';
-      chip.className = 'chip' + (isPast ? ' past' : '');
+      chip.className = 'chip' + (isPast ? ' past' : '')
+        + (String(entry.status || '').toLowerCase() === 'cancelled' ? ' cancelled' : '');
       chip.innerHTML = chipHtml(entry);
       chip.setAttribute('aria-label', `Edit duty on ${formatDayLabel(cell.date)}`);
       chip.onclick = () => selectDay(cell.date);
@@ -676,29 +704,33 @@ function entryFields(entry) {
     </div>
     <div class="row">
       <div><label>Names (comma-separated)</label><input type="text" class="f-names" placeholder="Calissa, Angelia"></div>
+      <div style="flex:none;min-width:150px"><label>Status</label><select class="f-status"></select></div>
       <button type="button" class="remove">Delete</button>
     </div>
-    <p class="hint" style="margin:0">Team shows on the public status page. Names don&#8217;t &mdash; they&#8217;re how the WhatsApp reminder finds each prefect&#8217;s number, so they must match the contact list exactly.</p>
+    <p class="hint" style="margin:0">Team shows on the public status page. Names don&#8217;t &mdash; they&#8217;re how the WhatsApp reminder finds each prefect&#8217;s number, so they must match the contact list exactly. A <b>Cancelled</b> duty stays on the calendar but sends no reminders.</p>
   `;
   const loc = wrap.querySelector('.f-location');
   const time = wrap.querySelector('.f-time');
   const team = wrap.querySelector('.f-team');
   const names = wrap.querySelector('.f-names');
+  const status = wrap.querySelector('.f-status');
 
   loc.value = entry.location;
   time.value = entry.time;
   team.value = entry.team;
   names.value = entry.names.join(', ');
+  fillStatusSelect(status, entry.status);
 
   const sync = () => {
     entry.location = loc.value.trim();
     entry.time = time.value.trim();
     entry.team = team.value;
     entry.names = names.value.split(',').map((s) => s.trim()).filter(Boolean);
+    entry.status = status.value;
     markDirty();
     if (view === 'calendar') renderGrid();
   };
-  [loc, time, team, names].forEach((el) => { el.onchange = sync; });
+  [loc, time, team, names, status].forEach((el) => { el.onchange = sync; });
 
   wrap.querySelector('.remove').onclick = () => {
     roster.splice(roster.indexOf(entry), 1);
@@ -907,9 +939,15 @@ async function load() {
     // them, so treat it as "not loaded" rather than "nothing scheduled".
     if (data.error) throw new Error(data.error);
 
+    // notionPageId and updatedAt are carried through untouched: they are the
+    // Notion sync's bookkeeping, and dropping them here would unlink each day
+    // from its Notion row on the next save.
     roster = (data.roster || []).map((d) => ({
       date: d.date || '', location: d.location || '', time: d.time || '',
       team: d.team || '', names: Array.isArray(d.names) ? [...d.names] : [],
+      status: d.status || '',
+      ...(d.notionPageId ? { notionPageId: d.notionPageId } : {}),
+      ...(d.updatedAt ? { updatedAt: d.updatedAt } : {}),
     })).sort(byDate);
     settings = sanitizeSettings(data.settings);
     (data.reminders || []).forEach((r) => reminderRows.appendChild(reminderRow(r)));
@@ -1282,52 +1320,53 @@ $('cancelBtn').onclick = async () => {
 // saved through the admin-only tasks endpoint instead of with the other settings.
 
 const notionStatus = $('notionStatus');
-const PROP_SELECTS = ['npDate', 'npLocation', 'npTime', 'npTeam', 'npNames'];
-let notionProps = null; // [{name, type}] once detected
+const PROP_SELECTS = ['npDate', 'npStatus', 'npTitle'];
+// The Notion property type each mapping needs, used to auto-pick on detect.
+const PROP_TYPES = { date: 'date', status: 'status', title: 'title' };
+let notionProps = null; // [{name, type, options}] once detected
 
 function paintPropSelects(saved) {
   for (const id of PROP_SELECTS) {
     const el = $(id);
     const key = el.dataset.key;
-    const current = saved?.[key] ?? el.value;
+    let current = saved?.[key] ?? el.value;
     el.innerHTML = '';
-
-    const blank = new Option(notionProps ? '— none —' : '(press Detect properties)', '');
-    el.appendChild(blank);
+    el.appendChild(new Option(notionProps ? '— none —' : '(press Detect properties)', ''));
 
     // Before detection there is nothing to choose from, so show the saved name
     // rather than silently blanking a working mapping.
     const options = notionProps
       ? notionProps.map((p) => ({ label: `${p.name} — ${p.type}`, value: p.name }))
       : (current ? [{ label: current, value: current }] : []);
-
     for (const o of options) el.appendChild(new Option(o.label, o.value));
+
+    // Nothing chosen yet: take the only column of the right type. A Status
+    // column is a status, a title is a title — guessing is safe when there is
+    // exactly one candidate, and saves setting up the obvious case by hand.
+    if (!current && notionProps) {
+      const candidates = notionProps.filter((p) => p.type === PROP_TYPES[key]);
+      if (candidates.length === 1) current = candidates[0].name;
+    }
     el.value = current || '';
   }
-  paintNamesWarning();
+  captureStatusOptions();
 }
 
-// A People column holds Notion account names, which almost never match the
-// WhatsApp contact list — the duty would sync but its reminders would find nobody.
-function paintNamesWarning() {
-  const el = $('notionNamesWarn');
-  const chosen = $('npNames').value;
-  const type = notionProps?.find((p) => p.name === chosen)?.type;
-  if (type === 'people') {
-    el.textContent = '⚠️ That is a People column. Its names come from Notion accounts, so they probably '
-      + 'will not match your contact list — reminders for these duties would reach nobody. Prefer a '
-      + 'Multi-select or Text column.';
-    el.style.color = 'var(--danger)';
-  } else {
-    el.textContent = '';
-    el.style.color = '';
-  }
+// The Status column's own choices, remembered so the day editor can offer them
+// instead of a free-text box the VHP has to spell exactly right. `statusOptions`
+// itself is declared with the roster state above, since the day editor reads it.
+function captureStatusOptions() {
+  const chosen = $('npStatus').value;
+  const found = notionProps?.find((p) => p.name === chosen)?.options;
+  if (found?.length) statusOptions = found;
+  paintStatusOptions();
 }
-$('npNames').onchange = paintNamesWarning;
+$('npStatus').onchange = captureStatusOptions;
 
 function paintNotion(cfg) {
   $('notionEnabled').checked = Boolean(cfg?.enabled);
   $('notionDb').value = cfg?.databaseId || '';
+  if (cfg?.statusOptions?.length) statusOptions = cfg.statusOptions;
   paintPropSelects(cfg?.props);
 
   const s = cfg?.lastSync;
@@ -1342,6 +1381,7 @@ function collectNotion() {
     enabled: $('notionEnabled').checked,
     databaseId: $('notionDb').value.trim(),
     props: Object.fromEntries(PROP_SELECTS.map((id) => [$(id).dataset.key, $(id).value])),
+    statusOptions,
   };
 }
 
