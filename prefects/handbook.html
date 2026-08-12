@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handbook confirmation code</title>
+<style>
+  /* Same palette and dark-mode approach as prefects/status.html — this is
+     embedded in the same Notion space and inherits the reader's theme. */
+  :root {
+    --blue-bg: #e3ecfb; --blue-fg: #1d3f8f;
+    --muted-bg: #f1efe8; --muted-fg: #5f5e5a;
+    --page: #ffffff; --line: #e5e3db; --text: #1c1b18;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --blue-bg: #132a52; --blue-fg: #a9c6f5;
+      --muted-bg: #2c2c2a; --muted-fg: #b4b2a9;
+      --page: #191917; --line: #35352f; --text: #ede9e1;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--page); color: var(--text);
+  }
+  .card { border-radius: 10px; padding: 16px 18px; background: var(--blue-bg); color: var(--blue-fg); }
+  .card.idle { background: var(--muted-bg); color: var(--muted-fg); }
+  .tag { margin: 0 0 6px; font-size: 12px; opacity: .85; }
+  .code {
+    margin: 0; font-size: 40px; font-weight: 700; letter-spacing: .16em;
+    font-variant-numeric: tabular-nums; line-height: 1.15;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .code.stale { opacity: .45; }
+  .foot { margin: 10px 0 0; font-size: 12.5px; line-height: 1.55; opacity: .85; }
+  .bar { height: 4px; border-radius: 99px; background: currentColor; opacity: .2; margin: 12px 0 0; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: currentColor; opacity: .75; transition: width .95s linear; }
+  .hint { margin: 9px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--muted-fg); }
+  button {
+    font: inherit; font-size: 12.5px; margin-top: 10px; padding: 6px 12px; cursor: pointer;
+    border-radius: 7px; border: 1px solid currentColor; background: transparent; color: inherit;
+  }
+  button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<div class="card" id="card" aria-live="polite">
+  <p class="tag" id="tag">Handbook confirmation code</p>
+  <p class="code" id="code">······</p>
+  <div class="bar" id="barWrap"><span id="bar" style="width:100%"></span></div>
+  <p class="foot" id="foot">Loading…</p>
+  <button type="button" id="copy" hidden>Copy code</button>
+</div>
+<p class="hint" id="hint"></p>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const SPACED = (c) => `${c.slice(0, 3)} ${c.slice(3)}`;
+
+let current = null;   // { code, expiresIn, periodMs, open }
+let expiresAt = 0;    // wall-clock ms when the shown code stops being the current one
+
+async function fetchCode() {
+  try {
+    const res = await fetch('/api/prefects/handbook-code', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data.code) throw new Error('no code');
+
+    current = data;
+    expiresAt = Date.now() + data.expiresIn;
+    $('code').textContent = SPACED(data.code);
+    $('code').classList.remove('stale');
+    $('copy').hidden = false;
+
+    // A code with no round running is still shown — a prefect reading ahead of
+    // the announcement should not meet a dead end — but it is labelled, so
+    // nobody copies one out expecting a reply that is not coming.
+    $('card').classList.toggle('idle', !data.open);
+    $('tag').textContent = data.open
+      ? 'Handbook confirmation code'
+      : 'Handbook confirmation code — no check running right now';
+    $('hint').textContent = data.open
+      ? 'Send this code to the prefect WhatsApp number to confirm you have read the handbook.'
+      : 'You can still send this in, but there is no confirmation round open at the moment.';
+    return true;
+  } catch (e) {
+    // Fail loud, like the status embed: a blank card teaches prefects to ignore
+    // the page, and they cannot tell a broken code from an expired one.
+    $('card').classList.add('idle');
+    $('code').textContent = '——————';
+    $('copy').hidden = true;
+    $('tag').textContent = 'Code unavailable';
+    $('foot').textContent = 'Could not reach the server. Reload the page, or ask the Vice-Head Prefect.';
+    $('hint').textContent = '';
+    $('barWrap').hidden = true;
+    return false;
+  }
+}
+
+function tick() {
+  if (!current) return;
+  const left = expiresAt - Date.now();
+
+  if (left <= 0) {
+    // Grey it out immediately, then pull the new one. The old code still works
+    // for a further window server-side, so this is a nudge and not a failure.
+    $('code').classList.add('stale');
+    $('foot').textContent = 'Refreshing…';
+    $('bar').style.width = '0%';
+    current = null;
+    fetchCode();
+    return;
+  }
+
+  const seconds = Math.ceil(left / 1000);
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  $('foot').textContent = `New code in ${mins}:${String(secs).padStart(2, '0')}. `
+    + 'A code stays valid for a few minutes after it changes, so there is no rush.';
+  $('bar').style.width = `${Math.max(0, (left / current.periodMs) * 100)}%`;
+}
+
+$('copy').onclick = async () => {
+  if (!current) return;
+  try {
+    await navigator.clipboard.writeText(current.code);
+    $('copy').textContent = 'Copied';
+    setTimeout(() => { $('copy').textContent = 'Copy code'; }, 1800);
+  } catch {
+    // Clipboard is blocked in some embedded contexts — the code is on screen
+    // anyway, so say so rather than failing silently.
+    $('copy').textContent = 'Copy it by hand';
+  }
+};
+
+await fetchCode();
+tick();
+setInterval(tick, 1000);
+// Coming back to a backgrounded tab should not show a code that expired while
+// it was hidden.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) fetchCode(); });
+</script>
+
+</body>
+</html>

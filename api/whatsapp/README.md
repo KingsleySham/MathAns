@@ -25,6 +25,29 @@ verification needs the raw request body).
 | `lib/prefect-notion.js` | Notion REST client (API version pinned to `2022-06-28`) |
 | `lib/prefect-notion-sync.js` | Pure mapping + the reconcile rules, unit-tested without Redis or network |
 
+## Handbook read-check
+
+At the start of a change, after the intro template, the VHP starts a *round*
+from the WhatsApp tab of `/prefects/status/update`. Every opted-in prefect gets a
+`prefect_notice` pointing at the handbook; the page carries a 6-digit code
+(`/prefects/handbook`, meant to be embedded in the Notion handbook itself) which
+they send back here to confirm.
+
+- The code rotates every 10 minutes — HMAC-SHA256 over a clock counter, i.e.
+  TOTP without the library (`lib/prefect-handbook.js`). The **previous** window
+  still verifies so a slow app-switch is not punished; **future** windows never
+  do.
+- **It is an attendance code, not authentication.** The Notion embed has no
+  login, so every prefect sees the same code and the first to open it can paste
+  it in the group chat. The rotation stops a code circulating days later, which
+  is the realistic failure. Starting a round rotates the secret, killing every
+  code shown before it.
+- A bare six-digit message is what distinguishes a code from an absence reason
+  (which is prose), and it is only claimed while a round is open. Confirming does
+  not consume a pending absence-reason question.
+- `prefect:handbook-secret` is made on first use, so there is no extra env var.
+  `prefect:handbook` holds `{ round, confirmed }` and is cleared per round.
+
 ## Notion roster sync
 
 Two-way, last-write-wins per duty day, between `prefect:roster` and a Notion

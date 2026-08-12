@@ -300,6 +300,30 @@
   </fieldset>
 
   <fieldset>
+    <legend>Handbook check</legend>
+    <p class="hint block">
+      Follows the intro at the start of a change. Starting a round asks every opted-in prefect to open the
+      handbook and send back the 6-digit code shown on
+      <a href="/prefects/handbook" target="_blank" rel="noopener">the code page</a> &mdash; embed that page in
+      the handbook itself. The code changes every 10 minutes, and starting a round makes every earlier code
+      stop working.
+    </p>
+    <div class="row">
+      <div><label for="handbookUrl">Link to the handbook page</label><input type="text" id="handbookUrl" placeholder="https://www.notion.so/…"></div>
+      <div class="remove"><button type="button" class="primary" id="handbookStart">Start round &amp; ask everyone</button></div>
+    </div>
+    <div class="row" style="margin-bottom:4px">
+      <div><button type="button" id="handbookRefresh">Refresh</button></div>
+    </div>
+    <div id="handbookOut" style="font-size:13.5px"></div>
+    <p class="hint" style="margin:6px 0 0">
+      A prefect who has the code can pass it to another &mdash; a Notion embed has no login, so this records
+      that someone opened the page, not that each person read it.
+    </p>
+    <p id="handbookStatus" class="hint" style="margin:8px 0 0"></p>
+  </fieldset>
+
+  <fieldset>
     <legend>Send a notice</legend>
     <p class="hint block">Operational notices only (schedule changes, procedures) &mdash; social messages belong in the group chat. Always delivered via the approved <b>prefect_notice</b> template (&#9888;&#65039; bold body, Prefect Team footer).</p>
     <div class="row"><div><textarea id="noticeText" rows="3" maxlength="900" placeholder="Duty on Thu 25 June moves to 7:30am for the fire drill."></textarea></div></div>
@@ -1219,8 +1243,78 @@ $('introSend').onclick = async () => {
   }
 };
 
+// ── handbook check ──────────────────────────────────────────────────────────
+
+const handbookStatus = $('handbookStatus');
+const handbookUrl = $('handbookUrl');
+handbookUrl.value = localStorage.getItem('prefectHandbookUrl') || '';
+
+function paintHandbook(data) {
+  const out = $('handbookOut');
+  if (!data.round) {
+    out.innerHTML = '<p class="hint" style="margin:0">No round has been started yet.</p>';
+    return;
+  }
+  const started = new Date(data.round.startedAt).toLocaleString();
+  out.innerHTML =
+    `<p style="margin:0 0 6px"><b>${data.done} of ${data.total} confirmed</b>`
+    + ` — round started ${esc(started)}, asked ${data.round.sent}.</p>`
+    + data.rows.map((r) =>
+      `<p style="margin:2px 0">${r.done ? '✅' : '⏳'} ${esc(r.name)}`
+      + (r.at ? ` <span style="color:var(--muted)">${esc(new Date(r.at).toLocaleString())}</span>` : '')
+      + '</p>').join('');
+}
+
+async function loadHandbook() {
+  const secret = needSecret(handbookStatus);
+  if (!secret) return;
+  handbookStatus.textContent = 'Loading…';
+  handbookStatus.style.color = '';
+  try {
+    const res = await fetch('/api/whatsapp/tasks?op=handbook', {
+      headers: { 'x-admin-secret': secret }, cache: 'no-store',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    paintHandbook(data);
+    handbookStatus.textContent = '';
+    localStorage.setItem(SECRET_KEY, secret);
+  } catch (e) {
+    say(handbookStatus, 'Failed: ' + e.message, true);
+  }
+}
+$('handbookRefresh').onclick = loadHandbook;
+
+$('handbookStart').onclick = async () => {
+  const secret = needSecret(handbookStatus);
+  if (!secret) return;
+  const url = handbookUrl.value.trim();
+  if (!url) return say(handbookStatus, 'Paste the link to the handbook page first.', true);
+  if (!confirm('Start a new round?\n\nThis messages every opted-in prefect, clears the previous '
+    + 'confirmations, and makes every code shown before now stop working.')) return;
+
+  say(handbookStatus, 'Sending…');
+  handbookStatus.style.color = '';
+  try {
+    localStorage.setItem('prefectHandbookUrl', url);
+    const res = await fetch('/api/whatsapp/tasks?op=handbook-start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    const failed = (data.results || []).filter((r) => !r.ok);
+    say(handbookStatus, `Round started — asked ${data.sent} prefect(s).`
+      + (failed.length ? ' Failed: ' + failed.map((f) => f.name).join(', ') : ''), failed.length > 0);
+    await loadHandbook();
+  } catch (e) {
+    say(handbookStatus, 'Failed: ' + e.message, true);
+  }
+};
+
 // Pre-fill automatically when the passcode is already remembered on this device.
-if (secretInput.value.trim()) loadContacts();
+if (secretInput.value.trim()) { loadContacts(); loadHandbook(); }
 
 const noticeStatus = $('noticeStatus');
 $('noticeSend').onclick = async () => {
