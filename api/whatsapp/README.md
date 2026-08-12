@@ -40,23 +40,22 @@ please contact Kingsley via +852 9257 7822. / Thank you for your kind
 attention." Sent at most once per sender per day.
 
 The evening reminder is deliberately weather-free — an evening forecast is
-stale by morning. Instead, the morning cron (06:00–07:00 HK) sends a
-**weather notice to the whole board** when a warning is actually in force
-on a day that has a duty. Clear mornings send nothing, and so do days with
-no duty on the roster.
+stale by morning. Instead, the morning cron (06:00–07:00 HK) sends the
+**`prefect_duty_reminder_weather` template to every opted-in contact** when
+a warning is actually in force on a day that has a duty. Clear mornings
+send nothing, and so do days with no duty on the roster.
 
-It goes to every opted-in prefect rather than just that day's team (VHP
-decision, Aug 2026): a warning that moves assembly indoors or changes what
-to bring affects anyone who might turn up. Anyone rostered who declined
-gets it too.
+It goes to all opted-in contacts rather than just that day's roster names
+(VHP decision, Aug 2026): the contact list *is* the morning duty group (see
+the scale note in `PREFECT_HUB.md`), so a warning that moves assembly
+indoors concerns all of them. Anyone rostered who declined gets it too.
 
-It uses the **`prefect_duty_reminder_weather`** template. Because it now
-goes to the whole board, `{{gate}}`, `{{time}}` and `{{day}}` describe
-**the day's duty**, not the reader's own assignment — only `{{name}}` is
-per-recipient. **Keep the body worded in the third person.** If it goes
-back to "You'll be having duty at {{gate}} today", the thirty-odd prefects
-who are not rostered are told to turn up. That wording lives in Meta and is
-re-reviewed there, not in this repo.
+`{{gate}}`, `{{time}}` and `{{day}}` come from the day's roster entry and
+are therefore the same for everyone; only `{{name}}` is per-recipient. That
+is fine while the contact list stays the duty group. If the hub is ever
+opened up to prefects who do not do morning duty, revisit the wording —
+"You'll be having duty at {{gate}} today" would then be telling the wrong
+people to turn up.
 
 **VHP** — gets a WhatsApp ping for **every reply** (their request), as a
 one-liner with a running tally: "Kingsley confirmed for Mon 22 June
@@ -130,13 +129,9 @@ Quick-reply buttons, in this order: `I'll be there`, `I can't make it`.
 
 **`prefect_duty_reminder_weather`** — same header/footer, **no buttons**
 (it's a morning-of update, sent by the morning cron only when a warning is
-in force — hence "today").
-
-⚠️ **Sent to the whole board since Aug 2026, so the body below needs
-rewording in Meta.** "You'll be having duty at *{{gate}} today*" is
-second-person and reaches ~35 prefects who are not rostered. Reword it to
-describe the day's duty instead — e.g. "Duty today is at *{{gate}}*" — and
-resubmit for review. The code sends the same variables either way.
+in force — hence "today"). Since Aug 2026 it goes to every opted-in
+contact, which is the morning duty group, so the second-person wording
+still holds:
 
 ```
 Hello {{name}},
