@@ -31,6 +31,7 @@ import {
   sendReminders, morningCheck,
   getContacts, setContacts, sanitizeContacts, MAX_CONTACTS,
   sendNotice, getReplies, approveCancel, sendIntro,
+  getHandbookStatus, startHandbookRound,
 } from '../../lib/prefect-messenger.js';
 import {
   readRoster, readSettings, writeSettings, purgeEndedDuties, syncWithNotion,
@@ -182,6 +183,33 @@ export default async function handler(req, res) {
     } catch (e) {
       console.error(`${op} failed:`, e);
       return res.status(502).json({ error: String(e.message || e) });
+    }
+  }
+
+  // Handbook read-check, admin-only. Same function for the same reason as the
+  // Notion ops above: the deployment sits on the Hobby cap of 12.
+  if (op === 'handbook' || op === 'handbook-start') {
+    let body = {};
+    if (req.method === 'POST') {
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      } catch {
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
+    }
+    if (!adminOk(req, body)) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+      if (op === 'handbook') {
+        if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+        return res.status(200).json(await getHandbookStatus());
+      }
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const out = await startHandbookRound(body);
+      return res.status(out.ok ? 200 : 400).json(out);
+    } catch (e) {
+      console.error(`${op} failed:`, e);
+      return res.status(500).json({ error: String(e.message || e) });
     }
   }
 

@@ -33,6 +33,7 @@ import {
   readRoster, writeRoster, readSettings, writeSettings, purgeEndedDuties,
 } from '../../lib/prefect-roster-store.js';
 import { stampUpdatedAt } from '../../lib/prefect-notion-sync.js';
+import { handbookCodeNow } from '../../lib/prefect-handbook-store.js';
 
 const HKO = 'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en';
 const MTR = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php';
@@ -229,6 +230,20 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  // The rotating handbook code, for the embed on the handbook page. Public by
+  // necessity — the Notion embed has no login — and folded in here rather than
+  // given its own file because the deployment is at the Hobby cap of 12
+  // serverless functions. Never cached: it changes every ten minutes and a
+  // stale one would be rejected on arrival.
+  if (new URL(req.url, 'http://localhost').searchParams.get('op') === 'handbook-code') {
+    res.setHeader('Cache-Control', 'no-store');
+    try {
+      return res.status(200).json(await handbookCodeNow());
+    } catch (err) {
+      return res.status(502).json({ error: String(err.message || err) });
+    }
+  }
 
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
 
