@@ -76,7 +76,11 @@ async function route(body) {
 
   if (msg.type === 'text') {
     const text = (msg.text?.body || '').trim();
-    if (await isVhpSender({ from, fromUserId })) return handleVhpText(text);
+    // The VHP gets the full sender context too: they are also a prefect, and
+    // handleVhpText needs it to record their own handbook confirmation.
+    if (await isVhpSender({ from, fromUserId })) {
+      return handleVhpText({ from, fromUserId, profileName, text });
+    }
     return handlePrefectText({ from, fromUserId, profileName, text });
   }
 }
