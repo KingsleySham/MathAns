@@ -32,7 +32,25 @@ database. Runs on the two crons above (the Hobby plan's cron slots were already
 spent, so it piggybacks rather than adding a third) and on the **Sync now**
 button on `/prefects/status/update`.
 
-Two things about it are easy to break and worth knowing before touching it:
+Three fields cross the boundary, and only three:
+
+| Notion | Roster | Direction |
+| --- | --- | --- |
+| `Date` (datetime) | `date` **and** `time` — `7:45am` becomes `T07:45:00+08:00` | both ways |
+| `Status` | `status` | both ways |
+| `Name` (title) | generated `9/9 Prefect Duty` | write-only, rewritten every sync |
+
+`location`, `team` and `names` have no columns in the database, so they are
+**hub-only**. A Notion win therefore merges the three synced fields into the
+existing entry rather than replacing it — replacing would wipe the names the
+duty reminders match against — and `entryDiffers` compares only the synced
+fields, so editing a location never queues a pointless Notion write.
+
+`Cancelled` is the one status the rest of the system acts on: the day stays on
+the roster and the calendar, but no duty reminder and no morning weather goes
+out for it. `Tentative` and `Special` behave as normal duties.
+
+Two more things are easy to break and worth knowing before touching it:
 
 - **Only days in `[today, today + 70]` are ever touched, on either side.** The
   roster's automatic clean-up deletes ended duty days. Without that window those
