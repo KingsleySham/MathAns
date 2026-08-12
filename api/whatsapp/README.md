@@ -19,9 +19,40 @@ verification needs the raw request body).
 | --- | --- |
 | **`https://www.mathans.app/whatsapp/prefects`** | Meta webhook callback URL (rewritten to `api/whatsapp/webhook.js`) |
 | `api/whatsapp/webhook.js` | GET verify handshake + POST handler (buttons, reasons, VHP commands) |
-| `api/whatsapp/tasks.js` | One function, three rewritten routes (Hobby caps deployments at 12 functions): `/api/whatsapp/remind` — cron 12:00 UTC (~20:00 HK), tomorrow's reminders; `/api/whatsapp/morning` — cron 22:00 UTC (~06:00 HK), suspension check (asks the VHP only) + morning weather update; `/api/whatsapp/contacts` — admin route for the opt-in contact list; plus admin-page ops `?op=replies` (who confirmed/declined + suspension state), `?op=notice` (one-off notice to board or a day's team), `?op=cancel` (approve a held suspension), `?op=intro` (welcome template to not-yet-introduced contacts) |
+| `api/whatsapp/tasks.js` | One function, three rewritten routes (Hobby caps deployments at 12 functions): `/api/whatsapp/remind` — cron 12:00 UTC (~20:00 HK), tomorrow's reminders; `/api/whatsapp/morning` — cron 22:00 UTC (~06:00 HK), suspension check (asks the VHP only) + morning weather update; `/api/whatsapp/contacts` — admin route for the opt-in contact list; plus admin-page ops `?op=replies` (who confirmed/declined + suspension state), `?op=notice` (one-off notice to board or a day's team), `?op=cancel` (approve a held suspension), `?op=intro` (welcome template to not-yet-introduced contacts), and the Notion sync ops `?op=notion-config` (read/write the mapping), `?op=notion-props` (list the database's columns), `?op=notion-sync` (run a sync now) |
 | `lib/prefect-messenger.js` | All conversational logic + Redis state |
 | `lib/whatsapp.js` | Cloud API send helpers (`sendText`, `sendTemplate`, `sendTextOrTemplate`) |
+| `lib/prefect-notion.js` | Notion REST client (API version pinned to `2022-06-28`) |
+| `lib/prefect-notion-sync.js` | Pure mapping + the reconcile rules, unit-tested without Redis or network |
+
+## Notion roster sync
+
+Two-way, last-write-wins per duty day, between `prefect:roster` and a Notion
+database. Runs on the two crons above (the Hobby plan's cron slots were already
+spent, so it piggybacks rather than adding a third) and on the **Sync now**
+button on `/prefects/status/update`.
+
+Two things about it are easy to break and worth knowing before touching it:
+
+- **Only days in `[today, today + 70]` are ever touched, on either side.** The
+  roster's automatic clean-up deletes ended duty days. Without that window those
+  deletions would propagate into Notion and destroy the VHP's history, and the
+  past rows that survived there would be re-imported on the next run only to be
+  purged again.
+- **`prefect:notion-seen` is what makes a hub-side deletion stick.** When a duty
+  day is deleted in the editor it is already gone from `prefect:roster` by the
+  time a sync runs, so the row still sitting in Notion looks exactly like a new
+  one and would be added straight back. That key holds the page ids linked at the
+  end of the last run. If it is ever lost, the sync deliberately does nothing
+  destructive — linked days with no record are left alone rather than deleted.
+
+Setup: create an internal integration at notion.so/my-integrations, set its token
+as `NOTION_TOKEN`, share the database with it (••• → Connections), then use
+**Detect properties** on the Settings tab to map the columns. The mapping is
+stored, not hardcoded, so a renamed column needs a re-detect rather than a deploy.
+
+The database id and column names are **not** returned by the public
+`/api/prefects/status`, only `enabled` and the last-run summary.
 
 ## The flows
 
@@ -100,6 +131,7 @@ that:
 | `PREFECT_ENQUIRY_PHONE` | `+852 9257 7822` — the number the free-text auto-reply points enquiries to |
 | `WHATSAPP_INTRO_TEMPLATE` | `prefect_intro` |
 | `PREFECT_VHP_NAME` | `Kingsley` — fills `{{vhp}}` in the intro |
+| `NOTION_TOKEN` | internal integration token for the roster sync — no default; the sync is simply off without it |
 
 ## Message templates (create in Meta → WhatsApp Manager, all **Utility**)
 

@@ -32,6 +32,7 @@ import {
 import {
   readRoster, writeRoster, readSettings, writeSettings, purgeEndedDuties,
 } from '../../lib/prefect-roster-store.js';
+import { stampUpdatedAt } from '../../lib/prefect-notion-sync.js';
 
 const HKO = 'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en';
 const MTR = 'https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php';
@@ -45,6 +46,15 @@ const UNAVAILABLE_WEATHER = {
   detail: 'Could not reach the weather service. Check the WhatsApp group and the HKO app directly.',
   latchAvailable: false,
 };
+
+// GET is public and unauthenticated — it is embedded in a Notion page — so the
+// Notion sync's database id and column names must not travel with it. Only the
+// on/off flag and the last-run summary do; the update page reads the full config
+// from the admin-only /api/whatsapp/tasks?op=notion-config.
+const publicSettings = (settings) => ({
+  ...settings,
+  notion: { enabled: settings.notion.enabled, lastSync: settings.notion.lastSync },
+});
 
 const hkNow = () => new Date(Date.now() + 8 * 3600 * 1000);
 const hkMinutes = () => { const d = hkNow(); return d.getUTCHours() * 60 + d.getUTCMinutes(); };
@@ -177,14 +187,33 @@ export default async function handler(req, res) {
     if (provided !== secret) return res.status(401).json({ error: 'Unauthorized' });
 
     const reminders = sanitizeReminders(body.reminders);
+
     // Settings are optional in the body: the roster editor and the settings
     // pane save independently, so an old client that only sends reminders and
     // roster must not wipe the saved defaults.
-    const settings = 'settings' in body ? sanitizeSettings(body.settings) : await readSettings();
+    //
+    // The `notion` block is always taken from storage and never from the body.
+    // It is admin-only and does not travel on the public GET, so a page that
+    // loaded settings from there has no copy to send back — accepting the
+    // body's version would erase the database id on the next ordinary save.
+    // It is written through /api/whatsapp/tasks?op=notion-config instead.
+    const stored = await readSettings();
+    const settings = 'settings' in body
+      ? { ...sanitizeSettings(body.settings), notion: stored.notion }
+      : stored;
 
     // Prune on the way in as well as on read, so a save that re-submits an old
     // day the admin never noticed doesn't resurrect it past its window.
-    const { kept: roster } = pruneRoster(sanitizeRoster(body.roster), hkDate(), settings.retention);
+    const { kept: submitted } = pruneRoster(sanitizeRoster(body.roster), hkDate(), settings.retention);
+
+    // Stamp updatedAt on genuinely changed days, by diffing against what is
+    // stored. This is the hub's half of the Notion sync's last-write-wins, and
+    // it has to happen here rather than on the page: the editor posts all 70
+    // days every save, so a client-side stamp would mark every day as
+    // just-edited and the hub would win every conflict, silently discarding
+    // whatever was changed in Notion.
+    const previous = await readRoster();
+    const roster = stampUpdatedAt(submitted, previous, new Date().toISOString());
 
     const [remindersOk, rosterOk, settingsOk] = await Promise.all([
       writeReminders(reminders),
@@ -193,6 +222,9 @@ export default async function handler(req, res) {
     ]);
     if (!remindersOk || !rosterOk || !settingsOk) return res.status(502).json({ error: 'Could not save to Redis' });
 
+    // Deletions only propagate to Notion on the next sync, not from here — the
+    // sync is the one place that talks to Notion, so a save stays fast and a
+    // Notion outage can never block the roster being written.
     return res.status(200).json({ ok: true, reminders, roster, settings });
   }
 
@@ -225,7 +257,7 @@ export default async function handler(req, res) {
       transport,
       reminders,
       roster,
-      settings,
+      settings: publicSettings(settings),
       nextDuty: nextDuty(roster, hkDate()),
       updated: hkNow().toISOString().slice(11, 16),
       ...(weatherError ? { error: String(weatherError.message || weatherError) } : {}),
@@ -238,7 +270,7 @@ export default async function handler(req, res) {
       transport: { ok: true, severity: 'green', alerts: [] },
       reminders: [],
       roster: [],
-      settings: DEFAULT_SETTINGS,
+      settings: publicSettings(DEFAULT_SETTINGS),
       nextDuty: null,
       updated: hkNow().toISOString().slice(11, 16),
       // The admin page keys off this to refuse to overwrite a roster it never

@@ -388,6 +388,73 @@
     <button type="button" class="primary" id="settingsSave">Save settings</button>
   </div>
   <p id="settingsStatus" class="hint" style="margin:10px 0 0"></p>
+
+  <h2>Notion sync</h2>
+  <p class="sub">
+    Keeps the duty roster and a Notion database in step, both ways. A day added or edited in either place
+    wins if it was changed more recently. Only days from today onwards are synced &mdash; past duties are
+    left alone in Notion, so the automatic clean-up above can never touch your records there.
+  </p>
+
+  <fieldset>
+    <legend>Connection</legend>
+    <div class="setting">
+      <div class="copy">
+        <strong>Sync with Notion</strong>
+        <p>Runs with the nightly and morning jobs, and whenever you press Sync now. Needs <code>NOTION_TOKEN</code>
+          set on the server, and the database shared with that integration (&bull;&bull;&bull; &rarr; Connections).</p>
+      </div>
+      <div class="control">
+        <label class="switch">
+          <input type="checkbox" id="notionEnabled" aria-label="Sync with Notion">
+          <span></span>
+        </label>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div><label for="notionDb">Database ID or URL</label><input type="text" id="notionDb" placeholder="3a8f2659-86c0-806f-a655-000bfa917049"></div>
+      <div class="remove"><button type="button" id="notionDetect">Detect properties</button></div>
+    </div>
+    <p class="hint" style="margin:0 0 4px" id="notionDbInfo"></p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Which column is which</legend>
+    <p class="hint block">
+      Press <b>Detect properties</b> first &mdash; these fill with your database&#8217;s real columns.
+      Only the date is required; a row with just a date still syncs, and the duty defaults above fill the rest.
+    </p>
+    <div class="row">
+      <div><label for="npDate">Date <b>(required)</b></label><select id="npDate" data-key="date"></select></div>
+      <div><label for="npLocation">Location</label><select id="npLocation" data-key="location"></select></div>
+      <div><label for="npTime">Time</label><select id="npTime" data-key="time"></select></div>
+    </div>
+    <div class="row">
+      <div><label for="npTeam">Team</label><select id="npTeam" data-key="team"></select></div>
+      <div><label for="npNames">Prefect names</label><select id="npNames" data-key="names"></select></div>
+    </div>
+    <p class="hint" style="margin:0" id="notionNamesWarn"></p>
+    <p class="hint" style="margin:6px 0 0">
+      Names have to match the WhatsApp contact list exactly &mdash; that is how a duty day finds each
+      prefect&#8217;s number. A <b>Multi-select</b> or <b>Text</b> column works best.
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Status</legend>
+    <div class="setting">
+      <div class="copy">
+        <strong>Last sync</strong>
+        <p id="notionLastSync">Enter the admin passcode above to load these settings.</p>
+      </div>
+      <div class="control"><button type="button" id="notionSyncNow">Sync now</button></div>
+    </div>
+  </fieldset>
+
+  <div class="savebar">
+    <button type="button" class="primary" id="notionSave">Save Notion settings</button>
+  </div>
+  <p id="notionStatus" class="hint" style="margin:10px 0 0"></p>
 </section>
 
 <script type="module">
@@ -1207,6 +1274,160 @@ $('cancelBtn').onclick = async () => {
     say(opsStatus, 'Failed: ' + e.message, true);
   }
 };
+
+// ══ Notion sync ══════════════════════════════════════════════════════════
+//
+// The Notion config never rides on the public status endpoint — it would put the
+// database ID and column names on an unauthenticated URL — so it is loaded and
+// saved through the admin-only tasks endpoint instead of with the other settings.
+
+const notionStatus = $('notionStatus');
+const PROP_SELECTS = ['npDate', 'npLocation', 'npTime', 'npTeam', 'npNames'];
+let notionProps = null; // [{name, type}] once detected
+
+function paintPropSelects(saved) {
+  for (const id of PROP_SELECTS) {
+    const el = $(id);
+    const key = el.dataset.key;
+    const current = saved?.[key] ?? el.value;
+    el.innerHTML = '';
+
+    const blank = new Option(notionProps ? '— none —' : '(press Detect properties)', '');
+    el.appendChild(blank);
+
+    // Before detection there is nothing to choose from, so show the saved name
+    // rather than silently blanking a working mapping.
+    const options = notionProps
+      ? notionProps.map((p) => ({ label: `${p.name} — ${p.type}`, value: p.name }))
+      : (current ? [{ label: current, value: current }] : []);
+
+    for (const o of options) el.appendChild(new Option(o.label, o.value));
+    el.value = current || '';
+  }
+  paintNamesWarning();
+}
+
+// A People column holds Notion account names, which almost never match the
+// WhatsApp contact list — the duty would sync but its reminders would find nobody.
+function paintNamesWarning() {
+  const el = $('notionNamesWarn');
+  const chosen = $('npNames').value;
+  const type = notionProps?.find((p) => p.name === chosen)?.type;
+  if (type === 'people') {
+    el.textContent = '⚠️ That is a People column. Its names come from Notion accounts, so they probably '
+      + 'will not match your contact list — reminders for these duties would reach nobody. Prefer a '
+      + 'Multi-select or Text column.';
+    el.style.color = 'var(--danger)';
+  } else {
+    el.textContent = '';
+    el.style.color = '';
+  }
+}
+$('npNames').onchange = paintNamesWarning;
+
+function paintNotion(cfg) {
+  $('notionEnabled').checked = Boolean(cfg?.enabled);
+  $('notionDb').value = cfg?.databaseId || '';
+  paintPropSelects(cfg?.props);
+
+  const s = cfg?.lastSync;
+  $('notionLastSync').textContent = s
+    ? `${new Date(s.at).toLocaleString()} — ${s.pulled} read, ${s.pushed} written, `
+      + `${s.archived} archived, ${s.removed} removed.${s.error ? ' Problem: ' + s.error : ''}`
+    : 'Never run.';
+}
+
+function collectNotion() {
+  return {
+    enabled: $('notionEnabled').checked,
+    databaseId: $('notionDb').value.trim(),
+    props: Object.fromEntries(PROP_SELECTS.map((id) => [$(id).dataset.key, $(id).value])),
+  };
+}
+
+async function notionCall(path, options, el) {
+  const secret = needSecret(el);
+  if (!secret) return null;
+  const res = await fetch(path, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret, ...(options?.headers || {}) },
+    cache: 'no-store',
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  localStorage.setItem(SECRET_KEY, secret);
+  return data;
+}
+
+async function loadNotion() {
+  try {
+    const data = await notionCall('/api/whatsapp/tasks?op=notion-config', {}, notionStatus);
+    if (data) paintNotion(data.notion);
+  } catch (e) {
+    say(notionStatus, 'Could not load the Notion settings: ' + e.message, true);
+  }
+}
+
+$('notionDetect').onclick = async () => {
+  const db = $('notionDb').value.trim();
+  notionStatus.textContent = 'Asking Notion…';
+  notionStatus.style.color = '';
+  try {
+    const data = await notionCall(
+      `/api/whatsapp/tasks?op=notion-props${db ? `&database=${encodeURIComponent(db)}` : ''}`, {}, notionStatus,
+    );
+    if (!data) return;
+    notionProps = data.properties;
+    $('notionDbInfo').textContent = `Connected to “${data.title}” — ${data.properties.length} properties.`;
+    paintPropSelects(collectNotion().props);
+    say(notionStatus, 'Properties detected. Pick the matching columns, then save.');
+  } catch (e) {
+    $('notionDbInfo').textContent = '';
+    say(notionStatus, e.message, true);
+  }
+};
+
+$('notionSave').onclick = async () => {
+  const notion = collectNotion();
+  if (notion.enabled && !notion.props.date) {
+    return say(notionStatus, 'Pick the Date column before turning the sync on.', true);
+  }
+  notionStatus.textContent = 'Saving…';
+  notionStatus.style.color = '';
+  try {
+    const data = await notionCall('/api/whatsapp/tasks?op=notion-config', {
+      method: 'POST', body: JSON.stringify({ notion }),
+    }, notionStatus);
+    if (!data) return;
+    paintNotion(data.notion);
+    say(notionStatus, 'Saved.');
+  } catch (e) {
+    say(notionStatus, 'Save failed: ' + e.message, true);
+  }
+};
+
+$('notionSyncNow').onclick = async () => {
+  if (!confirm('Sync now? Days changed more recently in Notion will overwrite the roster, and vice versa.')) return;
+  notionStatus.textContent = 'Syncing…';
+  notionStatus.style.color = '';
+  try {
+    const data = await notionCall('/api/whatsapp/tasks?op=notion-sync', { method: 'POST', body: '{}' }, notionStatus);
+    if (!data) return;
+    say(notionStatus,
+      `Synced — ${data.pulled} read, ${data.pushed} written, ${data.archived} archived, ${data.removed} removed.`
+      + (data.error ? ' Problem: ' + data.error : ''), Boolean(data.error));
+    await loadNotion();
+    // The roster changed underneath the calendar, so reload rather than leave a
+    // stale view that a later Save would write back over the merged result.
+    reminderRows.innerHTML = '';
+    await load();
+  } catch (e) {
+    say(notionStatus, 'Sync failed: ' + e.message, true);
+  }
+};
+
+paintPropSelects();
+if (secretInput.value.trim()) loadNotion();
 
 // Warn before losing unsaved roster edits.
 window.addEventListener('beforeunload', (e) => {
