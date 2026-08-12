@@ -32,18 +32,39 @@ import {
   getContacts, setContacts, sanitizeContacts, MAX_CONTACTS,
   sendNotice, getReplies, approveCancel, sendIntro,
 } from '../../lib/prefect-messenger.js';
-import { readRoster, readSettings, purgeEndedDuties } from '../../lib/prefect-roster-store.js';
+import {
+  readRoster, readSettings, writeSettings, purgeEndedDuties, syncWithNotion,
+} from '../../lib/prefect-roster-store.js';
+import { describeDatabase } from '../../lib/prefect-notion.js';
+import { sanitizeNotionConfig } from '../../lib/prefect-duty-status-logic.js';
 
 const hkDate = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
 
-// Automatic clean-up of ended duty days, hung off the two existing crons.
+// Roster housekeeping, both hung off the two existing crons.
 //
 // The Hobby plan allows exactly two cron jobs and both are already spoken for,
-// so rather than add a third this piggybacks on remind (20:00 HK) and morning
-// (06:00 HK) — a roster with nothing left to purge costs one Redis read.
+// so rather than add a third these piggyback on remind (20:00 HK) and morning
+// (06:00 HK). Neither costs much on a quiet day: one Redis read, one Notion query.
 //
-// Deliberately best-effort and never awaited into the send path's error
-// handling: a failed clean-up must not stop reminders going out.
+// Both are deliberately best-effort and swallow their own errors — a clean-up or
+// sync problem must never stop the reminders going out.
+
+// Two-way Notion sync. Runs BEFORE the purge, so a row pulled in from Notion
+// that has already ended is cleaned up in the same run rather than lingering a
+// day. Silent when the sync is switched off.
+async function syncNotionQuietly(op) {
+  try {
+    const { notion } = await readSettings();
+    if (!notion?.enabled) return;
+    const out = await syncWithNotion(hkDate());
+    if (out.ok) console.log(`${op}: notion sync — ${out.pulled} in, ${out.pushed} out, ${out.archived} archived`);
+    else console.error(`${op}: notion sync failed:`, out.error);
+  } catch (e) {
+    console.error('notion sync failed:', e);
+  }
+}
+
+// Automatic clean-up of ended duty days.
 async function purgeQuietly(op) {
   try {
     const [roster, settings] = await Promise.all([readRoster(), readSettings()]);
@@ -75,8 +96,9 @@ export default async function handler(req, res) {
     if (!cronOrAdminOk(req)) return res.status(401).json({ error: 'Unauthorized' });
 
     try {
-      // Never throws (see purgeQuietly) — a clean-up problem must not cost the
-      // board its reminders. Runs first so the send works off a pruned roster.
+      // Neither throws — a sync or clean-up problem must not cost the board its
+      // reminders. Both run first so the send works off a synced, pruned roster.
+      await syncNotionQuietly(op);
       await purgeQuietly(op);
 
       if (op === 'morning') return res.status(200).json(await morningCheck());
@@ -116,6 +138,51 @@ export default async function handler(req, res) {
     const ok = await setContacts(contacts);
     if (!ok) return res.status(502).json({ error: 'Could not save to Redis' });
     return res.status(200).json({ ok: true, contacts });
+  }
+
+  // Notion sync, admin-only. Folded in here rather than given its own file
+  // because the deployment already sits on the Hobby cap of 12 serverless
+  // functions — the same reason replies/notice/cancel/intro live here.
+  if (op === 'notion-props' || op === 'notion-sync' || op === 'notion-config') {
+    let body = {};
+    if (req.method === 'POST') {
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      } catch {
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
+    }
+    if (!adminOk(req, body)) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+      if (op === 'notion-config') {
+        // The config never rides on the public status endpoint, so the update
+        // page reads and writes it here.
+        if (req.method === 'GET') return res.status(200).json({ notion: (await readSettings()).notion });
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        const settings = await readSettings();
+        // lastSync belongs to the sync, not the admin — keep the stored one.
+        const notion = sanitizeNotionConfig({ ...body.notion, lastSync: settings.notion.lastSync });
+        const ok = await writeSettings({ ...settings, notion });
+        if (!ok) return res.status(502).json({ error: 'Could not save to Redis' });
+        return res.status(200).json({ ok: true, notion });
+      }
+
+      if (op === 'notion-props') {
+        if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+        // Read the id from the query so the admin can test one before saving it.
+        const id = url.searchParams.get('database') || (await readSettings()).notion.databaseId;
+        if (!id) return res.status(400).json({ error: 'No Notion database ID given or saved' });
+        return res.status(200).json(await describeDatabase(id));
+      }
+
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const out = await syncWithNotion(hkDate());
+      return res.status(out.ok ? 200 : 400).json(out);
+    } catch (e) {
+      console.error(`${op} failed:`, e);
+      return res.status(502).json({ error: String(e.message || e) });
+    }
   }
 
   if (op === 'replies' || op === 'notice' || op === 'cancel' || op === 'intro') {
