@@ -21,16 +21,10 @@
     --danger: #b42318; --danger-soft: #fef3f2;
     --ok: #067647; --ok-soft: #ecfdf3;
     --radius: 10px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --brand: #5b9dff; --brand-ink: #06152c; --brand-soft: #172542; --brand-line: #2c4a7d;
-      --page: #131417; --canvas: #131417; --raised: #191b1f;
-      --line: #2c2f36; --line-soft: #23262b; --shade: #1c1e22;
-      --text: #e8eaed; --muted: #9aa1ad;
-      --danger: #f5867a; --danger-soft: #2a1614;
-      --ok: #6ece9b; --ok-soft: #10231a;
-    }
+    /* Light only, by request. This also pins the native widgets: without it a
+       phone set to dark mode renders selects, date pickers and scrollbars dark
+       inside an otherwise white page. */
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
   body {
@@ -241,16 +235,53 @@
     .tabs button { white-space: nowrap; }
     .side-foot { margin: 0 0 0 auto; border: none; padding: 0; }
     .side-foot label { display: none; }
-    .side-foot input { max-width: 150px; }
+    .side-foot input { max-width: 148px; }
     .main { padding: 18px 14px 70px; }
+    h1 { font-size: 21px; }
+    .sub, .hint { max-width: none; }
+
+    /* Anything under 16px makes iOS zoom the whole page on focus, which then
+       leaves the layout scrolled sideways. Worth the slightly larger type. */
+    input[type="text"], input[type="password"], input[type="date"],
+    input[type="number"], select, textarea { font-size: 16px; padding: 10px 12px; }
+
+    /* Real thumb targets. 13px text with 8px padding is fine with a mouse and
+       fiddly on a phone, especially the × and + controls in the day editor. */
+    button { min-height: 42px; padding: 10px 15px; }
+    .monthnav button.step { min-width: 42px; padding: 10px 12px; }
+    .segmented button { padding: 10px 16px; }
+    .switch { width: 46px; height: 27px; }
+    .switch span::after { width: 21px; height: 21px; }
+    .switch input:checked + span::after { transform: translateX(19px); }
+
+    /* Each field gets its own line rather than three cramped columns. */
+    .row > div { flex: 1 1 100%; min-width: 0; }
+    .row .remove, .row > div[style*="flex:none"] { flex: 0 0 auto; }
+    .setting { flex-direction: column; gap: 10px; }
+    .setting .control { align-self: flex-start; }
+    .savebar { flex-wrap: wrap; }
+    .savebar button.primary { flex: 1 1 auto; }
+
     .cal-head, .cal-grid { gap: 3px; }
-    .cal-cell { min-height: 48px; padding: 3px; align-items: center; }
-    .cal-num { padding: 0; }
+    .cal-cell { min-height: 46px; padding: 3px; align-items: center; justify-content: center; }
+    .cal-num { padding: 0; font-size: 12.5px; }
+    .cal-cell.today .cal-num { padding: 1px 6px; }
     .cal-add { display: none; }
     /* Chips can't fit — a dot per duty, and the day editor does the work. */
-    .chip { padding: 0; border-radius: 999px; width: 8px; height: 8px; text-indent: -9999px; overflow: hidden; }
-    .monthnav strong { min-width: 7.5em; font-size: 14px; }
+    .chip { padding: 0; border-radius: 999px; width: 8px; height: 8px; text-indent: -9999px; overflow: hidden; min-height: 0; }
+    .cal-head span { font-size: 10px; }
+    .monthnav { margin-right: 0; }
+    .monthnav strong { min-width: 6.5em; font-size: 14px; }
+    .toolbar { justify-content: space-between; }
+    #calendarView, #listView { padding: 10px; }
+    .editor { padding: 14px; }
+    details.archive { padding: 10px 12px; }
   }
+
+  /* Nothing may push the page sideways: a horizontally scrolling admin page on
+     a phone is how you mis-tap a Delete. */
+  html, body { max-width: 100%; overflow-x: hidden; }
+  textarea { max-width: 100%; }
 </style>
 </head>
 <body>
@@ -277,7 +308,7 @@
 
   <div class="side-foot gate">
     <label for="secret">Admin passcode</label>
-    <input type="password" id="secret" autocomplete="off">
+    <input type="password" id="secret" autocomplete="off" placeholder="Passcode">
   </div>
 </aside>
 
