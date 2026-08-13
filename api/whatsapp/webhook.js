@@ -13,6 +13,7 @@
 
 import crypto from 'node:crypto';
 import { isVhpSender, handleButton, handlePrefectText, handleVhpText } from '../../lib/prefect-messenger.js';
+import { handleClashWebhook } from '../../lib/clash-messenger.js';
 
 export async function GET(request) {
   const url = new URL(request.url, 'http://localhost');
@@ -70,6 +71,13 @@ async function route(body) {
   const from = msg.from;
   const fromUserId = msg.from_user_id || value?.contacts?.[0]?.user_id;
   const profileName = value?.contacts?.[0]?.profile?.name || '';
+
+  // The family lesson-clash flow shares this number (see lib/clash-messenger.js).
+  // It claims only its own button payloads and texts from the three numbers on
+  // its recipient list, returns false for everything else — including a bare
+  // CANCEL or a handbook code — and never throws, so the prefect routing below
+  // is reached exactly as it was before.
+  if (await handleClashWebhook({ from, fromUserId, profileName, msg })) return;
 
   const button = readButton(msg);
   if (button) return handleButton({ from, fromUserId, profileName, ...button });

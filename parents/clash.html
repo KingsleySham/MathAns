@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Lesson clash</title>
+<style>
+  :root {
+    --page: #ffffff; --text: #1c1b18; --panel: #f7f6f1; --line: #e5e3db;
+    --muted: #5f5e5a; --accent: #2a5db0; --danger: #a02323; --ok: #27500a;
+    --accent-soft: #e9f0fb; --chip: #ffffff; --raised: #ffffff; --shade: #f1efe8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #191917; --text: #ede9e1; --panel: #211f1c; --line: #35352f;
+      --muted: #b4b2a9; --accent: #7fb0ff; --danger: #f7c1c1; --ok: #c0dd97;
+      --accent-soft: #1d2941; --chip: #2a2823; --raised: #262420; --shade: #1f1d1a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; padding: 20px 20px 80px; max-width: 720px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--page); color: var(--text);
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 26px 0 8px; }
+  .sub { font-size: 13px; color: var(--muted); margin: 0 0 18px; line-height: 1.5; max-width: 60ch; }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 0 0 16px; background: var(--panel); }
+  legend { font-size: 13px; font-weight: 600; padding: 0 6px; }
+  label { display: block; font-size: 12.5px; color: var(--muted); margin: 0 0 4px; }
+  input[type="text"], input[type="password"], textarea {
+    width: 100%; font: inherit; font-size: 14px; padding: 7px 9px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--page); color: var(--text);
+  }
+  textarea { min-height: 76px; resize: vertical; line-height: 1.5; }
+  button {
+    font: inherit; font-size: 13px; padding: 7px 13px; border-radius: 7px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text); cursor: pointer;
+  }
+  button:hover { border-color: currentColor; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.remove { color: var(--danger); border-color: var(--danger); padding: 6px 9px; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .gate { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 18px; }
+  .gate > div { max-width: 240px; }
+  .hint { font-size: 11.5px; color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
+  .row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-end; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 130px; }
+  .row .remove { flex: none; min-width: 0; }
+  #status { font-size: 13px; margin: 12px 0 0; min-height: 18px; }
+  #status.ok { color: var(--ok); }
+  #status.err { color: var(--danger); }
+
+  /* ── the lesson buttons: the whole point of the page ─────────────────── */
+  .lessons { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .lesson {
+    display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 9px; background: var(--chip); line-height: 1.35;
+  }
+  .lesson b { font-size: 13.5px; font-weight: 600; }
+  .lesson span { font-size: 11.5px; color: var(--muted); }
+  .lesson[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+  .lesson[aria-pressed="true"] span { color: var(--accent); }
+
+  /* ── the preview: exactly what the three phones will show ────────────── */
+  .preview {
+    border: 1px solid var(--line); border-radius: 10px; background: var(--raised);
+    padding: 12px 14px; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap;
+    word-break: break-word; margin-top: 4px;
+  }
+  .preview .head { font-weight: 700; }
+  .preview .foot { color: var(--muted); font-size: 11.5px; margin-top: 8px; }
+  .preview .btn {
+    margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line);
+    color: var(--accent); text-align: center; font-size: 13px;
+  }
+
+  /* ── open clashes ───────────────────────────────────────────────────── */
+  .case { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--panel); margin-bottom: 12px; }
+  .case header { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
+  .case header strong { font-size: 14px; }
+  .case .when { font-size: 11.5px; color: var(--muted); }
+  .case ul { list-style: none; padding: 0; margin: 0; }
+  .case li { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+  .case li:first-child { border-top: none; }
+  .case li.done { color: var(--muted); }
+  .case li.done b { text-decoration: line-through; font-weight: 400; }
+  .case footer { margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .case footer .progress { font-size: 12px; color: var(--muted); margin-right: auto; }
+  details.settings { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; background: var(--shade); }
+  details.settings summary { font-size: 13px; cursor: pointer; }
+  details.settings[open] summary { margin-bottom: 12px; }
+  .empty { font-size: 13px; color: var(--muted); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<h1>Lesson clash</h1>
+<p class="sub">
+  Press the tutorial(s) that clash, say what they clash with, and the
+  <code>class_clash</code> message goes to all three phones. Tapping
+  <em>Actions taken 已完成調堂</em> in WhatsApp — or the buttons here — marks a
+  lesson arranged and tells everyone.
+</p>
+
+<div class="gate">
+  <div>
+    <label for="secret">Passcode</label>
+    <input id="secret" type="password" autocomplete="current-password" placeholder="admin passcode">
+  </div>
+  <button id="unlock" class="primary" type="button">Unlock</button>
+</div>
+
+<div id="app" hidden>
+
+  <fieldset>
+    <legend>1 · Which tutorials clashed?</legend>
+    <div class="lessons" id="lessons"></div>
+    <p class="hint">The number on each is the code you type when doing this over WhatsApp (send <b>clash</b> to the bot).</p>
+  </fieldset>
+
+  <fieldset id="reasonBox" hidden>
+    <legend>2 · Why? (the event)</legend>
+    <div id="events"></div>
+    <button type="button" class="add" id="addEvent">+ Another event</button>
+    <div class="row" style="margin-top:12px">
+      <div style="max-width:140px">
+        <label for="day">Header date</label>
+        <input id="day" type="text" placeholder="22/8">
+      </div>
+    </div>
+    <p class="hint">Shown in the message header — “Possible clash - Kingsley 22/8”. Defaults to today.</p>
+  </fieldset>
+
+  <fieldset id="previewBox" hidden>
+    <legend>3 · What they will get</legend>
+    <div class="preview" id="preview"></div>
+    <p class="hint" id="recipientLine"></p>
+    <div class="row" style="margin-top:10px">
+      <button id="send" class="primary" type="button">Send to all</button>
+    </div>
+  </fieldset>
+
+  <h2>Open clashes</h2>
+  <div id="cases"><p class="empty">Nothing outstanding.</p></div>
+
+  <h2>Settings</h2>
+  <details class="settings">
+    <summary>Tutorials and phone numbers</summary>
+
+    <label style="margin-bottom:6px">Tutorials — code, name, normal slot, tutor</label>
+    <div id="catalogue"></div>
+    <button type="button" id="addLesson">+ Add tutorial</button>
+
+    <label style="margin:16px 0 6px">Who gets told — name, phone (with country code), relation</label>
+    <div id="recipients"></div>
+    <button type="button" id="addRecipient">+ Add person</button>
+
+    <p class="hint">
+      Numbers are stored server-side only. Unticking <b>notify</b> mutes someone
+      without losing their number.
+    </p>
+    <div class="row" style="margin-top:12px">
+      <button id="saveConfig" class="primary" type="button">Save settings</button>
+    </div>
+  </details>
+
+  <p id="status" role="status" aria-live="polite"></p>
+</div>
+
+<script>
+const API = '/api/whatsapp/tasks';
+const $ = (id) => document.getElementById(id);
+
+let state = { lessons: [], recipients: [], cases: [], day: '' };
+let picked = new Set();
+
+const secretEl = $('secret');
+const statusEl = $('status');
+
+function say(message, kind) {
+  statusEl.textContent = message;
+  statusEl.className = kind || '';
+}
+
+async function call(op, options) {
+  const secret = secretEl.value.trim();
+  const res = await fetch(`${API}?op=${op}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret, ...(options?.headers || {}) },
+    cache: 'no-store',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+
+// ── loading ─────────────────────────────────────────────────────────────────
+
+async function load() {
+  state = await call('clash-state');
+  if (!$('day').value) $('day').value = state.day;
+  renderLessons();
+  renderCases();
+  renderCatalogue();
+  renderRecipients();
+  renderPreview();
+}
+
+$('unlock').addEventListener('click', async () => {
+  if (!secretEl.value.trim()) return say('Enter the passcode first.', 'err');
+  try {
+    await load();
+    localStorage.setItem('clashSecret', secretEl.value.trim());
+    $('app').hidden = false;
+    say('');
+  } catch (e) {
+    say(e.message, 'err');
+  }
+});
+
+// Remembered on this device, same as the prefect update page.
+const remembered = localStorage.getItem('clashSecret');
+if (remembered) {
+  secretEl.value = remembered;
+  load().then(() => { $('app').hidden = false; }).catch(() => say('Passcode no longer works — enter it again.', 'err'));
+}
+
+// ── step 1: pick the lessons ────────────────────────────────────────────────
+
+function renderLessons() {
+  const box = $('lessons');
+  box.textContent = '';
+  if (!state.lessons.length) {
+    box.innerHTML = '<p class="empty">No tutorials yet — add them under Settings.</p>';
+    return;
+  }
+  for (const lesson of state.lessons) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lesson';
+    btn.setAttribute('aria-pressed', picked.has(lesson.code) ? 'true' : 'false');
+    btn.innerHTML = `<b>${escapeHtml(lesson.code)}. ${escapeHtml(lesson.name)}</b>`
+      + `<span>${escapeHtml([lesson.when, lesson.tutor].filter(Boolean).join(' · ') || 'no time set')}</span>`;
+    btn.addEventListener('click', () => {
+      if (picked.has(lesson.code)) picked.delete(lesson.code); else picked.add(lesson.code);
+      renderLessons();
+      renderPreview();
+    });
+    box.appendChild(btn);
+  }
+}
+
+// ── step 2: the reason ──────────────────────────────────────────────────────
+
+function eventRow(value) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `
+    <div><label>Event name</label><input type="text" class="ev-name" placeholder="HKYAS"></div>
+    <div><label>When</label><input type="text" class="ev-when" placeholder="16/8-19/8"></div>
+    <div class="remove"><button type="button" class="remove" title="Remove">✕</button></div>`;
+  row.querySelector('.ev-name').value = value?.name || '';
+  row.querySelector('.ev-when').value = value?.when || '';
+  row.querySelector('button.remove').addEventListener('click', () => {
+    row.remove();
+    if (!$('events').children.length) $('events').appendChild(eventRow());
+    renderPreview();
+  });
+  row.addEventListener('input', renderPreview);
+  return row;
+}
+
+$('addEvent').addEventListener('click', () => { $('events').appendChild(eventRow()); renderPreview(); });
+$('events').appendChild(eventRow());
+$('day').addEventListener('input', renderPreview);
+
+const readEvents = () => [...$('events').children]
+  .map((row) => ({
+    name: row.querySelector('.ev-name').value.trim(),
+    when: row.querySelector('.ev-when').value.trim(),
+  }))
+  .filter((e) => e.name);
+
+// ── step 3: the preview ─────────────────────────────────────────────────────
+// Mirrors lib/clash-flow.js clashTemplateParams() — if the wording of the
+// approved template changes in Meta, change it in both places.
+
+const KEYCAPS = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
+const codeMark = (code) => (/^[0-9]$/.test(code) ? KEYCAPS[Number(code)] : `#${code}`);
+const lessonLine = (l) => `${codeMark(l.code)} ${[l.when, l.name].filter(Boolean).join(' - ')}`;
+
+function renderPreview() {
+  const chosen = state.lessons.filter((l) => picked.has(l.code));
+  const events = readEvents();
+  $('reasonBox').hidden = !chosen.length;
+  $('previewBox').hidden = !(chosen.length && events.length);
+  if ($('previewBox').hidden) return;
+
+  const lines = chosen.map(lessonLine);
+  const slots = Array.from({ length: 7 }, (_, i) => (
+    i === 6 && lines.length > 7 ? `…and ${lines.length - 6} more` : (lines[i] || 'N/A')
+  ));
+
+  $('preview').innerHTML =
+    `<div class="head">Possible clash - Kingsley ${escapeHtml($('day').value || state.day)}</div>`
+    + escapeHtml([
+      'Due to unforeseen circumstances, actions are needed.',
+      `⚠️ Event(s): ${events.map((e) => (e.when ? `${e.name} (${e.when})` : e.name)).join(' · ')}`,
+      `Total: ${events.length}`,
+      '❌ Clash(es):',
+      ...slots,
+      '✅ Arranged :',
+      'N/A',
+      'Please make adjustments to the clashed tutorial(s).',
+      '',
+      'Thank you for your kind attention.',
+    ].join('\n'))
+    + '<div class="foot">電腦傳送 Sent via system.</div>'
+    + '<div class="btn">↩ Actions taken 已完成調堂</div>';
+
+  const to = state.recipients.filter((r) => r.notify !== false);
+  $('recipientLine').textContent = to.length
+    ? `Goes to ${to.map((r) => r.name).join(', ')}.`
+    : 'Nobody is set up to receive this yet — add the numbers under Settings.';
+}
+
+$('send').addEventListener('click', async () => {
+  const codes = state.lessons.filter((l) => picked.has(l.code)).map((l) => l.code);
+  const events = readEvents();
+  if (!codes.length || !events.length) return say('Pick a tutorial and name the event first.', 'err');
+
+  $('send').disabled = true;
+  say('Sending…');
+  try {
+    const out = await call('clash-open', {
+      method: 'POST',
+      body: JSON.stringify({ codes, events, day: $('day').value.trim() }),
+    });
+    say(`Sent to ${out.sent} ${out.sent === 1 ? 'phone' : 'phones'}.`, 'ok');
+    picked = new Set();
+    $('events').textContent = '';
+    $('events').appendChild(eventRow());
+    await load();
+  } catch (e) {
+    say(e.message, 'err');
+  } finally {
+    $('send').disabled = false;
+  }
+});
+
+// ── open clashes ────────────────────────────────────────────────────────────
+
+function renderCases() {
+  const box = $('cases');
+  box.textContent = '';
+  if (!state.cases.length) {
+    box.innerHTML = '<p class="empty">Nothing outstanding.</p>';
+    return;
+  }
+  for (const c of state.cases) {
+    const el = document.createElement('div');
+    el.className = 'case';
+    el.innerHTML = `
+      <header>
+        <strong>${escapeHtml(c.events.map((e) => (e.when ? `${e.name} (${e.when})` : e.name)).join(', '))}</strong>
+        <span class="when">${escapeHtml(new Date(c.createdAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }))}
+          · via ${escapeHtml(c.createdVia)}</span>
+      </header>
+      <ul></ul>
+      <footer><span class="progress">${escapeHtml(c.progress)}</span></footer>`;
+
+    const list = el.querySelector('ul');
+    for (const lesson of c.lessons) {
+      const li = document.createElement('li');
+      li.className = lesson.fixed ? 'done' : '';
+      li.innerHTML = `<span><b>${escapeHtml(lesson.name)}</b>
+        <span class="when">${escapeHtml(lesson.when || '')}</span></span>`;
+      if (lesson.fixed) {
+        const tag = document.createElement('span');
+        tag.className = 'when';
+        tag.textContent = `✅ ${lesson.fixedBy || 'arranged'}`;
+        li.appendChild(tag);
+      } else {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = 'Mark arranged';
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          say('Updating…');
+          try {
+            const out = await call('clash-resolve', {
+              method: 'POST',
+              body: JSON.stringify({ caseId: c.id, code: lesson.code, by: 'Kingsley' }),
+            });
+            say(out.closed ? 'All sorted — everyone has been told.' : 'Marked, and the message has gone out again.', 'ok');
+            await load();
+          } catch (e) {
+            say(e.message, 'err');
+            btn.disabled = false;
+          }
+        });
+        li.appendChild(btn);
+      }
+      list.appendChild(li);
+    }
+
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'remove';
+    close.textContent = 'Close, no message';
+    close.addEventListener('click', async () => {
+      if (!confirm('Close this clash without telling anyone?')) return;
+      try {
+        await call('clash-close', { method: 'POST', body: JSON.stringify({ caseId: c.id }) });
+        await load();
+        say('Closed.', 'ok');
+      } catch (e) {
+        say(e.message, 'err');
+      }
+    });
+    el.querySelector('footer').appendChild(close);
+    box.appendChild(el);
+  }
+}
+
+// ── settings ────────────────────────────────────────────────────────────────
+
+function lessonRow(lesson) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `
+    <div style="max-width:70px"><label>Code</label><input type="text" class="l-code" maxlength="6"></div>
+    <div><label>Name</label><input type="text" class="l-name" placeholder="Japanese"></div>
+    <div><label>Slot</label><input type="text" class="l-when" placeholder="Tuesday 6pm"></div>
+    <div><label>Tutor</label><input type="text" class="l-tutor"></div>
+    <div class="remove"><button type="button" class="remove" title="Remove">✕</button></div>`;
+  row.querySelector('.l-code').value = lesson?.code || '';
+  row.querySelector('.l-name').value = lesson?.name || '';
+  row.querySelector('.l-when').value = lesson?.when || '';
+  row.querySelector('.l-tutor').value = lesson?.tutor || '';
+  row.querySelector('button.remove').addEventListener('click', () => row.remove());
+  return row;
+}
+
+function recipientRow(person) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `
+    <div><label>Name</label><input type="text" class="r-name" placeholder="Jessica"></div>
+    <div><label>Phone</label><input type="text" class="r-phone" placeholder="+852…"></div>
+    <div style="max-width:110px"><label>Relation</label><input type="text" class="r-relation" placeholder="mum"></div>
+    <div class="remove" style="padding-bottom:7px">
+      <label style="white-space:nowrap"><input type="checkbox" class="r-notify"> notify</label>
+    </div>
+    <div class="remove"><button type="button" class="remove" title="Remove">✕</button></div>`;
+  row.querySelector('.r-name').value = person?.name || '';
+  row.querySelector('.r-phone').value = person?.phone ? `+${person.phone}` : '';
+  row.querySelector('.r-relation').value = person?.relation || '';
+  row.querySelector('.r-notify').checked = person ? person.notify !== false : true;
+  row.querySelector('button.remove').addEventListener('click', () => row.remove());
+  // userId is learned from webhooks and invisible here; carried through so
+  // saving the page never un-learns it.
+  row.dataset.userId = person?.userId || '';
+  return row;
+}
+
+function renderCatalogue() {
+  const box = $('catalogue');
+  box.textContent = '';
+  state.lessons.forEach((l) => box.appendChild(lessonRow(l)));
+}
+
+function renderRecipients() {
+  const box = $('recipients');
+  box.textContent = '';
+  state.recipients.forEach((r) => box.appendChild(recipientRow(r)));
+  if (!state.recipients.length) box.appendChild(recipientRow());
+}
+
+$('addLesson').addEventListener('click', () => $('catalogue').appendChild(lessonRow()));
+$('addRecipient').addEventListener('click', () => $('recipients').appendChild(recipientRow()));
+
+$('saveConfig').addEventListener('click', async () => {
+  const lessons = [...$('catalogue').children].map((row) => ({
+    code: row.querySelector('.l-code').value.trim(),
+    name: row.querySelector('.l-name').value.trim(),
+    when: row.querySelector('.l-when').value.trim(),
+    tutor: row.querySelector('.l-tutor').value.trim(),
+  })).filter((l) => l.code && l.name);
+
+  const recipients = [...$('recipients').children].map((row) => ({
+    name: row.querySelector('.r-name').value.trim(),
+    phone: row.querySelector('.r-phone').value.trim(),
+    relation: row.querySelector('.r-relation').value.trim(),
+    notify: row.querySelector('.r-notify').checked,
+    userId: row.dataset.userId || '',
+  })).filter((r) => r.phone);
+
+  try {
+    state = await call('clash-config', { method: 'POST', body: JSON.stringify({ lessons, recipients }) });
+    picked = new Set([...picked].filter((code) => state.lessons.some((l) => l.code === code)));
+    renderLessons();
+    renderCatalogue();
+    renderRecipients();
+    renderPreview();
+    say('Settings saved.', 'ok');
+  } catch (e) {
+    say(e.message, 'err');
+  }
+});
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+</script>
+</body>
+</html>
