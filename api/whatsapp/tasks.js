@@ -38,6 +38,9 @@ import {
 } from '../../lib/prefect-roster-store.js';
 import { describeDatabase } from '../../lib/prefect-notion.js';
 import { sanitizeNotionConfig } from '../../lib/prefect-duty-status-logic.js';
+import { getClashState, openClash, resolveLesson } from '../../lib/clash-messenger.js';
+import { readCase, removeOpen, setLessons, setRecipients, writeCase } from '../../lib/clash-store.js';
+import { parseEvents, sanitizeEvents } from '../../lib/clash-flow.js';
 
 const hkDate = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
 
@@ -78,6 +81,15 @@ async function purgeQuietly(op) {
 
 function adminOk(req, body) {
   const admin = process.env.PREFECT_ADMIN_SECRET;
+  const provided = req.headers['x-admin-secret'] || body?.secret;
+  return Boolean(admin) && provided === admin;
+}
+
+// The clash page is Kingsley's, not the prefect board's. It takes its own
+// secret so the two systems can be locked separately, and falls back to the
+// prefect one only so the page works before CLASH_ADMIN_SECRET is set.
+function clashAdminOk(req, body) {
+  const admin = process.env.CLASH_ADMIN_SECRET || process.env.PREFECT_ADMIN_SECRET;
   const provided = req.headers['x-admin-secret'] || body?.secret;
   return Boolean(admin) && provided === admin;
 }
@@ -249,6 +261,71 @@ export default async function handler(req, res) {
       // op === 'cancel'
       const out = await approveCancel({ viaWeb: true });
       return res.status(out.ok ? 200 : 409).json(out);
+    } catch (e) {
+      console.error(`${op} failed:`, e);
+      return res.status(500).json({ error: String(e.message || e) });
+    }
+  }
+
+  // Lesson-clash ops, for /parents/clash. Folded in here for the same reason
+  // as everything above — the deployment sits on the Hobby cap of 12
+  // serverless functions — but they are otherwise unrelated to the prefect
+  // system: separate lib, separate Redis namespace, separate secret.
+  if (op && op.startsWith('clash-')) {
+    let body = {};
+    if (req.method === 'POST') {
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      } catch {
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
+    }
+    if (!clashAdminOk(req, body)) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+      if (op === 'clash-state') {
+        if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+        return res.status(200).json(await getClashState());
+      }
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+      if (op === 'clash-config') {
+        const saved = await Promise.all([
+          Array.isArray(body.lessons) ? setLessons(body.lessons) : true,
+          Array.isArray(body.recipients) ? setRecipients(body.recipients) : true,
+        ]);
+        if (saved.some((ok) => !ok)) return res.status(502).json({ error: 'Could not save to Redis' });
+        return res.status(200).json(await getClashState());
+      }
+
+      if (op === 'clash-open') {
+        const out = await openClash({
+          codes: Array.isArray(body.codes) ? body.codes.map(String) : [],
+          // The page posts name/when pairs; a typed-in blob (or a curl) is
+          // parsed the same way a WhatsApp reply would be.
+          events: Array.isArray(body.events) ? sanitizeEvents(body.events) : parseEvents(String(body.events || '')),
+          day: body.day,
+          note: body.note,
+          via: 'web',
+        });
+        return res.status(out.ok ? 200 : 400).json(out);
+      }
+
+      if (op === 'clash-resolve') {
+        const out = await resolveLesson({ caseId: body.caseId, code: body.code, by: body.by });
+        return res.status(out.ok ? 200 : 400).json(out);
+      }
+
+      if (op === 'clash-close') {
+        // The escape hatch for a case opened by mistake: it stops being
+        // outstanding without telling anyone it was arranged.
+        const caseRec = await readCase(body.caseId);
+        if (!caseRec) return res.status(404).json({ error: 'No such clash' });
+        caseRec.closedAt = new Date().toISOString();
+        await writeCase(caseRec);
+        await removeOpen(caseRec.id);
+        return res.status(200).json({ ok: true });
+      }
     } catch (e) {
       console.error(`${op} failed:`, e);
       return res.status(500).json({ error: String(e.message || e) });

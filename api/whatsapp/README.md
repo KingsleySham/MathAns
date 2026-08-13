@@ -13,6 +13,12 @@ verification needs the raw request body).
 [ONBOARDING.md](ONBOARDING.md), or the interactive checklist version at
 [mathans.app/prefects/setup](https://www.mathans.app/prefects/setup).
 
+**The number is shared.** Kingsley's family lesson-clash bot runs on the same
+WhatsApp number — separate library, separate `clash:*` Redis keys, separate
+admin secret, and it hands every message it does not own straight back to the
+flows below. See [CLASH.md](CLASH.md), whose "Sharing the number" table is the
+contract between the two.
+
 ## Endpoints
 
 | Path | Purpose |
@@ -24,6 +30,7 @@ verification needs the raw request body).
 | `lib/whatsapp.js` | Cloud API send helpers (`sendText`, `sendTemplate`, `sendTextOrTemplate`) |
 | `lib/prefect-notion.js` | Notion REST client (API version pinned to `2022-06-28`) |
 | `lib/prefect-notion-sync.js` | Pure mapping + the reconcile rules, unit-tested without Redis or network |
+| `lib/clash-messenger.js` | Not the prefect system — the family lesson-clash flow sharing this number ([CLASH.md](CLASH.md)) |
 
 ## Handbook read-check
 

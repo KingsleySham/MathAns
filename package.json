@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test:flights": "node --test lib/flights/status-points.test.js",
-    "test:prefects": "node --experimental-test-module-mocks --test lib/prefect-roster-retention.test.js lib/prefect-morning-weather.test.js lib/prefect-notion-sync.test.js lib/prefect-notion-store.test.js lib/prefect-handbook.test.js lib/prefect-handbook-flow.test.js"
+    "test:prefects": "node --experimental-test-module-mocks --test lib/prefect-roster-retention.test.js lib/prefect-morning-weather.test.js lib/prefect-notion-sync.test.js lib/prefect-notion-store.test.js lib/prefect-handbook.test.js lib/prefect-handbook-flow.test.js",
+    "test:clash": "node --experimental-test-module-mocks --test lib/clash-flow.test.js lib/clash-routing.test.js"
   }
 }

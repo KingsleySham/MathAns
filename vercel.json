@@ -44,6 +44,8 @@
     { "source": "/api/prefects/handbook-code", "destination": "/api/prefects/status?op=handbook-code" },
     { "source": "/prefects/handbook",  "destination": "/prefects/handbook.html" },
     { "source": "/prefects/handbook/", "destination": "/prefects/handbook.html" },
+    { "source": "/parents/clash",  "destination": "/parents/clash.html" },
+    { "source": "/parents/clash/", "destination": "/parents/clash.html" },
     { "source": "/prefects/setup",  "destination": "/prefects/setup.html" },
     { "source": "/prefects/setup/", "destination": "/prefects/setup.html" },
     { "source": "/admin",        "destination": "/finals/admin.html" },
