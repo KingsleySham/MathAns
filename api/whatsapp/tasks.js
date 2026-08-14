@@ -38,7 +38,7 @@ import {
 } from '../../lib/prefect-roster-store.js';
 import { describeDatabase } from '../../lib/prefect-notion.js';
 import { sanitizeNotionConfig } from '../../lib/prefect-duty-status-logic.js';
-import { getClashState, openClash, resolveLesson } from '../../lib/clash-messenger.js';
+import { getClashState, openClash, resolveLessons } from '../../lib/clash-messenger.js';
 import { readCase, removeOpen, setLessons, setRecipients, writeCase } from '../../lib/clash-store.js';
 import { parseEvents, sanitizeEvents } from '../../lib/clash-flow.js';
 
@@ -312,7 +312,10 @@ export default async function handler(req, res) {
       }
 
       if (op === 'clash-resolve') {
-        const out = await resolveLesson({ caseId: body.caseId, code: body.code, by: body.by });
+        // One lesson or several — the page ticks boxes, so it usually sends
+        // several, and either way it is one message to the family.
+        const codes = Array.isArray(body.codes) ? body.codes.map(String) : [String(body.code || '')];
+        const out = await resolveLessons({ caseId: body.caseId, codes, by: body.by });
         return res.status(out.ok ? 200 : 400).json(out);
       }
 
