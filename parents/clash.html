@@ -376,6 +376,8 @@ function renderCases() {
       <ul></ul>
       <footer><span class="progress">${escapeHtml(c.progress)}</span></footer>`;
 
+    // Tick as many as have been sorted and send one message, rather than one
+    // per lesson — the same reason the WhatsApp side takes several codes.
     const list = el.querySelector('ul');
     for (const lesson of c.lessons) {
       const li = document.createElement('li');
@@ -388,27 +390,38 @@ function renderCases() {
         tag.textContent = `✅ ${lesson.fixedBy || 'arranged'}`;
         li.appendChild(tag);
       } else {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = 'Mark arranged';
-        btn.addEventListener('click', async () => {
-          btn.disabled = true;
-          say('Updating…');
-          try {
-            const out = await call('clash-resolve', {
-              method: 'POST',
-              body: JSON.stringify({ caseId: c.id, code: lesson.code, by: 'Kingsley' }),
-            });
-            say(out.closed ? 'All sorted — everyone has been told.' : 'Marked, and the message has gone out again.', 'ok');
-            await load();
-          } catch (e) {
-            say(e.message, 'err');
-            btn.disabled = false;
-          }
-        });
-        li.appendChild(btn);
+        const tick = document.createElement('label');
+        tick.style.cssText = 'margin:0; white-space:nowrap; color:inherit';
+        tick.innerHTML = '<input type="checkbox" class="fixbox"> arranged';
+        tick.querySelector('input').value = lesson.code;
+        li.appendChild(tick);
       }
       list.appendChild(li);
+    }
+
+    if (c.pending.length) {
+      const mark = document.createElement('button');
+      mark.type = 'button';
+      mark.className = 'primary';
+      mark.textContent = 'Send update';
+      mark.addEventListener('click', async () => {
+        const codes = [...el.querySelectorAll('.fixbox:checked')].map((box) => box.value);
+        if (!codes.length) return say('Tick whichever lessons have been arranged first.', 'err');
+        mark.disabled = true;
+        say('Updating…');
+        try {
+          const out = await call('clash-resolve', {
+            method: 'POST',
+            body: JSON.stringify({ caseId: c.id, codes, by: 'Kingsley' }),
+          });
+          say(out.closed ? 'All sorted — everyone has been told.' : 'Marked, and the message has gone out again.', 'ok');
+          await load();
+        } catch (e) {
+          say(e.message, 'err');
+          mark.disabled = false;
+        }
+      });
+      el.querySelector('footer').appendChild(mark);
     }
 
     const close = document.createElement('button');

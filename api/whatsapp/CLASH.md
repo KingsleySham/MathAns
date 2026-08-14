@@ -26,9 +26,11 @@ are what `lib/clash-routing.test.js` mostly tests.
                         │
                  tap "Actions taken 已完成調堂"
                         │
-              "Which lesson has been rearranged?"  ── button ──►  list of
-                        │                                       pending lessons
-                        │◄──────────────────── pick one ────────────────┘
+                        ▼
+              the list of lessons still to arrange
+                        │
+             pick one ──┴── or reply "1,3" for several
+                        │
                         ▼
          anything still outstanding?
               yes ─► class_clash again, that lesson moved to ✅ Arranged
@@ -39,9 +41,20 @@ Only the lessons still outstanding are ever listed as clashes: a re-send
 listing a lesson that was already sorted would read as if it had come undone.
 It moves down to ✅ Arranged instead, so each message shows the whole picture.
 
-One message per tap, to all three. WhatsApp has no multi-select, so the picker
-takes one lesson per pass — which is also why a partial fix re-sends the
-template rather than waiting.
+One message per action, to all three, however many lessons it ticked off.
+
+**Two at a time.** The Cloud API's list control is single-select — there is no
+multi-select in it — so tapping a row sorts one lesson. Replying with the codes
+(`1,3`) sorts as many as you like in one go, in the same language the bot
+already asks for when a clash is opened, and the picker says so. That reply
+only means "these are arranged" while the picker is open (`clash:draft` at step
+`fixing`), so a stray number from a parent can never tick a lesson off.
+
+The page does the same thing with tick-boxes and one **Send update** button.
+
+A genuine in-chat multi-select would mean a WhatsApp Flow — a published Flow in
+Meta, its own JSON, and the `nfm_reply` webhook to handle. Worth it only if
+typing two codes turns out to be the friction.
 
 ## Where it lives
 
