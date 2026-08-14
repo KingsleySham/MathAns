@@ -26,9 +26,11 @@ are what `lib/clash-routing.test.js` mostly tests.
                         │
                  tap "Actions taken 已完成調堂"
                         │
-              "Which lesson has been rearranged?"  ── button ──►  list of
-                        │                                       pending lessons
-                        │◄──────────────────── pick one ────────────────┘
+                        ▼
+              the list of lessons still to arrange
+                        │
+                    pick one
+                        │
                         ▼
          anything still outstanding?
               yes ─► class_clash again, that lesson moved to ✅ Arranged
