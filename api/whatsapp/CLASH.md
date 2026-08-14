@@ -30,16 +30,18 @@ are what `lib/clash-routing.test.js` mostly tests.
                         │                                       pending lessons
                         │◄──────────────────── pick one ────────────────┘
                         ▼
-      everyone is told which lesson is sorted and what is left,
-      and if anything is left the template goes out again
-      (arranged lessons move to ✅ Arranged)
+         anything still outstanding?
+              yes ─► class_clash again, that lesson moved to ✅ Arranged
+              no  ─► class_clash_done — the same message, no buttons
 ```
 
 Only the lessons still outstanding are ever listed as clashes: a re-send
 listing a lesson that was already sorted would read as if it had come undone.
+It moves down to ✅ Arranged instead, so each message shows the whole picture.
 
-WhatsApp has no multi-select, so the picker takes one lesson per pass — which
-is also why a partial fix re-sends the template rather than waiting.
+One message per tap, to all three. WhatsApp has no multi-select, so the picker
+takes one lesson per pass — which is also why a partial fix re-sends the
+template rather than waiting.
 
 ## Where it lives
 
@@ -96,6 +98,35 @@ The number on each line is the lesson's own catalogue code, the same code
 that gets typed into WhatsApp, so the message and the reply speak the same
 language.
 
+## The `class_clash_done` template
+
+The sign-off, sent once every lesson in a clash has been arranged. Same shape,
+so it reads as the same conversation — but **no buttons**, because there is
+nothing left to tap, and the tutorial slots hold the arranged lessons rather
+than the clashing ones. Also Utility, also named variables.
+
+```
+Header   Clash resolved - Kingsley {{day}}
+Body     All clashed tutorial(s) have been arranged.
+         ⚠️ Event(s): {{events}}
+         {{event2}}
+         *✅ Arranged:*
+         *{{tutorial_1}}* … *{{tutorial_7}}*
+         No further action is needed.
+
+         Thank you for your kind attention.
+Footer   電腦傳送 Sent via system.
+Buttons  none
+```
+
+`day`, `events` and `event2` are filled exactly as above; `tutorial_1`…`7`
+hold the arranged lessons, `N/A` for the unused slots. There is no
+`tutorial_arranged` — everything is arranged, so there is no second list.
+
+Until it is approved in Meta the Cloud API refuses it, and the send falls back
+to a plain-text summary. The family is never left un-told, but the message
+looks plainer until the template is live.
+
 ## The page
 
 `mathans.app/parents/clash`, behind `CLASH_ADMIN_SECRET` (falling back to
@@ -115,7 +146,9 @@ if anything is left) and *Close, no message* for one opened by mistake. Under
 
 ## Setup
 
-1. Get `class_clash` approved in Meta with the wording above.
+1. Get `class_clash` **and** `class_clash_done` approved in Meta with the
+   wording above. The flow works with only the first, but the sign-off then
+   goes out as plain text.
 2. Set `CLASH_ADMIN_SECRET` in Vercel (any string).
 3. Open `/parents/clash`, unlock, and under **Settings** enter the three
    numbers and the tutorial list. Nothing is sent until the numbers are there —
@@ -125,7 +158,8 @@ if anything is left) and *Close, no message* for one opened by mistake. Under
 | --- | --- |
 | `CLASH_ADMIN_SECRET` | falls back to `PREFECT_ADMIN_SECRET` |
 | `WHATSAPP_CLASH_TEMPLATE` | `class_clash` |
-| `CLASH_NOTICE_TEMPLATE` | `WHATSAPP_NOTICE_TEMPLATE`, i.e. `prefect_notice` — the fallback when a "sorted" message finds a closed 24-hour window |
+| `WHATSAPP_CLASH_DONE_TEMPLATE` | `class_clash_done` |
+| `CLASH_NOTICE_TEMPLATE` | `WHATSAPP_NOTICE_TEMPLATE`, i.e. `prefect_notice` — the fallback when the sign-off finds a closed 24-hour window |
 
 Everything else (`WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `REDIS_URL`, …) is
 already set for the Prefect Hub and is shared.
@@ -134,18 +168,27 @@ already set for the Prefect Hub and is shared.
 
 `handleClashWebhook()` runs first in `api/whatsapp/webhook.js` and returns
 `false` for anything that is not unambiguously its own; the prefect routing
-then runs exactly as it did before. What it will and will not claim:
+then runs exactly as it did before.
+
+**Which system a number belongs to is decided before a word of the message is
+read.** `whichSystem()` checks both contact lists — `clash:recipients` and
+`prefect:contacts` (plus `VHP_PHONE`) — because the same text means different
+things depending on who sent it. Six digits from a prefect is a handbook code;
+six digits from Mum is a mistyped lesson code, and answering her with *"open
+the handbook page and send the code showing there"* is the prefect system
+leaking into the family. That lookup is the only line of contact between the
+two systems, and it is a read.
 
 | Message | Claimed? |
 | --- | --- |
 | a button or list row whose payload starts `CLASH_` | yes — no prefect template uses that prefix |
 | a button labelled `Actions taken 已完成調堂` with no payload | yes, if a clash is open |
 | `CONFIRM:…` / `DECLINE:…`, from anyone | **no** |
-| text from a number not on the clash recipient list | **no** |
-| a bare `CANCEL`, even mid-clash | **no** — that is the VHP approving a weather suspension |
-| a bare six-digit message | **no** — that is a handbook code |
-| a stray text from Kingsley (who is also the VHP) | **no** — his fall through to the prefect handler |
-| a stray text from a parent | yes — they get a one-line pointer, never the prefect brush-off |
+| text from a number on neither list, or on the prefect list only | **no** |
+| anything from a number on the family list only — including `CANCEL` and six digits | yes |
+| a bare `CANCEL` or six-digit code from someone who is *also* a prefect | **no** — that is the VHP's suspension approval, or a handbook code |
+| a stray text from Kingsley (family and VHP) | **no** — his fall through to the prefect handler |
+| a stray text from a parent | yes — a one-line pointer, never the prefect brush-off |
 | anything at all, when Redis or the flow throws | **no** — errors are swallowed and reported as "not ours" |
 
 `lib/clash-routing.test.js` pins each of those down. Run both suites after
