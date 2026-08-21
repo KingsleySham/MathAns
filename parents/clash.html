@@ -110,6 +110,12 @@
   .missed { flex: 2; min-width: 170px; align-self: center; line-height: 1.35; }
   .missed b { display: block; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
   .missed .when { font-size: 13px; color: var(--muted); }
+  /* Giving up a lesson is a decision, so it does not look like a hint. */
+  .skip-ask {
+    border-left: 2px solid var(--text); padding: 2px 0 2px 12px;
+    margin: -4px 0 14px; color: var(--text);
+  }
+  .skip-ask .tick { margin-bottom: 3px; }
   #status { font-size: 14px; margin: 16px 0 0; min-height: 20px; color: var(--muted); }
   #status.ok { color: var(--ok); }
   #status.err { color: var(--danger); }
@@ -262,7 +268,9 @@
       what a make-up is scheduled around. A tutorial without them can still be picked by hand.
       <b>Make-up slots</b> are for a centre that only runs the subject at fixed hours — list them
       (<code>Mon 6pm, Sat 2-4pm</code>) and a make-up will only ever be put in one of those.
-      Leave it blank for a tutor who moves to suit, and the lesson keeps its usual time.</p>
+      Leave it blank for a tutor who moves to suit, and the lesson keeps its usual time.
+      Tick <b>home class</b> for a lesson that could be given up if it is the only thing blocking
+      a centre make-up — you will always be asked before anything is skipped.</p>
     <div id="catalogue"></div>
     <button type="button" id="addLesson">+ Add tutorial</button>
 
@@ -484,6 +492,31 @@ function renderClashes() {
     row.querySelector('.mk-date').value = lesson.makeup?.date || '';
     row.querySelector('.mk-start').value = lesson.makeup?.date ? fmtTime(lesson.makeup.start) : '';
 
+    // The only slot left costs a lesson at home. That is a decision, not a
+    // detail, so it is asked here — ticked, because it is what the system
+    // suggests, but never silent.
+    if (lesson.makeup?.date && lesson.makeup.displaces?.length) {
+      const ask = document.createElement('p');
+      ask.className = 'hint block skip-ask';
+      const names = lesson.makeup.displaces.map((d) => d.name).join(' and ');
+      // One span around the whole sentence: the flex gap on .tick would
+      // otherwise open a space either side of the bolded name.
+      ask.innerHTML = '<label class="tick"><input type="checkbox" class="skip" checked>'
+        + `<span>Skip <b>${escapeHtml(names)}</b> at home that day</span></label>`;
+      ask.append(`${niceDate(lesson.makeup.date)} is the only slot left for ${lesson.name}, `
+        + `and ${names} is on then. Untick to keep it and leave this make-up unscheduled.`);
+      box.appendChild(row);
+      box.appendChild(ask);
+      ask.querySelector('.skip').addEventListener('change', renderPreview);
+      row.querySelector('.keep').addEventListener('change', (e) => {
+        if (e.target.checked) dropped.delete(lesson.code); else dropped.add(lesson.code);
+        renderPreview();
+      });
+      row.addEventListener('input', renderPreview);
+      row.dataset.code = lesson.code;
+      continue;
+    }
+
     if (!lesson.makeup?.date) {
       const warn = document.createElement('p');
       warn.className = 'hint block';
@@ -513,11 +546,23 @@ function renderClashes() {
 // Make-up slots as edited on the page, sent alongside so the server uses these
 // rather than re-proposing.
 const readMakeups = () => [...$('clashes').querySelectorAll('.row')]
-  .map((row) => ({
-    code: row.dataset.code,
-    date: row.querySelector('.mk-date').value,
-    start: row.querySelector('.mk-start').value.trim(),
-  }))
+  .map((row) => {
+    // The "skip the home class" question, when there was one, sits in the note
+    // right after the row. Unticked means: keep that lesson, and this make-up
+    // goes back to being unscheduled.
+    const skip = row.nextElementSibling?.querySelector('.skip');
+    const keepsHomeClass = skip && !skip.checked;
+    return {
+      code: row.dataset.code,
+      date: keepsHomeClass ? '' : row.querySelector('.mk-date').value,
+      start: row.querySelector('.mk-start').value.trim(),
+      // Carried back so the record — and the message — still name what the
+      // slot cost.
+      displaces: keepsHomeClass
+        ? []
+        : ((plan?.lessons || []).find((l) => l.code === row.dataset.code)?.makeup?.displaces || []),
+    };
+  })
   .filter((m) => m.code);
 
 // "Wed 26/8" — the same shape lib/clash-schedule.js puts in the WhatsApp
@@ -555,9 +600,9 @@ const codeMark = (code) => (/^[0-9]$/.test(code) ? KEYCAPS[Number(code)] : `#${c
 function lessonLine(l, makeup) {
   const head = `${codeMark(l.code)} ${[l.when, l.name].filter(Boolean).join(' - ')}`;
   if (!makeup) return head;
-  return makeup.date
-    ? `${head} → ${niceDate(makeup.date)} ${makeup.start}`
-    : `${head} → no free slot, arrange with the tutor`;
+  if (!makeup.date) return `${head} → no free slot, arrange with the tutor`;
+  const cost = (makeup.displaces || []).map((d) => d.name).join(' and ');
+  return `${head} → ${niceDate(makeup.date)} ${makeup.start}${cost ? ` (skips ${cost})` : ''}`;
 }
 
 function renderPreview() {
@@ -740,6 +785,9 @@ function lessonRow(lesson) {
       <label>Make-up slots <span class="opt">only these times</span></label>
       <input type="text" class="l-makeup" placeholder="Mon 6pm, Sat 2-4pm">
     </div>
+    <div class="remove">
+      <label class="tick"><input type="checkbox" class="l-home"> home class</label>
+    </div>
     <div class="remove"><button type="button" class="remove" title="Remove">✕</button></div>`;
   row.querySelector('.l-code').value = lesson?.code || '';
   row.querySelector('.l-name').value = lesson?.name || '';
@@ -749,6 +797,7 @@ function lessonRow(lesson) {
   row.querySelector('.l-location').value = lesson?.location || '';
   row.querySelector('.l-tutor').value = lesson?.tutor || '';
   row.querySelector('.l-makeup').value = slotsLabel(lesson?.makeupSlots);
+  row.querySelector('.l-home').checked = lesson?.homeClass === true;
   row.querySelector('button.remove').addEventListener('click', () => row.remove());
   return row;
 }
@@ -803,6 +852,7 @@ $('saveConfig').addEventListener('click', async () => {
     // Sent as typed; lib/clash-schedule.js parses it, so the page and the
     // scheduler cannot disagree about what "Sat 2-4pm" means.
     makeupSlots: row.querySelector('.l-makeup').value.trim(),
+    homeClass: row.querySelector('.l-home').checked,
   })).filter((l) => l.code && l.name);
 
   const recipients = [...$('recipients').children].map((row) => ({
