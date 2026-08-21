@@ -92,6 +92,23 @@ one nearest the lesson's usual hour wins.
 Leave it blank and nothing changes — the lesson keeps its own time and only the
 day moves.
 
+**Slots that cannot be read are reported, never dropped quietly.** A lesson
+whose slots all fail to parse looks exactly like a lesson with no fixed hours,
+and is then scheduled at a time its centre never opens — which is precisely how
+a Sunday clash ended up moving a Wednesday-only lesson to the Saturday. So the
+day is found first and the rest of the line read as its time, which means all
+of these work:
+
+| Typed | Read as |
+| --- | --- |
+| `Sat 2pm` · `Sat, 2pm` · `Saturday, 10am` · `2pm Sat` | one slot |
+| `Sat 2pm, Sun 4pm` · `Sat 2pm; Sun 4pm` · `Sat 2pm Sun 4pm` | two slots |
+| `Sat 10am, 2pm` | two slots on the Saturday |
+| `Sat 2-4pm` · `星期六 2-4pm` | one slot with an end time |
+
+Anything left over comes back from `readSlots()` as `rejected`, and saving the
+page says so: *"Lesson 2: could not read "next Sat" as a make-up slot"*.
+
 A centre whose slots simply don't come up before the clash gets its own message
 on the page, because the fix is different: *"None of its make-up slots
 (Mon 6pm, Sat 2pm-4pm) come up before Fri 28/8 that week — pick one by hand, or

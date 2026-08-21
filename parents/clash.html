@@ -870,7 +870,11 @@ $('saveConfig').addEventListener('click', async () => {
     renderCatalogue();
     renderRecipients();
     renderPreview();
-    say('Settings saved.', 'ok');
+    // A make-up slot that could not be read is dropped, and the lesson is then
+    // scheduled as though the centre had no fixed hours — so say so loudly
+    // rather than letting it vanish from the field.
+    if (state.warnings?.length) say(`Saved, but — ${state.warnings.join('; ')}.`, 'err');
+    else say('Settings saved.', 'ok');
   } catch (e) {
     say(e.message, 'err');
   }

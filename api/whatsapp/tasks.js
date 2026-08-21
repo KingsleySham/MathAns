@@ -41,6 +41,7 @@ import { sanitizeNotionConfig } from '../../lib/prefect-duty-status-logic.js';
 import { getClashState, openClash, planClash, resolveLessons } from '../../lib/clash-messenger.js';
 import { readCase, removeOpen, setLessons, setRecipients, writeCase } from '../../lib/clash-store.js';
 import { parseEvents, sanitizeEvents } from '../../lib/clash-flow.js';
+import { readSlots } from '../../lib/clash-schedule.js';
 
 const hkDate = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
 
@@ -295,7 +296,16 @@ export default async function handler(req, res) {
           Array.isArray(body.recipients) ? setRecipients(body.recipients) : true,
         ]);
         if (saved.some((ok) => !ok)) return res.status(502).json({ error: 'Could not save to Redis' });
-        return res.status(200).json(await getClashState());
+        // A make-up slot that could not be read is dropped, and a lesson with
+        // no slots is scheduled as though it had no fixed hours — so the one
+        // thing that must not happen is for it to disappear quietly.
+        const warnings = (Array.isArray(body.lessons) ? body.lessons : []).flatMap((l) => {
+          const { rejected } = readSlots(l?.makeupSlots);
+          return rejected.length
+            ? [`${l?.name || l?.code}: could not read "${rejected.join('", "')}" as a make-up slot`]
+            : [];
+        });
+        return res.status(200).json({ ...(await getClashState()), warnings });
       }
 
       if (op === 'clash-detect') {
