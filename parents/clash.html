@@ -136,6 +136,8 @@
      instruction that replaces them. Wide enough that the fields sit side by
      side rather than stacking. */
   #clashes .plan { flex: 2; min-width: 300px; }
+  .tick.online { margin-top: 5px; font-size: 13px; font-weight: 600; }
+  .tick.online input { width: 15px; height: 15px; }
   .plan.skip {
     align-self: center; font-size: 15px; font-weight: 600;
     letter-spacing: -0.01em; color: var(--warn-text);
@@ -301,7 +303,9 @@
       (<code>Mon 6pm, Sat 2-4pm</code>) and a make-up will only ever be put in one of those.
       Leave it blank for a tutor who moves to suit, and the lesson keeps its usual time.
       Tick <b>home class</b> for a lesson that could be given up if it is the only thing blocking
-      a centre make-up — you will always be asked before anything is skipped.</p>
+      a centre make-up — you will always be asked before anything is skipped.
+      <b>Online slots</b> are the hours the same centre runs the subject online; they show up as an
+      <i>Online</i> tick on the clash itself, and only count once you take it.</p>
     <div id="catalogue"></div>
     <button type="button" id="addLesson">+ Add tutorial</button>
 
@@ -456,34 +460,55 @@ const readEvents = () => [...$('events').children]
 let plan = null;           // { events, lessons } from clash-detect
 const dropped = new Set(); // lessons unticked here — not part of the clash at all
 const skips = new Set();   // lessons that are simply not happening: tell the tutor
+const online = new Set();  // lessons being attended online, which opens up more hours
 
 function resetPlan() {
   plan = null;
   dropped.clear();
   skips.clear();
+  online.clear();
   $('clashBox').hidden = true;
   $('previewBox').hidden = true;
 }
 
-$('detect').addEventListener('click', async () => {
+// Ask the server what this event costs and where each lesson can go. Called
+// again whenever a choice changes what is possible — turning a lesson online
+// opens up that centre's online hours, and the slots have to be looked for
+// again before they can be shown.
+async function detect({ keepChoices = false } = {}) {
   const events = readEvents();
-  if (!events.length) return say('Name the event and give it a date first.', 'err');
-
-  $('detect').disabled = true;
-  say('Checking the timetable…');
-  try {
-    const out = await call('clash-detect', { method: 'POST', body: JSON.stringify({ events }) });
-    plan = out.ok ? out : { events: out.events || events, lessons: [] };
+  if (!events.length) {
+    say('Name the event and give it a date first.', 'err');
+    return false;
+  }
+  const out = await call('clash-detect', {
+    method: 'POST',
+    body: JSON.stringify({ events, online: [...online] }),
+  });
+  plan = out.ok ? out : { events: out.events || events, lessons: [] };
+  if (!keepChoices) {
     dropped.clear();
     skips.clear();
     picked = new Set();
-    $('clashBox').hidden = false;
-    say(out.ok
-      ? `${out.lessons.length} lesson${out.lessons.length === 1 ? '' : 's'} affected.`
-      : 'Nothing in the timetable clashes with that.', out.ok ? 'ok' : '');
-    renderClashes();
-    renderLessons();
-    renderPreview();
+  }
+  $('clashBox').hidden = false;
+  renderClashes();
+  renderLessons();
+  renderPreview();
+  return out.ok;
+}
+
+$('detect').addEventListener('click', async () => {
+  $('detect').disabled = true;
+  say('Checking the timetable…');
+  try {
+    online.clear();
+    const found = await detect();
+    if (found !== false) {
+      say(found
+        ? `${plan.lessons.length} lesson${plan.lessons.length === 1 ? '' : 's'} affected.`
+        : 'Nothing in the timetable clashes with that.', found ? 'ok' : '');
+    }
   } catch (e) {
     say(e.message, 'err');
   } finally {
@@ -562,6 +587,31 @@ function renderClashes() {
         + '<input type="date" class="mk-date"></div>'
         + '<div style="max-width:110px"><label>Time</label>'
         + '<input type="text" class="mk-start" placeholder="6pm"></div>';
+    }
+    // Attending online is a choice, so it is offered wherever the centre runs
+    // one — and taking it re-plans, because it opens hours the in-person
+    // timetable does not have.
+    if (lesson.onlineSlots?.length && !skips.has(lesson.code)) {
+      const tick = document.createElement('label');
+      tick.className = 'tick online';
+      tick.innerHTML = '<input type="checkbox" class="l-online-pick"><span>Online</span>';
+      const pick = tick.querySelector('input');
+      pick.checked = online.has(lesson.code);
+      pick.addEventListener('change', async () => {
+        if (pick.checked) online.add(lesson.code); else online.delete(lesson.code);
+        say('Looking for slots…');
+        try {
+          await detect({ keepChoices: true });
+          const now = (plan.lessons || []).find((l) => l.code === lesson.code);
+          say(now?.makeup?.date
+            ? `${lesson.name}: ${niceDate(now.makeup.date)} ${fmtTime(now.makeup.start)}`
+              + `${now.makeup.online ? ' online' : ''}.`
+            : `${lesson.name}: still nothing free that week.`, now?.makeup?.date ? 'ok' : '');
+        } catch (e) {
+          say(e.message, 'err');
+        }
+      });
+      row.querySelector('.missed').appendChild(tick);
     }
     row.querySelector('.keep').checked = !dropped.has(lesson.code);
     if (dropped.has(lesson.code)) row.classList.add('dropped');
@@ -660,6 +710,7 @@ const readMakeups = () => [...$('clashes').querySelectorAll('.row')]
       displaces: keepsHomeClass
         ? []
         : ((plan?.lessons || []).find((l) => l.code === row.dataset.code)?.makeup?.displaces || []),
+      online: (plan?.lessons || []).find((l) => l.code === row.dataset.code)?.makeup?.online === true,
     };
   })
   .filter((m) => m.code);
@@ -703,7 +754,8 @@ function lessonLine(l, makeup) {
   if (!makeup) return head;
   if (!makeup.date) return `${head} → no free slot, arrange with the tutor`;
   const cost = (makeup.displaces || []).map((d) => d.name).join(' and ');
-  return `${head} → ${niceDate(makeup.date)} ${makeup.start}${cost ? ` (skips ${cost})` : ''}`;
+  const how = makeup.online ? ' (online)' : '';
+  return `${head} → ${niceDate(makeup.date)} ${makeup.start}${how}${cost ? ` (skips ${cost})` : ''}`;
 }
 
 function renderPreview() {
@@ -756,6 +808,7 @@ $('send').addEventListener('click', async () => {
         events,
         makeups: readMakeups().filter((m) => codes.includes(m.code)),
         skips: [...skips].filter((code) => codes.includes(code)),
+        online: [...online].filter((code) => codes.includes(code)),
         day: $('day').value.trim(),
       }),
     });
@@ -887,6 +940,10 @@ function lessonRow(lesson) {
       <label>Make-up slots <span class="opt">only these times</span></label>
       <input type="text" class="l-makeup" placeholder="Mon 6pm, Sat 2-4pm">
     </div>
+    <div style="flex:2; min-width:200px">
+      <label>Online slots <span class="opt">if it runs online</span></label>
+      <input type="text" class="l-online" placeholder="Wed 8pm, Sun 10am">
+    </div>
     <div class="remove">
       <label class="tick"><input type="checkbox" class="l-home"> home class</label>
     </div>
@@ -899,6 +956,7 @@ function lessonRow(lesson) {
   row.querySelector('.l-location').value = lesson?.location || '';
   row.querySelector('.l-tutor').value = lesson?.tutor || '';
   row.querySelector('.l-makeup').value = slotsLabel(lesson?.makeupSlots);
+  row.querySelector('.l-online').value = slotsLabel(lesson?.onlineSlots);
   row.querySelector('.l-home').checked = lesson?.homeClass === true;
   row.querySelector('button.remove').addEventListener('click', () => row.remove());
   return row;
@@ -954,6 +1012,7 @@ $('saveConfig').addEventListener('click', async () => {
     // Sent as typed; lib/clash-schedule.js parses it, so the page and the
     // scheduler cannot disagree about what "Sat 2-4pm" means.
     makeupSlots: row.querySelector('.l-makeup').value.trim(),
+    onlineSlots: row.querySelector('.l-online').value.trim(),
     homeClass: row.querySelector('.l-home').checked,
   })).filter((l) => l.code && l.name);
 

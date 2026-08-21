@@ -316,6 +316,7 @@ export default async function handler(req, res) {
           codes: Array.isArray(body.codes) ? body.codes.map(String) : null,
           makeups: Array.isArray(body.makeups) ? body.makeups : null,
           skips: Array.isArray(body.skips) ? body.skips.map(String) : [],
+          online: Array.isArray(body.online) ? body.online.map(String) : [],
         });
         return res.status(out.ok || out.none ? 200 : 400).json(out);
       }
@@ -328,6 +329,8 @@ export default async function handler(req, res) {
           makeups: Array.isArray(body.makeups) ? body.makeups : null,
           // Lessons that are simply not happening — the tutor gets told instead.
           skips: Array.isArray(body.skips) ? body.skips.map(String) : [],
+          // Lessons being attended online, which opens up the centre's online hours.
+          online: Array.isArray(body.online) ? body.online.map(String) : [],
           // The page posts structured events; a typed-in blob (or a curl) is
           // parsed the same way a WhatsApp reply would be.
           events: Array.isArray(body.events) ? sanitizeEvents(body.events) : parseEvents(String(body.events || '')),
