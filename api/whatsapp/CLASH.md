@@ -76,6 +76,22 @@ When nothing in the week works — a Monday clash has no earlier day at all —
 the line says `→ no free slot, arrange with the tutor` rather than inventing
 one. That is information, and more use than a slot nobody can make.
 
+### Who gets a contested hour
+
+When two clashed lessons want the same hour, "whichever clashed first" is the
+wrong answer. A lesson at a centre with fixed hours may have exactly one slot
+all week; a lesson whose tutor moves to suit has one every day. First-come
+allocation can hand the hour to the flexible one and leave the constrained one
+with nothing.
+
+So the scarce ones are placed first — **fixed-hours lessons before flexible
+ones, then fewest options first, then earliest clash**. Only the order of
+allocation changes; the proposals come back in the order they were given, so
+the message still reads chronologically.
+
+The one left without is told why it lost, since that reads differently from
+nothing being free: *"Maths' make-up has that hour."*
+
 ### When the centre only offers certain hours
 
 Keeping the tutor's usual time is right for a private tutor, who moves to suit.

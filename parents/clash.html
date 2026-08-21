@@ -612,6 +612,13 @@ function renderClashes() {
           + 'or leave it blank and arrange with the tutor.';
       // What was in the way, and the one thing that would make room. Without
       // this a dead end looks like the home-class setting being ignored.
+      // Another make-up needed the same hour more — not something to change,
+      // but the difference between "nothing was free" and "it went elsewhere".
+      if (lesson.takenBy?.length) {
+        const note = document.createElement('span');
+        note.textContent = ` ${lesson.takenBy.join(' and ')}'s make-up has that hour.`;
+        warn.appendChild(note);
+      }
       if (lesson.blockedBy?.length) {
         const names = lesson.blockedBy.map((b) => b.name).join(' and ');
         const note = document.createElement('span');
