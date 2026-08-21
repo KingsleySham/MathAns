@@ -76,6 +76,27 @@ When nothing in the week works — a Monday clash has no earlier day at all —
 the line says `→ no free slot, arrange with the tutor` rather than inventing
 one. That is information, and more use than a slot nobody can make.
 
+### When the centre only offers certain hours
+
+Keeping the tutor's usual time is right for a private tutor, who moves to suit.
+A tuition centre does not: it runs the subject at fixed hours, and a make-up
+has to go in one of them.
+
+So a tutorial can carry **make-up slots** — typed into Settings as
+`Mon 6pm, Sat 2-4pm` — and when it has any, **those are the only times
+considered**. The window does not change: still the same week, still before the
+clash, still nothing on top of anything else. All that changes is which times
+are candidates on each day. Where two offered slots fall on the same day, the
+one nearest the lesson's usual hour wins.
+
+Leave it blank and nothing changes — the lesson keeps its own time and only the
+day moves.
+
+A centre whose slots simply don't come up before the clash gets its own message
+on the page, because the fix is different: *"None of its make-up slots
+(Mon 6pm, Sat 2pm-4pm) come up before Fri 28/8 that week — pick one by hand, or
+arrange it with the centre."*
+
 The proposal rides along in the `class_clash` message, one per clash line:
 
 ```
@@ -204,7 +225,8 @@ Three steps, plus the housekeeping:
 1. **Name the event** and give it dates — times only if it is not all day —
    then press **Find clashes**.
 2. **Check what it found**: every tutorial the event runs over, each with a
-   proposed make-up date and time. Untick anything that does not need
+   proposed make-up date and time — drawn from the centre's offered slots where
+   the tutorial has them. Untick anything that does not need
    arranging, type over a slot that will not work, or add a tutorial the
    detection missed.
 3. **Check the preview** — a mock-up of exactly what the three phones will
@@ -226,7 +248,9 @@ location, tutor — and the three phone numbers.
    numbers and the weekly timetable. Nothing is sent until the numbers are
    there — they are personal data and are never committed to the repository.
    Give every tutorial a **day and a start time**: without them a lesson
-   cannot be detected automatically or scheduled around.
+   cannot be detected automatically or scheduled around. Add **make-up slots**
+   (`Mon 6pm, Sat 2-4pm`) for any tutorial run by a centre with fixed hours —
+   see [above](#when-the-centre-only-offers-certain-hours).
 
 | Variable | Default |
 | --- | --- |
@@ -278,7 +302,7 @@ npm run test:prefects
 | Key | Contents | TTL |
 | --- | --- | --- |
 | `clash:recipients` | `[{ name, phone, relation, notify, userId }]` | — |
-| `clash:lessons` | the weekly timetable — `[{ code, name, weekday, start, end, location, tutor }]` | — |
+| `clash:lessons` | the weekly timetable — `[{ code, name, weekday, start, end, location, tutor, makeupSlots }]` | — |
 | `clash:open` | ids of clashes still outstanding (an index; the cases are the truth) | — |
 | `clash:case:{id}` | one clash: the lessons with their dates and make-up slots, the events, who sorted what | 60 days |
 | `clash:draft:{key}` | the half-answered WhatsApp conversation (`event` → `confirm`, or `fixing`) | 2 h |

@@ -259,7 +259,10 @@
 
     <label style="margin-bottom:6px">Tutorials — the weekly timetable</label>
     <p class="hint block">The day and start time are what let a clash be spotted automatically, and
-      what a make-up is scheduled around. A tutorial without them can still be picked by hand.</p>
+      what a make-up is scheduled around. A tutorial without them can still be picked by hand.
+      <b>Make-up slots</b> are for a centre that only runs the subject at fixed hours — list them
+      (<code>Mon 6pm, Sat 2-4pm</code>) and a make-up will only ever be put in one of those.
+      Leave it blank for a tutor who moves to suit, and the lesson keeps its usual time.</p>
     <div id="catalogue"></div>
     <button type="button" id="addLesson">+ Add tutorial</button>
 
@@ -485,8 +488,13 @@ function renderClashes() {
       const warn = document.createElement('p');
       warn.className = 'hint block';
       warn.style.color = 'var(--danger)';
-      warn.textContent = `No free slot before ${niceDate(lesson.date)} that week — pick one by hand, `
-        + 'or leave it blank and arrange with the tutor.';
+      // A centre with fixed hours fails for a different reason than a tutor
+      // whose usual hour was busy, and the fix is different too.
+      warn.textContent = lesson.makeupSlots?.length
+        ? `None of its make-up slots (${slotsLabel(lesson.makeupSlots)}) come up before `
+          + `${niceDate(lesson.date)} that week — pick one by hand, or arrange it with the centre.`
+        : `No free slot before ${niceDate(lesson.date)} that week — pick one by hand, `
+          + 'or leave it blank and arrange with the tutor.';
       box.appendChild(row);
       box.appendChild(warn);
     } else {
@@ -515,6 +523,13 @@ const readMakeups = () => [...$('clashes').querySelectorAll('.row')]
 // "Wed 26/8" — the same shape lib/clash-schedule.js puts in the WhatsApp
 // message, so the page and the phones never disagree about a date.
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+// "Mon 6pm, Sat 2pm-4pm" — mirrors slotsLabel() in lib/clash-schedule.js, so
+// what the editor shows is what the server stored.
+const slotsLabel = (slots) => (slots || [])
+  .map((s) => `${DAY_NAMES[s.weekday]} ${fmtTime(s.start)}${s.end ? `-${fmtTime(s.end)}` : ''}`)
+  .join(', ');
+
 function niceDate(iso) {
   const d = new Date(`${iso}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) return iso;
@@ -721,6 +736,10 @@ function lessonRow(lesson) {
     <div style="max-width:100px"><label>End</label><input type="text" class="l-end" placeholder="7pm"></div>
     <div><label>Location</label><input type="text" class="l-location" placeholder="Causeway Bay"></div>
     <div><label>Tutor</label><input type="text" class="l-tutor"></div>
+    <div style="flex:2; min-width:200px">
+      <label>Make-up slots <span class="opt">only these times</span></label>
+      <input type="text" class="l-makeup" placeholder="Mon 6pm, Sat 2-4pm">
+    </div>
     <div class="remove"><button type="button" class="remove" title="Remove">✕</button></div>`;
   row.querySelector('.l-code').value = lesson?.code || '';
   row.querySelector('.l-name').value = lesson?.name || '';
@@ -729,6 +748,7 @@ function lessonRow(lesson) {
   row.querySelector('.l-end').value = fmtTime(lesson?.end) || '';
   row.querySelector('.l-location').value = lesson?.location || '';
   row.querySelector('.l-tutor').value = lesson?.tutor || '';
+  row.querySelector('.l-makeup').value = slotsLabel(lesson?.makeupSlots);
   row.querySelector('button.remove').addEventListener('click', () => row.remove());
   return row;
 }
@@ -780,6 +800,9 @@ $('saveConfig').addEventListener('click', async () => {
     end: row.querySelector('.l-end').value.trim(),
     location: row.querySelector('.l-location').value.trim(),
     tutor: row.querySelector('.l-tutor').value.trim(),
+    // Sent as typed; lib/clash-schedule.js parses it, so the page and the
+    // scheduler cannot disagree about what "Sat 2-4pm" means.
+    makeupSlots: row.querySelector('.l-makeup').value.trim(),
   })).filter((l) => l.code && l.name);
 
   const recipients = [...$('recipients').children].map((row) => ({
