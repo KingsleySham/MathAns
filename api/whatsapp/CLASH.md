@@ -13,17 +13,20 @@ are what `lib/clash-routing.test.js` mostly tests.
 ## The flow
 
 ```
-        ┌── mathans.app/parents/clash ──┐
-        │  press the tutorials that     │
-        │  clashed, name the event      │
-        └───────────────┬───────────────┘
-                        │        ┌── WhatsApp: text "clash" ──┐
-                        │        │  "which tutorial(s)?" 1,3  │
-                        │        │  "what is it clashing      │
-                        │        │   with?"  HKYAS — 16/8     │
-                        ▼        └──────────────┬─────────────┘
-             class_clash template to all three ◄┘
-                        │
+        ┌── mathans.app/parents/clash ──┐   ┌── WhatsApp: text "clash" ───┐
+        │  name the event, give it      │   │  "what's the event?"        │
+        │  dates, press Find clashes    │   │   HKYAS, 16/8-19/8          │
+        └───────────────┬───────────────┘   └──────────────┬──────────────┘
+                        │                                  │
+                        ▼                                  ▼
+              the timetable is checked: which tutorials the event
+              runs over, and where each one can be made up
+                        │                                  │
+              review / edit the slots            "send this? reply yes"
+                        └────────────────┬─────────────────┘
+                                         ▼
+                        class_clash template to all three
+                                         │
                  tap "Actions taken 已完成調堂"
                         │
                         ▼
@@ -40,6 +43,55 @@ are what `lib/clash-routing.test.js` mostly tests.
 Only the lessons still outstanding are ever listed as clashes: a re-send
 listing a lesson that was already sorted would read as if it had come undone.
 It moves down to ✅ Arranged instead, so each message shows the whole picture.
+
+## Working it out — the make-up rule
+
+The event is the only thing anybody types. From it, `lib/clash-schedule.js`
+works out **what was missed** (which tutorials the event runs over) and **where
+each one goes instead**, against the weekly timetable in Settings.
+
+The rule, which is the whole point:
+
+> A make-up goes in the **same week** as the lesson it replaces, on a day
+> **before** it, keeping the tutor's usual time.
+
+```
+    event Thursday · reported the Saturday before
+    ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┐
+    │ Mon │ Tue │ Wed │ THU │ Fri │ Sat │ Sun │
+    │  ✓  │  ✓  │  ✓  │  ✗  │  ✗  │  ✗  │  ✗  │   ✓ = a make-up may go here
+    └─────┴─────┴─────┴─────┴─────┴─────┴─────┘
+```
+
+The week runs Monday to Sunday. Days are tried **nearest the clash first**, so
+the lesson lands as close to where it should have been as the week allows, and
+a day is only offered when the slot is clear of:
+
+- the event itself — a multi-day event blocks the earlier days too;
+- every other tutorial in the timetable;
+- any make-up already proposed in the same run — two lessons cannot share an hour;
+- the next two hours (`MIN_NOTICE_MINUTES`) — a slot this evening is not a plan.
+
+When nothing in the week works — a Monday clash has no earlier day at all —
+the line says `→ no free slot, arrange with the tutor` rather than inventing
+one. That is information, and more use than a slot nobody can make.
+
+The proposal rides along in the `class_clash` message, one per clash line:
+
+```
+1️⃣ Tuesday 6pm - Japanese → Mon 18/8 6pm
+3️⃣ Thursday 6:30pm - Math → no free slot, arrange with the tutor
+```
+
+**Nothing is sent on the system's say-so.** The page shows the proposals with
+the dates and times editable and a tick-box per lesson; WhatsApp shows the same
+summary and waits for *yes*. Both post the reviewed plan back, so what was
+approved is exactly what goes out.
+
+The timetable is what makes any of this possible: a tutorial needs a **day and
+a start time** to be detected or scheduled around. One without them can still
+be picked by hand — the page's *Add a tutorial it missed* — and is hung on its
+next occurrence so "the same week, before it" still means something.
 
 One message per action, to all three, however many lessons it ticked off.
 
@@ -62,6 +114,7 @@ typing two codes turns out to be the friction.
 | --- | --- |
 | `parents/clash.html` | the page — `mathans.app/parents/clash`, behind the passcode |
 | `lib/clash-flow.js` | pure logic: parsing, the case shape, the template mapping. No Redis, no network |
+| `lib/clash-schedule.js` | pure logic: detecting the clashes and proposing the make-ups. "Now" is always passed in |
 | `lib/clash-store.js` | the `clash:*` Redis keys |
 | `lib/clash-messenger.js` | the conversation, both entry points, and the webhook claim rules |
 | `api/whatsapp/webhook.js` | one added line — clash gets first refusal, prefects get everything else |
@@ -148,14 +201,20 @@ the two systems can be locked separately).
 
 Three steps, plus the housekeeping:
 
-1. **Press the tutorials that clashed.** Each button shows its code and normal slot.
-2. **Say why** — event name and when, one row per event.
-3. **Check the preview** — a mock-up of exactly what the three phones will show — and send.
+1. **Name the event** and give it dates — times only if it is not all day —
+   then press **Find clashes**.
+2. **Check what it found**: every tutorial the event runs over, each with a
+   proposed make-up date and time. Untick anything that does not need
+   arranging, type over a slot that will not work, or add a tutorial the
+   detection missed.
+3. **Check the preview** — a mock-up of exactly what the three phones will
+   show — and send.
 
-Below that, **open clashes** with a *Mark arranged* button per lesson (the same
-path as picking it in WhatsApp: everyone is told, and the template goes again
-if anything is left) and *Close, no message* for one opened by mistake. Under
-**Settings**, the tutorial catalogue and the three phone numbers.
+Below that, **open clashes** with a tick-box per lesson and one *Send update*
+button (the same path as picking them in WhatsApp: everyone is told, and the
+template goes again if anything is left) and *Close, no message* for one
+opened by mistake. Under **Settings**, the weekly timetable — day, start, end,
+location, tutor — and the three phone numbers.
 
 ## Setup
 
@@ -164,8 +223,10 @@ if anything is left) and *Close, no message* for one opened by mistake. Under
    goes out as plain text.
 2. Set `CLASH_ADMIN_SECRET` in Vercel (any string).
 3. Open `/parents/clash`, unlock, and under **Settings** enter the three
-   numbers and the tutorial list. Nothing is sent until the numbers are there —
-   they are personal data and are never committed to the repository.
+   numbers and the weekly timetable. Nothing is sent until the numbers are
+   there — they are personal data and are never committed to the repository.
+   Give every tutorial a **day and a start time**: without them a lesson
+   cannot be detected automatically or scheduled around.
 
 | Variable | Default |
 | --- | --- |
@@ -217,9 +278,9 @@ npm run test:prefects
 | Key | Contents | TTL |
 | --- | --- | --- |
 | `clash:recipients` | `[{ name, phone, relation, notify, userId }]` | — |
-| `clash:lessons` | the tutorial catalogue | — |
+| `clash:lessons` | the weekly timetable — `[{ code, name, weekday, start, end, location, tutor }]` | — |
 | `clash:open` | ids of clashes still outstanding (an index; the cases are the truth) | — |
-| `clash:case:{id}` | one clash: lessons, events, who sorted what | 60 days |
-| `clash:draft:{key}` | the half-answered WhatsApp conversation | 2 h |
+| `clash:case:{id}` | one clash: the lessons with their dates and make-up slots, the events, who sorted what | 60 days |
+| `clash:draft:{key}` | the half-answered WhatsApp conversation (`event` → `confirm`, or `fixing`) | 2 h |
 
 No `prefect:*` key is read or written by any of this.

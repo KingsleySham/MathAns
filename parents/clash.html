@@ -120,13 +120,7 @@
 <div id="app" hidden>
 
   <fieldset>
-    <legend>1 · Which tutorials clashed?</legend>
-    <div class="lessons" id="lessons"></div>
-    <p class="hint">The number on each is the code you type when doing this over WhatsApp (send <b>clash</b> to the bot).</p>
-  </fieldset>
-
-  <fieldset id="reasonBox" hidden>
-    <legend>2 · Why? (the event)</legend>
+    <legend>1 · What's the event?</legend>
     <div id="events"></div>
     <button type="button" class="add" id="addEvent">+ Another event</button>
     <div class="row" style="margin-top:12px">
@@ -134,8 +128,24 @@
         <label for="day">Header date</label>
         <input id="day" type="text" placeholder="22/8">
       </div>
+      <div class="remove"><button id="detect" class="primary" type="button">Find clashes</button></div>
     </div>
-    <p class="hint">Shown in the message header — “Possible clash - Kingsley 22/8”. Defaults to today.</p>
+    <p class="hint">Leave the times blank for a whole-day event. The header date is what shows in
+      “Possible clash - Kingsley 22/8” — it defaults to today.</p>
+  </fieldset>
+
+  <fieldset id="clashBox" hidden>
+    <legend>2 · What it clashes with</legend>
+    <div id="clashes"></div>
+    <p class="hint">
+      Make-ups go in the <b>same week</b> as the lesson and <b>before</b> the day it was missed,
+      keeping the tutor's usual time. Untick anything that doesn't need arranging, or type a
+      different date and time.
+    </p>
+    <details style="margin-top:8px">
+      <summary style="font-size:12.5px; color:var(--muted); cursor:pointer">Add a tutorial it missed</summary>
+      <div class="lessons" id="lessons" style="margin-top:10px"></div>
+    </details>
   </fieldset>
 
   <fieldset id="previewBox" hidden>
@@ -154,7 +164,9 @@
   <details class="settings">
     <summary>Tutorials and phone numbers</summary>
 
-    <label style="margin-bottom:6px">Tutorials — code, name, normal slot, tutor</label>
+    <label style="margin-bottom:6px">Tutorials — the weekly timetable</label>
+    <p class="hint block">The day and start time are what let a clash be spotted automatically, and
+      what a make-up is scheduled around. A tutorial without them can still be picked by hand.</p>
     <div id="catalogue"></div>
     <button type="button" id="addLesson">+ Add tutorial</button>
 
@@ -257,36 +269,156 @@ function renderLessons() {
   }
 }
 
-// ── step 2: the reason ──────────────────────────────────────────────────────
+// ── step 1: the event ───────────────────────────────────────────────────────
 
 function eventRow(value) {
   const row = document.createElement('div');
   row.className = 'row';
   row.innerHTML = `
     <div><label>Event name</label><input type="text" class="ev-name" placeholder="HKYAS"></div>
-    <div><label>When</label><input type="text" class="ev-when" placeholder="16/8-19/8"></div>
+    <div style="max-width:150px"><label>From</label><input type="date" class="ev-from"></div>
+    <div style="max-width:150px"><label>To (optional)</label><input type="date" class="ev-to"></div>
+    <div style="max-width:110px"><label>Start</label><input type="text" class="ev-start" placeholder="2pm"></div>
+    <div style="max-width:110px"><label>End</label><input type="text" class="ev-end" placeholder="5pm"></div>
     <div class="remove"><button type="button" class="remove" title="Remove">✕</button></div>`;
   row.querySelector('.ev-name').value = value?.name || '';
-  row.querySelector('.ev-when').value = value?.when || '';
+  row.querySelector('.ev-from').value = value?.startDate || '';
+  row.querySelector('.ev-to').value = value?.endDate || '';
   row.querySelector('button.remove').addEventListener('click', () => {
     row.remove();
     if (!$('events').children.length) $('events').appendChild(eventRow());
-    renderPreview();
+    resetPlan();
   });
-  row.addEventListener('input', renderPreview);
+  row.addEventListener('input', resetPlan);
   return row;
 }
 
-$('addEvent').addEventListener('click', () => { $('events').appendChild(eventRow()); renderPreview(); });
+$('addEvent').addEventListener('click', () => { $('events').appendChild(eventRow()); resetPlan(); });
 $('events').appendChild(eventRow());
-$('day').addEventListener('input', renderPreview);
 
 const readEvents = () => [...$('events').children]
   .map((row) => ({
     name: row.querySelector('.ev-name').value.trim(),
-    when: row.querySelector('.ev-when').value.trim(),
+    startDate: row.querySelector('.ev-from').value,
+    endDate: row.querySelector('.ev-to').value,
+    startTime: row.querySelector('.ev-start').value.trim(),
+    endTime: row.querySelector('.ev-end').value.trim(),
   }))
-  .filter((e) => e.name);
+  .filter((e) => e.name && e.startDate);
+
+// ── step 2: what clashed, and where it goes instead ─────────────────────────
+//
+// The server does the working out (lib/clash-schedule.js), so the page cannot
+// disagree with what actually gets sent.
+
+let plan = null;          // { events, lessons } from clash-detect
+const dropped = new Set(); // lessons unticked here
+
+function resetPlan() {
+  plan = null;
+  dropped.clear();
+  $('clashBox').hidden = true;
+  $('previewBox').hidden = true;
+}
+
+$('detect').addEventListener('click', async () => {
+  const events = readEvents();
+  if (!events.length) return say('Name the event and give it a date first.', 'err');
+
+  $('detect').disabled = true;
+  say('Checking the timetable…');
+  try {
+    const out = await call('clash-detect', { method: 'POST', body: JSON.stringify({ events }) });
+    plan = out.ok ? out : { events: out.events || events, lessons: [] };
+    dropped.clear();
+    picked = new Set();
+    $('clashBox').hidden = false;
+    say(out.ok
+      ? `${out.lessons.length} lesson${out.lessons.length === 1 ? '' : 's'} affected.`
+      : 'Nothing in the timetable clashes with that.', out.ok ? 'ok' : '');
+    renderClashes();
+    renderLessons();
+    renderPreview();
+  } catch (e) {
+    say(e.message, 'err');
+  } finally {
+    $('detect').disabled = false;
+  }
+});
+
+// The lessons actually going into the message: detected, minus anything
+// unticked, plus anything added by hand.
+const chosenLessons = () => [
+  ...(plan?.lessons || []).filter((l) => !dropped.has(l.code)),
+  ...state.lessons.filter((l) => picked.has(l.code) && !(plan?.lessons || []).some((p) => p.code === l.code))
+    .map((l) => ({ ...l, makeup: null })),
+];
+
+function renderClashes() {
+  const box = $('clashes');
+  box.textContent = '';
+  if (!plan?.lessons?.length) {
+    box.innerHTML = '<p class="empty">Nothing in the timetable clashes with that — '
+      + 'add one by hand below if it still needs arranging.</p>';
+    return;
+  }
+  for (const lesson of plan.lessons) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <div class="remove" style="padding-bottom:7px">
+        <label style="white-space:nowrap"><input type="checkbox" class="keep" checked> arrange</label>
+      </div>
+      <div><label>Missed</label><input type="text" disabled></div>
+      <div style="max-width:150px"><label>Make-up date</label><input type="date" class="mk-date"></div>
+      <div style="max-width:110px"><label>Time</label><input type="text" class="mk-start"></div>`;
+    row.querySelector('input[disabled]').value =
+      `${lesson.code}. ${lesson.name} — ${lesson.date ? niceDate(lesson.date) : lesson.when}`;
+    row.querySelector('.mk-date').value = lesson.makeup?.date || '';
+    row.querySelector('.mk-start').value = lesson.makeup?.date ? fmtTime(lesson.makeup.start) : '';
+
+    if (!lesson.makeup?.date) {
+      const warn = document.createElement('p');
+      warn.className = 'hint block';
+      warn.style.color = 'var(--danger)';
+      warn.textContent = `No free slot before ${niceDate(lesson.date)} that week — pick one by hand, `
+        + 'or leave it blank and arrange with the tutor.';
+      box.appendChild(row);
+      box.appendChild(warn);
+    } else {
+      box.appendChild(row);
+    }
+
+    row.querySelector('.keep').addEventListener('change', (e) => {
+      if (e.target.checked) dropped.delete(lesson.code); else dropped.add(lesson.code);
+      renderPreview();
+    });
+    row.addEventListener('input', renderPreview);
+    row.dataset.code = lesson.code;
+  }
+}
+
+// Make-up slots as edited on the page, sent alongside so the server uses these
+// rather than re-proposing.
+const readMakeups = () => [...$('clashes').querySelectorAll('.row')]
+  .map((row) => ({
+    code: row.dataset.code,
+    date: row.querySelector('.mk-date').value,
+    start: row.querySelector('.mk-start').value.trim(),
+  }))
+  .filter((m) => m.code);
+
+const niceDate = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB',
+  { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' });
+
+function fmtTime(minutes) {
+  if (!Number.isFinite(minutes)) return '';
+  const h = Math.floor(minutes / 60) % 24;
+  const m = minutes % 60;
+  const suffix = h < 12 ? 'am' : 'pm';
+  const h12 = ((h + 11) % 12) + 1;
+  return m ? `${h12}:${String(m).padStart(2, '0')}${suffix}` : `${h12}${suffix}`;
+}
 
 // ── step 3: the preview ─────────────────────────────────────────────────────
 // Mirrors lib/clash-flow.js clashTemplateParams() — if the wording of the
@@ -294,16 +426,23 @@ const readEvents = () => [...$('events').children]
 
 const KEYCAPS = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
 const codeMark = (code) => (/^[0-9]$/.test(code) ? KEYCAPS[Number(code)] : `#${code}`);
-const lessonLine = (l) => `${codeMark(l.code)} ${[l.when, l.name].filter(Boolean).join(' - ')}`;
+
+function lessonLine(l, makeup) {
+  const head = `${codeMark(l.code)} ${[l.when, l.name].filter(Boolean).join(' - ')}`;
+  if (!makeup) return head;
+  return makeup.date
+    ? `${head} → ${niceDate(makeup.date)} ${makeup.start}`
+    : `${head} → no free slot, arrange with the tutor`;
+}
 
 function renderPreview() {
-  const chosen = state.lessons.filter((l) => picked.has(l.code));
+  const chosen = chosenLessons();
   const events = readEvents();
-  $('reasonBox').hidden = !chosen.length;
   $('previewBox').hidden = !(chosen.length && events.length);
   if ($('previewBox').hidden) return;
 
-  const lines = chosen.map(lessonLine);
+  const edited = new Map(readMakeups().map((m) => [m.code, m]));
+  const lines = chosen.map((l) => lessonLine(l, edited.get(l.code) || null));
   const slots = Array.from({ length: 7 }, (_, i) => (
     i === 6 && lines.length > 7 ? `…and ${lines.length - 6} more` : (lines[i] || 'N/A')
   ));
@@ -312,7 +451,7 @@ function renderPreview() {
     `<div class="head">Possible clash - Kingsley ${escapeHtml($('day').value || state.day)}</div>`
     + escapeHtml([
       'Due to unforeseen circumstances, actions are needed.',
-      `⚠️ Event(s): ${events.map((e) => (e.when ? `${e.name} (${e.when})` : e.name)).join(' · ')}`,
+      `⚠️ Event(s): ${(plan?.events || events).map((e) => (e.when ? `${e.name} (${e.when})` : e.name)).join(' · ')}`,
       `Total: ${events.length}`,
       '❌ Clash(es):',
       ...slots,
@@ -332,19 +471,24 @@ function renderPreview() {
 }
 
 $('send').addEventListener('click', async () => {
-  const codes = state.lessons.filter((l) => picked.has(l.code)).map((l) => l.code);
+  const codes = chosenLessons().map((l) => l.code);
   const events = readEvents();
-  if (!codes.length || !events.length) return say('Pick a tutorial and name the event first.', 'err');
+  if (!codes.length || !events.length) return say('Find the clashes first, or add a tutorial by hand.', 'err');
 
   $('send').disabled = true;
   say('Sending…');
   try {
     const out = await call('clash-open', {
       method: 'POST',
-      body: JSON.stringify({ codes, events, day: $('day').value.trim() }),
+      body: JSON.stringify({
+        codes,
+        events,
+        makeups: readMakeups().filter((m) => codes.includes(m.code)),
+        day: $('day').value.trim(),
+      }),
     });
     say(`Sent to ${out.sent} ${out.sent === 1 ? 'phone' : 'phones'}.`, 'ok');
-    picked = new Set();
+    resetPlan();
     $('events').textContent = '';
     $('events').appendChild(eventRow());
     await load();
@@ -445,18 +589,29 @@ function renderCases() {
 
 // ── settings ────────────────────────────────────────────────────────────────
 
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 function lessonRow(lesson) {
   const row = document.createElement('div');
   row.className = 'row';
   row.innerHTML = `
     <div style="max-width:70px"><label>Code</label><input type="text" class="l-code" maxlength="6"></div>
-    <div><label>Name</label><input type="text" class="l-name" placeholder="Japanese"></div>
-    <div><label>Slot</label><input type="text" class="l-when" placeholder="Tuesday 6pm"></div>
+    <div><label>Subject</label><input type="text" class="l-name" placeholder="Japanese"></div>
+    <div style="max-width:130px"><label>Day</label><select class="l-weekday">
+      <option value="">—</option>
+      ${WEEKDAYS.map((d, i) => `<option value="${i}">${d}</option>`).join('')}
+    </select></div>
+    <div style="max-width:100px"><label>Start</label><input type="text" class="l-start" placeholder="6pm"></div>
+    <div style="max-width:100px"><label>End</label><input type="text" class="l-end" placeholder="7pm"></div>
+    <div><label>Location</label><input type="text" class="l-location" placeholder="Causeway Bay"></div>
     <div><label>Tutor</label><input type="text" class="l-tutor"></div>
     <div class="remove"><button type="button" class="remove" title="Remove">✕</button></div>`;
   row.querySelector('.l-code').value = lesson?.code || '';
   row.querySelector('.l-name').value = lesson?.name || '';
-  row.querySelector('.l-when').value = lesson?.when || '';
+  row.querySelector('.l-weekday').value = Number.isInteger(lesson?.weekday) ? String(lesson.weekday) : '';
+  row.querySelector('.l-start').value = fmtTime(lesson?.start) || '';
+  row.querySelector('.l-end').value = fmtTime(lesson?.end) || '';
+  row.querySelector('.l-location').value = lesson?.location || '';
   row.querySelector('.l-tutor').value = lesson?.tutor || '';
   row.querySelector('button.remove').addEventListener('click', () => row.remove());
   return row;
@@ -504,7 +659,10 @@ $('saveConfig').addEventListener('click', async () => {
   const lessons = [...$('catalogue').children].map((row) => ({
     code: row.querySelector('.l-code').value.trim(),
     name: row.querySelector('.l-name').value.trim(),
-    when: row.querySelector('.l-when').value.trim(),
+    weekday: row.querySelector('.l-weekday').value,
+    start: row.querySelector('.l-start').value.trim(),
+    end: row.querySelector('.l-end').value.trim(),
+    location: row.querySelector('.l-location').value.trim(),
     tutor: row.querySelector('.l-tutor').value.trim(),
   })).filter((l) => l.code && l.name);
 

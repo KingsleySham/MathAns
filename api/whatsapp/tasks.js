@@ -38,7 +38,7 @@ import {
 } from '../../lib/prefect-roster-store.js';
 import { describeDatabase } from '../../lib/prefect-notion.js';
 import { sanitizeNotionConfig } from '../../lib/prefect-duty-status-logic.js';
-import { getClashState, openClash, resolveLessons } from '../../lib/clash-messenger.js';
+import { getClashState, openClash, planClash, resolveLessons } from '../../lib/clash-messenger.js';
 import { readCase, removeOpen, setLessons, setRecipients, writeCase } from '../../lib/clash-store.js';
 import { parseEvents, sanitizeEvents } from '../../lib/clash-flow.js';
 
@@ -298,10 +298,24 @@ export default async function handler(req, res) {
         return res.status(200).json(await getClashState());
       }
 
+      if (op === 'clash-detect') {
+        // What would happen if this were sent: which lessons the event runs
+        // over and where each can be made up. Sends nothing.
+        const out = await planClash({
+          events: Array.isArray(body.events) ? body.events : [],
+          codes: Array.isArray(body.codes) ? body.codes.map(String) : null,
+          makeups: Array.isArray(body.makeups) ? body.makeups : null,
+        });
+        return res.status(out.ok || out.none ? 200 : 400).json(out);
+      }
+
       if (op === 'clash-open') {
         const out = await openClash({
-          codes: Array.isArray(body.codes) ? body.codes.map(String) : [],
-          // The page posts name/when pairs; a typed-in blob (or a curl) is
+          // Ticked lessons and edited slots override the detection; without
+          // them the event alone decides.
+          codes: Array.isArray(body.codes) ? body.codes.map(String) : null,
+          makeups: Array.isArray(body.makeups) ? body.makeups : null,
+          // The page posts structured events; a typed-in blob (or a curl) is
           // parsed the same way a WhatsApp reply would be.
           events: Array.isArray(body.events) ? sanitizeEvents(body.events) : parseEvents(String(body.events || '')),
           day: body.day,
