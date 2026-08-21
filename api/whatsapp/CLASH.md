@@ -146,10 +146,18 @@ The displaced lesson is **given up, not rescheduled**. Chasing it would start a
 cascade, so it is named in the message and the family decides what to do about
 it.
 
-**Tick it on the lesson that is in the way, not the one being made up.** Home
-class is a property of the lesson that can be given up — Japanese, sitting on
-the Tuesday slot Math needs — not of the lesson that clashed. Ticking the
-clashed lesson changes nothing, because a lesson is never in its own way.
+**Home class does two jobs**, both of them "this one can give way":
+
+- when it is **in the way** of a make-up — Japanese sitting on the Tuesday slot
+  Math needs — it is offered up, as above;
+- when it is **itself clashed**, the page offers to skip it outright. There is
+  no centre to ring and nothing to rearrange, so a yellow box above the list
+  asks *"Clashed, skip classes?"* with a **Proceed** button. Skipped lessons
+  drop out of the message entirely; *Undo* puts them back.
+
+What it does **not** do is make the lesson being made up skippable by ticking
+that lesson — a lesson is never in its own way, so ticking the clashed centre
+lesson changes nothing about where its make-up goes.
 
 That distinction is invisible when it goes wrong, so a make-up that could not
 be placed now names what stood in it:
@@ -291,7 +299,10 @@ Three steps, plus the housekeeping:
    then press **Find clashes**.
 2. **Check what it found**: every tutorial the event runs over, each with a
    proposed make-up date and time — drawn from the centre's offered slots where
-   the tutorial has them. Untick anything that does not need
+   the tutorial has them. If any of the clashed lessons is itself a **home
+   class**, a yellow box sits above the list — *"Clashed, skip classes?"* —
+   with a **Proceed** button that drops them: no make-up, nobody asked to
+   arrange one, and they vanish from the message. *Undo* puts them back. Untick anything that does not need
    arranging, type over a slot that will not work, or add a tutorial the
    detection missed.
 3. **Check the preview** — a mock-up of exactly what the three phones will
