@@ -10,8 +10,14 @@
      with no panels, hairline rules instead of boxes, borderless fields, and a
      single black full-width action. The one idea worth stealing outright is
      the thread connector — a missed lesson and its make-up are a post and its
-     reply, so they are drawn as one. */
+     reply, so they are drawn as one.
+
+     Light only, deliberately. `color-scheme: light` is the part that matters:
+     without it the browser renders the native controls — the date pickers, the
+     select, the tick-boxes — in dark on a phone set to dark mode, dropping
+     black-on-black fields into an otherwise white page. */
   :root {
+    color-scheme: light;
     --page: #ffffff;
     --raised: #ffffff;
     --shade: #fafafa;
@@ -25,21 +31,6 @@
     --ok: #1b7f3b;
     --focus: #0095f6;
     --radius: 18px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --page: #0a0a0a;
-      --raised: #101010;
-      --shade: #161616;
-      --text: #f5f5f5;
-      --muted: #7a7a7a;
-      --line: #2a2a2a;
-      --rule: #1f1f1f;
-      --invert-bg: #ffffff;
-      --invert-text: #000000;
-      --danger: #ff6b6b;
-      --ok: #4ade80;
-    }
   }
   * { box-sizing: border-box; }
   body {
