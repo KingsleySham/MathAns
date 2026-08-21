@@ -37,7 +37,7 @@ are what `lib/clash-routing.test.js` mostly tests.
                         ▼
          anything still outstanding?
               yes ─► class_clash again, that lesson moved to ✅ Arranged
-              no  ─► class_clash_done — the same message, no buttons
+              no  ─► the sign-off: plain text, or class_clash_done if named
 ```
 
 Only the lessons still outstanding are ever listed as clashes: a re-send
@@ -290,11 +290,11 @@ Button   Actions taken 已完成調堂   (quick reply)
 | `day` | the day it is sent, `22/8` (the page can override it) |
 | `events` | every event on one line — `HKYAS (16/8-19/8) · Speech Day (21/8)` |
 | `event2` | `Total: 2` |
-| `tutorial_1`…`tutorial_7` | one outstanding lesson each — `1️⃣ Tuesday 6pm - Japanese` — `N/A` for the unused slots |
-| `tutorial_arranged` | lessons already sorted, or `N/A` |
+| `tutorial_1`…`tutorial_7` | one outstanding lesson each — `1️⃣ Tuesday 6pm - Japanese` — `—` for the unused slots |
+| `tutorial_arranged` | lessons already sorted, or `—` |
 
 Two Cloud API rules this has to respect, both covered by tests: **a parameter
-may not be empty** (hence `N/A`, as in the approved samples) and **may not
+may not be empty** (hence the `—`) and **may not
 contain a newline** (hence the ` · ` joins). The template has exactly seven
 tutorial slots — an eighth lesson collapses into `…and N more` rather than
 disappearing.
@@ -325,12 +325,14 @@ Buttons  none
 ```
 
 `day`, `events` and `event2` are filled exactly as above; `tutorial_1`…`7`
-hold the arranged lessons, `N/A` for the unused slots. There is no
+hold the arranged lessons, `—` for the unused slots. There is no
 `tutorial_arranged` — everything is arranged, so there is no second list.
 
-Until it is approved in Meta the Cloud API refuses it, and the send falls back
-to a plain-text summary. The family is never left un-told, but the message
-looks plainer until the template is live.
+**Optional, and off by default.** With `WHATSAPP_CLASH_DONE_TEMPLATE` unset the
+sign-off goes out as plain text and no template is attempted — which is the
+current setup, by choice. Approve this one in Meta and name it in that variable
+to use it instead; if the Cloud API then refuses it, the send still falls back
+to the plain-text summary, so the family is never left un-told.
 
 ## The page
 
@@ -361,9 +363,10 @@ location, tutor — and the three phone numbers.
 
 ## Setup
 
-1. Get `class_clash` **and** `class_clash_done` approved in Meta with the
-   wording above. The flow works with only the first, but the sign-off then
-   goes out as plain text.
+1. Get `class_clash` approved in Meta with the wording above. That is the
+   only template this needs; the sign-off goes out as plain text unless you
+   also approve `class_clash_done` and name it in
+   `WHATSAPP_CLASH_DONE_TEMPLATE`.
 2. Set `CLASH_ADMIN_SECRET` in Vercel (any string).
 3. Open `/parents/clash`, unlock, and under **Settings** enter the three
    numbers and the weekly timetable. Nothing is sent until the numbers are
@@ -378,7 +381,7 @@ location, tutor — and the three phone numbers.
 | --- | --- |
 | `CLASH_ADMIN_SECRET` | falls back to `PREFECT_ADMIN_SECRET` |
 | `WHATSAPP_CLASH_TEMPLATE` | `class_clash` |
-| `WHATSAPP_CLASH_DONE_TEMPLATE` | `class_clash_done` |
+| `WHATSAPP_CLASH_DONE_TEMPLATE` | unset — the sign-off is plain text. Name an approved template here to use one instead |
 | `CLASH_NOTICE_TEMPLATE` | `WHATSAPP_NOTICE_TEMPLATE`, i.e. `prefect_notice` — the fallback when the sign-off finds a closed 24-hour window |
 
 Everything else (`WHATSAPP_TOKEN`, `PHONE_NUMBER_ID`, `REDIS_URL`, …) is

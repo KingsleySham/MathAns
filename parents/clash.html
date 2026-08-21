@@ -767,7 +767,7 @@ function renderPreview() {
   const edited = new Map(readMakeups().map((m) => [m.code, m]));
   const lines = chosen.map((l) => lessonLine(l, edited.get(l.code) || null));
   const slots = Array.from({ length: 7 }, (_, i) => (
-    i === 6 && lines.length > 7 ? `…and ${lines.length - 6} more` : (lines[i] || 'N/A')
+    i === 6 && lines.length > 7 ? `…and ${lines.length - 6} more` : (lines[i] || '—')
   ));
 
   $('preview').innerHTML =
@@ -779,7 +779,7 @@ function renderPreview() {
       '❌ Clash(es):',
       ...slots,
       '✅ Arranged :',
-      'N/A',
+      '—',
       'Please make adjustments to the clashed tutorial(s).',
       '',
       'Thank you for your kind attention.',
