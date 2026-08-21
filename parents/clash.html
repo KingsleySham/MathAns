@@ -128,9 +128,18 @@
     background: var(--warn-text); color: var(--warn-bg); border-color: var(--warn-text); flex: none;
   }
   .warn-box button.undo { background: transparent; color: var(--warn-text); border-color: var(--warn-line); }
-  /* A row that is being skipped should look it — its make-up slot is moot. */
-  #clashes .row.dropped { opacity: .4; }
-  #clashes .row.dropped .tick { opacity: 1; }
+  /* A row taken out of the clash entirely reads as gone; a row that is being
+     skipped is still on the list, and says what to do instead. */
+  #clashes > .row.dropped { opacity: .4; }
+  #clashes > .row.dropped .tick { opacity: 1; }
+  /* The right-hand half of a clash row: either the two make-up fields or the
+     instruction that replaces them. Wide enough that the fields sit side by
+     side rather than stacking. */
+  #clashes .plan { flex: 2; min-width: 300px; }
+  .plan.skip {
+    align-self: center; font-size: 15px; font-weight: 600;
+    letter-spacing: -0.01em; color: var(--warn-text);
+  }
 
   /* Giving up a lesson is a decision, so it does not look like a hint. */
   .skip-ask {
@@ -444,12 +453,14 @@ const readEvents = () => [...$('events').children]
 // The server does the working out (lib/clash-schedule.js), so the page cannot
 // disagree with what actually gets sent.
 
-let plan = null;          // { events, lessons } from clash-detect
-const dropped = new Set(); // lessons unticked here
+let plan = null;           // { events, lessons } from clash-detect
+const dropped = new Set(); // lessons unticked here — not part of the clash at all
+const skips = new Set();   // lessons that are simply not happening: tell the tutor
 
 function resetPlan() {
   plan = null;
   dropped.clear();
+  skips.clear();
   $('clashBox').hidden = true;
   $('previewBox').hidden = true;
 }
@@ -464,6 +475,7 @@ $('detect').addEventListener('click', async () => {
     const out = await call('clash-detect', { method: 'POST', body: JSON.stringify({ events }) });
     plan = out.ok ? out : { events: out.events || events, lessons: [] };
     dropped.clear();
+    skips.clear();
     picked = new Set();
     $('clashBox').hidden = false;
     say(out.ok
@@ -500,14 +512,14 @@ function renderClashes() {
   // that would be easy to miss.
   const atHome = plan.lessons.filter((l) => l.homeClass);
   if (atHome.length) {
-    const skipped = atHome.every((l) => dropped.has(l.code));
+    const skipped = atHome.every((l) => skips.has(l.code));
     const names = atHome.map((l) => l.name).join(', ');
     const banner = document.createElement('div');
     banner.className = 'warn-box';
     banner.innerHTML = `<div class="what"><b>⚠️ ${escapeHtml(names)} ${atHome.length === 1 ? 'is' : 'are'} `
       + `at home${skipped ? ' — skipped' : ''}</b>`
       + (skipped
-        ? 'No make-up will be arranged, and nobody will be asked to.'
+        ? 'Listed as “skip class, notify tutor” — no make-up will be arranged.'
         : 'Clashed, skip classes?') + '</div>';
 
     const act = document.createElement('button');
@@ -515,10 +527,10 @@ function renderClashes() {
     act.textContent = skipped ? 'Undo' : 'Proceed';
     if (skipped) act.className = 'undo';
     act.addEventListener('click', () => {
-      atHome.forEach((l) => (skipped ? dropped.delete(l.code) : dropped.add(l.code)));
+      atHome.forEach((l) => (skipped ? skips.delete(l.code) : skips.add(l.code)));
       renderClashes();
       renderPreview();
-      say(skipped ? '' : `${names} skipped — no make-up needed.`, skipped ? '' : 'ok');
+      say(skipped ? '' : `${names}: skip class, notify tutor.`, skipped ? '' : 'ok');
     });
     banner.appendChild(act);
     box.appendChild(banner);
@@ -535,20 +547,37 @@ function renderClashes() {
         <b></b>
         <span class="when"></span>
       </div>
-      <div style="max-width:160px"><label>Make-up date</label><input type="date" class="mk-date"></div>
-      <div style="max-width:110px"><label>Time</label><input type="text" class="mk-start" placeholder="6pm"></div>`;
+      <div class="plan"></div>`;
+
+    const slot = row.querySelector('.plan');
+    if (skips.has(lesson.code)) {
+      // Not being made up: the action is telling the tutor, so that is what
+      // the row says instead of offering a date nobody will use.
+      slot.className = 'plan skip';
+      slot.textContent = '→ Skip class, notify tutor';
+    } else {
+      slot.className = 'plan row';
+      slot.style.margin = '0';
+      slot.innerHTML = '<div style="max-width:160px"><label>Make-up date</label>'
+        + '<input type="date" class="mk-date"></div>'
+        + '<div style="max-width:110px"><label>Time</label>'
+        + '<input type="text" class="mk-start" placeholder="6pm"></div>';
+    }
     row.querySelector('.keep').checked = !dropped.has(lesson.code);
     if (dropped.has(lesson.code)) row.classList.add('dropped');
     row.querySelector('.missed b').textContent = `${lesson.code}. ${lesson.name}`;
     row.querySelector('.missed .when').textContent =
       [lesson.when, lesson.date ? `missed ${niceDate(lesson.date)}` : ''].filter(Boolean).join(' · ');
-    row.querySelector('.mk-date').value = lesson.makeup?.date || '';
-    row.querySelector('.mk-start').value = lesson.makeup?.date ? fmtTime(lesson.makeup.start) : '';
+    const dateInput = row.querySelector('.mk-date');
+    if (dateInput) {
+      dateInput.value = lesson.makeup?.date || '';
+      row.querySelector('.mk-start').value = lesson.makeup?.date ? fmtTime(lesson.makeup.start) : '';
+    }
 
     // The only slot left costs a lesson at home. That is a decision, not a
     // detail, so it is asked here — ticked, because it is what the system
     // suggests, but never silent.
-    if (lesson.makeup?.date && lesson.makeup.displaces?.length) {
+    if (!skips.has(lesson.code) && lesson.makeup?.date && lesson.makeup.displaces?.length) {
       const ask = document.createElement('p');
       ask.className = 'hint block skip-ask';
       const names = lesson.makeup.displaces.map((d) => d.name).join(' and ');
@@ -570,7 +599,7 @@ function renderClashes() {
       continue;
     }
 
-    if (!lesson.makeup?.date) {
+    if (!skips.has(lesson.code) && !lesson.makeup?.date) {
       const warn = document.createElement('p');
       warn.className = 'hint block';
       warn.style.color = 'var(--danger)';
@@ -617,8 +646,8 @@ const readMakeups = () => [...$('clashes').querySelectorAll('.row')]
     const keepsHomeClass = skip && !skip.checked;
     return {
       code: row.dataset.code,
-      date: keepsHomeClass ? '' : row.querySelector('.mk-date').value,
-      start: row.querySelector('.mk-start').value.trim(),
+      date: keepsHomeClass ? '' : (row.querySelector('.mk-date')?.value || ''),
+      start: row.querySelector('.mk-start')?.value.trim() || '',
       // Carried back so the record — and the message — still name what the
       // slot cost.
       displaces: keepsHomeClass
@@ -662,6 +691,8 @@ const codeMark = (code) => (/^[0-9]$/.test(code) ? KEYCAPS[Number(code)] : `#${c
 
 function lessonLine(l, makeup) {
   const head = `${codeMark(l.code)} ${[l.when, l.name].filter(Boolean).join(' - ')}`;
+  // Mirrors lessonLine() in lib/clash-flow.js.
+  if (skips.has(l.code)) return `${head} → Skip class, notify tutor`;
   if (!makeup) return head;
   if (!makeup.date) return `${head} → no free slot, arrange with the tutor`;
   const cost = (makeup.displaces || []).map((d) => d.name).join(' and ');
@@ -717,6 +748,7 @@ $('send').addEventListener('click', async () => {
         codes,
         events,
         makeups: readMakeups().filter((m) => codes.includes(m.code)),
+        skips: [...skips].filter((code) => codes.includes(code)),
         day: $('day').value.trim(),
       }),
     });

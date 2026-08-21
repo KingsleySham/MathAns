@@ -151,9 +151,17 @@ it.
 - when it is **in the way** of a make-up — Japanese sitting on the Tuesday slot
   Math needs — it is offered up, as above;
 - when it is **itself clashed**, the page offers to skip it outright. There is
-  no centre to ring and nothing to rearrange, so a yellow box above the list
-  asks *"Clashed, skip classes?"* with a **Proceed** button. Skipped lessons
-  drop out of the message entirely; *Undo* puts them back.
+  nothing to rearrange, so a yellow box above the list asks *"Clashed, skip
+  classes?"* with a **Proceed** button. The lesson stays on the list and in the
+  message, with its make-up slot replaced by what to do instead:
+
+  ```
+  1️⃣ Thursday 6pm - Japanese → Skip class, notify tutor
+  3️⃣ Thursday 6:30pm - Math → Mon 24/8 6:30pm
+  ```
+
+  It stays outstanding until someone ticks it off, because telling the tutor is
+  still an action. *Undo* puts it back to being made up.
 
 What it does **not** do is make the lesson being made up skippable by ticking
 that lesson — a lesson is never in its own way, so ticking the clashed centre
@@ -301,8 +309,8 @@ Three steps, plus the housekeeping:
    proposed make-up date and time — drawn from the centre's offered slots where
    the tutorial has them. If any of the clashed lessons is itself a **home
    class**, a yellow box sits above the list — *"Clashed, skip classes?"* —
-   with a **Proceed** button that drops them: no make-up, nobody asked to
-   arrange one, and they vanish from the message. *Undo* puts them back. Untick anything that does not need
+   with a **Proceed** button. They stay listed, with their make-up replaced by
+   *"Skip class, notify tutor"*. *Undo* puts them back. Untick anything that does not need
    arranging, type over a slot that will not work, or add a tutorial the
    detection missed.
 3. **Check the preview** — a mock-up of exactly what the three phones will

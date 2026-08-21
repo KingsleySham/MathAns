@@ -315,6 +315,7 @@ export default async function handler(req, res) {
           events: Array.isArray(body.events) ? body.events : [],
           codes: Array.isArray(body.codes) ? body.codes.map(String) : null,
           makeups: Array.isArray(body.makeups) ? body.makeups : null,
+          skips: Array.isArray(body.skips) ? body.skips.map(String) : [],
         });
         return res.status(out.ok || out.none ? 200 : 400).json(out);
       }
@@ -325,6 +326,8 @@ export default async function handler(req, res) {
           // them the event alone decides.
           codes: Array.isArray(body.codes) ? body.codes.map(String) : null,
           makeups: Array.isArray(body.makeups) ? body.makeups : null,
+          // Lessons that are simply not happening — the tutor gets told instead.
+          skips: Array.isArray(body.skips) ? body.skips.map(String) : [],
           // The page posts structured events; a typed-in blob (or a curl) is
           // parsed the same way a WhatsApp reply would be.
           events: Array.isArray(body.events) ? sanitizeEvents(body.events) : parseEvents(String(body.events || '')),
