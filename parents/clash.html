@@ -6,96 +6,199 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Lesson clash</title>
 <style>
+  /* Visual language borrowed from Threads (Mobbin reference): a white ground
+     with no panels, hairline rules instead of boxes, borderless fields, and a
+     single black full-width action. The one idea worth stealing outright is
+     the thread connector — a missed lesson and its make-up are a post and its
+     reply, so they are drawn as one. */
   :root {
-    --page: #ffffff; --text: #1c1b18; --panel: #f7f6f1; --line: #e5e3db;
-    --muted: #5f5e5a; --accent: #2a5db0; --danger: #a02323; --ok: #27500a;
-    --accent-soft: #e9f0fb; --chip: #ffffff; --raised: #ffffff; --shade: #f1efe8;
+    --page: #ffffff;
+    --raised: #ffffff;
+    --shade: #fafafa;
+    --text: #000000;
+    --muted: #999999;
+    --line: #e6e6e6;
+    --rule: #f0f0f0;
+    --invert-bg: #000000;
+    --invert-text: #ffffff;
+    --danger: #d0021b;
+    --ok: #1b7f3b;
+    --focus: #0095f6;
+    --radius: 18px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --page: #191917; --text: #ede9e1; --panel: #211f1c; --line: #35352f;
-      --muted: #b4b2a9; --accent: #7fb0ff; --danger: #f7c1c1; --ok: #c0dd97;
-      --accent-soft: #1d2941; --chip: #2a2823; --raised: #262420; --shade: #1f1d1a;
+      --page: #0a0a0a;
+      --raised: #101010;
+      --shade: #161616;
+      --text: #f5f5f5;
+      --muted: #7a7a7a;
+      --line: #2a2a2a;
+      --rule: #1f1f1f;
+      --invert-bg: #ffffff;
+      --invert-text: #000000;
+      --danger: #ff6b6b;
+      --ok: #4ade80;
     }
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0 auto; padding: 20px 20px 80px; max-width: 720px;
+    margin: 0 auto; padding: 28px 16px 96px; max-width: 620px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: var(--page); color: var(--text);
+    -webkit-font-smoothing: antialiased;
   }
-  h1 { font-size: 18px; margin: 0 0 4px; }
-  h2 { font-size: 15px; margin: 26px 0 8px; }
-  .sub { font-size: 13px; color: var(--muted); margin: 0 0 18px; line-height: 1.5; max-width: 60ch; }
-  fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 0 0 16px; background: var(--panel); }
-  legend { font-size: 13px; font-weight: 600; padding: 0 6px; }
-  label { display: block; font-size: 12.5px; color: var(--muted); margin: 0 0 4px; }
-  input[type="text"], input[type="password"], textarea {
-    width: 100%; font: inherit; font-size: 14px; padding: 7px 9px; border-radius: 6px;
-    border: 1px solid var(--line); background: var(--page); color: var(--text);
+  h1 { font-size: 26px; letter-spacing: -0.02em; margin: 0 0 6px; }
+  h2 {
+    font-size: 15px; letter-spacing: -0.01em; margin: 32px 0 12px;
+    display: flex; align-items: baseline; gap: 8px;
   }
+  .sub { font-size: 15px; color: var(--muted); margin: 0 0 22px; line-height: 1.45; }
+  code { font-size: .92em; }
+
+  /* ── cards: a hairline, a big radius, no shadow ──────────────────────── */
+  fieldset {
+    border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 6px 16px 16px; margin: 0 0 14px; background: var(--raised);
+  }
+  legend {
+    font-size: 13px; font-weight: 700; letter-spacing: -0.01em;
+    padding: 0 8px; margin-left: -8px; color: var(--text);
+  }
+
+  /* ── fields: no boxes, a rule underneath ────────────────────────────── */
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin: 0 0 2px; }
+  input[type="text"], input[type="password"], input[type="date"], select, textarea {
+    width: 100%; font: inherit; font-size: 15px; padding: 6px 0;
+    border: none; border-bottom: 1px solid var(--line); border-radius: 0;
+    background: transparent; color: var(--text); appearance: none;
+  }
+  select { padding-right: 18px; }
+  input::placeholder { color: var(--muted); }
+  input:focus, select:focus, textarea:focus { outline: none; border-bottom-color: var(--text); }
+  input[disabled] { color: var(--muted); border-bottom-style: dashed; }
   textarea { min-height: 76px; resize: vertical; line-height: 1.5; }
+
+  /* ── buttons: one black action, everything else a hairline outline ──── */
   button {
-    font: inherit; font-size: 13px; padding: 7px 13px; border-radius: 7px; border: 1px solid var(--line);
-    background: var(--panel); color: var(--text); cursor: pointer;
+    font: inherit; font-size: 14px; font-weight: 600; letter-spacing: -0.01em;
+    padding: 9px 16px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--line); background: transparent; color: var(--text);
   }
-  button:hover { border-color: currentColor; }
-  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  button.remove { color: var(--danger); border-color: var(--danger); padding: 6px 9px; }
-  button:disabled { opacity: .5; cursor: not-allowed; }
-  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
-    outline: 2px solid var(--accent); outline-offset: 2px;
+  button:hover { border-color: var(--muted); }
+  button.primary {
+    background: var(--invert-bg); color: var(--invert-text); border-color: var(--invert-bg);
+    padding: 11px 20px;
   }
-  .gate { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 18px; }
-  .gate > div { max-width: 240px; }
-  .hint { font-size: 11.5px; color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
-  .row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-end; flex-wrap: wrap; }
-  .row > div { flex: 1; min-width: 130px; }
+  button.primary:hover { opacity: .85; border-color: var(--invert-bg); }
+  button.remove { border: none; color: var(--muted); padding: 8px 6px; }
+  button.remove:hover { color: var(--danger); }
+  button:disabled { opacity: .35; cursor: not-allowed; }
+  button:disabled:hover { border-color: var(--line); opacity: .35; }
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--focus); outline-offset: 2px;
+  }
+
+  .gate { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 24px; }
+  .gate > div { max-width: 260px; flex: 1; }
+  .hint { font-size: 13px; color: var(--muted); margin: 8px 0 0; line-height: 1.45; }
+  .hint.block { margin: 0 0 10px; }
+  .row { display: flex; gap: 14px; margin-bottom: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 120px; }
+  .row.tight > div { min-width: 92px; }
   .row .remove { flex: none; min-width: 0; }
-  #status { font-size: 13px; margin: 12px 0 0; min-height: 18px; }
+  .event { padding: 12px 0; border-bottom: 1px solid var(--rule); margin-bottom: 12px; }
+  .event:first-child { padding-top: 4px; }
+  .event .row:last-child { margin-bottom: 0; }
+  .opt { font-weight: 400; color: var(--muted); }
+  /* A missed lesson is a fact, not a field — it reads as text, not as a
+     disabled input that truncates its own name. */
+  /* The tick belongs beside the lesson it governs, whatever height that row
+     wraps to. */
+  #clashes .row > .remove { align-self: center; }
+  .missed { flex: 2; min-width: 170px; align-self: center; line-height: 1.35; }
+  .missed b { display: block; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .missed .when { font-size: 13px; color: var(--muted); }
+  #status { font-size: 14px; margin: 16px 0 0; min-height: 20px; color: var(--muted); }
   #status.ok { color: var(--ok); }
   #status.err { color: var(--danger); }
+  .empty { font-size: 15px; color: var(--muted); margin: 4px 0; }
+  .tick { display: flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; margin: 0; }
+  .tick input { accent-color: var(--invert-bg); width: 17px; height: 17px; }
 
-  /* ── the lesson buttons: the whole point of the page ─────────────────── */
+  /* ── the tutorial chips ─────────────────────────────────────────────── */
   .lessons { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
   .lesson {
-    display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 10px 12px;
-    border: 1px solid var(--line); border-radius: 9px; background: var(--chip); line-height: 1.35;
+    display: flex; flex-direction: column; gap: 1px; text-align: left; align-items: flex-start;
+    padding: 11px 14px; border-radius: 12px; line-height: 1.35; font-weight: 400;
   }
-  .lesson b { font-size: 13.5px; font-weight: 600; }
-  .lesson span { font-size: 11.5px; color: var(--muted); }
-  .lesson[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
-  .lesson[aria-pressed="true"] span { color: var(--accent); }
+  .lesson b { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+  .lesson span { font-size: 12.5px; color: var(--muted); }
+  .lesson[aria-pressed="true"] {
+    background: var(--invert-bg); border-color: var(--invert-bg); color: var(--invert-text);
+  }
+  .lesson[aria-pressed="true"] span { color: var(--invert-text); opacity: .65; }
 
-  /* ── the preview: exactly what the three phones will show ────────────── */
+  /* ── the message preview ────────────────────────────────────────────── */
   .preview {
-    border: 1px solid var(--line); border-radius: 10px; background: var(--raised);
-    padding: 12px 14px; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap;
+    border: 1px solid var(--line); border-radius: 14px; background: var(--shade);
+    padding: 14px 16px; font-size: 14.5px; line-height: 1.5; white-space: pre-wrap;
     word-break: break-word; margin-top: 4px;
   }
-  .preview .head { font-weight: 700; }
-  .preview .foot { color: var(--muted); font-size: 11.5px; margin-top: 8px; }
+  .preview .head { font-weight: 700; letter-spacing: -0.01em; margin-bottom: 2px; }
+  .preview .foot { color: var(--muted); font-size: 12px; margin-top: 10px; }
   .preview .btn {
-    margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line);
-    color: var(--accent); text-align: center; font-size: 13px;
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line);
+    text-align: center; font-size: 14px; font-weight: 600;
   }
 
-  /* ── open clashes ───────────────────────────────────────────────────── */
-  .case { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--panel); margin-bottom: 12px; }
-  .case header { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
-  .case header strong { font-size: 14px; }
-  .case .when { font-size: 11.5px; color: var(--muted); }
-  .case ul { list-style: none; padding: 0; margin: 0; }
-  .case li { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
-  .case li:first-child { border-top: none; }
+  /* ── open clashes: drawn as a thread ────────────────────────────────── */
+  .case { padding: 16px 0; border-top: 1px solid var(--rule); }
+  .case:first-child { border-top: none; padding-top: 4px; }
+  .case header { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .case header strong { font-size: 15.5px; font-weight: 700; letter-spacing: -0.01em; }
+  .case .when { font-size: 13px; color: var(--muted); font-weight: 400; }
+  .case ul { list-style: none; padding: 0; margin: 12px 0 0; }
+  /* The connector: the same device Threads uses to tie a reply to its post —
+     here it ties a missed lesson to the make-up that answers it. */
+  .case li {
+    display: flex; justify-content: space-between; gap: 12px; align-items: center;
+    font-size: 15px; padding: 10px 0 10px 20px; position: relative;
+  }
+  .case li::before {
+    content: ""; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px;
+    background: var(--line); border-radius: 1px;
+  }
+  .case li:first-child::before { top: 12px; }
+  .case li:last-child::before { bottom: calc(100% - 24px); }
+  .case li::after {
+    content: ""; position: absolute; left: 1px; top: 18px; width: 10px; height: 10px;
+    border-radius: 50%; background: var(--line);
+  }
+  .case li.done::after { background: var(--ok); }
+  .case li.done b { font-weight: 400; text-decoration: line-through; }
   .case li.done { color: var(--muted); }
-  .case li.done b { text-decoration: line-through; font-weight: 400; }
-  .case footer { margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .case footer .progress { font-size: 12px; color: var(--muted); margin-right: auto; }
-  details.settings { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; background: var(--shade); }
-  details.settings summary { font-size: 13px; cursor: pointer; }
-  details.settings[open] summary { margin-bottom: 12px; }
-  .empty { font-size: 13px; color: var(--muted); }
+  .case li b { font-weight: 600; letter-spacing: -0.01em; }
+  .case li .when { display: block; margin-top: 1px; }
+  .case footer { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .case footer .progress { font-size: 13px; color: var(--muted); margin-right: auto; }
+
+  details.settings { border-top: 1px solid var(--rule); padding: 14px 0 0; }
+  details.settings summary {
+    font-size: 15px; font-weight: 600; letter-spacing: -0.01em; cursor: pointer;
+    list-style: none; display: flex; align-items: center; gap: 6px;
+  }
+  details.settings summary::-webkit-details-marker { display: none; }
+  details.settings summary::after { content: "›"; color: var(--muted); font-size: 18px; }
+  details.settings[open] summary::after { content: "⌄"; }
+  details.settings[open] summary { margin-bottom: 16px; }
+  details.settings > div, details.settings > label { margin-bottom: 4px; }
+  /* One tutorial (or person) per block, separated the way the reference
+     separates fields in a card: a rule, not a box. */
+  #catalogue > .row, #recipients > .row {
+    border-bottom: 1px solid var(--rule); padding-bottom: 12px; margin-bottom: 14px;
+  }
+  #catalogue > .row:last-of-type, #recipients > .row:last-of-type { border-bottom: none; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -103,10 +206,9 @@
 
 <h1>Lesson clash</h1>
 <p class="sub">
-  Press the tutorial(s) that clash, say what they clash with, and the
-  <code>class_clash</code> message goes to all three phones. Tapping
-  <em>Actions taken 已完成調堂</em> in WhatsApp — or the buttons here — marks a
-  lesson arranged and tells everyone.
+  Name the event. Everything else — which tutorials it costs, and when each one
+  can be made up — is worked out from the timetable, for you to check before the
+  <code>class_clash</code> message goes to all three phones.
 </p>
 
 <div class="gate">
@@ -274,13 +376,20 @@ function renderLessons() {
 function eventRow(value) {
   const row = document.createElement('div');
   row.className = 'row';
+  // Name on its own line, dates and times beneath: five fields side by side
+  // wrap into a mess on a phone.
+  row.className = 'event';
   row.innerHTML = `
-    <div><label>Event name</label><input type="text" class="ev-name" placeholder="HKYAS"></div>
-    <div style="max-width:150px"><label>From</label><input type="date" class="ev-from"></div>
-    <div style="max-width:150px"><label>To (optional)</label><input type="date" class="ev-to"></div>
-    <div style="max-width:110px"><label>Start</label><input type="text" class="ev-start" placeholder="2pm"></div>
-    <div style="max-width:110px"><label>End</label><input type="text" class="ev-end" placeholder="5pm"></div>
-    <div class="remove"><button type="button" class="remove" title="Remove">✕</button></div>`;
+    <div class="row">
+      <div><label>Event name</label><input type="text" class="ev-name" placeholder="HKYAS"></div>
+      <div class="remove"><button type="button" class="remove" title="Remove">✕</button></div>
+    </div>
+    <div class="row tight">
+      <div><label>From</label><input type="date" class="ev-from"></div>
+      <div><label>To <span class="opt">optional</span></label><input type="date" class="ev-to"></div>
+      <div><label>Start <span class="opt">optional</span></label><input type="text" class="ev-start" placeholder="2pm"></div>
+      <div><label>End</label><input type="text" class="ev-end" placeholder="5pm"></div>
+    </div>`;
   row.querySelector('.ev-name').value = value?.name || '';
   row.querySelector('.ev-from').value = value?.startDate || '';
   row.querySelector('.ev-to').value = value?.endDate || '';
@@ -366,14 +475,18 @@ function renderClashes() {
     const row = document.createElement('div');
     row.className = 'row';
     row.innerHTML = `
-      <div class="remove" style="padding-bottom:7px">
-        <label style="white-space:nowrap"><input type="checkbox" class="keep" checked> arrange</label>
+      <div class="remove">
+        <label class="tick"><input type="checkbox" class="keep" checked></label>
       </div>
-      <div><label>Missed</label><input type="text" disabled></div>
-      <div style="max-width:150px"><label>Make-up date</label><input type="date" class="mk-date"></div>
-      <div style="max-width:110px"><label>Time</label><input type="text" class="mk-start"></div>`;
-    row.querySelector('input[disabled]').value =
-      `${lesson.code}. ${lesson.name} — ${lesson.date ? niceDate(lesson.date) : lesson.when}`;
+      <div class="missed">
+        <b></b>
+        <span class="when"></span>
+      </div>
+      <div style="max-width:160px"><label>Make-up date</label><input type="date" class="mk-date"></div>
+      <div style="max-width:110px"><label>Time</label><input type="text" class="mk-start" placeholder="6pm"></div>`;
+    row.querySelector('.missed b').textContent = `${lesson.code}. ${lesson.name}`;
+    row.querySelector('.missed .when').textContent =
+      [lesson.when, lesson.date ? `missed ${niceDate(lesson.date)}` : ''].filter(Boolean).join(' · ');
     row.querySelector('.mk-date').value = lesson.makeup?.date || '';
     row.querySelector('.mk-start').value = lesson.makeup?.date ? fmtTime(lesson.makeup.start) : '';
 
@@ -408,8 +521,14 @@ const readMakeups = () => [...$('clashes').querySelectorAll('.row')]
   }))
   .filter((m) => m.code);
 
-const niceDate = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB',
-  { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' });
+// "Wed 26/8" — the same shape lib/clash-schedule.js puts in the WhatsApp
+// message, so the page and the phones never disagree about a date.
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function niceDate(iso) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return `${DAY_NAMES[d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1}`;
+}
 
 function fmtTime(minutes) {
   if (!Number.isFinite(minutes)) return '';
@@ -526,8 +645,14 @@ function renderCases() {
     for (const lesson of c.lessons) {
       const li = document.createElement('li');
       li.className = lesson.fixed ? 'done' : '';
+      // Missed on the left, where it is going on the right of the arrow — the
+      // whole story of one lesson on one line.
+      const missed = [lesson.when, lesson.date ? niceDate(lesson.date) : ''].filter(Boolean).join(' · ');
+      const moving = lesson.makeup?.date
+        ? `→ ${niceDate(lesson.makeup.date)} ${fmtTime(lesson.makeup.start)}`
+        : (lesson.makeup ? '→ no free slot that week' : '');
       li.innerHTML = `<span><b>${escapeHtml(lesson.name)}</b>
-        <span class="when">${escapeHtml(lesson.when || '')}</span></span>`;
+        <span class="when">${escapeHtml(missed)} ${escapeHtml(moving)}</span></span>`;
       if (lesson.fixed) {
         const tag = document.createElement('span');
         tag.className = 'when';
@@ -535,7 +660,7 @@ function renderCases() {
         li.appendChild(tag);
       } else {
         const tick = document.createElement('label');
-        tick.style.cssText = 'margin:0; white-space:nowrap; color:inherit';
+        tick.className = 'tick';
         tick.innerHTML = '<input type="checkbox" class="fixbox"> arranged';
         tick.querySelector('input').value = lesson.code;
         li.appendChild(tick);
@@ -625,7 +750,7 @@ function recipientRow(person) {
     <div><label>Phone</label><input type="text" class="r-phone" placeholder="+852…"></div>
     <div style="max-width:110px"><label>Relation</label><input type="text" class="r-relation" placeholder="mum"></div>
     <div class="remove" style="padding-bottom:7px">
-      <label style="white-space:nowrap"><input type="checkbox" class="r-notify"> notify</label>
+      <label class="tick"><input type="checkbox" class="r-notify"> notify</label>
     </div>
     <div class="remove"><button type="button" class="remove" title="Remove">✕</button></div>`;
   row.querySelector('.r-name').value = person?.name || '';
