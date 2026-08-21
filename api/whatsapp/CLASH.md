@@ -132,24 +132,27 @@ arrange it with the centre."*
 
 ### Attending online
 
-A centre that also runs the subject online usually runs it at other hours too,
-and those hours are no use to someone who has to be in the room. So a tutorial
-can carry **online slots** as well as its in-person ones — `Wed 8pm, Sun 10am`
-— and they stay out of the search until online is chosen **for that lesson**.
+A centre's fixed hours are a room and a teacher. Online is neither, so it has
+**no timetable to be constrained by** — which means there is nothing to type
+but yes or no. Tick **can be online** on a tutorial the centre will take
+online, and nothing else.
 
-On the page, a clash whose tutorial has online hours grows an **Online** tick.
+Choosing it on a clash then does not add hours, it **removes the constraint**:
+that make-up may go at the lesson's own hour on any free day in the window,
+exactly as a private tutor's would.
+
+On the page, a clash whose tutorial can be online grows an **Online** tick.
 Taking it re-plans there and then and shows what it opened up:
 
 ```
-before   4️⃣ Thursday 6:30pm - Maths → (none of its slots are free that week)
-after    4️⃣ Thursday 6:30pm - Maths → Wed 26/8 8pm (online)
+before   4️⃣ Thursday 6:30pm - Maths → none of its slots are free that week
+after    4️⃣ Thursday 6:30pm - Maths → Wed 26/8 6:30pm (online)
 ```
 
-They are extra options, never replacements: the in-person hours are still
-considered, and **in person wins a tie** — there is no reason to be online when
-the room is free. A proposal that came from the online list carries `online`
-and says so on the line, because "Tue 5pm" and "Tue 5pm (online)" are not the
-same instruction to anybody.
+The centre's in-person hours are still considered alongside, and **in person
+wins a tie** — there is no reason to be online when the room is free. A
+proposal that ended up online carries `online` and says so on the line, because
+"Tue 5pm" and "Tue 5pm (online)" are not the same instruction to anybody.
 
 ### Skipping a home class
 
@@ -427,7 +430,7 @@ npm run test:prefects
 | Key | Contents | TTL |
 | --- | --- | --- |
 | `clash:recipients` | `[{ name, phone, relation, notify, userId }]` | — |
-| `clash:lessons` | the weekly timetable — `[{ code, name, weekday, start, end, location, tutor, makeupSlots, onlineSlots, homeClass }]` | — |
+| `clash:lessons` | the weekly timetable — `[{ code, name, weekday, start, end, location, tutor, makeupSlots, canBeOnline, homeClass }]` | — |
 | `clash:open` | ids of clashes still outstanding (an index; the cases are the truth) | — |
 | `clash:case:{id}` | one clash: the lessons with their dates and make-up slots, the events, who sorted what | 60 days |
 | `clash:draft:{key}` | the half-answered WhatsApp conversation (`event` → `confirm`, or `fixing`) | 2 h |

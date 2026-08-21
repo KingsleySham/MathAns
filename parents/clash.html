@@ -304,8 +304,9 @@
       Leave it blank for a tutor who moves to suit, and the lesson keeps its usual time.
       Tick <b>home class</b> for a lesson that could be given up if it is the only thing blocking
       a centre make-up — you will always be asked before anything is skipped.
-      <b>Online slots</b> are the hours the same centre runs the subject online; they show up as an
-      <i>Online</i> tick on the clash itself, and only count once you take it.</p>
+      Tick <b>can be online</b> where the centre will take the lesson online: online has no timetable
+      of its own, so choosing it on a clash frees that make-up from the centre's fixed hours
+      altogether — same hour, any free day.</p>
     <div id="catalogue"></div>
     <button type="button" id="addLesson">+ Add tutorial</button>
 
@@ -591,7 +592,7 @@ function renderClashes() {
     // Attending online is a choice, so it is offered wherever the centre runs
     // one — and taking it re-plans, because it opens hours the in-person
     // timetable does not have.
-    if (lesson.onlineSlots?.length && !skips.has(lesson.code)) {
+    if (lesson.canBeOnline && !skips.has(lesson.code)) {
       const tick = document.createElement('label');
       tick.className = 'tick online';
       tick.innerHTML = '<input type="checkbox" class="l-online-pick"><span>Online</span>';
@@ -940,9 +941,8 @@ function lessonRow(lesson) {
       <label>Make-up slots <span class="opt">only these times</span></label>
       <input type="text" class="l-makeup" placeholder="Mon 6pm, Sat 2-4pm">
     </div>
-    <div style="flex:2; min-width:200px">
-      <label>Online slots <span class="opt">if it runs online</span></label>
-      <input type="text" class="l-online" placeholder="Wed 8pm, Sun 10am">
+    <div class="remove">
+      <label class="tick"><input type="checkbox" class="l-can-online"> can be online</label>
     </div>
     <div class="remove">
       <label class="tick"><input type="checkbox" class="l-home"> home class</label>
@@ -956,7 +956,7 @@ function lessonRow(lesson) {
   row.querySelector('.l-location').value = lesson?.location || '';
   row.querySelector('.l-tutor').value = lesson?.tutor || '';
   row.querySelector('.l-makeup').value = slotsLabel(lesson?.makeupSlots);
-  row.querySelector('.l-online').value = slotsLabel(lesson?.onlineSlots);
+  row.querySelector('.l-can-online').checked = lesson?.canBeOnline === true;
   row.querySelector('.l-home').checked = lesson?.homeClass === true;
   row.querySelector('button.remove').addEventListener('click', () => row.remove());
   return row;
@@ -1012,7 +1012,7 @@ $('saveConfig').addEventListener('click', async () => {
     // Sent as typed; lib/clash-schedule.js parses it, so the page and the
     // scheduler cannot disagree about what "Sat 2-4pm" means.
     makeupSlots: row.querySelector('.l-makeup').value.trim(),
-    onlineSlots: row.querySelector('.l-online').value.trim(),
+    canBeOnline: row.querySelector('.l-can-online').checked,
     homeClass: row.querySelector('.l-home').checked,
   })).filter((l) => l.code && l.name);
 
