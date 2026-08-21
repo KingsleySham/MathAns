@@ -146,6 +146,22 @@ The displaced lesson is **given up, not rescheduled**. Chasing it would start a
 cascade, so it is named in the message and the family decides what to do about
 it.
 
+**Tick it on the lesson that is in the way, not the one being made up.** Home
+class is a property of the lesson that can be given up — Japanese, sitting on
+the Tuesday slot Math needs — not of the lesson that clashed. Ticking the
+clashed lesson changes nothing, because a lesson is never in its own way.
+
+That distinction is invisible when it goes wrong, so a make-up that could not
+be placed now names what stood in it:
+
+> None of its make-up slots (Tue 6pm-7:30pm) are free before Thu 27/8 that week
+> — pick one by hand, or arrange it with the centre. **Japanese is on then —
+> tick it as a home class in Settings if it could be skipped for this.**
+
+Only lessons that are *not* already ticked are named, since those are the ones
+where ticking would make a difference. The same sentence appears in the
+WhatsApp summary.
+
 The proposal rides along in the `class_clash` message, one per clash line:
 
 ```

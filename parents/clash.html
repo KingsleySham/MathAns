@@ -524,10 +524,20 @@ function renderClashes() {
       // A centre with fixed hours fails for a different reason than a tutor
       // whose usual hour was busy, and the fix is different too.
       warn.textContent = lesson.makeupSlots?.length
-        ? `None of its make-up slots (${slotsLabel(lesson.makeupSlots)}) come up before `
+        ? `None of its make-up slots (${slotsLabel(lesson.makeupSlots)}) are free before `
           + `${niceDate(lesson.date)} that week — pick one by hand, or arrange it with the centre.`
         : `No free slot before ${niceDate(lesson.date)} that week — pick one by hand, `
           + 'or leave it blank and arrange with the tutor.';
+      // What was in the way, and the one thing that would make room. Without
+      // this a dead end looks like the home-class setting being ignored.
+      if (lesson.blockedBy?.length) {
+        const names = lesson.blockedBy.map((b) => b.name).join(' and ');
+        const note = document.createElement('span');
+        note.textContent = ` ${names} ${lesson.blockedBy.length === 1 ? 'is' : 'are'} on then — `
+          + `tick ${lesson.blockedBy.length === 1 ? 'it' : 'them'} as a home class in Settings `
+          + 'if it could be skipped for this.';
+        warn.appendChild(note);
+      }
       box.appendChild(row);
       box.appendChild(warn);
     } else {
