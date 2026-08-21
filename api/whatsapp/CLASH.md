@@ -92,10 +92,59 @@ one nearest the lesson's usual hour wins.
 Leave it blank and nothing changes — the lesson keeps its own time and only the
 day moves.
 
+**Slots that cannot be read are reported, never dropped quietly.** A lesson
+whose slots all fail to parse looks exactly like a lesson with no fixed hours,
+and is then scheduled at a time its centre never opens — which is precisely how
+a Sunday clash ended up moving a Wednesday-only lesson to the Saturday. So the
+day is found first and the rest of the line read as its time, which means all
+of these work:
+
+| Typed | Read as |
+| --- | --- |
+| `Sat 2pm` · `Sat, 2pm` · `Saturday, 10am` · `2pm Sat` | one slot |
+| `Sat 2pm, Sun 4pm` · `Sat 2pm; Sun 4pm` · `Sat 2pm Sun 4pm` | two slots |
+| `Sat 10am, 2pm` | two slots on the Saturday |
+| `Sat 2-4pm` · `星期六 2-4pm` | one slot with an end time |
+
+Anything left over comes back from `readSlots()` as `rejected`, and saving the
+page says so: *"Lesson 2: could not read "next Sat" as a make-up slot"*.
+
 A centre whose slots simply don't come up before the clash gets its own message
 on the page, because the fix is different: *"None of its make-up slots
 (Mon 6pm, Sat 2pm-4pm) come up before Fri 28/8 that week — pick one by hand, or
 arrange it with the centre."*
+
+### Skipping a home class
+
+A centre's slots are scarce; a lesson at home is not. So when the **only** thing
+standing between a make-up and the week is a home lesson, that is a question
+rather than a dead end.
+
+Tick **home class** on a tutorial and it may be given up for a centre make-up.
+The proposal then comes back carrying what it would cost, and says so on the
+line everyone reads:
+
+```
+3️⃣ Thursday 6pm - Math → Tue 25/8 6pm (skips Japanese)
+```
+
+Nothing is skipped without being asked:
+
+- **On the page**, the row grows a question — *"Skip **Japanese** at home that
+  day"* — ticked, because it is what the system suggests, but never silent.
+  Untick it and the make-up goes back to unscheduled.
+- **On WhatsApp**, the confirm step becomes a real either/or: *yes* sends it
+  that way, *no* keeps the home lesson and leaves that make-up unscheduled.
+
+Four things are never displaced, whatever it costs: **an event** (it cannot be
+moved), **another make-up** (it is already someone's answer), **a centre
+lesson** (the thing being protected), and **any lesson not ticked as a home
+class**. And a genuinely free slot always beats one that costs something — the
+question only comes up when there is no alternative.
+
+The displaced lesson is **given up, not rescheduled**. Chasing it would start a
+cascade, so it is named in the message and the family decides what to do about
+it.
 
 The proposal rides along in the `class_clash` message, one per clash line:
 
@@ -250,7 +299,8 @@ location, tutor — and the three phone numbers.
    Give every tutorial a **day and a start time**: without them a lesson
    cannot be detected automatically or scheduled around. Add **make-up slots**
    (`Mon 6pm, Sat 2-4pm`) for any tutorial run by a centre with fixed hours —
-   see [above](#when-the-centre-only-offers-certain-hours).
+   see [above](#when-the-centre-only-offers-certain-hours) — and tick **home
+   class** on the ones that could be given up to fit one in.
 
 | Variable | Default |
 | --- | --- |
@@ -302,7 +352,7 @@ npm run test:prefects
 | Key | Contents | TTL |
 | --- | --- | --- |
 | `clash:recipients` | `[{ name, phone, relation, notify, userId }]` | — |
-| `clash:lessons` | the weekly timetable — `[{ code, name, weekday, start, end, location, tutor, makeupSlots }]` | — |
+| `clash:lessons` | the weekly timetable — `[{ code, name, weekday, start, end, location, tutor, makeupSlots, homeClass }]` | — |
 | `clash:open` | ids of clashes still outstanding (an index; the cases are the truth) | — |
 | `clash:case:{id}` | one clash: the lessons with their dates and make-up slots, the events, who sorted what | 60 days |
 | `clash:draft:{key}` | the half-answered WhatsApp conversation (`event` → `confirm`, or `fixing`) | 2 h |
