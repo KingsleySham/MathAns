@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="zh-Hant" data-lang="both" data-scale="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#ffffff">
+<meta name="color-scheme" content="light">
+<title>火車班次 Trains — Chatswood ⇄ Hurstville</title>
+<meta name="description" content="Chatswood ⇄ Hurstville 火車班次與轉車指引。Next trains and interchange guide between Chatswood and Hurstville.">
+<style>
+  /* Light mode only, on purpose: this is read on a phone in daylight, at a
+     station, by someone who should not have to hunt for a theme switch. The
+     palette is fixed rather than following prefers-color-scheme. */
+  :root {
+    --paper: #ffffff;
+    --panel: #f3f6fa;
+    --ink: #13181f;
+    --muted: #45505f;
+    --line: #c3cdda;
+    --edge: #8d99a8;
+
+    --best-bg: #fff5c2;
+    --best-bg-soft: #fffbe6;
+    --best-edge: #b87503;
+    --best-ink: #3a2a00;
+
+    --metro: #168388;
+    --t4: #00539b;
+    --sco: #1b3f8b;
+
+    --alight: #7c2d12;
+    --alight-bg: #fdf1e7;
+
+    --focus: #0b4fd1;
+    --radius: 14px;
+    --tap: 3rem;
+  }
+
+  * { box-sizing: border-box; }
+  html {
+    -webkit-text-size-adjust: 100%;
+    /* One control, three sizes. Everything below is in rem, so the whole
+       page grows together instead of only the body text. */
+    font-size: calc(20px * var(--ui-scale, 1));
+  }
+  html[data-scale="1.15"] { --ui-scale: 1.15; }
+  html[data-scale="1.3"]  { --ui-scale: 1.3; }
+
+  body {
+    margin: 0 auto;
+    max-width: 46rem;
+    padding: 0 0.9rem 4rem;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", -apple-system,
+      BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.5;
+  }
+  h1, h2, h3 { line-height: 1.25; margin: 0; }
+
+  /* Bilingual pairs. The reader picks 中文 / English / both; station names
+     always keep their English, because that is what the platform sign says. */
+  .t-zh { display: inline; }
+  .t-en { display: inline; }
+  html[data-lang="zh"] .t-en { display: none; }
+  html[data-lang="en"] .t-zh { display: none; }
+  html[data-lang="en"] .stn-zh { display: none; }
+  .bi > .t-en::before { content: " "; }
+  .bi.stacked { display: block; }
+  .bi.stacked > .t-zh, .bi.stacked > .t-en { display: block; }
+  html[data-lang="zh"] .bi.stacked > .t-en,
+  html[data-lang="en"] .bi.stacked > .t-zh { display: none; }
+  .bi.stacked > .t-en { font-size: 0.8em; color: var(--muted); }
+  .bi.stacked > .t-en::before { content: none; }
+
+  a { color: #0b4fd1; }
+  :focus-visible { outline: 4px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+
+  /* ---- controls ------------------------------------------------------- */
+
+  .settings {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem;
+    align-items: center; justify-content: space-between;
+    padding: 0.5rem 0; border-bottom: 2px solid var(--line);
+  }
+  .settings-group { display: flex; align-items: center; gap: 0.4rem; }
+  .settings-label { font-size: 0.7rem; color: var(--muted); }
+
+  button {
+    font: inherit; color: var(--ink); background: var(--paper);
+    border: 2px solid var(--edge); border-radius: 10px;
+    padding: 0.4rem 0.7rem; min-height: 2.4rem; cursor: pointer;
+  }
+  button:hover { background: var(--panel); }
+  button[aria-pressed="true"] {
+    background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 700;
+  }
+
+  header { padding: 0.9rem 0 0.4rem; }
+  h1 { font-size: 1.15rem; letter-spacing: 0.01em; }
+  h1 .route { display: block; font-size: 1.5rem; font-weight: 800; margin-top: 0.15rem; }
+  .clock {
+    font-variant-numeric: tabular-nums; font-size: 1.5rem; font-weight: 700;
+  }
+  .clock-row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem;
+    flex-wrap: wrap; margin-top: 0.5rem;
+  }
+  .clock-label { font-size: 0.7rem; color: var(--muted); }
+
+  /* ---- direction ------------------------------------------------------ */
+
+  /* Two across when they fit, stacked when they do not — a squeezed pair of
+     half-legible buttons helps nobody. */
+  .direction {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 0.6rem; margin: 0.8rem 0;
+  }
+  .direction button {
+    min-height: var(--tap); padding: 0.55rem 0.5rem; border-width: 3px;
+    border-radius: var(--radius); text-align: center; line-height: 1.3;
+  }
+  .direction button .way { display: block; font-size: 0.72rem; color: var(--muted); }
+  .direction button .stop-name { display: inline-block; }
+  .direction button[aria-pressed="true"] .way { color: #dbe4f0; }
+
+  /* ---- status --------------------------------------------------------- */
+
+  .status {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius);
+    padding: 0.55rem 0.7rem; font-size: 0.78rem; color: var(--muted);
+  }
+  .badge {
+    display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px;
+    font-size: 0.72rem; font-weight: 700; border: 2px solid currentColor;
+  }
+  .badge.live { color: #0d5c2b; background: #e6f6ec; }
+  .badge.model { color: #5a4200; background: #fdf5df; }
+  .status .grow { margin-left: auto; }
+  .notice {
+    border: 3px solid var(--best-edge); background: var(--best-bg-soft);
+    border-radius: var(--radius); padding: 0.7rem 0.85rem; margin: 0.8rem 0;
+    font-size: 0.85rem;
+  }
+
+  /* ---- journey cards -------------------------------------------------- */
+
+  .board { margin: 0.9rem 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.9rem; }
+  .section-heading {
+    font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin: 1.4rem 0 0.1rem;
+  }
+
+  .journey {
+    border: 2px solid var(--line); border-radius: var(--radius);
+    background: var(--paper); padding: 0.85rem 0.9rem; min-width: 0;
+  }
+  /* The highlight the whole board is built around. Never colour alone: the
+     yellow card also carries a ★ and the words 最快 / FASTEST. */
+  .journey.best {
+    background: var(--best-bg); border-color: var(--best-edge); border-width: 4px;
+    box-shadow: 0 2px 0 var(--best-edge);
+  }
+  .journey.best .headline-time { color: var(--best-ink); }
+
+  .flag {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: var(--best-edge); color: #fff; font-weight: 800;
+    border-radius: 999px; padding: 0.2rem 0.7rem; font-size: 0.8rem;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-bottom: 0.5rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 700; border-radius: 999px;
+    padding: 0.2rem 0.6rem; border: 2px solid var(--edge); color: var(--ink);
+    background: var(--paper); max-width: 100%; min-width: 0;
+  }
+  .chip.line-m1 { background: var(--metro); border-color: var(--metro); color: #fff; }
+  .chip.line-t4 { background: var(--t4); border-color: var(--t4); color: #fff; }
+  .chip.line-sco { background: var(--sco); border-color: var(--sco); color: #fff; }
+  .chip.speed-express, .chip.speed-limited { background: #14181f; border-color: #14181f; color: #fff; }
+
+  .headline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.9rem; }
+  .headline-time { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .headline > span { min-width: 0; }
+  .headline-note { font-size: 0.85rem; }
+  .headline-arrow { font-size: 1.4rem; font-weight: 700; color: var(--muted); }
+  .journey.best .headline-arrow { color: var(--best-edge); }
+  .headline-sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
+  .journey.best .headline-sub { color: #5c4708; }
+
+  /* ---- the steps ------------------------------------------------------ */
+
+  .steps { list-style: none; margin: 0.8rem 0 0; padding: 0; display: grid; gap: 0.5rem; }
+  .step {
+    display: grid; grid-template-columns: 3.7rem minmax(0, 1fr); gap: 0.6rem; align-items: start;
+    padding: 0.5rem 0.1rem; border-top: 2px solid rgba(0, 0, 0, 0.12);
+  }
+  .step:first-child { border-top: 0; }
+  .step-time {
+    font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.05rem;
+  }
+  .step-what { font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  .step-station { font-size: 1.15rem; font-weight: 700; overflow-wrap: break-word; }
+  .step-detail { font-size: 0.83rem; color: var(--muted); }
+  .journey.best .step-detail { color: #5c4708; }
+  .journey.best .step-what { color: #6b5205; }
+
+  .step.alight .step-station { color: var(--alight); }
+  .step.alight .step-what { color: var(--alight); font-weight: 800; }
+  .step.arrive { background: var(--alight-bg); border-radius: 10px; padding: 0.6rem 0.5rem; }
+  .journey.best .step.arrive { background: #fff; }
+
+  .platform {
+    display: inline-block; border: 3px solid var(--ink); border-radius: 8px;
+    padding: 0.05rem 0.5rem; font-weight: 800; font-size: 0.95rem; margin-top: 0.2rem;
+    background: var(--paper);
+  }
+  .platform .p-label { font-size: 0.68rem; font-weight: 700; color: var(--muted); display: block; }
+  .platform.unknown { border-style: dashed; font-size: 0.8rem; font-weight: 700; }
+
+  .ride {
+    font-size: 0.85rem; color: var(--muted); padding-left: 0.2rem;
+    border-left: 5px solid var(--line); margin-left: 1.6rem; padding: 0.35rem 0 0.35rem 0.9rem;
+  }
+  .journey.best .ride { border-left-color: var(--best-edge); color: #5c4708; }
+  .ride strong { color: var(--ink); }
+  .journey.best .ride strong { color: var(--best-ink); }
+
+  details { margin-top: 0.6rem; }
+  summary {
+    cursor: pointer; font-size: 0.82rem; font-weight: 700; padding: 0.45rem 0;
+    min-height: 2rem;
+  }
+  .stoplist { margin: 0.3rem 0 0; padding-left: 1.2rem; font-size: 0.83rem; color: var(--muted); }
+  .stoplist li { margin: 0.15rem 0; }
+  .stoplist .stn { color: var(--ink); }
+  .stn-zh { white-space: nowrap; }
+  .summary-line {
+    font-size: 0.88rem; margin-top: 0.5rem; padding-top: 0.5rem;
+    border-top: 2px solid rgba(0, 0, 0, 0.12);
+  }
+  .summary-line b { font-size: 1rem; }
+
+  .ways { display: grid; gap: 0.6rem; margin-top: 0.5rem; }
+  @media (min-width: 44rem) { .ways { grid-template-columns: repeat(3, 1fr); } }
+  .way-card {
+    border: 2px solid var(--line); border-radius: var(--radius);
+    background: var(--panel); padding: 0.6rem 0.75rem; font-size: 0.85rem;
+  }
+  .way-card h3 { font-size: 1rem; }
+  .way-times { margin: 0.25rem 0; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+  footer { margin-top: 2.2rem; font-size: 0.78rem; color: var(--muted); }
+  footer p { margin: 0.5rem 0; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  @media print {
+    .settings, .direction, .status, .refresh, details, .reference { display: none; }
+    .journey { break-inside: avoid; border-color: #000; }
+    .journey.best { background: #fff; border-width: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="settings">
+  <div class="settings-group">
+    <span class="settings-label" id="lbl-size">字體 Text</span>
+    <div role="group" aria-labelledby="lbl-size">
+      <button type="button" data-scale-btn="1" aria-pressed="true">A</button>
+      <button type="button" data-scale-btn="1.15" aria-pressed="false" style="font-size:1.1em">A</button>
+      <button type="button" data-scale-btn="1.3" aria-pressed="false" style="font-size:1.25em">A</button>
+    </div>
+  </div>
+  <div class="settings-group">
+    <span class="settings-label" id="lbl-lang">語言 Language</span>
+    <div role="group" aria-labelledby="lbl-lang">
+      <button type="button" data-lang-btn="both" aria-pressed="true">中/EN</button>
+      <button type="button" data-lang-btn="zh" aria-pressed="false">中文</button>
+      <button type="button" data-lang-btn="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <h1>
+    <span class="bi"><span class="t-zh">火車班次</span><span class="t-en">Next trains</span></span>
+    <span class="route" id="route-title">Chatswood → Hurstville</span>
+  </h1>
+  <div class="clock-row">
+    <div>
+      <span class="clock" id="clock">--:--</span>
+      <span class="clock-label"><span class="bi"><span class="t-zh">悉尼時間</span><span class="t-en">Sydney time</span></span></span>
+    </div>
+    <div class="clock-label" id="day-label"></div>
+  </div>
+</header>
+
+<nav class="direction" aria-label="方向 Direction">
+  <button type="button" data-direction="toHurstville" aria-pressed="true">
+    <span class="way"><span class="bi"><span class="t-zh">出發</span><span class="t-en">Going to</span></span></span>
+    <span class="stop-name">Hurstville <span class="stn-zh">好市圍</span></span>
+  </button>
+  <button type="button" data-direction="toChatswood" aria-pressed="false">
+    <span class="way"><span class="bi"><span class="t-zh">回家</span><span class="t-en">Going home</span></span></span>
+    <span class="stop-name">Chatswood <span class="stn-zh">車士活</span></span>
+  </button>
+</nav>
+
+<div class="status">
+  <span class="badge model" id="source-badge">預計時間表 Estimated</span>
+  <span id="updated"></span>
+  <button type="button" class="refresh grow" id="refresh">
+    <span class="bi"><span class="t-zh">重新整理</span><span class="t-en">Refresh</span></span>
+  </button>
+</div>
+
+<p class="sr-only" role="status" id="live-summary"></p>
+
+<main class="board" id="board"></main>
+
+<section class="reference">
+  <h2 class="section-heading">
+    <span class="bi"><span class="t-zh">三條路線比較</span><span class="t-en">The three ways round</span></span>
+  </h2>
+  <div class="ways">
+    <div class="way-card">
+      <h3>Martin Place <span class="stn-zh">馬丁廣場</span></h3>
+      <p class="way-times">
+        <span class="bi"><span class="t-zh">地鐵</span><span class="t-en">Metro</span></span> ~11 min ·
+        <span class="bi"><span class="t-zh">步行</span><span class="t-en">walk</span></span> ~2 min ·
+        <span class="bi"><span class="t-zh">火車</span><span class="t-en">train</span></span> ~25–27 min
+      </p>
+      <p class="bi stacked">
+        <span class="t-zh">最短步行，全程室內，最易上到座位。</span>
+        <span class="t-en">Shortest walk, all indoors, best chance of a seat.</span>
+      </p>
+    </div>
+    <div class="way-card">
+      <h3>Central <span class="stn-zh">中央車站</span></h3>
+      <p class="way-times">
+        <span class="bi"><span class="t-zh">地鐵</span><span class="t-en">Metro</span></span> ~15 min ·
+        <span class="bi"><span class="t-zh">步行</span><span class="t-en">walk</span></span> ~4 min ·
+        <span class="bi"><span class="t-zh">火車</span><span class="t-en">train</span></span> ~18–22 min
+      </p>
+      <p class="bi stacked">
+        <span class="t-zh">繁忙時間可搭南海岸線特快，只停兩個站。</span>
+        <span class="t-en">The peak South Coast express — two stops only.</span>
+      </p>
+    </div>
+    <div class="way-card">
+      <h3>Sydenham <span class="stn-zh">悉尼漢</span></h3>
+      <p class="way-times">
+        <span class="bi"><span class="t-zh">地鐵</span><span class="t-en">Metro</span></span> ~22 min ·
+        <span class="bi"><span class="t-zh">步行</span><span class="t-en">walk</span></span> ~2 min ·
+        <span class="bi"><span class="t-zh">火車</span><span class="t-en">train</span></span> ~10–16 min
+      </p>
+      <p class="bi stacked">
+        <span class="t-zh">地鐵坐得最遠，等車最少；但部分繁忙特快不停此站。</span>
+        <span class="t-en">Longest on the Metro, least waiting — but some peak expresses run past it.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p class="bi stacked">
+    <span class="t-zh">月台號碼請以車站顯示屏為準。列車有機會誤點或改道。</span>
+    <span class="t-en">Always confirm the platform on the station indicator board. Trains can be delayed or diverted.</span>
+  </p>
+  <p class="bi stacked" id="source-note"></p>
+  <p><a href="https://transportnsw.info/trip" rel="noopener">transportnsw.info</a> ·
+     <a href="https://transportnsw.info/alerts" rel="noopener">Service alerts 服務通知</a></p>
+</footer>
+
+<script type="module">
+import {
+  MIN_LEAD_MINUTES,
+  formatClock,
+  planJourneys,
+  serviceClock,
+  windowJourneys,
+} from '/lib/trains/plan.js';
+import { STATIONS } from '/lib/trains/network.js';
+
+// ---------------------------------------------------------------------------
+// Small DOM helpers. Everything user-facing goes in as text, never as HTML.
+
+function el(tag, attrs = {}, ...kids) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (value == null || value === false) continue;
+    if (key === 'class') node.className = value;
+    else if (key === 'text') node.textContent = value;
+    else node.setAttribute(key, value === true ? '' : String(value));
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    node.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return node;
+}
+
+/** A Chinese / English pair, shown according to the language setting. */
+function bi(zh, en, { stacked = false, className = '' } = {}) {
+  return el(
+    'span',
+    { class: `bi${stacked ? ' stacked' : ''}${className ? ' ' + className : ''}` },
+    el('span', { class: 't-zh', lang: 'zh-Hant', text: zh }),
+    el('span', { class: 't-en', lang: 'en', text: en }),
+  );
+}
+
+/**
+ * A station, always in English — that is what the sign, the announcement and
+ * the indicator board say — with the Chinese name alongside unless the reader
+ * has asked for English only.
+ */
+function station(key, name) {
+  const known = STATIONS[key];
+  const en = known ? known.en : name || key;
+  const zh = known ? known.zh : null;
+  return el(
+    'span',
+    { class: 'stn' },
+    en,
+    zh ? ' ' : null,
+    zh ? el('span', { class: 'stn-zh', lang: 'zh-Hant', text: zh }) : null,
+  );
+}
+
+const plural = (n, one, many) => (n === 1 ? one : many);
+
+/** "8 分鐘 / 8 min" for a short wait, "4 小時 20 分鐘 / 4 h 20 min" for a long one. */
+function span(minutes) {
+  if (minutes < 90) return { zh: `${minutes} 分鐘`, en: `${minutes} min` };
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return {
+    zh: rest ? `${hours} 小時 ${rest} 分鐘` : `${hours} 小時`,
+    en: rest ? `${hours} h ${rest} min` : `${hours} h`,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// State
+
+const SETTINGS_KEY = 'trains.settings.v1';
+const state = {
+  direction: 'toHurstville',
+  lang: 'both',
+  scale: '1',
+  live: null, // last good live payload, or null
+};
+
+function loadSettings() {
+  try {
+    Object.assign(state, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'), { live: null });
+  } catch {
+    /* a browser with storage switched off still gets a working board */
+  }
+}
+function saveSettings() {
+  try {
+    const { direction, lang, scale } = state;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ direction, lang, scale }));
+  } catch {
+    /* nothing here is worth failing a render over */
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The board
+
+const board = document.getElementById('board');
+let lastSignature = null;
+
+function currentPlan() {
+  const now = new Date();
+  const clock = serviceClock(now);
+
+  // Live data when the Trip Planner answered, the timetable model otherwise.
+  if (state.live && state.live.direction === state.direction) {
+    const age = Date.now() - new Date(state.live.generatedAt).getTime();
+    if (age < 3 * 60 * 1000) {
+      const { journeys, extended } = windowJourneys(state.live.journeys, clock.minuteOfDay, {
+        minLeadMinutes: MIN_LEAD_MINUTES,
+        windowMinutes: 30,
+      });
+      if (journeys.length > 0) {
+        return {
+          live: true,
+          nowMinute: clock.minuteOfDay,
+          isWeekend: clock.isWeekend,
+          inService: true,
+          extended,
+          journeys,
+          direction: state.direction,
+        };
+      }
+    }
+  }
+
+  return { ...planJourneys({ now, direction: state.direction }), live: false };
+}
+
+function signatureOf(plan) {
+  return [
+    plan.live,
+    plan.direction,
+    plan.extended,
+    plan.nextDay,
+    plan.journeys.map((j) => `${j.departMinute}>${j.arriveMinute}@${j.via}`).join('|'),
+  ].join('~');
+}
+
+function render(force = false) {
+  const plan = currentPlan();
+  const signature = signatureOf(plan);
+  updateStatus(plan);
+
+  // Re-drawing every few seconds would close every "all stations" list the
+  // reader had opened. Redraw only when the trains themselves change; the
+  // countdowns are patched in place.
+  if (!force && signature === lastSignature) {
+    updateCountdowns(plan.nowMinute);
+    return;
+  }
+  lastSignature = signature;
+
+  board.replaceChildren();
+
+  if (plan.journeys.length === 0) {
+    board.append(
+      el(
+        'div',
+        { class: 'notice' },
+        bi(
+          '暫時查不到班次。請稍後再試，或查看 transportnsw.info。',
+          'No departures could be worked out right now. Try again shortly, or check transportnsw.info.',
+          { stacked: true },
+        ),
+      ),
+    );
+    return;
+  }
+
+  if (plan.nextDay) {
+    board.append(
+      el(
+        'div',
+        { class: 'notice' },
+        bi(
+          '今晚已無班次。以下是明早最早的班次。',
+          'The last connection of the night has gone. These are the first trains tomorrow morning.',
+          { stacked: true },
+        ),
+      ),
+    );
+  } else if (plan.extended && !plan.inService) {
+    board.append(
+      el(
+        'div',
+        { class: 'notice' },
+        bi(
+          '現時沒有列車服務。以下是今早最早的班次。',
+          'No trains are running at this hour. These are the first ones this morning.',
+          { stacked: true },
+        ),
+      ),
+    );
+  } else if (plan.extended) {
+    board.append(
+      el(
+        'div',
+        { class: 'notice' },
+        bi(
+          '未來 30 分鐘內沒有班次。以下是之後最早的班次。',
+          'Nothing leaves in the next 30 minutes. These are the next ones after that.',
+          { stacked: true },
+        ),
+      ),
+    );
+  }
+
+  const [best, ...rest] = plan.journeys;
+  board.append(journeyCard(best, plan, true));
+
+  if (rest.length > 0) {
+    board.append(
+      el(
+        'h2',
+        { class: 'section-heading' },
+        bi('其他班次', 'Other departures'),
+      ),
+    );
+    for (const journey of rest.slice(0, 4)) board.append(journeyCard(journey, plan, false));
+  }
+
+  updateCountdowns(plan.nowMinute);
+}
+
+function journeyCard(journey, plan, isBest) {
+  const card = el('article', {
+    class: `journey${isBest ? ' best' : ''}`,
+    'data-depart': journey.departMinute,
+    'data-arrive': journey.arriveMinute,
+  });
+
+  const chips = el('div', { class: 'chips' });
+  if (isBest) {
+    chips.append(el('span', { class: 'flag' }, '★ ', bi('最快', 'Fastest')));
+  }
+  chips.append(lineChip(journey.leg2));
+  if (journey.leg2.speed && journey.leg2.speed.key !== 'allStops') {
+    chips.append(
+      el(
+        'span',
+        { class: `chip speed-${journey.leg2.speed.key}` },
+        bi(journey.leg2.speed.zh, journey.leg2.speed.en),
+      ),
+    );
+  }
+  chips.append(
+    el('span', { class: 'chip' }, bi('轉車站 ', 'Change at '), station(journey.via)),
+  );
+  card.append(chips);
+
+  // Departure first and largest: it is the one time you have to act on.
+  card.append(
+    el(
+      'div',
+      { class: 'headline' },
+      el(
+        'span',
+        {},
+        el('span', { class: 'headline-time' }, formatClock(journey.departMinute)),
+        el('span', { class: 'headline-note' }, bi(' 開出', ' leave')),
+      ),
+      el('span', { class: 'headline-arrow' }, '→'),
+      el(
+        'span',
+        {},
+        el('span', { class: 'headline-time' }, formatClock(journey.arriveMinute)),
+        el(
+          'span',
+          { class: 'headline-note' },
+          bi(' 到達 ', ' arrive '),
+          station(plan.direction === 'toChatswood' ? 'chatswood' : 'hurstville'),
+        ),
+      ),
+    ),
+  );
+  card.append(
+    el(
+      'div',
+      { class: 'headline-sub', 'data-countdown': 'true' },
+      '', // filled by updateCountdowns
+    ),
+  );
+
+  const steps = el('ol', { class: 'steps' });
+  steps.append(boardStep(journey.leg1, plan.direction));
+  steps.append(rideNote(journey.leg1));
+  steps.append(alightStep(journey.leg1, false));
+  steps.append(transferNote(journey));
+  steps.append(boardStep(journey.leg2, plan.direction));
+  steps.append(rideNote(journey.leg2));
+  steps.append(alightStep(journey.leg2, true));
+
+  if (isBest) {
+    // The recommended journey is laid out in full: it is the one they will
+    // actually follow, and it should need no tapping.
+    card.append(steps);
+  } else {
+    card.append(summaryLine(journey));
+    const folded = el('details');
+    folded.append(el('summary', {}, bi('查看步驟', 'Show the steps')));
+    folded.append(steps);
+    card.append(folded);
+  }
+
+  if (journey.sameTrainAlso && journey.sameTrainAlso.length > 0) {
+    const alsoList = journey.sameTrainAlso
+      .map((alt) => `${STATIONS[alt.via].en} ${formatClock(alt.boardMinute)}`)
+      .join(' · ');
+    card.append(
+      el(
+        'p',
+        { class: 'step-detail' },
+        bi('同一班列車亦可在以下車站上車：', 'The same train can also be joined at: '),
+        alsoList,
+      ),
+    );
+  }
+
+  if (isBest) card.append(allStopsDetails(journey));
+  return card;
+}
+
+/** The one line a reader needs from an alternative: change here, get off there. */
+function summaryLine(journey) {
+  const line = el('p', { class: 'summary-line' });
+  line.append(bi('轉車 ', 'Change at '), el('b', {}, station(journey.via)));
+  if (journey.leg2.boardPlatform) {
+    line.append(' · ', bi('月台 ', 'Platform '), el('b', {}, journey.leg2.boardPlatform));
+  }
+  line.append(
+    el(
+      'span',
+      {},
+      ' · ',
+      bi('落車 ', 'Get off at '),
+      el('b', {}, station(journey.leg2.to)),
+    ),
+  );
+  return line;
+}
+
+function lineChip(leg) {
+  const cls =
+    leg.line === 'SCO' ? 'line-sco' : leg.mode === 'metro' ? 'line-m1' : 'line-t4';
+  return el('span', { class: `chip ${cls}` }, bi(leg.lineLabel.zh, leg.lineLabel.en));
+}
+
+function boardStep(leg, direction) {
+  const detail = el('div');
+  detail.append(el('div', { class: 'step-what' }, bi('上車', 'Get on')));
+  detail.append(el('div', { class: 'step-station' }, station(leg.from)));
+  detail.append(
+    el(
+      'div',
+      { class: 'step-detail' },
+      bi(leg.lineLabel.zh, leg.lineLabel.en),
+      ' · ',
+      bi(leg.headsign.zh, leg.headsign.en),
+    ),
+  );
+  detail.append(platformTag(leg.boardPlatform));
+  return el(
+    'li',
+    { class: 'step' },
+    el('div', { class: 'step-time' }, formatClock(leg.departMinute)),
+    detail,
+  );
+}
+
+function alightStep(leg, isFinal) {
+  const detail = el('div');
+  detail.append(
+    el(
+      'div',
+      { class: 'step-what' },
+      isFinal ? bi('到站 · 落車', 'Arrive · get off') : bi('落車 · 轉車', 'Get off · change here'),
+    ),
+  );
+  detail.append(el('div', { class: 'step-station' }, station(leg.to)));
+  return el(
+    'li',
+    { class: `step alight${isFinal ? ' arrive' : ''}` },
+    el('div', { class: 'step-time' }, formatClock(leg.arriveMinute)),
+    detail,
+  );
+}
+
+function rideNote(leg) {
+  const stops = leg.stopCount;
+  // The stop count carries the emphasis: counting stops is how you know when
+  // to stand up, and it works even when you cannot hear the announcement.
+  return el(
+    'li',
+    { class: 'ride' },
+    el(
+      'span',
+      { class: 'bi' },
+      el(
+        'span',
+        { class: 't-zh', lang: 'zh-Hant' },
+        el('strong', {}, `坐 ${stops} 個站`),
+        ` · 約 ${leg.rideMinutes} 分鐘`,
+      ),
+      el(
+        'span',
+        { class: 't-en', lang: 'en' },
+        el('strong', {}, `${stops} ${plural(stops, 'stop', 'stops')}`),
+        ` · about ${leg.rideMinutes} min`,
+      ),
+    ),
+  );
+}
+
+function transferNote(journey) {
+  const { walkMinutes } = journey.transfer;
+  const note = el(
+    'li',
+    { class: 'ride' },
+    bi(`步行約 ${walkMinutes} 分鐘`, `Walk about ${walkMinutes} min`),
+  );
+  if (journey.waitMinutes > 0) {
+    note.append(
+      ' · ',
+      bi(`等候 ${journey.waitMinutes} 分鐘`, `wait ${journey.waitMinutes} min`),
+    );
+  }
+  if (journey.transfer.note) {
+    note.append(
+      el('div', {}, bi(journey.transfer.note.zh, journey.transfer.note.en)),
+    );
+  }
+  return note;
+}
+
+function platformTag(platform) {
+  if (!platform) {
+    return el(
+      'div',
+      { class: 'platform unknown' },
+      bi('月台請看顯示屏', 'Platform: see indicator board'),
+    );
+  }
+  return el(
+    'div',
+    { class: 'platform' },
+    el('span', { class: 'p-label' }, bi('月台', 'Platform')),
+    platform,
+  );
+}
+
+function allStopsDetails(journey) {
+  const details = el('details');
+  details.append(
+    el('summary', {}, bi('查看所有停站', 'Show every stop')),
+  );
+  for (const leg of [journey.leg1, journey.leg2]) {
+    details.append(
+      el(
+        'p',
+        { class: 'step-detail' },
+        station(leg.from),
+        ' → ',
+        station(leg.to),
+      ),
+    );
+    const list = el('ol', { class: 'stoplist' });
+    for (const stop of leg.stops) {
+      list.append(
+        el('li', {}, formatClock(stop.minute), ' — ', station(stop.station, stop.name)),
+      );
+    }
+    list.append(
+      el(
+        'li',
+        {},
+        el('strong', {}, formatClock(leg.arriveMinute)),
+        ' — ',
+        station(leg.to),
+        ' ',
+        bi('（落車）', '(get off)'),
+      ),
+    );
+    details.append(list);
+  }
+  return details;
+}
+
+// ---------------------------------------------------------------------------
+// The parts that tick
+
+function updateCountdowns(nowMinute) {
+  for (const card of board.querySelectorAll('.journey')) {
+    const depart = Number(card.dataset.depart);
+    const arrive = Number(card.dataset.arrive);
+    const until = depart - nowMinute;
+    const target = card.querySelector('[data-countdown]');
+    if (!target) continue;
+
+    const wait = span(until);
+    const total = span(arrive - depart);
+    target.replaceChildren(
+      until <= 0
+        ? bi('即將開出', 'leaving now')
+        : bi(`${wait.zh}後開出`, `leaves in ${wait.en}`),
+      ' · ',
+      bi(`全程 ${total.zh}`, `${total.en} journey`),
+    );
+  }
+}
+
+function updateStatus(plan) {
+  const stamp = document.getElementById('updated');
+  stamp.replaceChildren(
+    plan.live && state.live
+      ? bi(
+          `實時資料更新於 ${sydneyTime(new Date(state.live.generatedAt))}`,
+          `live times as at ${sydneyTime(new Date(state.live.generatedAt))}`,
+        )
+      : bi('按班次規律推算', 'worked out from the timetable'),
+  );
+
+  const badge = document.getElementById('source-badge');
+  badge.className = `badge ${plan.live ? 'live' : 'model'}`;
+  badge.replaceChildren(
+    plan.live ? bi('實時班次', 'Live times') : bi('預計時間表', 'Estimated timetable'),
+  );
+
+  const summary = document.getElementById('live-summary');
+  const best = plan.journeys[0];
+  if (best) {
+    summary.textContent = `最快：${formatClock(best.departMinute)} 開出，於 ${
+      STATIONS[best.via].en
+    } 轉車，${formatClock(best.arriveMinute)} 到達。Fastest: leave ${formatClock(
+      best.departMinute,
+    )}, change at ${STATIONS[best.via].en}, arrive ${formatClock(best.arriveMinute)}.`;
+  }
+
+  const note = document.getElementById('source-note');
+  note.replaceChildren(
+    plan.live
+      ? bi(
+          '時間來自 Transport for NSW 實時資料。',
+          'Times come from the Transport for NSW live feed.',
+          { stacked: true },
+        )
+      : bi(
+          '未接上實時資料，時間按平日班次推算，只作參考。',
+          'Not connected to the live feed — times are worked out from typical service patterns and are a guide only.',
+          { stacked: true },
+        ),
+  );
+}
+
+const SYDNEY_TIME = new Intl.DateTimeFormat('en-AU', {
+  timeZone: 'Australia/Sydney',
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+const sydneyTime = (date) => SYDNEY_TIME.format(date);
+
+function tickClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = sydneyTime(now);
+
+  const day = new Intl.DateTimeFormat('en-AU', {
+    timeZone: 'Australia/Sydney',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+  }).format(now);
+  document.getElementById('day-label').textContent = day;
+}
+
+// ---------------------------------------------------------------------------
+// Live feed
+//
+// Best effort in every sense: if it is not configured, times out, or answers
+// something this board cannot draw, the model is already on screen and stays
+// there.
+
+async function pollLive() {
+  try {
+    const response = await fetch(`/api/trains?direction=${encodeURIComponent(state.direction)}`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) throw new Error(String(response.status));
+    const body = await response.json();
+    state.live = body && body.live && Array.isArray(body.journeys) ? body : null;
+  } catch {
+    state.live = null;
+  }
+  render();
+}
+
+// ---------------------------------------------------------------------------
+// Controls
+
+function setPressed(selector, matches) {
+  for (const button of document.querySelectorAll(selector)) {
+    button.setAttribute('aria-pressed', String(matches(button)));
+  }
+}
+
+function applySettings() {
+  document.documentElement.dataset.lang = state.lang;
+  document.documentElement.dataset.scale = state.scale;
+  setPressed('[data-lang-btn]', (b) => b.dataset.langBtn === state.lang);
+  setPressed('[data-scale-btn]', (b) => b.dataset.scaleBtn === state.scale);
+  setPressed('[data-direction]', (b) => b.dataset.direction === state.direction);
+
+  const title = document.getElementById('route-title');
+  title.textContent =
+    state.direction === 'toChatswood' ? 'Hurstville → Chatswood' : 'Chatswood → Hurstville';
+}
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('button');
+  if (!button) return;
+
+  if (button.dataset.direction) {
+    state.direction = button.dataset.direction;
+    state.live = null;
+    saveSettings();
+    applySettings();
+    render(true);
+    pollLive();
+  } else if (button.dataset.langBtn) {
+    state.lang = button.dataset.langBtn;
+    saveSettings();
+    applySettings();
+  } else if (button.dataset.scaleBtn) {
+    state.scale = button.dataset.scaleBtn;
+    saveSettings();
+    applySettings();
+  } else if (button.id === 'refresh') {
+    render(true);
+    pollLive();
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Go
+
+loadSettings();
+applySettings();
+tickClock();
+render(true);
+pollLive();
+
+setInterval(tickClock, 1000);
+setInterval(() => render(), 15 * 1000);
+setInterval(pollLive, 60 * 1000);
+
+// Coming back to the page after a while should not show a stale board.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    tickClock();
+    render(true);
+    pollLive();
+  }
+});
+
+// The board is recomputed from the clock every few seconds, so what is worth
+// stamping is when the times themselves were last confirmed against the live
+// feed — not when the page last redrew.
+
+</script>
+
+<script>
+  // The site's service worker (network-first, same-origin) is what lets this
+  // page open on a platform with no signal. The timetable model runs entirely
+  // in the browser, so an offline board is still a correct board.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+  }
+</script>
+</body>
+</html>

@@ -23,6 +23,10 @@
   "rewrites": [
     { "source": "/api/calendar", "destination": "/api/dashboard?op=calendar" },
     { "source": "/api/todoist",  "destination": "/api/dashboard?op=todoist" },
+    { "source": "/trains",  "destination": "/trains/index.html" },
+    { "source": "/trains/", "destination": "/trains/index.html" },
+    { "source": "/api/trains",    "destination": "/api/transit?op=trains" },
+    { "source": "/api/kmb-route", "destination": "/api/transit?op=kmb" },
     { "source": "/flights",  "destination": "/flights/index.html" },
     { "source": "/flights/", "destination": "/flights/index.html" },
     { "source": "/flights/api/watches",     "destination": "/api/flights?op=watches" },
